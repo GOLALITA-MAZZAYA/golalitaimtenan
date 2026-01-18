@@ -1,4 +1,4 @@
-package com.golalitarewards.orientation
+package com.golalitaimtenanrewards.orientation
 
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule

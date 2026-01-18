@@ -4,7 +4,7 @@ export const convertAPNtoFCM = async (token) => {
   const res = await axios.post(
     "https://iid.googleapis.com/iid/v1:batchImport",
     {
-      application: "com.golalita.ios",
+      application: "com.golalitaimtenanrewards.ios",
       sandbox: false,
       apns_tokens: [token],
     },

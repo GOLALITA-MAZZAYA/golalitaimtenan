@@ -1,4 +1,4 @@
-package com.golalitarewards.geofence
+package com.golalitaimtenanrewards.geofence
 
 import android.content.Intent
 import android.content.Context

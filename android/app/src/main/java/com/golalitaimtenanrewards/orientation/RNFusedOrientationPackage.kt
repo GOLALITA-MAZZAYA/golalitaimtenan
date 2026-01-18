@@ -1,4 +1,4 @@
-package com.golalitarewards.orientation
+package com.golalitaimtenanrewards.orientation
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.ReactApplicationContext

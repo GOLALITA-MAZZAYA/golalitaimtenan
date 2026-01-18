@@ -1,4 +1,4 @@
-package com.golalitarewards.geofence
+package com.golalitaimtenanrewards.geofence
 
 import android.app.*
 import android.content.Context
@@ -7,7 +7,7 @@ import android.location.Location
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.golalitarewards.R
+import com.golalitaimtenanrewards.R
 import com.google.android.gms.location.*
 import org.json.JSONObject
 import java.io.OutputStream

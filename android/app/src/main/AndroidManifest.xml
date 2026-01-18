@@ -2,7 +2,7 @@
 <manifest
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools"
-  package="com.golalitarewards">
+  package="com.golalitaimtenanrewards">
 
   <!-- Сеть и прочее -->
   <uses-permission android:name="android.permission.INTERNET" />
@@ -106,15 +106,15 @@
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
-        <data android:scheme="com.golalitarewards" />
-        <data android:scheme="exp+golalita" />
-        <data android:scheme="golalita" />
+        <data android:scheme="com.golalitaimtenanrewards" />
+        <data android:scheme="exp+golalitaimtenanrewards" />
+        <data android:scheme="golalitaimtenanrewards" />
       </intent-filter>
     </activity>
 
     <provider
       android:name="androidx.core.content.FileProvider"
-      android:authorities="com.golalitarewards.fileprovider"
+      android:authorities="com.golalitaimtenanrewards.fileprovider"
       android:grantUriPermissions="true"
       android:exported="false"
       tools:replace="android:authorities">

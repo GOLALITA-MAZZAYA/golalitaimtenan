@@ -32,7 +32,7 @@ setup_permissions([
    'Motion'
 ])
 
-target 'Golalita' do
+target 'golalitaimtenanrewards' do
 
   rn_maps_path = '../node_modules/react-native-maps'
   pod 'react-native-google-maps', :path => rn_maps_path

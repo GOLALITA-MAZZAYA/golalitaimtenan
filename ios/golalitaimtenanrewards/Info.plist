@@ -5,9 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Golalita Rewards and Discount</string>
+	<string>Golalita Imtenan Rewards</string>
 	<key>CFBundleExecutable</key>
-	<string>Golalita</string>
+	<string>golalitaimtenanrewards</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -25,23 +25,23 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.golalita.ios</string>
+				<string>com.golalitaimtenanrewards.ios</string>
 			</array>
 		</dict>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>exp+golalita</string>
+				<string>exp+golalitaimtenanrewards</string>
 			</array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.golalita.ios</string>
+			<string>com.golalitaimtenanrewards.ios</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>golalita</string>
+				<string>golalitaimtenanrewards</string>
 			</array>
 		</dict>
 	</array>
@@ -71,9 +71,9 @@
 		</dict>
 	</dict>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>Golalita usses media access to display notifications with sound</string>
+	<string>Golalita Imtenan Rewards uses media access to display notifications with sound</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Golalita uses the camera to let user put a photo in his profile page.</string>
+	<string>Golalita Imtenan Rewards uses the camera to let user put a photo in his profile page.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to use Face ID</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -83,13 +83,13 @@
 	<key>NSLocationUsageDescription</key>
 	<string>Turning on location services allows us to show you nearby merchants</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Golalita uses your location for displaying nearest merchants on the map.</string>
+	<string>Golalita Imtenan Rewards uses your location for displaying nearest merchants on the map.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to access your microphone</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save pictures for certain activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Golalita accesses the library to let user put a photo in his profile page.</string>
+	<string>Golalita Imtenan Rewards accesses the library to let user put a photo in his profile page.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

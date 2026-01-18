@@ -1,4 +1,4 @@
-package com.golalitarewards
+package com.golalitaimtenanrewards
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -9,8 +9,8 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
-import com.golalitarewards.orientation.RNFusedOrientationPackage
-import com.golalitarewards.geofence.GeofencePackage
+import com.golalitaimtenanrewards.orientation.RNFusedOrientationPackage
+import com.golalitaimtenanrewards.geofence.GeofencePackage
 
 class MainApplication : Application(), ReactApplication {
 

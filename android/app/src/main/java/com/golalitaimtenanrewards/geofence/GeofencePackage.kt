@@ -1,4 +1,4 @@
-package com.golalitarewards.geofence
+package com.golalitaimtenanrewards.geofence
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

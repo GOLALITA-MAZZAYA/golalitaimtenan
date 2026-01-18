@@ -17,7 +17,7 @@ const PhoneIcon = sized(PhoneSvg, 120, 160);
 
 const CONFIG = {
   ios: "https://apps.apple.com/in/app/golalita-rewards-and-discount/id1589276214",
-  android: "https://play.google.com/store/apps/details?id=com.golalitarewards",
+  android: "https://play.google.com/store/apps/details?id=com.golalitaimtenanrewards",
 };
 
 const UpdateModal = ({ updateModal, setUpdateModal, version }) => {

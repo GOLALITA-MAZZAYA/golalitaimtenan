@@ -1,4 +1,4 @@
-package com.golalitarewards.geofence
+package com.golalitaimtenanrewards.geofence
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -12,7 +12,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "[GeofenceReceiver]"
-        const val ACTION_START_GEOFENCE = "com.golalitarewards.START_GEOFENCE"
+        const val ACTION_START_GEOFENCE = "com.golalitaimtenanrewards.START_GEOFENCE"
     }
 
     override fun onReceive(context: Context, intent: Intent) {

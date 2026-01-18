@@ -1,12 +1,12 @@
 {
-  "name": "Golalita",
-  "displayName": "Golalita",
+  "name": "golalitaimtenanrewards",
+  "displayName": "Golalita Imtenan Rewards",
   "expo": {
-    "name": "Golalita",
-    "slug": "golalita",
-    "version": "2.1.2",
+    "name": "Golalita Imtenan Rewards",
+    "slug": "golalitaimtenanrewards",
+    "version": "1.0.0",
     "ios": {
-      "bundleIdentifier": "com.golalita.ios",
+      "bundleIdentifier": "com.golalitaimtenanrewards.ios",
       "buildNumber": "1"
     },
     "extra": {

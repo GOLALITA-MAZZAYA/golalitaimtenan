@@ -9,7 +9,7 @@ const useWalletCard = () => {
   const addCard = async (base64EncodedPass) => {
     const result = await WalletPasses.addPass(
       base64EncodedPass,
-      "com.golalitarewards.fileprovider"
+      "com.golalitaimtenanrewards.fileprovider"
     );
 
     return result;

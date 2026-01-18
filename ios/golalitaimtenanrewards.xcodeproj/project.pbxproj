@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0460143D08964031833D5846 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B60243C70DB940B7A3D333D5 /* Colors.xcassets */; };
-		0C80B921A6F3F58F76C31292 /* libPods-Golalita.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-Golalita.a */; };
+		0C80B921A6F3F58F76C31292 /* libPods-golalitaimtenanrewards.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-golalitaimtenanrewards.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -25,26 +25,26 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* Golalita.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Golalita.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Golalita/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Golalita/Info.plist; sourceTree = "<group>"; };
-		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Golalita/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B4392A12AC88292D35C810B /* Pods-Golalita.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Golalita.debug.xcconfig"; path = "Target Support Files/Pods-Golalita/Pods-Golalita.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-Golalita.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Golalita.release.xcconfig"; path = "Target Support Files/Pods-Golalita/Pods-Golalita.release.xcconfig"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-Golalita.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Golalita.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Golalita/AppDelegate.swift; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Golalita/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		AA1111111111111111111111 /* GeofenceNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeofenceNative.swift; path = Golalita/GeofenceNative.swift; sourceTree = "<group>"; };
-		AA2222222222222222222222 /* GeofenceNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = GeofenceNative.m; path = Golalita/GeofenceNative.m; sourceTree = "<group>"; };
-		B60243C70DB940B7A3D333D5 /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = Golalita/Colors.xcassets; sourceTree = "<group>"; };
-		CE9964922E6DABE100DFCC1E /* Golalita.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Golalita.entitlements; path = Golalita/Golalita.entitlements; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* golalitaimtenanrewards.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = golalitaimtenanrewards.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = golalitaimtenanrewards/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = golalitaimtenanrewards/Info.plist; sourceTree = "<group>"; };
+		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = golalitaimtenanrewards/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		3B4392A12AC88292D35C810B /* Pods-golalitaimtenanrewards.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-golalitaimtenanrewards.debug.xcconfig"; path = "Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards.debug.xcconfig"; sourceTree = "<group>"; };
+		5709B34CF0A7D63546082F79 /* Pods-golalitaimtenanrewards.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-golalitaimtenanrewards.release.xcconfig"; path = "Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards.release.xcconfig"; sourceTree = "<group>"; };
+		5DCACB8F33CDC322A6C60F78 /* libPods-golalitaimtenanrewards.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-golalitaimtenanrewards.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = golalitaimtenanrewards/AppDelegate.swift; sourceTree = "<group>"; };
+		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = golalitaimtenanrewards/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* GeofenceNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeofenceNative.swift; path = golalitaimtenanrewards/GeofenceNative.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* GeofenceNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = GeofenceNative.m; path = golalitaimtenanrewards/GeofenceNative.m; sourceTree = "<group>"; };
+		B60243C70DB940B7A3D333D5 /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = golalitaimtenanrewards/Colors.xcassets; sourceTree = "<group>"; };
+		CE9964922E6DABE100DFCC1E /* golalitaimtenanrewards.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = golalitaimtenanrewards.entitlements; path = golalitaimtenanrewards/golalitaimtenanrewards.entitlements; sourceTree = "<group>"; };
 		CE9964932E6DAC1400DFCC1E /* Baloo-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Baloo-Bold.ttf"; path = "../assets/fonts/Baloo-Bold.ttf"; sourceTree = "<group>"; };
 		CE9964952E6DAC2200DFCC1E /* Baloo-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Baloo-ExtraBold.ttf"; path = "../assets/fonts/Baloo-ExtraBold.ttf"; sourceTree = "<group>"; };
 		CE9964972E6DAC2E00DFCC1E /* Baloo-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Baloo-Medium.ttf"; path = "../assets/fonts/Baloo-Medium.ttf"; sourceTree = "<group>"; };
 		CE9964992E6DAC3900DFCC1E /* Baloo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Baloo-Regular.ttf"; path = "../assets/fonts/Baloo-Regular.ttf"; sourceTree = "<group>"; };
 		CE99649B2E6DAC4500DFCC1E /* Baloo-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Baloo-SemiBold.ttf"; path = "../assets/fonts/Baloo-SemiBold.ttf"; sourceTree = "<group>"; };
 		CEA976202E7093F7005DFEC6 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		E60F58B2D12D4EACBF550365 /* BootSplash.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = BootSplash.storyboard; path = Golalita/BootSplash.storyboard; sourceTree = "<group>"; };
+		E60F58B2D12D4EACBF550365 /* BootSplash.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = BootSplash.storyboard; path = golalitaimtenanrewards/BootSplash.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -53,17 +53,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-Golalita.a in Frameworks */,
+				0C80B921A6F3F58F76C31292 /* libPods-golalitaimtenanrewards.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* Golalita */ = {
+		13B07FAE1A68108700A75B9A /* golalitaimtenanrewards */ = {
 			isa = PBXGroup;
 			children = (
-				CE9964922E6DABE100DFCC1E /* Golalita.entitlements */,
+				CE9964922E6DABE100DFCC1E /* golalitaimtenanrewards.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				AA1111111111111111111111 /* GeofenceNative.swift */,
@@ -74,14 +74,14 @@
 				E60F58B2D12D4EACBF550365 /* BootSplash.storyboard */,
 				B60243C70DB940B7A3D333D5 /* Colors.xcassets */,
 			);
-			name = Golalita;
+			name = golalitaimtenanrewards;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-Golalita.a */,
+				5DCACB8F33CDC322A6C60F78 /* libPods-golalitaimtenanrewards.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -101,7 +101,7 @@
 				CE9964972E6DAC2E00DFCC1E /* Baloo-Medium.ttf */,
 				CE9964952E6DAC2200DFCC1E /* Baloo-ExtraBold.ttf */,
 				CE9964932E6DAC1400DFCC1E /* Baloo-Bold.ttf */,
-				13B07FAE1A68108700A75B9A /* Golalita */,
+				13B07FAE1A68108700A75B9A /* golalitaimtenanrewards */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -116,7 +116,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* Golalita.app */,
+				13B07F961A680F5B00A75B9A /* golalitaimtenanrewards.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,8 +124,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-Golalita.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-Golalita.release.xcconfig */,
+				3B4392A12AC88292D35C810B /* Pods-golalitaimtenanrewards.debug.xcconfig */,
+				5709B34CF0A7D63546082F79 /* Pods-golalitaimtenanrewards.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -133,9 +133,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* Golalita */ = {
+		13B07F861A680F5B00A75B9A /* golalitaimtenanrewards */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Golalita" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "golalitaimtenanrewards" */;
 			buildPhases = (
 				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
@@ -150,9 +150,9 @@
 			);
 			dependencies = (
 			);
-			name = Golalita;
-			productName = Golalita;
-			productReference = 13B07F961A680F5B00A75B9A /* Golalita.app */;
+			name = golalitaimtenanrewards;
+			productName = golalitaimtenanrewards;
+			productReference = 13B07F961A680F5B00A75B9A /* golalitaimtenanrewards.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -168,7 +168,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Golalita" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "golalitaimtenanrewards" */;
 			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -230,19 +230,19 @@
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Golalita/Pods-Golalita-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			inputPaths = (
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Golalita/Pods-Golalita-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Golalita/Pods-Golalita-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		5E66519E904953535657A58D /* [CP-User] [RNFB] Core Configuration */ = {
@@ -275,7 +275,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Golalita-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-golalitaimtenanrewards-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -288,19 +288,19 @@
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Golalita/Pods-Golalita-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			inputPaths = (
 			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Golalita/Pods-Golalita-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Golalita/Pods-Golalita-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-golalitaimtenanrewards/Pods-golalitaimtenanrewards-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -325,11 +325,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Golalita/Golalita.entitlements;
+				CODE_SIGN_ENTITLEMENTS = golalitaimtenanrewards/golalitaimtenanrewards.entitlements;
 				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = V83QSUA898;
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = Golalita/Info.plist;
+				INFOPLIST_FILE = golalitaimtenanrewards/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -341,8 +341,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.golalita.ios;
-				PRODUCT_NAME = Golalita;
+				PRODUCT_BUNDLE_IDENTIFIER = com.golalitaimtenanrewards.ios;
+				PRODUCT_NAME = golalitaimtenanrewards;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -360,10 +360,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Golalita/Golalita.entitlements;
+				CODE_SIGN_ENTITLEMENTS = golalitaimtenanrewards/golalitaimtenanrewards.entitlements;
 				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = V83QSUA898;
-				INFOPLIST_FILE = Golalita/Info.plist;
+				INFOPLIST_FILE = golalitaimtenanrewards/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -375,8 +375,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.golalita.ios;
-				PRODUCT_NAME = Golalita;
+				PRODUCT_BUNDLE_IDENTIFIER = com.golalitaimtenanrewards.ios;
+				PRODUCT_NAME = golalitaimtenanrewards;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
