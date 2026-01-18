@@ -58,7 +58,7 @@ class AppDelegate: UIResponder,
     window = UIWindow(frame: UIScreen.main.bounds)
 
     factory.startReactNative(
-      withModuleName: "Golalita",
+      withModuleName: "golalitaimtenanrewards",
       in: window,
       launchOptions: launchOptions
     )
