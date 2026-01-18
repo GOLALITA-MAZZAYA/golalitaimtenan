@@ -1,0 +1,315 @@
+diff --git a/node_modules/react-native-pdf-jsi/android/build/generated/source/buildConfig/debug/org/wonday/pdf/BuildConfig.java b/node_modules/react-native-pdf-jsi/android/build/generated/source/buildConfig/debug/org/wonday/pdf/BuildConfig.java
+new file mode 100644
+index 0000000..de3771d
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/generated/source/buildConfig/debug/org/wonday/pdf/BuildConfig.java
+@@ -0,0 +1,12 @@
++/**
++ * Automatically generated file. DO NOT MODIFY
++ */
++package org.wonday.pdf;
++
++public final class BuildConfig {
++  public static final boolean DEBUG = Boolean.parseBoolean("true");
++  public static final String LIBRARY_PACKAGE_NAME = "org.wonday.pdf";
++  public static final String BUILD_TYPE = "debug";
++  // Field from default config.
++  public static final boolean IS_NEW_ARCHITECTURE_ENABLED = false;
++}
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml b/node_modules/react-native-pdf-jsi/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+new file mode 100644
+index 0000000..f25cf52
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="org.wonday.pdf" >
++
++    <uses-sdk android:minSdkVersion="24" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json b/node_modules/react-native-pdf-jsi/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+new file mode 100644
+index 0000000..ef0be3c
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+@@ -0,0 +1,18 @@
++{
++  "version": 3,
++  "artifactType": {
++    "type": "AAPT_FRIENDLY_MERGED_MANIFESTS",
++    "kind": "Directory"
++  },
++  "applicationId": "org.wonday.pdf",
++  "variantName": "debug",
++  "elements": [
++    {
++      "type": "SINGLE",
++      "filters": [],
++      "attributes": [],
++      "outputFile": "AndroidManifest.xml"
++    }
++  ],
++  "elementType": "File"
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties b/node_modules/react-native-pdf-jsi/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+new file mode 100644
+index 0000000..1211b1e
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+@@ -0,0 +1,6 @@
++aarFormatVersion=1.0
++aarMetadataVersion=1.0
++minCompileSdk=1
++minCompileSdkExtension=0
++minAndroidGradlePluginVersion=1.0.0
++coreLibraryDesugaringEnabled=false
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json b/node_modules/react-native-pdf-jsi/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+new file mode 100644
+index 0000000..9e26dfe
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+@@ -0,0 +1 @@
++{}
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar b/node_modules/react-native-pdf-jsi/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar
+new file mode 100644
+index 0000000..30012f9
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt b/node_modules/react-native-pdf-jsi/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/react-native-pdf-jsi/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+new file mode 100644
+index 0000000..4fd173c
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+@@ -0,0 +1 @@
++#Tue Dec 23 23:55:44 EET 2025
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/react-native-pdf-jsi/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+new file mode 100644
+index 0000000..94c89d0
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/build/generated/res/resValues/debug"/></dataSet><mergedItems/></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/BitmapPool.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/BitmapPool.class
+new file mode 100644
+index 0000000..1a459f2
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/BitmapPool.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/EnhancedPdfJSIBridge.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/EnhancedPdfJSIBridge.class
+new file mode 100644
+index 0000000..746de6d
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/EnhancedPdfJSIBridge.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/FileDownloader.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/FileDownloader.class
+new file mode 100644
+index 0000000..fc00e93
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/FileDownloader.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/FileManager.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/FileManager.class
+new file mode 100644
+index 0000000..64f567c
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/FileManager.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/LazyMetadataLoader.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/LazyMetadataLoader.class
+new file mode 100644
+index 0000000..d26760a
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/LazyMetadataLoader.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/MemoryMappedCache.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/MemoryMappedCache.class
+new file mode 100644
+index 0000000..8018f01
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/MemoryMappedCache.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFExporter.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFExporter.class
+new file mode 100644
+index 0000000..04fb8aa
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFExporter.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFJSIManager.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFJSIManager.class
+new file mode 100644
+index 0000000..b65c65a
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFJSIManager.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFJSIModule.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFJSIModule.class
+new file mode 100644
+index 0000000..86260ad
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFJSIModule.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheMetadata.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheMetadata.class
+new file mode 100644
+index 0000000..bb35e1c
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheMetadata.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheOptions.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheOptions.class
+new file mode 100644
+index 0000000..95b8bcc
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheOptions.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheStats.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheStats.class
+new file mode 100644
+index 0000000..ae8ea92
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheStats.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheTestResult.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheTestResult.class
+new file mode 100644
+index 0000000..19cf46a
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager$CacheTestResult.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager.class
+new file mode 100644
+index 0000000..aaafe52
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PDFNativeCacheManager.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PdfView$1.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PdfView$1.class
+new file mode 100644
+index 0000000..d3ea2f3
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PdfView$1.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PdfView.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PdfView.class
+new file mode 100644
+index 0000000..f882446
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/PdfView.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/RNPDFJSIPackage.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/RNPDFJSIPackage.class
+new file mode 100644
+index 0000000..ac05b44
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/RNPDFJSIPackage.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/RNPDFPackage.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/RNPDFPackage.class
+new file mode 100644
+index 0000000..3a79a75
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/RNPDFPackage.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingBase64Decoder$ProgressCallback.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingBase64Decoder$ProgressCallback.class
+new file mode 100644
+index 0000000..274c73e
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingBase64Decoder$ProgressCallback.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingBase64Decoder.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingBase64Decoder.class
+new file mode 100644
+index 0000000..61f242d
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingBase64Decoder.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$CompressionResult.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$CompressionResult.class
+new file mode 100644
+index 0000000..0c8a5d0
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$CompressionResult.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$CopyResult.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$CopyResult.class
+new file mode 100644
+index 0000000..5dbcacd
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$CopyResult.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$ExtractionResult.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$ExtractionResult.class
+new file mode 100644
+index 0000000..5833c2a
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor$ExtractionResult.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor.class
+new file mode 100644
+index 0000000..552fedd
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/StreamingPDFProcessor.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/events/TopChangeEvent.class b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/events/TopChangeEvent.class
+new file mode 100644
+index 0000000..91da1ff
+Binary files /dev/null and b/node_modules/react-native-pdf-jsi/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/org/wonday/pdf/events/TopChangeEvent.class differ
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt b/node_modules/react-native-pdf-jsi/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+new file mode 100644
+index 0000000..78ac5b8
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+@@ -0,0 +1,2 @@
++R_DEF: Internal format may change without notice
++local
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt b/node_modules/react-native-pdf-jsi/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+new file mode 100644
+index 0000000..d3b4f64
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+@@ -0,0 +1,7 @@
++1<?xml version="1.0" encoding="utf-8"?>
++2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++3    package="org.wonday.pdf" >
++4
++5    <uses-sdk android:minSdkVersion="24" />
++6
++7</manifest>
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml b/node_modules/react-native-pdf-jsi/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+new file mode 100644
+index 0000000..f25cf52
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="org.wonday.pdf" >
++
++    <uses-sdk android:minSdkVersion="24" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json b/node_modules/react-native-pdf-jsi/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+new file mode 100644
+index 0000000..0637a08
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+@@ -0,0 +1 @@
++[]
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt b/node_modules/react-native-pdf-jsi/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+new file mode 100644
+index 0000000..08f4ebe
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+@@ -0,0 +1 @@
++0 Warning/Error
+\ No newline at end of file
+diff --git a/node_modules/react-native-pdf-jsi/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt b/node_modules/react-native-pdf-jsi/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+new file mode 100644
+index 0000000..3512665
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+@@ -0,0 +1 @@
++org.wonday.pdf
+diff --git a/node_modules/react-native-pdf-jsi/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-pdf-jsi/android/build/outputs/logs/manifest-merger-debug-report.txt
+new file mode 100644
+index 0000000..30fd680
+--- /dev/null
++++ b/node_modules/react-native-pdf-jsi/android/build/outputs/logs/manifest-merger-debug-report.txt
+@@ -0,0 +1,17 @@
++-- Merging decision tree log ---
++manifest
++ADDED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml:1:1-4:12
++INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml:1:1-4:12
++	package
++		ADDED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml:1:70-94
++		INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml
++	xmlns:android
++		ADDED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml:1:11-69
++uses-sdk
++INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
++INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml
++INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml
++	android:targetSdkVersion
++		INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml
++	android:minSdkVersion
++		INJECTED from /Users/mac/Documents/Golalita/Golatita-APP/node_modules/react-native-pdf-jsi/android/src/main/AndroidManifest.xml
+diff --git a/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PDFJSIManager.java b/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PDFJSIManager.java
+index facbfe7..1f0a385 100644
+--- a/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PDFJSIManager.java
++++ b/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PDFJSIManager.java
+@@ -287,7 +287,7 @@ public class PDFJSIManager extends ReactContextBaseJavaModule {
+      * Cleanup resources
+      */
+     // Note: onCatalystInstanceDestroy is deprecated, using onCatalystInstanceDestroy for compatibility
+-    @Override
++
+     public void onCatalystInstanceDestroy() {
+         super.onCatalystInstanceDestroy();
+         
+diff --git a/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PdfManager.java b/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PdfManager.java
+index c6835d7..c53297a 100644
+--- a/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PdfManager.java
++++ b/node_modules/react-native-pdf-jsi/android/src/main/java/org/wonday/pdf/PdfManager.java
+@@ -144,7 +144,6 @@ public class PdfManager extends SimpleViewManager<PdfView> implements RNPDFPdfVi
+         // NOOP on Android
+     }
+ 
+-    @Override
+     public void setEnableMomentum(PdfView view, boolean value) {
+         // NOOP on Android - momentum scrolling is handled automatically by Android's ScrollView
+     }
+@@ -161,7 +160,7 @@ public class PdfManager extends SimpleViewManager<PdfView> implements RNPDFPdfVi
+     
+     // It seems funny, but this method is called through delegate on Paper, but on Fabric we need to
+     // use `receiveCommand` method and call this one there
+-    @Override
++
+     public void setNativePage(PdfView view, int page) {
+         pdfView.setPage(page);
+     }

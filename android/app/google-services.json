@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1063084247741",
+    "project_id": "golalita-rewards",
+    "storage_bucket": "golalita-rewards.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1063084247741:android:9d0ddbceef2135774e85d4",
+        "android_client_info": {
+          "package_name": "com.golalitarewards"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1063084247741-bmq6toa2l9lnh8np9fv25bs00a39ei1t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWihLABHmbjGtXpPYh_83xLtBZsaQ-5kQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1063084247741-bmq6toa2l9lnh8np9fv25bs00a39ei1t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Golalita",
+  "displayName": "Golalita",
+  "expo": {
+    "name": "Golalita",
+    "slug": "golalita",
+    "version": "2.1.2",
+    "ios": {
+      "bundleIdentifier": "com.golalita.ios",
+      "buildNumber": "1"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6a8f11a7-730e-40cd-a15b-ebdfa7afcb54"
+      }
+    }
+  }
+}

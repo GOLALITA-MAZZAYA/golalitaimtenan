@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  package="com.golalitarewards">
+
+  <!-- Сеть и прочее -->
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+  <!-- Локация: foreground + background -->
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+  <!-- Foreground service -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+  <!-- Остальные разрешения, как у тебя было -->
+  <uses-permission android:name="android.permission.MEDIA_LIBRARY" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-feature
+    android:name="android.hardware.camera"
+    android:required="false" />
+
+  <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+  <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+
+  <application
+    android:name=".MainApplication"
+    android:label="@string/app_name"
+    android:icon="@mipmap/ic_launcher"
+    android:allowBackup="true"
+    android:theme="@style/AppTheme"
+    android:usesCleartextTraffic="true">
+
+    <!-- Notifee headless -->
+    <service
+      android:name="io.invertase.notifee.HeadlessService"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="io.invertase.notifee.BACKGROUND_EVENT" />
+      </intent-filter>
+    </service>
+
+    <!-- Geofence foreground service -->
+    <service
+      android:name=".geofence.GeofenceLocationService"
+      android:exported="false"
+      android:foregroundServiceType="location" />
+
+    <!-- Geofence ресивер -->
+    <receiver
+      android:name=".geofence.GeofenceBroadcastReceiver"
+      android:enabled="true"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+      </intent-filter>
+    </receiver>
+
+    <!-- Google Maps -->
+    <meta-data
+      android:name="com.google.android.geo.API_KEY"
+      android:value="AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o" />
+
+    <!-- Иконка пушей -->
+    <meta-data
+      android:name="com.google.firebase.messaging.default_notification_icon"
+      android:resource="@drawable/icon" />
+
+    <meta-data
+      android:name="com.dieam.reactnativepushnotification.notification_foreground"
+      android:value="true" />
+
+    <activity
+      android:name=".MainActivity"
+      android:label="@string/app_name"
+      android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+      android:launchMode="singleTask"
+      android:windowSoftInputMode="adjustResize"
+      android:exported="true"
+      android:theme="@style/BootTheme">
+
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="com.golalitarewards" />
+        <data android:scheme="exp+golalita" />
+        <data android:scheme="golalita" />
+      </intent-filter>
+    </activity>
+
+    <provider
+      android:name="androidx.core.content.FileProvider"
+      android:authorities="com.golalitarewards.fileprovider"
+      android:grantUriPermissions="true"
+      android:exported="false"
+      tools:replace="android:authorities">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/wallet_passes_file_paths"
+        tools:replace="android:resource" />
+    </provider>
+  </application>
+</manifest>
