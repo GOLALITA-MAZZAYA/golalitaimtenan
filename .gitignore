@@ -98,11 +98,13 @@ android/app/build/
 android/app/release/
 android/build/
 
-# Sensitive Firebase files (if contains sensitive keys)
-# Note: Uncomment these if your files contain sensitive data
-# fcm.json
+# Sensitive Firebase and API files (contains sensitive keys)
+fcm.json
 # google-services.json
 # ios/GoogleService-Info.plist
+
+# Sensitive API configuration files
+src/config/groq.js
 
 # Misc
 *.orig
