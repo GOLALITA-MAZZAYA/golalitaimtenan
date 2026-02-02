@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import instance from '../redux/instance';
+import { ORG_ID, ORG_CODE } from '../constants';
 
 export const getMerchants = async (params = {}) => {
   const token = await AsyncStorage.getItem('token');
 
   console.log(params, 'params');
   const res = await instance.post('/user/category/merchant/lists', {
-    params: { token, ...params, x_org_linked: 'golalita' },
+    params: { token, ...params, x_org_linked: ORG_CODE },
   });
 
   if (!res.data.result) {
@@ -361,7 +362,7 @@ export const getMerchantsByCoordinates = async (
       longitude,
       category_id,
       limit: 20,
-      x_org_linked: 1651,
+      x_org_linked: ORG_ID,
       radius,
     },
   });

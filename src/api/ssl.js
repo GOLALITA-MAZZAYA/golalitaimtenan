@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { BASE_URL } from '../constants';
 
 export const getKeyHashes = async () => {
-  const res = await axios.post('https://golalita.com/utils/spki_pin', {
+  const res = await axios.post(`https://${BASE_URL}/utils/spki_pin`, {
     params: {
-      host: 'www.golalita.com',
+      host: BASE_URL,
       port: 443,
     },
   });

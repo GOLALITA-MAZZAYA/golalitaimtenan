@@ -1,16 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
 import store from "../redux/store";
+import { ORG_CODE } from "../constants";
 
 export const getLoyaltyTransactionHistory = async ({ pageParam = 0 }) => {
   const token = await AsyncStorage.getItem("token");
-  
+
   const limit = 50;
   const offset = pageParam * limit;
 
   const res = await instance.post(
     "loyalty/points/transaction/history",
-    { 
+    {
       params: {
         token,
         limit,
@@ -52,7 +53,7 @@ export const getLoyaltyProductList = async () => {
   const res = await instance.post("loyalty/product/list", {
     params: {
       token,
-      x_org_linked: 'golalita',
+      x_org_linked: ORG_CODE,
     },
   });
 
@@ -81,7 +82,7 @@ export const getLoyaltyProductDetails = async (product_id) => {
   return res.data.result;
 };
 
-export const getLoyaltyProductsHistory= async () => {
+export const getLoyaltyProductsHistory = async () => {
   const token = await AsyncStorage.getItem("token");
 
   const res = await instance.post("loyalty/product/user/history", {
@@ -187,19 +188,19 @@ export const redeemLoyaltyProduct = async (product_id) => {
   return res.data.result;
 };
 
-export const getLoyaltyPartners= async ({ pageParam = 0 }) => {
+export const getLoyaltyPartners = async ({ pageParam = 0 }) => {
   const token = await AsyncStorage.getItem("token");
-  
+
   const limit = 50;
   const offset = pageParam * limit;
 
   const res = await instance.post(
     "user/category/merchant/lists",
-    { 
+    {
       params: {
         token,
         category_id: 192,
-        x_org_linked: 'golalita',
+        x_org_linked: ORG_CODE,
         limit,
         offset,
         is_website: true,
@@ -219,19 +220,19 @@ export const getLoyaltyPartners= async ({ pageParam = 0 }) => {
   };
 };
 
-export const getLoyaltyTransferPartners= async ({ pageParam = 0 }) => {
+export const getLoyaltyTransferPartners = async ({ pageParam = 0 }) => {
   const token = await AsyncStorage.getItem("token");
-  
+
   const limit = 50;
   const offset = pageParam * limit;
 
   const res = await instance.post(
     "user/category/merchant/lists",
-    { 
+    {
       params: {
         token,
         category_id: 245,
-        x_org_linked: 'golalita',
+        x_org_linked: ORG_CODE,
         limit,
         offset,
         is_website: true,
@@ -253,17 +254,17 @@ export const getLoyaltyTransferPartners= async ({ pageParam = 0 }) => {
 
 export const getLoyaltyGoods = async ({ pageParam = 0 }) => {
   const token = await AsyncStorage.getItem("token");
-  
+
   const limit = 50;
   const offset = pageParam * limit;
 
   const res = await instance.post(
     "user/category/merchant/lists",
-    { 
+    {
       params: {
         token,
         category_id: 671,
-        x_org_linked: 'golalita',
+        x_org_linked: ORG_CODE,
         limit,
         offset,
         is_website: true,
@@ -285,17 +286,17 @@ export const getLoyaltyGoods = async ({ pageParam = 0 }) => {
 
 export const getLoyaltyTavel = async ({ pageParam = 0 }) => {
   const token = await AsyncStorage.getItem("token");
-  
+
   const limit = 50;
   const offset = pageParam * limit;
 
   const res = await instance.post(
     "user/category/merchant/lists",
-    { 
+    {
       params: {
         token,
         category_id: 682,
-        x_org_linked: 'golalita',
+        x_org_linked: ORG_CODE,
         limit,
         offset,
         is_website: true
@@ -315,22 +316,22 @@ export const getLoyaltyTavel = async ({ pageParam = 0 }) => {
 };
 
 
-export const verifyProductCode =  async (code, product_id, track_type) => {
-  const {  user } = store.getState().authReducer;
+export const verifyProductCode = async (code, product_id, track_type) => {
+  const { user } = store.getState().authReducer;
   const token = await AsyncStorage.getItem("token");
   const userId = await AsyncStorage.getItem('userId');
 
   const res = await instance.post("merchant/redeem/v2", {
     params: {
-        token,
-        customer_name: user.name,
-        customer_phone: user.phone,
-        customer_email: user.email,
-        track_type,
-        track_value: code,
-        product_id,
-        track_date_time: new Date(),
-        customer_id: userId,
+      token,
+      customer_name: user.name,
+      customer_phone: user.phone,
+      customer_email: user.email,
+      track_type,
+      track_value: code,
+      product_id,
+      track_date_time: new Date(),
+      customer_id: userId,
     },
   });
 
@@ -343,50 +344,50 @@ export const verifyProductCode =  async (code, product_id, track_type) => {
 };
 
 export const trackProduct = async (product_id, track_type) => {
-     const { token, user } = store.getState().authReducer;
-     const userId = await AsyncStorage.getItem('tracking_partner_id');
+  const { token, user } = store.getState().authReducer;
+  const userId = await AsyncStorage.getItem('tracking_partner_id');
 
 
-      const body = {
-        params: {
-          token,
-          customer_id: userId,
-          customer_name: user.name,
-          customer_phone: user.phone,
-          customer_email: user.email,
-          track_type,
-          product_id,
-          track_date_time: new Date(),
-        },
-      };
+  const body = {
+    params: {
+      token,
+      customer_id: userId,
+      customer_name: user.name,
+      customer_phone: user.phone,
+      customer_email: user.email,
+      track_type,
+      product_id,
+      track_date_time: new Date(),
+    },
+  };
 
-      const res = await instance.post('/merchant/track/v2',body);
+  const res = await instance.post('/merchant/track/v2', body);
 
-      console.log(res,'track produck response')
+  console.log(res, 'track produck response')
 
 };
 
 export const sendProductEmail = async (product_id, track_type) => {
-     const { token, user } = store.getState().authReducer;
-     const userId = await AsyncStorage.getItem('tracking_partner_id');
+  const { token, user } = store.getState().authReducer;
+  const userId = await AsyncStorage.getItem('tracking_partner_id');
 
 
-      const body = {
-        params: {
-          token,
-          customer_id: userId,
-          customer_name: user.name,
-          customer_phone: user.phone,
-          customer_email: user.email,
-          track_type,
-          product_id,
-          track_date_time: new Date(),
-        },
-      };
+  const body = {
+    params: {
+      token,
+      customer_id: userId,
+      customer_name: user.name,
+      customer_phone: user.phone,
+      customer_email: user.email,
+      track_type,
+      product_id,
+      track_date_time: new Date(),
+    },
+  };
 
-      const res = await instance.post('/send/mail/v2',body);
+  const res = await instance.post('/send/mail/v2', body);
 
-      console.log(res,'send email response')
+  console.log(res, 'send email response')
 
 };
 

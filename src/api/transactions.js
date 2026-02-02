@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { BASE_URL } from "../constants";
 
 export const getTransactionsPoints = async (filters = {}) => {
   const token = await AsyncStorage.getItem("token");
 
   const res = await instance.post(
-    "https://www.golalita.com/go/user/api/loyalty/transactions",
+    `https://${BASE_URL}/go/user/api/loyalty/transactions`,
     {
       params: {
         token,

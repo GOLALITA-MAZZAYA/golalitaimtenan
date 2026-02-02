@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
 import axios from "axios";
 import store from "../redux/store";
+import { BASE_URL } from "../constants";
 
 export const CARDMOOLA_BASE_URL = "https://api.business.cardmoola.com";
 
@@ -180,7 +181,7 @@ export const getCardmolaGiftCardById = async (encodedId, token) => {
 
   let a =
     selectedCardmolaCountry === "undefined-undefined" ||
-    selectedCardmolaCountry === null
+      selectedCardmolaCountry === null
       ? `${CARDMOOLA_BASE_URL}/products/${encodedId}`
       : `${CARDMOOLA_BASE_URL}/products/${encodedId}?cultureCode=${selectedCardmolaCountry}`;
 
@@ -201,7 +202,7 @@ export const requestGiftCardPayment = async (data) => {
   const token = await AsyncStorage.getItem("token");
 
   const res = await axios.post(
-    "https://www.golalita.com/cardmola/payment/request",
+    `https://${BASE_URL}/cardmola/payment/request`,
     {
       params: {
         ...data,
@@ -237,7 +238,7 @@ export const checkCardmolaPaymentById = async (encodedId) => {
   const token = await AsyncStorage.getItem("token");
 
   const res = await axios.post(
-    "https://www.golalita.com/go/api/user/cardmoola/search/id",
+    `https://${BASE_URL}/go/api/user/cardmoola/search/id`,
     {
       params: {
         token,
@@ -257,7 +258,7 @@ export const checkGlobalTixPaymentStatus = async (recordRefNumber, referenceNumb
   const token = await AsyncStorage.getItem("token");
 
   const res = await axios.post(
-    "https://www.golalita.com/go/api/globaltix/payment/status",
+    `https://${BASE_URL}/go/api/globaltix/payment/status`,
     {
       params: {
         token,
@@ -266,7 +267,7 @@ export const checkGlobalTixPaymentStatus = async (recordRefNumber, referenceNumb
       },
     }
   );
-console.log(res.data.result, "res.data.result");
+  console.log(res.data.result, "res.data.result");
   if (!res.data?.result) {
     throw new Error("check globaltix payment error");
   }
@@ -299,7 +300,7 @@ export const getCardmolaCurrencies = async () => {
   const token = await AsyncStorage.getItem("token");
 
   const res = await axios.post(
-    "https://www.golalita.com/go/api/res.currency/search",
+    `https://${BASE_URL}/go/api/res.currency/search`,
     {
       params: {
         token,
