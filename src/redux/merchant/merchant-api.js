@@ -1,5 +1,7 @@
 import instance from "../instance";
 
+import { ORG_CODE } from "../../constants";
+
 export const merchantApi = {
   getCategories: (body) => instance.post("/partner.category/search", body),
   getParentCategories: (body) => instance.post("/parent/category/v2", body),
@@ -20,7 +22,7 @@ export const merchantApi = {
   getOrganizationDetails: (body) => instance.post("/user/org/details", body),
   bookNow: (body) => instance.post("/merchant/hotel/enquiry", body),
   deleteAccount: (body) => instance.post("/user/account/delete", body),
-  getAdvert: (body) => instance.post("/advertisement/banner", body),
+  getAdvert: (body) => instance.post(`${ORG_CODE}/advertisement/banner`, body),
   trackBanner: (body) => instance.post("/advertisement_tracking", body),
   getSocialMedia: (body) => instance.post("/user/social/v2", body),
   saveOffer: (body) => instance.post("/save/offer/as/favourite", body),
