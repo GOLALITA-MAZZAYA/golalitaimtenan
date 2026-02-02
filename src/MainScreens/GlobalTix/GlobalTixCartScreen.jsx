@@ -12,16 +12,16 @@ import Header from '../../components/Header';
 import { SCREEN_HEIGHT } from '../../styles/mainStyles';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  globalTixCartItemsSelector, 
-  globalTixCartTotalPriceSelector, 
-  globalTixCartTotalQuantitySelector 
+import {
+  globalTixCartItemsSelector,
+  globalTixCartTotalPriceSelector,
+  globalTixCartTotalQuantitySelector
 } from '../../redux/globalTix/globalTix-cart-selectors';
 import { userSelector } from '../../redux/auth/auth-selectors';
-import { 
-  removeFromGlobalTixCartThunk, 
+import {
+  removeFromGlobalTixCartThunk,
   updateGlobalTixCartQuantityThunk,
-  clearGlobalTixCartThunk 
+  clearGlobalTixCartThunk
 } from '../../redux/globalTix/globalTix-cart-thunks';
 import { globalTixAPI } from '../../redux/globalTix/globalTix-api';
 import { setGlobalTixPaymentData } from '../../redux/globalTix/globalTix-actions';
@@ -35,22 +35,23 @@ import store from '../../redux/store';
 import { translateText } from '../../utils/translationService';
 import { getTicketSellingPrice } from '../../utils/globalTixPricing';
 import { GLOBALTIX_CONFIG } from '../../config/globalTix';
+import { BASE_URL } from '../../constants';
 
 const GlobalTixCartScreen = ({ navigation }) => {
   const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
-  
+
   const cartItems = useSelector(globalTixCartItemsSelector);
   const totalPrice = useSelector(globalTixCartTotalPriceSelector);
   const totalQuantity = useSelector(globalTixCartTotalQuantitySelector);
   const user = useSelector(userSelector);
-  
+
   // Helper function to ensure proper decimal formatting for monetary values
   const formatMonetaryValue = (amount) => {
     return parseFloat(Number(amount || 0).toFixed(2));
   };
-  
+
   // Calculate bank charge and final amount with proper decimal formatting
   const bankCharge = formatMonetaryValue(getCommission(totalPrice || 0));
   const finalAmount = formatMonetaryValue((totalPrice || 0) + bankCharge);
@@ -76,18 +77,18 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const [selectedItems, setSelectedItems] = useState({});
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
-  
+
   // Question handling state
   const [ticketQuestions, setTicketQuestions] = useState({});
   const [questionAnswers, setQuestionAnswers] = useState({});
   const [loadingQuestions, setLoadingQuestions] = useState(false);
-  
+
   // Modal state
   const [isQuestionsModalVisible, setIsQuestionsModalVisible] = useState(false);
   const [currentTicketTypeId, setCurrentTicketTypeId] = useState(null);
   const [currentTicketTypeName, setCurrentTicketTypeName] = useState('');
   const [tempAnswers, setTempAnswers] = useState({});
-  
+
   // Translated ticket and option names cache
   const [translatedTicketNames, setTranslatedTicketNames] = useState({});
   const [translatedOptionNames, setTranslatedOptionNames] = useState({});
@@ -100,10 +101,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
   // Parse phone number to extract country code and number
   const parsePhoneNumber = (phone) => {
     if (!phone) return { code: '+974', number: '' };
-    
+
     // Remove any spaces or special characters
     const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    
+
     // Check if it starts with +974 (Qatar country code)
     if (cleanPhone.startsWith('+974')) {
       return {
@@ -111,7 +112,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         number: cleanPhone.substring(4)
       };
     }
-    
+
     // Check if it starts with 974
     if (cleanPhone.startsWith('974')) {
       return {
@@ -119,7 +120,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         number: cleanPhone.substring(3)
       };
     }
-    
+
     // If it doesn't start with country code, assume it's a local number
     return {
       code: '+974',
@@ -160,21 +161,21 @@ const GlobalTixCartScreen = ({ navigation }) => {
   // Extract questions from product options data
   const extractQuestionsFromOptions = () => {
     const questionsMap = {};
-    
+
     for (const item of cartItemsArray) {
       const optionId = item.optionId;
       const ticketTypeId = item.ticketTypeId;
-      
+
       console.log(`Extracting questions for ticket type ${ticketTypeId} from option ${optionId}`);
       console.log('Item data:', {
         hasOption: !!item.option,
         optionQuestions: item.option?.questions,
         optionQuestionsLength: item.option?.questions?.length
       });
-      
+
       // Get questions from the option data - handle different possible structures
       let questions = [];
-      
+
       if (item.option) {
         // Check for questions in different possible locations
         if (item.option.questions && Array.isArray(item.option.questions)) {
@@ -184,7 +185,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         } else if (item.option.qna && Array.isArray(item.option.qna)) {
           questions = item.option.qna;
         }
-        
+
         // Validate and clean questions data
         questions = questions.filter(q => {
           const isValid = q && (q.id || q.questionId) && (q.question || q.text || q.label);
@@ -193,7 +194,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
           }
           return isValid;
         });
-        
+
         // Normalize question structure
         questions = questions.map(q => ({
           id: q.id || q.questionId,
@@ -205,10 +206,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
           optionList: q.optionList || q.options || []
         }));
       }
-      
+
       questionsMap[ticketTypeId] = questions;
       console.log(`Found ${questions.length} questions for ticket type ${ticketTypeId}:`, questions);
-      
+
       // Debug each question structure
       questions.forEach((q, qIdx) => {
         console.log(`Question ${qIdx + 1} for ticket ${ticketTypeId}:`, {
@@ -220,7 +221,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         });
       });
     }
-    
+
     setTicketQuestions(prev => ({ ...prev, ...questionsMap }));
   };
 
@@ -246,9 +247,9 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const renderQuestionInput = (question, index) => {
     const questionType = question.type?.toUpperCase() || 'FREETEXT';
     const currentAnswer = tempAnswers[question.id] || '';
-    
+
     console.log(`Rendering question ${index + 1}: Type=${questionType}, ID=${question.id}, Question="${question.question}"`);
-    
+
     // Handle OPTION type questions (multiple choice)
     if (questionType === 'OPTION' && (question.optionList || question.options)) {
       const options = question.optionList || question.options || [];
@@ -258,15 +259,15 @@ const GlobalTixCartScreen = ({ navigation }) => {
             const optionKey = option.key || option.value || option;
             const optionValue = option.value || option.key || option;
             const isSelected = currentAnswer === optionKey;
-            
+
             return (
               <TouchableOpacity
                 key={optIndex}
                 style={[
                   styles.optionButton,
                   {
-                    backgroundColor: isSelected 
-                      ? (colors.blue || '#2196F3') 
+                    backgroundColor: isSelected
+                      ? (colors.blue || '#2196F3')
                       : (isDark ? colors.darkGrey : colors.lightGrey),
                     borderColor: isDark ? colors.grey : colors.lightGrey
                   }
@@ -284,14 +285,14 @@ const GlobalTixCartScreen = ({ navigation }) => {
         </View>
       );
     }
-    
+
     // Handle DATE type questions
     if (questionType === 'DATE') {
       return (
         <TextInput
           style={[
             styles.modalQuestionInput,
-            { 
+            {
               backgroundColor: isDark ? colors.darkGrey : colors.lightGrey,
               color: isDark ? colors.white : colors.black,
               borderColor: isDark ? colors.grey : colors.lightGrey
@@ -306,14 +307,14 @@ const GlobalTixCartScreen = ({ navigation }) => {
         />
       );
     }
-    
+
     // Handle NUMBER type questions
     if (questionType === 'NUMBER' || questionType === 'NUMERIC') {
       return (
         <TextInput
           style={[
             styles.modalQuestionInput,
-            { 
+            {
               backgroundColor: isDark ? colors.darkGrey : colors.lightGrey,
               color: isDark ? colors.white : colors.black,
               borderColor: isDark ? colors.grey : colors.lightGrey
@@ -328,14 +329,14 @@ const GlobalTixCartScreen = ({ navigation }) => {
         />
       );
     }
-    
+
     // Handle EMAIL type questions
     if (questionType === 'EMAIL') {
       return (
         <TextInput
           style={[
             styles.modalQuestionInput,
-            { 
+            {
               backgroundColor: isDark ? colors.darkGrey : colors.lightGrey,
               color: isDark ? colors.white : colors.black,
               borderColor: isDark ? colors.grey : colors.lightGrey
@@ -351,14 +352,14 @@ const GlobalTixCartScreen = ({ navigation }) => {
         />
       );
     }
-    
+
     // Handle PHONE type questions
     if (questionType === 'PHONE' || questionType === 'PHONENUMBER') {
       return (
         <TextInput
           style={[
             styles.modalQuestionInput,
-            { 
+            {
               backgroundColor: isDark ? colors.darkGrey : colors.lightGrey,
               color: isDark ? colors.white : colors.black,
               borderColor: isDark ? colors.grey : colors.lightGrey
@@ -373,7 +374,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         />
       );
     }
-    
+
     // Handle BOOLEAN type questions (Yes/No)
     if (questionType === 'BOOLEAN' || questionType === 'YESNO') {
       return (
@@ -382,8 +383,8 @@ const GlobalTixCartScreen = ({ navigation }) => {
             style={[
               styles.optionButton,
               {
-                backgroundColor: currentAnswer === 'true' || currentAnswer === 'yes' 
-                  ? (colors.blue || '#2196F3') 
+                backgroundColor: currentAnswer === 'true' || currentAnswer === 'yes'
+                  ? (colors.blue || '#2196F3')
                   : (isDark ? colors.darkGrey : colors.lightGrey),
                 borderColor: isDark ? colors.grey : colors.lightGrey
               }
@@ -400,8 +401,8 @@ const GlobalTixCartScreen = ({ navigation }) => {
             style={[
               styles.optionButton,
               {
-                backgroundColor: currentAnswer === 'false' || currentAnswer === 'no' 
-                  ? (colors.blue || '#2196F3') 
+                backgroundColor: currentAnswer === 'false' || currentAnswer === 'no'
+                  ? (colors.blue || '#2196F3')
                   : (isDark ? colors.darkGrey : colors.lightGrey),
                 borderColor: isDark ? colors.grey : colors.lightGrey
               }
@@ -417,13 +418,13 @@ const GlobalTixCartScreen = ({ navigation }) => {
         </View>
       );
     }
-    
+
     // Default fallback for FREETEXT and unknown types
     return (
       <TextInput
         style={[
           styles.modalQuestionInput,
-          { 
+          {
             backgroundColor: isDark ? colors.darkGrey : colors.lightGrey,
             color: isDark ? colors.white : colors.black,
             borderColor: isDark ? colors.grey : colors.lightGrey
@@ -445,12 +446,12 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const getPlaceholderForQuestionType = (questionType) => {
     switch (questionType?.toUpperCase()) {
       case 'DATE': return 'YYYY-MM-DD';
-      case 'NUMBER': 
+      case 'NUMBER':
       case 'NUMERIC': return 'Enter number';
       case 'EMAIL': return 'Enter email address';
-      case 'PHONE': 
+      case 'PHONE':
       case 'PHONENUMBER': return 'Enter phone number';
-      case 'FREETEXT': 
+      case 'FREETEXT':
       case 'TEXTAREA': return t("GlobalTix.cart.enterAnswer");
       default: return t("GlobalTix.cart.enterAnswer");
     }
@@ -459,10 +460,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
   // Helper function to get appropriate keyboard type
   const getKeyboardTypeForQuestionType = (questionType) => {
     switch (questionType?.toUpperCase()) {
-      case 'NUMBER': 
+      case 'NUMBER':
       case 'NUMERIC': return 'numeric';
       case 'EMAIL': return 'email-address';
-      case 'PHONE': 
+      case 'PHONE':
       case 'PHONENUMBER': return 'phone-pad';
       default: return 'default';
     }
@@ -472,7 +473,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const openQuestionsModal = (ticketTypeId, ticketTypeName) => {
     setCurrentTicketTypeId(ticketTypeId);
     setCurrentTicketTypeName(ticketTypeName);
-    
+
     // Initialize temp answers with existing answers
     const questions = getQuestionsForTicketType(ticketTypeId);
     const initialAnswers = {};
@@ -480,7 +481,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
       initialAnswers[question.id] = getQuestionAnswer(ticketTypeId, question.id);
     });
     setTempAnswers(initialAnswers);
-    
+
     setIsQuestionsModalVisible(true);
   };
 
@@ -516,17 +517,17 @@ const GlobalTixCartScreen = ({ navigation }) => {
       try {
         const optionCurrency = item.option?.currency;
         const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-        
+
         // Calculate selling price with markup (this is what customers pay)
         const pricing = getTicketSellingPrice(item.ticketType || {}, markupPercentage);
         const sellingPrice = pricing.sellingPrice;
-        
+
         if (sellingPrice > 0 && optionCurrency) {
           const convertedPriceString = await convertToQAR(sellingPrice, optionCurrency, false);
           const convertedPrice = parseFloat(convertedPriceString.replace(/[^\d.]/g, ''));
-          
+
           console.log(`Converting cart item ${cartKey}: sellingPrice=${sellingPrice} ${optionCurrency} -> ${convertedPrice} QAR`);
-          
+
           // Update the cart item with converted selling price
           dispatch(updateGlobalTixCartQuantityThunk({
             productId: item.productId,
@@ -553,7 +554,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
   useEffect(() => {
     if (user) {
       const parsedPhone = parsePhoneNumber(user.phone);
-      
+
       setCustomerInfo(prev => ({
         ...prev,
         firstName: user.name || '',
@@ -587,7 +588,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
       const optionTranslations = {};
       const uniqueTicketNames = new Set();
       const uniqueOptionNames = new Set();
-      
+
       // Collect all unique ticket and option names
       cartItemsArray.forEach(item => {
         if (item.ticketType?.name) {
@@ -606,7 +607,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         const results = await Promise.allSettled(
           batch.map(ticketName => translateText(ticketName, currentLanguage))
         );
-        
+
         results.forEach((result, index) => {
           const ticketName = batch[index];
           if (result.status === 'fulfilled') {
@@ -616,7 +617,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             ticketTranslations[ticketName] = ticketName; // Fallback to original
           }
         });
-        
+
         // Small delay between batches to avoid rate limits
         if (i + batchSize < ticketNamesArray.length) {
           await new Promise(resolve => setTimeout(resolve, 200));
@@ -630,7 +631,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         const results = await Promise.allSettled(
           batch.map(optionName => translateText(optionName, currentLanguage))
         );
-        
+
         results.forEach((result, index) => {
           const optionName = batch[index];
           if (result.status === 'fulfilled') {
@@ -640,7 +641,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             optionTranslations[optionName] = optionName; // Fallback to original
           }
         });
-        
+
         // Small delay between batches to avoid rate limits
         if (i + batchSize < optionNamesArray.length) {
           await new Promise(resolve => setTimeout(resolve, 200));
@@ -661,10 +662,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
     useCallback(() => {
       // Get payment data from Redux state instead of local state
       const globalTixPaymentData = store.getState().globalTix.paymentDataGlobal;
-      
+
       async function checkPaymentStatus() {
         const currentPaymentData = paymentData || globalTixPaymentData;
-        
+
         if (currentPaymentData && currentPaymentData.referenceNumber) {
           try {
             const data = await checkGlobalTixPaymentStatus(
@@ -679,7 +680,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
                   referenceNumber: currentPaymentData.referenceNumber,
                   // Add any other required confirmation parameters based on GlobalTix API documentation
                 });
-                
+
                 if (confirmResult.success) {
                   showMessage({
                     message: t("GlobalTix.cart.messages.bookingConfirmed"),
@@ -700,13 +701,13 @@ const GlobalTixCartScreen = ({ navigation }) => {
                   duration: 4000,
                 });
               }
-              
+
               // Clear cart after successful payment (regardless of confirmation result)
               dispatch(clearGlobalTixCartThunk());
-              
+
               // Clear payment data from Redux
               dispatch(setGlobalTixPaymentData(null));
-              
+
               // Navigate back or to a success screen
               setTimeout(() => {
                 navigation.goBack();
@@ -718,7 +719,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
                   referenceNumber: currentPaymentData.referenceNumber,
                   // Add any other required release parameters based on GlobalTix API documentation
                 });
-                
+
                 if (!releaseResult.success) {
                   console.error("Failed to release booking:", releaseResult.error);
                 }
@@ -726,10 +727,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
                 console.error("Error releasing booking after payment failure:", releaseError);
                 // Don't show error to user as payment failure is already handled
               }
-              
+
               // Clear payment data from Redux
               dispatch(setGlobalTixPaymentData(null));
-              
+
               // Show payment failed message AFTER releasing the booking
               showMessage({
                 message: t("GlobalTix.cart.messages.paymentFailed"),
@@ -765,38 +766,38 @@ const GlobalTixCartScreen = ({ navigation }) => {
   // Send booking data to backend for payment processing
   const sendBookingToBackend = async (globalTixResponse, ticketDetails, customerInfo, totalPrice, bankCharge, finalAmount, selectedPaymentMethod) => {
     try {
-      
+
       const token = await AsyncStorage.getItem("token");
-      
+
       // Validate required data
       if (!token) {
         throw new Error("Authentication token is missing");
       }
-      
+
       if (!globalTixResponse?.data?.referenceNumber) {
         throw new Error("Reference number is missing from booking response");
       }
-      
+
       if (!customerInfo?.email) {
         throw new Error("Customer email is required");
       }
-      
+
       if (!customerInfo?.lastName) {
         throw new Error("Customer last name is required");
       }
-      
+
       if (!ticketDetails || ticketDetails.length === 0) {
         throw new Error("Ticket details are required");
       }
-      
+
       if (!totalPrice || totalPrice <= 0) {
         throw new Error("Valid total price is required");
       }
-      
+
       if (!selectedPaymentMethod) {
         throw new Error("Payment method is required");
       }
-      
+
       const backendPayload = {
         "params": {
           "token": token,
@@ -841,52 +842,52 @@ const GlobalTixCartScreen = ({ navigation }) => {
       };
       console.log('backendPayload', backendPayload);
       const response = await axios.post(
-        "https://www.golalita.com/go/api/user/payment/request/globaltix",
+        `https://${BASE_URL}/go/api/user/payment/request/globaltix`,
         backendPayload
       );
-      
+
       console.log('backendPayload response', response.data);
       if (response.data?.error) {
         throw new Error(`Payment processing failed: ${response.data.error}`);
       }
-      
+
       if (!response.data?.result) {
         throw new Error("Payment link generation failed - no result in response");
       }
-      
+
       const backendResponse = response.data.result;
-      
+
       // Validate that we have the necessary response fields
       if (!backendResponse.payment_link && !backendResponse.payUrl) {
         throw new Error("Payment link generation failed - no payment link in response");
       }
-      
+
       return backendResponse;
-      
+
     } catch (error) {
       throw error;
     }
   };
 
   const handleCheckout = async () => {
-    
+
     // Validate required fields
     if (!customerInfo.lastName || !customerInfo.email || !customerInfo.mobileNumber) {
       Alert.alert(t('General.error'), t('GlobalTix.cart.requiredFields'));
       return;
     }
-    
+
     try {
       setLoading(true);
-      
+
       // Check if all cart items have visiting dates
       console.log('=== Cart Items Debug ===');
       console.log('All cart items:', cartItems);
       console.log('Cart items values:', Object.values(cartItems));
-      
+
       const itemsWithoutVisitDate = Object.values(cartItems).filter(item => !item.visitDate);
       console.log('Items without visit date:', itemsWithoutVisitDate);
-      
+
       // Log ticket type details for debugging
       Object.values(cartItems).forEach(item => {
         console.log('Ticket type details:', {
@@ -897,7 +898,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
           visitDate: item.visitDate
         });
       });
-      
+
       if (itemsWithoutVisitDate.length > 0) {
         Alert.alert(
           t("GlobalTix.cart.alerts.missingVisitDate"),
@@ -907,24 +908,24 @@ const GlobalTixCartScreen = ({ navigation }) => {
         setLoading(false);
         return;
       }
-      
+
       // Prepare ticket types from cart items
       const ticketTypes = Object.values(cartItems).map((item, index) => {
         // Validate ticket type ID
         if (!item.ticketTypeId || isNaN(item.ticketTypeId)) {
           throw new Error(`Invalid ticket type ID: ${item.ticketTypeId}`);
         }
-        
+
         // Additional validation for ticket type ID
         const ticketTypeId = parseInt(item.ticketTypeId);
         if (ticketTypeId <= 0) {
           throw new Error(`Invalid ticket type ID: ${ticketTypeId}. Please try again.`);
         }
-        
+
         // Format the visit date to ensure it's in the correct format
         const visitDate = item.visitDate;
         const formattedVisitDate = visitDate ? new Date(visitDate).toISOString().split('T')[0] : null;
-        
+
         // Build question list with answers in the correct GlobalTix API format
         const questions = getQuestionsForTicketType(ticketTypeId);
         const questionList = questions
@@ -940,7 +941,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               answer: answer,
               questionCode: question.questionCode
             });
-            
+
             return {
               id: question.id,
               answer: answer,
@@ -960,12 +961,12 @@ const GlobalTixCartScreen = ({ navigation }) => {
           packageItems: [],
           visitDateSettings: []
         };
-        
-        
+
+
         return ticketType;
       });
-      
-      
+
+
       // Create reserve payload according to GlobalTix API
       const reservePayload = {
         customerName: `${customerInfo.firstName} ${customerInfo.lastName}`.trim(),
@@ -986,56 +987,56 @@ const GlobalTixCartScreen = ({ navigation }) => {
         remarks: customerInfo.remarks || undefined,
         ticketTypes: ticketTypes
       };
-      
+
       // Remove undefined values from the payload
       const cleanPayload = JSON.parse(JSON.stringify(reservePayload, (key, value) => {
         return value === undefined ? undefined : value;
       }));
-      
-      
+
+
       // Validate payload before sending
       if (!cleanPayload.customerName || !cleanPayload.email) {
         throw new Error('Missing required customer information');
       }
-      
+
       if (!cleanPayload.ticketTypes || cleanPayload.ticketTypes.length === 0) {
         throw new Error('No ticket types in payload');
       }
-      
+
       if (cleanPayload.ticketTypes.some(t => !t.id || !t.quantity)) {
         throw new Error('Invalid ticket type data');
       }
-      
+
       // Validate that all ticket types have visit dates
       if (cleanPayload.ticketTypes.some(t => !t.visitDate)) {
         throw new Error('Visit date is required for all ticket types');
       }
-      
+
       // Validate that all ticket types have event_id
       // event_id can be null as per GlobalTix API example
-      
+
       // Validate date format consistency
       const invalidDateFormats = cleanPayload.ticketTypes.filter(t => {
         if (!t.visitDate) return false;
         // Check if date is in YYYY-MM-DD format
         return !/^\d{4}-\d{2}-\d{2}$/.test(t.visitDate);
       });
-      
+
       if (invalidDateFormats.length > 0) {
         throw new Error('Invalid date format detected. Please try again.');
       }
-      
+
       // Validate ticket type consistency (event_id can be null)
       const invalidTicketTypes = cleanPayload.ticketTypes.filter(t => {
         // Check if ticket type ID is valid
         return !t.id || !Number.isInteger(t.id) || t.id <= 0;
       });
-      
+
       if (invalidTicketTypes.length > 0) {
         console.error('Invalid ticket type IDs:', invalidTicketTypes);
         throw new Error('Invalid ticket type data detected. Please try again.');
       }
-      
+
       // Debug: Log all available IDs from cart items
       console.log('=== DEBUGGING AVAILABLE IDs ===');
       Object.values(cartItems).forEach((item, index) => {
@@ -1056,10 +1057,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
             name: item.ticketType.name
           } : 'No ticket type data'
         });
-        
+
         // Log the complete item structure to see if there are other IDs
         console.log(`Complete Cart Item ${index} structure:`, JSON.stringify(item, null, 2));
-        
+
         // Log the attraction ID that will be used as event_id
         if (item.product && item.product.howToUseList && item.product.howToUseList[0] && item.product.howToUseList[0].attraction) {
           console.log(`Attraction ID for Cart Item ${index}: ${item.product.howToUseList[0].attraction.id}`);
@@ -1067,26 +1068,26 @@ const GlobalTixCartScreen = ({ navigation }) => {
           console.log(`No attraction ID found for Cart Item ${index}, using product ID: ${item.product.id}`);
         }
       });
-      
+
       // Additional validation: Check if the ticket type ID exists in our cart
       console.log('=== VALIDATING TICKET TYPE COMBINATIONS ===');
       cleanPayload.ticketTypes.forEach((ticketType, index) => {
-        const cartItem = Object.values(cartItems).find(item => 
+        const cartItem = Object.values(cartItems).find(item =>
           item.ticketTypeId === ticketType.id
         );
-        
+
         if (!cartItem) {
           console.error(`Ticket type ${ticketType.id} not found in cart`);
           throw new Error(`Invalid ticket type detected. Please refresh and try again.`);
         }
-        
+
         console.log(`✅ Valid ticket type: ${ticketType.id} with event_id: ${ticketType.event_id}`);
       });
-      
+
       // Pre-booking availability check to validate ticket types are still valid
       try {
         console.log('=== PRE-BOOKING AVAILABILITY CHECK ===');
-        
+
         // Group items by visiting date for efficient checking
         const itemsByDate = {};
         Object.values(cartItems).forEach(item => {
@@ -1095,26 +1096,26 @@ const GlobalTixCartScreen = ({ navigation }) => {
           }
           itemsByDate[item.visitDate].push(item);
         });
-        
+
         console.log('Items grouped by date:', itemsByDate);
-        
+
         // Check availability for each date
         for (const [visitDate, items] of Object.entries(itemsByDate)) {
           const optionIds = items.map(item => item.optionId);
           console.log(`Checking availability for date ${visitDate} with optionIds:`, optionIds);
-          
+
           const availabilityResponse = await globalTixAPI.checkCalendarAvailability({
             optionIds: optionIds,
             date: visitDate,
             pullAll: true
           });
-          
+
           console.log(`Availability response for ${visitDate}:`, availabilityResponse);
-          
+
           if (availabilityResponse.success && availabilityResponse.data) {
             const unavailableOptions = availabilityResponse.data.filter(item => item.status !== 'available');
             console.log(`Unavailable options for ${visitDate}:`, unavailableOptions);
-            
+
             // Check if any of our specific ticket types are unavailable
             const unavailableTicketTypes = [];
             availabilityResponse.data.forEach(availabilityItem => {
@@ -1128,26 +1129,26 @@ const GlobalTixCartScreen = ({ navigation }) => {
                 });
               }
             });
-            
+
             console.log(`Unavailable ticket types for ${visitDate}:`, unavailableTicketTypes);
-            
+
             if (unavailableTicketTypes.length > 0) {
               throw new Error(`Some selected tickets are no longer available for ${visitDate}. Please try again.`);
             }
           }
         }
-        
+
         console.log('✅ Pre-booking availability check passed');
       } catch (availabilityError) {
         console.log('❌ Pre-booking availability check failed:', availabilityError.message);
         // Don't throw here, just log the error and proceed
         // The booking API will handle the validation
       }
-      
+
       // Call GlobalTix booking API
       console.log('=== CALLING BOOKING API ===');
       console.log('Final payload being sent to booking API:', JSON.stringify(cleanPayload, null, 2));
-      
+
       // Debug questionList specifically
       console.log('=== QUESTION LIST DEBUG ===');
       cleanPayload.ticketTypes.forEach((ticketType, idx) => {
@@ -1157,20 +1158,20 @@ const GlobalTixCartScreen = ({ navigation }) => {
           questionList: ticketType.questionList
         });
       });
-      
+
       const bookingResponse = await globalTixAPI.createBooking(cleanPayload);
-      
+
       console.log('=== BOOKING API RESPONSE ===');
       console.log('Booking response:', JSON.stringify(bookingResponse, null, 2));
       console.log('Success:', bookingResponse.success);
       console.log('Data:', bookingResponse.data);
       console.log('Error:', bookingResponse.error);
-      
+
       // Enhanced error handling for booking response
       if (bookingResponse.success && bookingResponse.data) {
         const bookingData = bookingResponse.data;
-        
-        
+
+
         // Prepare ticket details for backend
         const ticketDetails = Object.values(cartItems).map((item) => ({
           productId: item.productId,
@@ -1181,17 +1182,17 @@ const GlobalTixCartScreen = ({ navigation }) => {
           price: item.price,
           visitDate: item.visitDate // Use the visiting date from cart item
         }));
-        
+
         try {
-        console.log('Before sendBookingToBackend'); 
+          console.log('Before sendBookingToBackend');
           // Send to backend for payment processing
           const backendResponse = await sendBookingToBackend(
-            bookingResponse, 
-            ticketDetails, 
-            customerInfo, 
-            totalPrice, 
-            bankCharge, 
-            finalAmount, 
+            bookingResponse,
+            ticketDetails,
+            customerInfo,
+            totalPrice,
+            bankCharge,
+            finalAmount,
             selectedPaymentMethod
           );
           // Store payment data for status checking (similar to Cardmola)
@@ -1202,13 +1203,13 @@ const GlobalTixCartScreen = ({ navigation }) => {
             payment_link: backendResponse.payment_link || backendResponse.payUrl,
             state: backendResponse.state
           };
-          
+
           dispatch(setGlobalTixPaymentData(paymentInfo));
           setPaymentData(paymentInfo);
 
           // Navigate to payment gateway (same pattern as Cardmola)
           const paymentUrl = backendResponse.payment_link || backendResponse.payUrl;
-          
+
           if (paymentUrl) {
             navigation.navigate("Website", {
               url: paymentUrl,
@@ -1221,41 +1222,41 @@ const GlobalTixCartScreen = ({ navigation }) => {
               [{ text: t("GlobalTix.cart.buttons.ok") }]
             );
           }
-          
-        } catch (backendError) {
-          
-          // Show warning but still allow user to proceed
-            Alert.alert(
-              t("GlobalTix.cart.messages.bookingReserved"),
-              `${t("GlobalTix.cart.messages.bookingReservedMessage")}\n\nReference Number: ${bookingData.referenceNumber}\nSub Total: ${formatCurrency(totalPrice)}\nBank Charge: ${formatCurrency(bankCharge)}\nFinal Amount: ${formatCurrency(finalAmount)}\nStatus: ${bookingData.status}\n\nNote: There was an issue with payment processing. Please contact support.`,
-              [
-                {
-                  text: t("GlobalTix.cart.buttons.ok"),
-                  onPress: () => {
-                    dispatch(clearGlobalTixCartThunk());
-                    navigation.goBack();
-                  }
-                }
-              ]
-            );
-        }
-        } else {
-          const errorCode = bookingResponse.error?.code || 'UNKNOWN_ERROR';
-          const errorMsg = bookingResponse.error?.message || bookingResponse.error || 'Failed to create booking';
-          const errorDetails = bookingResponse.error?.errorDetails || null;
 
-          // Log detailed error information for debugging
-          console.error('=== BOOKING ERROR DEBUG ===');
-          console.error('Full booking response:', JSON.stringify(bookingResponse, null, 2));
-          console.error('Error Code:', errorCode);
-          console.error('Error Message:', errorMsg);
-          console.error('Error Details:', errorDetails);
-          console.error('Request Payload:', JSON.stringify(cleanPayload, null, 2));
-        
+        } catch (backendError) {
+
+          // Show warning but still allow user to proceed
+          Alert.alert(
+            t("GlobalTix.cart.messages.bookingReserved"),
+            `${t("GlobalTix.cart.messages.bookingReservedMessage")}\n\nReference Number: ${bookingData.referenceNumber}\nSub Total: ${formatCurrency(totalPrice)}\nBank Charge: ${formatCurrency(bankCharge)}\nFinal Amount: ${formatCurrency(finalAmount)}\nStatus: ${bookingData.status}\n\nNote: There was an issue with payment processing. Please contact support.`,
+            [
+              {
+                text: t("GlobalTix.cart.buttons.ok"),
+                onPress: () => {
+                  dispatch(clearGlobalTixCartThunk());
+                  navigation.goBack();
+                }
+              }
+            ]
+          );
+        }
+      } else {
+        const errorCode = bookingResponse.error?.code || 'UNKNOWN_ERROR';
+        const errorMsg = bookingResponse.error?.message || bookingResponse.error || 'Failed to create booking';
+        const errorDetails = bookingResponse.error?.errorDetails || null;
+
+        // Log detailed error information for debugging
+        console.error('=== BOOKING ERROR DEBUG ===');
+        console.error('Full booking response:', JSON.stringify(bookingResponse, null, 2));
+        console.error('Error Code:', errorCode);
+        console.error('Error Message:', errorMsg);
+        console.error('Error Details:', errorDetails);
+        console.error('Request Payload:', JSON.stringify(cleanPayload, null, 2));
+
         // Provide more specific error messages based on error code
         let userFriendlyMessage = errorMsg;
         let shouldClearCart = false;
-        
+
         if (errorCode === 'unknown.error') {
           userFriendlyMessage = 'The booking request could not be processed. Please check your information and try again.';
         } else if (errorCode === 'validation.error') {
@@ -1279,19 +1280,19 @@ const GlobalTixCartScreen = ({ navigation }) => {
           // If error message is empty, provide a generic message based on error code
           userFriendlyMessage = `Booking failed with error: ${errorCode}. Please try again or contact support.`;
         }
-        
+
         // Clear cart if the error indicates stale data
         if (shouldClearCart) {
           dispatch(clearGlobalTixCartThunk());
         }
-        
+
         throw new Error(userFriendlyMessage);
       }
-      
+
     } catch (error) {
       console.log('=== ERROR ===:', error);
       // Show error alert
-        Alert.alert(t('General.error'), `${t("GlobalTix.cart.messages.checkoutError")}: ${error.message}`);
+      Alert.alert(t('General.error'), `${t("GlobalTix.cart.messages.checkoutError")}: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -1355,8 +1356,8 @@ const GlobalTixCartScreen = ({ navigation }) => {
       headerHeight={50}
       contentStyle={{ height: SCREEN_HEIGHT - 120, paddingHorizontal: 20 }}
     >
-      <ScrollView 
-        style={styles.container} 
+      <ScrollView
+        style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -1372,9 +1373,9 @@ const GlobalTixCartScreen = ({ navigation }) => {
             textColor={isDark ? colors.white : colors.darkBlue}
             style={styles.cartSummary}
           />
-          
+
           <View style={styles.actionButtons}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.removeButton}
               onPress={handleRemoveSelectedItems}
             >
@@ -1384,8 +1385,8 @@ const GlobalTixCartScreen = ({ navigation }) => {
                 textColor={colors.white}
               />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.clearButton}
               onPress={handleClearCart}
             >
@@ -1430,7 +1431,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             return (
               <View key={index} style={styles.cartItem}>
                 <View style={styles.cartItemHeader}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.checkboxContainer}
                     onPress={() => toggleItemSelection(cartKey)}
                   >
@@ -1443,13 +1444,13 @@ const GlobalTixCartScreen = ({ navigation }) => {
                       )}
                     </View>
                   </TouchableOpacity>
-                  
+
                   <View style={styles.productImageContainer}>
                     <Image
-                      source={{ 
-                        uri: item.product.image ? generateImageUrl(item.product.image) : 
-                             item.product.media?.[0]?.path ? generateImageUrl(item.product.media[0].path) :
-                             'https://via.placeholder.com/80x60'
+                      source={{
+                        uri: item.product.image ? generateImageUrl(item.product.image) :
+                          item.product.media?.[0]?.path ? generateImageUrl(item.product.media[0].path) :
+                            'https://via.placeholder.com/80x60'
                       }}
                       style={styles.productImage}
                       resizeMode="cover"
@@ -1490,15 +1491,15 @@ const GlobalTixCartScreen = ({ navigation }) => {
                       <TouchableOpacity
                         style={styles.quantityBtn}
                         onPress={() => handleUpdateQuantity(
-                          item.productId, 
-                          item.optionId, 
-                          item.ticketTypeId, 
+                          item.productId,
+                          item.optionId,
+                          item.ticketTypeId,
                           item.quantity - 1
                         )}
                       >
                         <TypographyText title="-" size={16} textColor={colors.white} />
                       </TouchableOpacity>
-                      
+
                       <TypographyText
                         title={item.quantity.toString()}
                         size={16}
@@ -1506,13 +1507,13 @@ const GlobalTixCartScreen = ({ navigation }) => {
                         textColor={isDark ? colors.white : colors.darkBlue}
                         style={styles.quantity}
                       />
-                      
+
                       <TouchableOpacity
                         style={styles.quantityBtn}
                         onPress={() => handleUpdateQuantity(
-                          item.productId, 
-                          item.optionId, 
-                          item.ticketTypeId, 
+                          item.productId,
+                          item.optionId,
+                          item.ticketTypeId,
                           item.quantity + 1
                         )}
                       >
@@ -1612,7 +1613,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             style={styles.sectionTitle}
           />
 
-<View style={styles.inputRow}>
+          <View style={styles.inputRow}>
             <View style={styles.inputContainer}>
               <TypographyText
                 title={t("GlobalTix.cart.firstNameOptional")}
@@ -1623,7 +1624,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1646,7 +1647,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1659,7 +1660,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             </View>
           </View>
 
-         
+
 
           <View style={styles.inputRow}>
             <View style={styles.inputContainer}>
@@ -1672,7 +1673,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1697,7 +1698,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1722,7 +1723,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1746,7 +1747,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1759,7 +1760,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             </View>
             <View style={[styles.inputContainer, { flex: 0.7, marginLeft: 12 }]}>
               <TypographyText
-                  title={t("GlobalTix.cart.mobileNumber")}
+                title={t("GlobalTix.cart.mobileNumber")}
                 size={14}
                 textColor={isDark ? colors.lightGrey : colors.grey}
                 style={styles.inputLabel}
@@ -1767,7 +1768,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1792,7 +1793,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1816,7 +1817,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
               <TextInput
                 style={[
                   styles.textArea,
-                  { 
+                  {
                     backgroundColor: isDark ? colors.navyBlue : colors.lightGrey,
                     color: isDark ? colors.white : colors.black
                   }
@@ -1881,7 +1882,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
                     textColor={isDark ? colors.white : colors.darkBlue}
                     style={styles.modalQuestionText}
                   />
-                  
+
                   {/* Dynamic question type handling */}
                   {renderQuestionInput(question, index)}
                 </View>
@@ -1899,7 +1900,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
                   textColor={isDark ? colors.white : colors.darkBlue}
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.modalButton, styles.saveButton]}
                 onPress={saveQuestionAnswers}
@@ -1941,7 +1942,7 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     textAlign: 'center',
   },
-  
+
   // Cart Summary Card
   summaryCard: {
     padding: 16,
@@ -2013,7 +2014,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  
+
   // Checkbox
   checkboxContainer: {
     marginRight: 12,
@@ -2163,7 +2164,7 @@ const styles = StyleSheet.create({
   checkoutButton: {
     // CommonButton will handle its own styling
   },
-  
+
   // Question button styles
   questionsButtonContainer: {
     marginTop: 12,
@@ -2177,7 +2178,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  
+
   // Modal styles
   modalOverlay: {
     flex: 1,
@@ -2239,7 +2240,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: colors.blue || '#2196F3',
   },
-  
+
   // Option styles
   optionContainer: {
     flexDirection: 'row',

@@ -5,7 +5,6 @@ import {useEffect, useState} from "react";
 import {getLoyaltyProductDetails} from "../../../api/loyalty";
 import OfferInfoSwiper from "../../AllOffers/OfferInfo/components/OfferInfoSwiper";
 import MerchantInfoBlock from "../../AllOffers/OfferInfo/components/MerchatInfoBlock";
-import {transformDate} from "../../AllOffers/OfferInfo/helpers";
 import InfoBlocks from "../../AllOffers/OfferInfo/components/InfoBlocks";
 import FullScreenImageModal from "../../AllOffers/OfferInfo/components/FullScreenImageModal";
 import {SCREEN_HEIGHT} from "../../../styles/mainStyles";
@@ -13,10 +12,12 @@ import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import NoData from "../../Transactions/components/NoData";
 import CommonButton from "../../../components/CommonButton/CommonButton";
 import {useTranslation} from "react-i18next";
-import {getInfoBlocksConfig} from "./config";
 import {useTheme} from "../../../components/ThemeProvider";
 import {colors} from "../../../components/colors";
 import {TypographyText} from "../../../components/Typography";
+import InfoWithTitleBlock from "../common/InfoWithTitleBlock";
+import {isRTL} from "../../../../utils";
+import DescriptionSvg from '../../../assets/loyaltyPoints/description.svg';
 
 const LoyaltyProductInfo = ({route, navigation}) => {
     const {i18n, t} = useTranslation();
@@ -29,6 +30,7 @@ const LoyaltyProductInfo = ({route, navigation}) => {
     const product_id = route.params.product_id;
     const title = route.params.title;
     const isArabic = i18n.language === 'ar';
+    const isRtl = isRTL();
 
 
     const getProductInfo = async () => {
@@ -72,8 +74,6 @@ const LoyaltyProductInfo = ({route, navigation}) => {
    }
 
 
-    const infoBlocksConfig = getInfoBlocksConfig(data);
-
     console.log(data,'product data')
 
     const btnTextColor =  colors.white;
@@ -103,7 +103,12 @@ const LoyaltyProductInfo = ({route, navigation}) => {
               merchantUrl={data.merchant_logo}
             />
 
-            <InfoBlocks data={infoBlocksConfig} />
+
+           <InfoWithTitleBlock 
+              title={t('LoyaltyOffers.description')}
+              description={isRtl ? data.description_arabic : data.description_sale}
+              icon={<DescriptionSvg color={colors.loyaltyPrimary}/>}
+           />
 
             <FullScreenImageModal
               visible={!!selectedImageUrl}

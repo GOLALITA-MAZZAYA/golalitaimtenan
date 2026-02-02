@@ -1,12 +1,56 @@
 import {FlatList, StyleSheet} from "react-native";
 import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
-import InfoCard from "./InfoCard";
 import {navigate} from "../../../Navigation/RootNavigation";
 import {TypographyText} from "../../../components/Typography";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "../../../components/ThemeProvider";
 import {colors} from "../../../components/colors";
+import ListCard from "../common/ListCard";
+import i18next from "i18next";
+import TravelWithPoints from "./TravelWithPoints";
+
+
+export const getQuickActionsData = (isDark) => {
+return [
+    {
+        title: i18next.t('LoyaltyInfo.redeem'),
+        description: i18next.t('LoyaltyInfo.redeemDescription'),
+        icon: isDark ? require('../../../assets/loyaltyPoints/categories/redeem.png'): require('../../../assets/loyaltyPoints/categories/redeem_light.png'),
+        onPress: () => navigate('loyaltyPoints-categories'),
+    },
+    {
+        title: i18next.t('LoyaltyInfo.scan'),
+        description: i18next.t('LoyaltyInfo.scanDescription'),
+        icon: isDark ? require('../../../assets/loyaltyPoints/categories/scan.png'): require('../../../assets/loyaltyPoints/categories/scan_light.png'),
+        onPress: () => navigate('loyaltyPoints-transactions'),       
+    },
+   {
+        title: i18next.t('LoyaltyInfo.transactions'),
+        description: i18next.t('LoyaltyInfo.transactionsDescription'),
+        icon: isDark ? require('../../../assets/loyaltyPoints/categories/transactions.png'): require('../../../assets/loyaltyPoints/categories/transactions_light.png'),
+        onPress: () => navigate('loyaltyPoints-transactions'),       
+    },
+    {
+        title: i18next.t('LoyaltyInfo.giftCards'),
+        description: i18next.t('LoyaltyInfo.giftCardsDescription'),
+        icon: isDark ? require('../../../assets/loyaltyPoints/categories/gift.png'): require('../../../assets/loyaltyPoints/categories/gift_light.png'),
+        onPress: () => navigate("loyaltyPoints-giftCards-list"),
+    },
+    {
+        title: i18next.t('LoyaltyInfo.vouchers'),
+        description: i18next.t('LoyaltyInfo.vouchersDescription'),
+        icon: !isDark ? require('../../../assets/loyaltyPoints/categories/voucher.png'): require('../../../assets/loyaltyPoints/categories/voucher_light.png'),
+        onPress: () => navigate('loyaltyPoints-vouchers-list'),       
+    },
+    {
+        title: i18next.t('LoyaltyInfo.partners'),
+        description: i18next.t('LoyaltyInfo.partnersDescription'),
+        icon: !isDark ? require('../../../assets/loyaltyPoints/categories/partner.png'): require('../../../assets/loyaltyPoints/categories/partner_light.png'),
+        onPress: () => navigate('loyaltyPoints-partners-list'), 
+    },
+]
+}
 
 
 const LoyaltyPointsInfo = () => {
@@ -14,59 +58,10 @@ const LoyaltyPointsInfo = () => {
     const {t} = useTranslation();
     const {isDark} = useTheme();
     
-    const CONFIG = [
-    {
-       title: t('LoyaltyInfo.redeemTitle'),
-       description: t('LoyaltyInfo.redeemDescription'),
-       onPress: () => navigate('loyaltyPoints-categories'),
-       source: require('../../../assets/loyaltyPoints/info/1.png')
-    },
-    {
-       title: t('LoyaltyInfo.myTransactionTitle'),
-       description: t('LoyaltyInfo.myTransactionDescription'),
-       onPress: () => navigate('loyaltyPoints-transactions'),
-       source: require('../../../assets/loyaltyPoints/info/3.png')
-    },
-    {
-       title: t('LoyaltyInfo.giftCardsTitle'),
-       description: t('LoyaltyInfo.giftCardsDescription'),
-       onPress: () => navigate("loyaltyPoints-giftCards-list"),
-       source: require('../../../assets/loyaltyPoints/info/2.png')
-    },
-    {
-       title: t('LoyaltyInfo.scanTitle'),
-       description: t('LoyaltyInfo.scanDescription'),
-       onPress: () =>  navigate('BillScannerHoToUse', {
-          title: t('Drawer.scanBill'),
-      }),
-       source: require('../../../assets/loyaltyPoints/info/8.png')
-    },
-    {
-       title: t('LoyaltyInfo.vouchersTitle'),
-       description: t('LoyaltyInfo.vouchersDescription'),
-       onPress: () => navigate('loyaltyPoints-vouchers-list'),
-       source: require('../../../assets/loyaltyPoints/info/7.png')
-    },
-    {
-       title: t('LoyaltyInfo.partnersTitle'),
-       description: t('LoyaltyInfo.partnersDescription'),
-       onPress: () => navigate('loyaltyPoints-partners-list'),
-       source: require('../../../assets/loyaltyPoints/info/4.png')
-    },
-    {
-       title: t('LoyaltyInfo.travelTitle'),
-       description: t('LoyaltyInfo.travelDescription'),
-       onPress: () => {},
-       source: require('../../../assets/loyaltyPoints/info/6.png')
-    },
-    {
-       title: t('LoyaltyInfo.goodsTitle'),
-       description: t('LoyaltyInfo.goodsDescription'),
-       onPress: () => {},
-       source: require('../../../assets/loyaltyPoints/info/5.png')
-    },
+   
+    const data = getQuickActionsData(isDark)
 
-];
+
 
    const titleColor = isDark ? 'white': colors.mainDarkModeText;
 
@@ -81,22 +76,26 @@ const LoyaltyPointsInfo = () => {
         headerHeight={50}
         contentStyle={styles.contentStyle}
     >
-            <TypographyText
+
+        <FlatList 
+          showsVerticalScrollIndicator={false}
+          data={data}
+          ListHeaderComponent={() => (
+            <>
+         <TypographyText
                 title={t('LoyaltyInfo.title')}
                 style={styles.title}  
-                textColor={titleColor}            
-            />
-            <TypographyText
+                textColor={colors.loyaltyTextPrimary}            
+         />
+         <TypographyText
                 title={t('LoyaltyInfo.subTitle')}
                 style={styles.subTitle}
                 textColor={titleColor}                
-            />
-
-        <FlatList 
-            data={CONFIG}
-            renderItem={({item, index}) => <InfoCard {...item} style={{marginTop: !index? 0 : 20, borderWidth: 1, borderColor: isDark ? 'transparent': colors.mainDarkModeText}} />}
-            contentContainerStyle={styles.contentContainerStyle}
-            style={styles.list}
+         />
+           </>
+          )}
+          renderItem={({item}) => <ListCard {...item} style={styles.card} isDark={isDark}/>}
+          ListFooterComponent={() => <TravelWithPoints />}
         />
 
       </MainLayout>
@@ -106,6 +105,8 @@ const LoyaltyPointsInfo = () => {
 const styles = StyleSheet.create({
     contentStyle: {
       flexGrow: 1,
+      paddingBottom: 180,
+      paddingHorizontal: 20
     },
     list: {
       marginTop: 20
@@ -115,12 +116,16 @@ const styles = StyleSheet.create({
        paddingBottom: 160
     },
     title: {
-      paddingHorizontal: 40,
       fontSize: 25
     },
     subTitle: {
-      paddingHorizontal: 40,
-     fontSize: 16
+     fontSize: 14,
+     color: colors.loyaltyTextSecondary,
+     marginTop: 4,
+     marginBottom: 10
+    },
+    card: {
+      marginTop: 12
     }
 
 });

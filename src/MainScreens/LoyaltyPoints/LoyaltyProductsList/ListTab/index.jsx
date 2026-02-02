@@ -26,12 +26,12 @@ const ListTab = () => {
       })
 
     }
-
+   console.log(data,'data')
     
     return (
         <FlatList 
           data={!isLoading ? data: []}
-          renderItem={({item, index}) => <ProductListCard onPress={() => handleItemPress(item)} uri={item.image_1920} style={{marginTop: index ? 20: 0}} expiringDate={timeLeft(item.loyalty_expiry_date
+          renderItem={({item, index}) => <ProductListCard description={language === 'ar' ? item.x_arabic_name: item.name} onPress={() => handleItemPress(item)} uri={item.image_1920} style={{marginTop: index ? 20: 0}} expiringDate={timeLeft(item.loyalty_expiry_date
 ,language)} value={item.minimum_loyalty_points}/>}
           style={styles.list}
           contentContainerStyle={styles.contentContainerStyle}

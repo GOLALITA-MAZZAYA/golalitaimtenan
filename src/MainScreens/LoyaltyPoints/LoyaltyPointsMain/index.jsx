@@ -1,26 +1,33 @@
-import { StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
-import { SCREEN_HEIGHT } from "../../../styles/mainStyles";
-import LoyaltyPointsBanners from "./LoyaltyPointsBanners";
 import LoyaltyPointsUserInfo from "./LoyaltyPointsUserInfo";
 import LoyaltyPointsList from "./LoyaltyPointsList";
+import FeaturedRewardsList from "./FeaturedRewardsList";
+import {SCREEN_HEIGHT} from "@gorhom/bottom-sheet";
 
 const LoyaltyPointsMain = () => {
     return (
-         <MainLayout
+        <MainLayout
         outsideScroll={true}
         headerChildren={
           <Header label={''} btns={['back']} />
         }
-        headerHeight={50}
+        headerHeight={50} 
         contentStyle={styles.contentStyle}
       >
-        <LoyaltyPointsBanners style={styles.banners}/>
+        <ScrollView 
+          contentContainerStyle={styles.contentContainerStyle}
+          showsVerticalScrollIndicator={false}
+        >
 
         <LoyaltyPointsUserInfo />
 
         <LoyaltyPointsList />
+
+        <FeaturedRewardsList />
+
+        </ScrollView>
         
       </MainLayout>
     )
@@ -34,8 +41,9 @@ const styles = StyleSheet.create({
       borderTopRightRadius: 0,
       borderTopLeftRadius: 0 ,
     },
-    banners: {
-      marginHorizontal: 20
+    contentContainerStyle: {
+      flexGrow: 1,
+      paddingBottom: 180
     }
 });
 

@@ -7,6 +7,7 @@ import FullScreenLoader from "../../../../components/Loaders/FullScreenLoader";
 import NoData from "../../../Transactions/components/NoData";
 import {useTheme} from "../../../../components/ThemeProvider";
 import {useNavigation} from "@react-navigation/native";
+import ListCard from "../../common/ListCard";
 
 const ListTab = () => {
   const {
@@ -48,7 +49,14 @@ const ListTab = () => {
       data={!isLoading ? partners : []}
       renderItem={({ item, index }) => {
         return (
-          <PartnerListCard howToUse={isAr ? item.x_use_term_ar: item.x_use_term_en} uri={item.merchant_logo} title={isAr ? item.x_arabic_name: item.merchant_name} isDark={isDark} submitText={t('LoyaltyPartners.bookNow')} onPress={() => handleBookNowPress(item)}/>
+          <ListCard
+            icon={item.merchant_logo} 
+            title={isAr ? item.x_arabic_name: item.merchant_name}
+            description={"Redeem points for shopping online"}
+            onPress={() => handleBookNowPress(item)}
+            style={styles.listCard}
+            isDark={isDark}
+          />
         );
       }}
       keyExtractor={(item, index) => index.toString()}
@@ -80,6 +88,9 @@ const styles = StyleSheet.create({
    contentContainerStyle: {
     flexGrow: 1,
     paddingBottom: 160
+   },
+   listCard: {
+    marginTop: 15
    }
 });
 

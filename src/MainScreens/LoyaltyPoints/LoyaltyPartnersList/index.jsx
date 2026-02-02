@@ -5,9 +5,8 @@ import Header from "../../../components/Header";
 import Tabs from "../../../components/Tabs";
 import TransferTab from "./TransferTab";
 import ListTab from "./ListTab";
-import MP4Slider from "../../../components/MP4Slider";
-
-const BANNERS = [require('../../../assets/loyaltyPoints/partners/partners.mp4')];
+import HandBagSvg from '../../../assets/loyaltyPoints/partners/handbag.svg';
+import TransferSvg from '../../../assets/loyaltyPoints/partners/transfer.svg';
 
 const LoyaltyPartnersList = () => {
   const { t } = useTranslation();
@@ -21,17 +20,14 @@ const LoyaltyPartnersList = () => {
         headerHeight={50}
         contentStyle={styles.contentStyle}
       >
-      <MP4Slider
-         data={BANNERS}
-         style={styles.banners}
-      />
-    <Tabs defaultActiveTab="partners-list" style={styles.tabsWrapper}>
+       <Tabs defaultActiveTab="partners-list" style={styles.tabsWrapper}>
  
-        <Tabs.Tab name="partners-list" title={t('LoyaltyPartners.partners')} />
-        <Tabs.Tab
+        <Tabs.TabWithIcon name="partners-list" title={t('LoyaltyPartners.partners')} icon={<HandBagSvg/>}/>
+        <Tabs.TabWithIcon
           name="products-transfer"
           title={t('LoyaltyPartners.transfer')}
           style={{ marginLeft: 10 }}
+          icon={<TransferSvg />}
         />
 
 
@@ -47,6 +43,7 @@ const LoyaltyPartnersList = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   contentStyle: {
     flex: 1,
@@ -58,6 +55,9 @@ const styles = StyleSheet.create({
   contentContainerStyle: {
     flexGrow: 1,
     paddingBottom: 160
+  },
+  tabsWrapper: {
+
   }
 });
 

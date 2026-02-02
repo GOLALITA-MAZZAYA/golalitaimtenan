@@ -1,6 +1,5 @@
 {
   "translation": {
-
     "ar": {
       "loadingCategories": "Loading categories...",
       "loadingError": "Loading error",
@@ -104,7 +103,7 @@
       "invalidPhone": "Phone number is not valid",
       "passwordsMustMatch": "Passwords must match",
       "min8chars": "8 characters minimum",
-      "pleaseEnterData": "We need to verify you are part of program Golalita",
+      "pleaseEnterData": "We need to verify you are part of program Imtenan",
       "phoneDoesntExist": "This phone doesn't exist",
       "emailDoesntExist": "This email doesn`t exist",
       "verify": "Verify",
@@ -174,7 +173,7 @@
       "next": "Next",
       "skip": "Skip",
       "mazaya": "Mazaya",
-      "welcomeTo": "Welcome to Golalita, please choose your language"
+      "welcomeTo": "Welcome to Imtenan, please choose your language"
     },
     "AllOffers": {
       "title": "All offers",
@@ -1000,27 +999,49 @@
     "LoyaltyMain": {
       "availablePoints": "Availalble Points",
       "saved": "Saved QAR",
-      "transactions": "Transactions",
-      "categories": "Categories",
       "codeVerification": "Code verification",
       "pointsNeeded": "Points Needed",
-      "redeem": "Redeem"
+      "hi": "Hi,",
+      "redeemed": "Redeemed",
+      "scan": "Scan Bill",
+      "howItWorks": "How it works?",
+      "quickActions": "Quick Actions",
+      "redeemNow": "Redeem Now",
+      "usePoints": "Use your points",
+      "transactions": "Transactions",
+      "transactionsInfo": "View Your Activities",
+      "shop": "Shop & Earn Rewards",
+      "goods": "Shop The Goods",
+      "travel": "Travel With Points",
+      "featuredRewards": "Featured Rewards",
+      "seeAll": "See all",
+      "freeCoffee": "Free Coffee",
+      "useYourPoints": "Use your Points",
+      "redeem": "Redeem",
+      "shopTheGoods": "Shop The Goods",
+      "exploreTheStore": "Explore the stores",
+      "explore": "Explore"
     },
     "LoyaltyGiftCards": {
-       "title": "Gift Cards"
+      "title": "Gift Cards",
+      "countries": "COUNTRIES",
+      "countriesSearchPlaceholder": "Search countries...",
+      "categories": "CATEGORIES",
+      "categoriesSearchPlaceholder": "Search categories...",
+      "applyFilters": "Apply Filters"
     },
     "LoyaltyOffers": {
-       "title": "Discount Offers",
-       "offers": "Offers +",
-       "history": "History",
-       "points": "Points",
-       "terms": "Terms of usage",
-       "description": "Description",
-       "expiryDate": "Expiry date",
-       "Redeem": "Redeem",
-       "redeemSuccess": "You successfully redeemed the points",
-       "goBack": "Accept",
-       "redeem": "Redeem"
+      "title": "Discount Offers",
+      "offers": "Offers +",
+      "history": "History",
+      "points": "Pts",
+      "terms": "Terms of usage",
+      "description": "Description",
+      "expiryDate": "Expiry date",
+      "Redeem": "Redeem",
+      "redeemSuccess": "You successfully redeemed the points",
+      "goBack": "Accept",
+      "redeem": "Redeem"
     },
     "LoyaltyPartners": {
       "title": "Partners",
@@ -1036,7 +1057,7 @@
       "transfer": "Transfer",
       "select": "Select",
       "agreeWith": "Agree with",
-      "terms":"Terms & Conditions",
+      "terms": "Terms & Conditions",
       "pointsLabel": "Points to receive",
       "partnerNumLabel": "Partner Membership number",
       "partnerNumPlaceholder": "Enter mobile number",
@@ -1050,37 +1071,46 @@
       "shopNow": "Shop now"
     },
     "LoyaltyVouchers": {
-       "title": "Vouchers",
-       "points": "Points",
-       "order": "Order",
-       "redeem": "Redeem",
-       "products": "Products",
-       "history": "History"
+      "title": "Vouchers",
+      "points": "Points",
+      "order": "Order",
+      "redeem": "Redeem",
+      "products": "Products",
+      "history": "History",
+      "pts": "Pts",
+      "qar": "QAR",
+      "earn": "Earn",
+      "or": "or"
     },
     "LoyaltyInfo": {
-      "title": "Hello",
-      "subTitle": "Here, you'll discover how to easily earn points, track your activity, and redeem exclusive rewards. Follow the simple steps ahead to unlock the full value of your experiance",
-      "redeemTitle": "Redeem now.",
-      "redeemDescription": "You can now redeem your points for an additional discount at any of the listed stores through your daily purchases.",
-      "myTransactionTitle": "My Transactions.",
-      "myTransactionDescription": "This feature allows the customer to track all transactions related to redeeming or earning points.",
-      "scanTitle": "Scan the Bill.",
-      "scanDescription": "This service allows the customer to photograph their purchase invoice and send it via the app so they can earn.",
-      "giftCardsTitle": "Gift Cards.",
-      "giftCardsDescription": "Use your gift card to redeem exclusive rewards or enjoy discounts from participating partners.",
-      "vouchersTitle": "Vouchers.",
-      "vouchersDescription": "This service allow you to redeem your loyalty points a voucher, and use it at the selected merchant according to the voucher terms.",
-      "partnersTitle": "Partner Program.",
-      "partnersDescription": "This service allows the customer to Redeem points to unlock extra discount on selected partner offers.",
-      "goodsTitle": "Shop the Goods.",
+      "title": "Hello!",
+      "subTitle": "Easily earn points, track your activity, and redeem exclusive rewards. Follow these simple steps to unlock the full value of your experience.",
+      "redeem": "Redeem now",
+      "redeemDescription": "Turn your points into instant discounts on daily purchases.",
+      "transactions": "My Transactions",
+      "transactionsDescription": "Easily track every point you earn and spend.",
+      "giftCards": "Gift Cards",
+      "giftCardsDescription": "Use points to get gift cards for your favorite partners.",
+      "vouchers": "Vouchers",
+      "vouchersDescription": "Swap your loyalty points for high value shopping vouchers.",
+      "partners": "Partner Program",
+      "partnersDescription": "Shop with our partners to unlock extra bonus points.",
+      "goodsTitle": "Shop the Goods",
       "goodsDescription": "This service allows you to Browse products directly from the site, redeem with points, and enjoy your rewards.",
-      "travelTitle": "Travel With Points.",
-      "travelDescription": "This service allows to use your points to book hotels and flights, access assistance services, and enjoy concierge support."
+      "travelTitle": "Travel With Points",
+      "travelDescription": "This service allows to use your points to book hotels and flights, access assistance services, and enjoy concierge support.",
+      "scan": "Scan Bill",
+      "scanDescription": "Snap a photo of any receipt to collect points fast.",
+      "travelWithPoints": "Travel With Points",
+      "travelWithPointsDescription": "Collect points to unlock exclusive travel rewards!",
+      "travelItemTitle": "Hotel Stays",
+      "travelItemDescription": "Accumulate points through your activity to save on hotel bookings.",
+      "travelItemTitle2": "Flight Rewards",
+      "travelItemDescription2": "Earn enough points to cover the cost of your next flight ticket."
     },
     "LoyaltyTravel": {
       "title": "Travel With Points",
       "select": "Book now"
     }
   }
-
 }

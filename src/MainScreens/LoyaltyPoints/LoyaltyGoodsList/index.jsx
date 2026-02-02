@@ -8,10 +8,8 @@ import NoData from "../../Transactions/components/NoData";
 import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import {isRTL} from "../../../../utils";
 import {useTheme} from "../../../components/ThemeProvider";
-import PartnerListCard from "../common/PartnerListCard";
-import MP4Slider from "../../../components/MP4Slider";
+import ListCard from "../common/ListCard";
 
-const BANNERS = [require('../../../assets/loyaltyPoints/goods/goods.mp4')];
 
 const LoyaltyGoodsList = ({navigation}) => {
   const { t } = useTranslation();
@@ -54,18 +52,22 @@ const LoyaltyGoodsList = ({navigation}) => {
         headerHeight={50}
         contentStyle={styles.contentStyle}
       >
-      <MP4Slider
-         data={BANNERS}
-      />
+
     <FlatList
       data={!isLoading ? partners : []}
-      renderItem={({ item, index }) => {
+      renderItem={({ item }) => {
         return (
-          <PartnerListCard howToUse={isAr ? item.x_use_term_ar: item.x_use_term_en} uri={item.merchant_logo} title={isAr ? item.x_arabic_name: item.merchant_name} isDark={isDark} submitText={t('LoyaltyGoods.shopNow')} onPress={() => handleBookNowPress(item)} />
+          <ListCard 
+            icon={item.merchant_logo} 
+            title={isAr ? item.x_arabic_name: item.merchant_name}
+            description={"Redeem points for shopping online"}
+            onPress={() => handleBookNowPress(item)}
+            style={styles.listCard}
+            isDark={isDark}
+          />
         );
       }}
-      keyExtractor={(item, index) => index.toString()}
-      style={styles.list}
+      keyExtractor={(_, index) => index.toString()}
       contentContainerStyle={styles.contentContainerStyle}
       
       onEndReached={() => {
@@ -92,12 +94,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  list: {
-    marginTop: 20
-  },
   contentContainerStyle: {
     flexGrow: 1,
     paddingBottom: 160
+  },
+  listCard: {
+    marginTop: 15
   }
 });
 

@@ -1,59 +1,34 @@
-import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ImageBackground } from "react-native";
 import { TypographyText } from "../../../../components/Typography";
-import { BALOO_MEDIUM } from "../../../../redux/types";
+import { BALOO_2 } from "../../../../redux/types";
 import { colors } from "../../../../components/colors";
 
-const GiftCard = ({ name, description, isDark, onPress, imageUrl, index }) => {
-  const borderColorStyle = {
-    borderColor: isDark ? colors.white : "#DDDFE4",
-    backgroundColor: isDark ? colors.navyBlue : null,
-  };
+const BORDER_RADIUS = 34;
+const CARD_HEIGHT = 174;
 
+const GiftCard = ({ name, onPress, imageUrl, index, tagline }) => {
   return (
-    <TouchableOpacity style={[styles.card, borderColorStyle, {marginTop: index ? 20: 0}]} onPress={onPress}>
-      <View style={styles.header}>
-        <TypographyText
-          title={description}
-          textColor={colors.green}
-          size={12}
-          font={BALOO_MEDIUM}
-        />
-      </View>
-      <View style={styles.nameWrapper}>
-        <TypographyText
-          title={name}
-          textColor={isDark ? colors.white : colors.darkBlue}
-          size={18}
-          font={BALOO_MEDIUM}
-          numberOfLines={1}
-          style={{ paddingHorizontal: 5 }}
-        />
-      </View>
-      {imageUrl && (
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.cardImage}
-          resizeMode="stretch"
-        />
-      )}
+    <TouchableOpacity style={[styles.card, {marginTop: index ? 20: 0}]} onPress={onPress}>
 
-      <View style={styles.block}>
-        <View style={[styles.block1, borderColorStyle]}>
-          <View
-            style={[
-              styles.block2,
-              { backgroundColor: isDark ? colors.navyBlue : colors.white },
-              borderColorStyle,
-            ]}
-          >
-            <View
-              style={[
-                styles.block3,
-                { backgroundColor: isDark ? colors.navyBlue : colors.white },
-              ]}
-            />
-          </View>
-        </View>
+      <ImageBackground style={styles.cardImage} source={{ uri: imageUrl }} resizeMode="cover" />
+
+      <View style={styles.descriptionBlock}>
+        {!!name && <TypographyText
+          title={name}
+          textColor={colors.loyaltyGiftCardText}
+          size={18}
+          font={BALOO_2}
+          numberOfLines={1}
+          style={styles.title}
+        />}
+        {!!tagline &&<TypographyText
+          title={tagline}
+          textColor={colors.loyaltyGiftCardText}
+          size={12}
+          font={BALOO_2}
+          numberOfLines={1}
+          style={styles.subTitle}
+        />}
       </View>
     </TouchableOpacity>
   );
@@ -62,64 +37,27 @@ const GiftCard = ({ name, description, isDark, onPress, imageUrl, index }) => {
 const styles = StyleSheet.create({
   card: {
     width: "100%",
-    borderWidth: 1.5,
-    borderRadius: 12,
-    //padding: 8,
-  },
-  header: {
-    height: 25,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    borderRadius: BORDER_RADIUS,
+    height: CARD_HEIGHT,
+    overflow: 'hidden',
   },
   cardImage: {
-    height: 220,
-
-    borderRadius: 12,
-    // margin: 10,
-    backgroundColor: colors.lightGrey,
-    // marginVertical:17
-  },
-  nameWrapper: {
-    justifyContent: "center",
-    // alignItems: "center",
-    marginTop: 22,
-  },
-  block: {
+    position: 'relative',
+    height: CARD_HEIGHT,
     width: "100%",
-    height: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    left: 8,
-    top: 18,
+    borderRadius: 34,
+    flex: 1
   },
-  block1: {
-    width: 40,
-    height: 10,
-    borderWidth: 1,
-    borderColor: "#DDDFE4",
-    borderRadius: 10,
+  descriptionBlock: {
+    bottom: 20,
+    left: 20
   },
-  block2: {
-    height: 18,
-    width: 18,
-    borderWidth: 1,
-    borderColor: "#DDDFE4",
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    position: "absolute",
-    left: 10,
-    top: -10,
+  title: {
+    fontWeight: '800'
   },
-  block3: {
-    width: 30,
-    height: 7.5,
-    position: "absolute",
-    bottom: -1,
-    left: -5,
-    borderRadius: 10,
-  },
+  subTitle: {
+    marginTop: 4
+  }
 });
 
 export default GiftCard;

@@ -1,82 +1,120 @@
-import {StyleSheet, TouchableOpacity, View} from "react-native"
+import {StyleSheet, View} from "react-native"
 import {TypographyText} from "../../../../components/Typography";
 import {useSelector} from "react-redux";
 import {userSelector} from "../../../../redux/auth/auth-selectors";
-import {useTheme} from "../../../../components/ThemeProvider";
 import {colors} from "../../../../components/colors";
-import ScanSvg from '../../../../assets/scan.svg';
 import {navigate} from "../../../../Navigation/RootNavigation";
 import {useTranslation} from "react-i18next";
 import useUserLoyaltyPoints from "../../../../hooks/useUserLoyaltyPoints";
+import ButtonWithImage from "../../common/ButtonWithIcon";
+import ScanSvg from '../../../../assets/loyaltyPoints/home/scan.svg';
+import ScanSvgLight from '../../../../assets/loyaltyPoints/home/scan-light.svg';
+import PlayLight from '../../../../assets/loyaltyPoints/home/play-light.svg';
+import PlaySvg from '../../../../assets/loyaltyPoints/home/play.svg';
+import {isRTL} from "../../../../../utils";
+import {useTheme} from "../../../../components/ThemeProvider";
 
 const LoyaltyPointsUserInfo = () => {
     const user = useSelector(userSelector);
-    const {isDark} = useTheme();
     const {t} = useTranslation();
     const {loading, points} = useUserLoyaltyPoints();
+    const {isDark} = useTheme();
 
-    const textColor = isDark ? colors.mainDarkMode : colors.darkBlue;
 
     const handleScanPress = () => {
         navigate('BillScanner', {
           title: t('Drawer.scanBill'),
         })
+    };
+
+    const handleInfoPress = () => {
+        navigate('loyaltyPoints-info')
     }
 
 
     return (
         <View style={styles.wrapper}>
-        <View style={styles.nameBlock}>
-        <TypographyText
-            title={user.name}
-            textColor={textColor}
-            size={16}                
+
+         <TypographyText
+            title={`${t('LoyaltyMain.hi')} ${user.name}`}
+            textColor={colors.loyaltyTextMain}
+            size={17}                
           />
 
-                    
 
-        <TouchableOpacity style={styles.scanWrapper} onPress={handleScanPress}>
-            <ScanSvg height={30} width={30} color={textColor}/>
-        </TouchableOpacity> 
-        </View>
+        <View style={[
+            styles.pointsInfo,
+            {
+            borderColor: colors.loyaltyCardBackground,
+            borderColor: colors.loyaltyMainBorder,
+            backgroundColor: colors.loyaltyCardBackground,
+            }
+        ]}>
 
-        <View style={styles.pointsInfo}>
-
-  
+        <View style={[
+            styles.pointsWrapper,
+            {
+              flexDirection: isRTL() ? 'row-reverse': 'row',
+              borderColor: colors.loyaltyPrimary,
+            }]}>
 
         <View style={styles.block}>
+
         <TypographyText
             title={points}
-            textColor={textColor}
-            size={22}    
+            textColor={colors.loyaltyTextPrimary}
+            size={30}    
             style={{fontWeight: '600'}}            
-           />
+        />
         <TypographyText
             title={t('LoyaltyMain.availablePoints')}
-            textColor={textColor}
-            size={13}
-            style={{marginLeft: 4, marginBottom: 2, fontWeight: '600'}}                
+            textColor={colors.loyaltyTextSecondary}
+            size={14}              
         />
         </View>
 
-        {/* <View style={styles.block}>
+         <View style={styles.redeemedBlock}>
            <TypographyText
             title={333}
-            textColor={textColor}
-            size={22}    
+            textColor={colors.loyaltyTextSecondary}
+            size={20}    
             style={{fontWeight: '600'}}            
            />
         <TypographyText
-            title={t('LoyaltyMain.saved')}
-            textColor={textColor}
-            size={13}
-            style={{marginLeft: 4, marginBottom: 2, fontWeight: '600'}}                
+            title={t('LoyaltyMain.redeemed')}
+            textColor={colors.loyaltyTextSecondary}
+            size={14}               
          />
+        </View> 
 
-  
-        </View> */}
+        </View>
 
+        <View style={[styles.controllBtns,{flexDirection: isRTL() ? 'row-reverse': 'row'}]}>
 
+            <ButtonWithImage 
+              text={t('LoyaltyMain.scan')}
+              icon={isDark ? <ScanSvg /> : <ScanSvgLight />}
+              primary
+              style={{
+                marginRight: isRTL() ? 0 : 6,
+                marginLeft: isRTL() ? 6 : 0
+              }}
+              onPress={handleScanPress}
+            
+            />
+
+            <ButtonWithImage 
+              text={t('LoyaltyMain.howItWorks')}
+              icon={isDark ? <PlaySvg/> : <PlayLight />}
+              style={{
+                marginRight: isRTL() ? 6 : 0,
+                marginLeft: isRTL() ? 0 : 6
+              }}
+              onPress={handleInfoPress}
+            
+            />
+
+        </View>
 
         </View>
 
@@ -87,28 +125,41 @@ const LoyaltyPointsUserInfo = () => {
 
 const styles = StyleSheet.create({
     wrapper: {
-      paddingHorizontal: 20,
       paddingTop: 25,
-      marginBottom: 25
+      marginBottom: 25,
+      marginHorizontal: 20
     },
     pointsInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 25
+        borderWidth: 1,
+        padding: 18,
+        borderRadius: 40,
+        marginTop: 15
+    },
+    pointsWrapper: {
+       flexDirection: 'row',
+       justifyContent: 'space-between',
+       alignItems: 'flex-end',
+       borderBottomWidth: 1,
+       paddingBottom: 8
     },
     scanWrapper: {
-        justifyContent: 'center',
-        alignItems: 'center'
+       
     },
     block: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        marginTop: 10
+        
+    },
+    redeemedBlock: {
+      justifyContent: 'center',
+      alignItems: 'center',
+
     },
     nameBlock: {
-        flexDirection: 'row',
-        justifyContent: 'space-between'
+       flexDirection: 'row',
+       justifyContent: 'space-between'
+    },
+    controllBtns: {
+      flexDirection: 'row',
+      marginTop: 12
     }
 })
 

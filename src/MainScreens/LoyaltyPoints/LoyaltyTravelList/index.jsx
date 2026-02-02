@@ -9,9 +9,7 @@ import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import {isRTL} from "../../../../utils";
 import {useTheme} from "../../../components/ThemeProvider";
 import PartnerListCard from "../common/PartnerListCard";
-import MP4Slider from "../../../components/MP4Slider";
-
-const BANNERS = [require('../../../assets/loyaltyPoints/travel/travel.mp4')];
+import ListCard from "../common/ListCard";
 
 const LoyaltyTravelList = () => {
   const { t } = useTranslation();
@@ -49,14 +47,20 @@ const LoyaltyTravelList = () => {
         headerHeight={50}
         contentStyle={styles.contentStyle}
       >
-      <MP4Slider
-         data={BANNERS}
-      />
+
     <FlatList
       data={!isLoading ? partners : []}
       renderItem={({ item, index }) => {
         return (
-          <PartnerListCard howToUse={isAr ? item.x_use_term_ar: item.x_use_term_en} uri={item.merchant_logo} title={isAr ? item.x_arabic_name: item.merchant_name} isDark={isDark} submitText={t('LoyaltyTravel.select')} onPress={() => handleSelectPress(item)}/>
+           <ListCard
+            icon={item.merchant_logo} 
+            title={isAr ? item.x_arabic_name: item.merchant_name}
+            description={"Redeem points for shopping online"}
+            onPress={() => handleSelectPress(item)}
+            style={styles.listCard}
+            isDark={isDark}
+          />
+
         );
       }}
       keyExtractor={(item, index) => index.toString()}

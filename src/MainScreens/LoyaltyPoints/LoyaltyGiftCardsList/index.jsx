@@ -19,17 +19,17 @@ import { StyleSheet } from 'react-native';
 import { BALOO_MEDIUM } from '../../../redux/types';
 import { TypographyText } from '../../../components/Typography';
 import GiftCard from './GiftCard';
-import CountrySelect from '../LoyaltyGiftCardsFilters/CountrySelect';
 import { useFocusEffect } from '@react-navigation/native';
 import store from '../../../redux/store';
 import { checkCardmolaPaymentById } from '../../../api/giftCard';
 import { showMessage } from 'react-native-flash-message';
 import { setPaymentDataGlobal } from '../../../redux/giftCards/giftcards-actions';
-import UGotGiftCategorySelect from '../LoyaltyGiftCardsFilters/UGotGiftCategorySelect';
-import MP4Slider from '../../../components/MP4Slider';
+import CateogiresSelect from './CategoriesSelect';
+import CountriesSelect from './CountriesSelect';
+import {isRTL} from '../../../../utils';
+import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
 
 const DEFAULT_COUNTRY = 'QA';
-const BANNERS = [require('../../../assets/loyaltyPoints/giftCards/giftcard.mp4'),];
 
 const LoyaltyGiftCardsList = ({
   giftCards,
@@ -41,11 +41,12 @@ const LoyaltyGiftCardsList = ({
   const { isDark } = useTheme();
 
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
-  const [selectedUGotGiftCategory, setSelectedUGotGiftCategory] =
+  const [categoryId, setCategoryId] =
     useState(undefined);
   const dispatch = useDispatch();
 
   const title = t('LoyaltyGiftCards.title');
+  const isRtl = isRTL();
 
   useFocusEffect(
     useCallback(() => {
@@ -84,9 +85,9 @@ const LoyaltyGiftCardsList = ({
 
   useEffect(() => {
   
-      getGiftCards(selectedUGotGiftCategory, selectedCountry);
+      getGiftCards(categoryId, selectedCountry);
     
-  }, [selectedCountry]);
+  }, [selectedCountry, categoryId]);
 
 
   const handleGiftCardPress = giftCard => {
@@ -107,6 +108,7 @@ const LoyaltyGiftCardsList = ({
         <GiftCard
           index={index}
           name={item.name}
+          tagline={item.tagline}
           imageUrl={item.product_image}
           isDark={isDark}
           key={item.id}
@@ -114,7 +116,7 @@ const LoyaltyGiftCardsList = ({
         />
       );
     },
-    [i18n.language, isDark, selectedCountry, selectedUGotGiftCategory],
+    [i18n.language, isDark, selectedCountry, categoryId],
   );
 
 
@@ -122,8 +124,11 @@ const LoyaltyGiftCardsList = ({
     setSelectedCountry(country || DEFAULT_COUNTRY);
   };
 
-  const handleUGotGiftCategoryPress = i => {
-    setSelectedUGotGiftCategory(i || undefined);
+
+  const handleUGotGiftCategoryPress = (categoryId) => {
+     if(categoryId){
+      setCategoryId(categoryId);
+     }
   };
   
 
@@ -137,38 +142,18 @@ const LoyaltyGiftCardsList = ({
       }}
       style={{ backgroundColor: isDark ? colors.darkBlue : colors.white }}
     >
-       
-         <MP4Slider
-            data={BANNERS}
-            style={styles.banners}
-          />
-
         <View  style={styles.listWrapper}>
-          <View
-            style={{
-              flexDirection: i18n.language === 'ar' ? 'row-reverse' : 'row',
-              ...styles.filtersWrapper
-            }}
-          >
-            <TypographyText
-              title={t('Vouchers.filterby')}
-              textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-              size={16}
-              font={BALOO_MEDIUM}
-            />
-            <View
-              style={styles.filters}
-            >
-              <CountrySelect onChange={handleCounntryPress} />
-              <UGotGiftCategorySelect onChange={handleUGotGiftCategoryPress} />
-            </View>
-          </View>
-
           <FlatList
-            contentContainerStyle={[
-              styles.listContainer,
-              styles.giftsContainer,
-            ]}
+            ListHeaderComponent={
+            <View
+              style={[styles.filters, {flexDirection: isRtl ? 'row-reverse' : 'row'}]}
+            >
+              <CountriesSelect onSubmit={handleCounntryPress}/>
+
+              <CateogiresSelect onSubmit={handleUGotGiftCategoryPress} />
+            </View>
+            }
+            contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
             data={giftCardsLoading ? [] : giftCards}
             maxToRenderPerBatch={5}
@@ -183,10 +168,7 @@ const LoyaltyGiftCardsList = ({
                     font={BALOO_MEDIUM}
                   />
                 ) : (
-                  <ActivityIndicator
-                    size={'large'}
-                    color={isDark ? colors.mainDarkMode : colors.darkBlue}
-                  />
+                  <FullScreenLoader />
                 )}
               </View>
             }
@@ -201,21 +183,19 @@ const LoyaltyGiftCardsList = ({
 
 const styles = StyleSheet.create({
   listWrapper: {
-    flex: 1,
-    paddingTop: 20,
+    flex: 1
   },
   listContainer: {
-    paddingBottom: 60,
+    paddingBottom: 120,
     marginTop: 12,
     flexGrow: 1,
+    paddingHorizontal: 20
   },
   loaderWrapper: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  giftsContainer: {
-    paddingHorizontal: 20,
+    alignSelf: 'stretch',
   },
   bottomView: {
     flex: 1,
@@ -225,15 +205,11 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   filtersWrapper: {
-     width: '90%',
-     alignItems: 'center',
-     justifyContent: 'space-between',
-     alignSelf: 'center',
+     width: '100%',
   },
   filters: {
-                  flexDirection: 'row',
-                alignItems: 'center',
-                alignSelf: 'flex-end',
+    flexDirection: 'row',
+    marginBottom: 25
   },
   list: {
      marginTop: 20

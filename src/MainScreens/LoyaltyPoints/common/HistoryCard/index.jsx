@@ -2,28 +2,28 @@ import {Image, StyleSheet, View} from "react-native";
 import {useTheme} from "../../../../components/ThemeProvider";
 import {colors} from "../../../../components/colors";
 import {TypographyText} from "../../../../components/Typography";
-
-const giftImg = require('../../../../assets/loyaltyPoints/gift.png');
-const plusImg = require('../../../../assets/loyaltyPoints/plus.png');
+import OkSvg from '../../../../assets/loyaltyPoints/ok.svg'
+import {isRTL} from "../../../../../utils";
+import {BALOO_REGULAR, BALOO_SEMIBOLD} from "../../../../redux/types";
 
 
 const HistoryCard = ({title, description, value, index}) => {
     const {isDark} = useTheme();
     
     const isGift = value > 0;
-    const logoSource = isGift ? giftImg: plusImg ;
-    const mainTextColor = isDark ? colors.white : colors.mainDarkModeText;
-    const valueString =  `${isGift ? '- ' :' + '}${value}`;
-    const valueColor = isGift ?'#C00000' : '#85BB65';
-    const borderBottomColor = isDark ? 'white': colors.mainDarkModeText;
-   
+    const valueString =  `${isGift ? '-' :' +'}${value}`;
 
+   
+    const isRtl = isRTL();
 
     return (
-      <View style={[styles.wrapper, {marginTop: index ? 25: 0,  borderBottomColor}]}>
+      <View style={[styles.wrapper,
+         {marginTop: index ? 25: 0},
+         {backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder }
+         ]}>
 
         <View style={styles.logoWrapper}>
-             <Image source={logoSource} style={styles.logo}/>
+             <OkSvg />
         </View>
 
         <View style={styles.descriptionWraper}>
@@ -31,27 +31,47 @@ const HistoryCard = ({title, description, value, index}) => {
               <TypographyText
                 title={title}
                 textColor={
-                 mainTextColor
+                 colors.loyaltyTextMainTitle
                 }
                 style={styles.title}
                 numberOfLines={2}
+                font={BALOO_SEMIBOLD}
               />
               <TypographyText
                 title={description}
                 textColor={
-                 mainTextColor
+                 colors.loyaltyTextSecondary
                 }
+                fontSize={12}
+                font={BALOO_REGULAR}
+                
               />
 
         </View>
-
+        
+        <View style={styles.rightBlock}>
         <View style={styles.valueWrapper}>
               <TypographyText
                 title={valueString}
                 textColor={
-                 valueColor
-                 }
-                 style={styles.value}
+                 colors.loyaltyTextPrimary
+                }
+                style={styles.value}
+              />
+              <TypographyText
+                title={'Points'}
+                textColor={
+                 colors.loyaltyTextPrimary
+                }
+                style={styles.valueText}
+              />
+        </View>
+              <TypographyText
+                title={'Confirmed'}
+                textColor={
+                 colors.loyaltyTextPrimary
+                }
+                style={styles.confirmText}
               />
         </View>
          
@@ -62,36 +82,53 @@ const HistoryCard = ({title, description, value, index}) => {
 const styles = StyleSheet.create({
     wrapper: {
       flexDirection: 'row',
-      width: '100%',
-      borderBottomWidth: 1,
-      paddingBottom: 15,
-      height: 85
+      height: 96,
+      borderRadius: 34,
+      padding: 20,
+      borderWidth: 1,
+      alignItems: 'center'
     },
     logoWrapper: {
       justifyContent: 'center',
       alignItems: 'center',
-      width: 60,
-      height: '100%'
-    },
-    logo: {
-        width: 60,
-        height: 60
+      width: 48,
+      height: 48,
+      backgroundColor: '#1E2B21',
+      borderRadius: 13
     },
     descriptionWraper: {
       flex: 1,
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      marginLeft: 12
     },
     valueWrapper: {
-      justifyContent: 'center',
-      alignItems: 'center'
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      width: 77
     },
     title: {
-        fontSize: 15,
+        fontSize: 14,
+        fontWeight: '500'
     },
     value: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        marginLeft: 10
+        marginLeft: 2,
+        textAlign: 'right'
+    },
+    valueText: {
+      fontSize: 14,
+      marginLeft: 2,
+      textAlign: 'right'
+    },
+    confirmText: {
+      fontSize: 12,
+      color: '#53C361',
+      textAlign: 'right'
+    },
+    rightBlock: {
+      marginLeft: 12
     }
 
 });

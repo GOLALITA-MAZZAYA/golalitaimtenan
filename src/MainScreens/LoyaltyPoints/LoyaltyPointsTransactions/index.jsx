@@ -8,6 +8,7 @@ import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import { getLoyaltyTransactionHistory } from "../../../api/loyalty";
 import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
+import {SCREEN_HEIGHT} from "../../../styles/mainStyles";
 
 const LoyaltyPointsTransactions = () => {
   const { i18n, t } = useTranslation();
@@ -86,6 +87,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexGrow: 1,
     paddingBottom: 160
+  },
+  contentStyle: {
+    height: SCREEN_HEIGHT
   }
 });
 
