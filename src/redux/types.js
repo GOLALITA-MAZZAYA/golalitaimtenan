@@ -5,6 +5,7 @@ export const BALOO_SEMIBOLD = 'Baloo-SemiBold';
 export const BALOO_BOLD = 'Baloo-Bold';
 export const BALOO_EXTRABOLD = 'Baloo-ExtraBold';
 export const LUSAIL_REGULAR = 'Lusail-Regular';
+export const BALOO_2 = 'Baloo2-VariableFont_wght';
 
 // merchant types
 export const PREMIUM = 'premium';

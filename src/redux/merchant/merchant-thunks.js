@@ -37,6 +37,7 @@ import { setClickedNotificationData } from '../notifications/notifications-actio
 import axios from 'axios';
 import { getMerchantDisscountForOffers, trackMerchantOpensCount } from '../../api/merchants';
 import { getFavouriteMerchantsList } from '../favouriteMerchants/favourite-merchants-thunks';
+import { ORG_ID, ORG_CODE } from '../../constants';
 
 export const getCategories = () => async (dispatch, getState) => {
   const { workStatus } = getState().authReducer;
@@ -66,7 +67,7 @@ const getSubCategoriesFunc = async (parentCategories, type, country) => {
           type,
           country,
           parent_id: id,
-          org_id: 1651,
+          org_id: ORG_ID,
         },
       });
 
@@ -145,7 +146,7 @@ export const getParentCategories = type => async (dispatch, getState) => {
       fields:
         "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image']",
       type,
-      org_id: 1651,
+      org_id: ORG_ID,
     };
 
     const res = await merchantApi.getParentCategories({
@@ -183,229 +184,231 @@ export const getTravelSubCategories = () => async dispatch => {
 
 export const getPremiumBanners =
   ({ page }) =>
-  async (dispatch, getState) => {
-    setPremiumBannersLoading(true);
+    async (dispatch, getState) => {
+      setPremiumBannersLoading(true);
 
-    const { premiumBannersPage } = getState().merchantReducer;
-    const pageVal = page === 'next' ? premiumBannersPage + 1 : page;
-    const concat = !page || pageVal === 1 ? false : true;
+      const { premiumBannersPage } = getState().merchantReducer;
+      const pageVal = page === 'next' ? premiumBannersPage + 1 : page;
+      const concat = !page || pageVal === 1 ? false : true;
 
-    const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem('token');
 
-    const userRes = await authApi.getUserBanners({
-      params: {
-        token,
-        ...getOffsetAndLimit(pageVal),
-      },
-    });
+      const userRes = await authApi.getUserBanners({
+        params: {
+          token,
+          ...getOffsetAndLimit(pageVal),
+        },
+      });
 
-    const banners = userRes.data.result;
+      const banners = userRes.data.result;
 
-    const sortedBanners = banners.sort((a, b) =>
-      a.x_sequence > b.x_sequence ? 1 : -1,
-    );
+      const sortedBanners = banners.sort((a, b) =>
+        a.x_sequence > b.x_sequence ? 1 : -1,
+      );
 
-    dispatch(setPremiumBanners({ data: sortedBanners, concat, page: pageVal }));
-  };
+      dispatch(setPremiumBanners({ data: sortedBanners, concat, page: pageVal }));
+    };
 
 export const getMerchantList =
   ({ page, transform, filters = {}, onGetData }) =>
-  async (dispatch, getState) => {
-    dispatch(setIsMerchantsLoading(true));
+    async (dispatch, getState) => {
+      dispatch(setIsMerchantsLoading(true));
 
-    if (page === 1) {
-      dispatch(setMerchants({ data: [] }));
-    }
+      if (page === 1) {
+        dispatch(setMerchants({ data: [] }));
+      }
 
-    const { workStatus } = getState().authReducer;
-    const token = await AsyncStorage.getItem('token');
-    const isWorkStatusDisabled = workStatus === CONTENT_DISABLED;
+      const { workStatus } = getState().authReducer;
+      const token = await AsyncStorage.getItem('token');
+      const isWorkStatusDisabled = workStatus === CONTENT_DISABLED;
 
-    if (isWorkStatusDisabled) {
-      setMerchants({ data: [] });
-      return;
-    }
+      if (isWorkStatusDisabled) {
+        setMerchants({ data: [] });
+        return;
+      }
 
-    const { merchantsPage } = getState().merchantReducer;
+      const { merchantsPage } = getState().merchantReducer;
 
-    const pageVal = page === 'next' ? merchantsPage + 1 : page;
+      const pageVal = page === 'next' ? merchantsPage + 1 : page;
 
-    const params = {
-      token,
-      ...filters,
-      ...getOffsetAndLimit(pageVal),
-      x_org_linked: 'golalita',
+      const params = {
+        token,
+        ...filters,
+        ...getOffsetAndLimit(pageVal),
+        x_org_linked: ORG_CODE,
+      };
+
+      console.log(params, 'params')
+
+
+      const merchantsRes = await merchantApi.getAllMerchant({
+        params,
+      });
+
+      const merchantsData = merchantsRes.data.result;
+
+      onGetData?.(merchantsData?.length, params.limit);
+
+      const sortedMerchants = merchantsData;
+
+      const data = transform ? transform(sortedMerchants) : sortedMerchants;
+
+      const concat = !page || pageVal === 1 ? false : true;
+
+      dispatch(setMerchants({ data, concat, page: pageVal }));
+
+      dispatch(setIsMerchantsLoading(false));
     };
-
-
-    const merchantsRes = await merchantApi.getAllMerchant({
-      params,
-    });
-
-    const merchantsData = merchantsRes.data.result;
-
-    onGetData?.(merchantsData?.length, params.limit);
-
-    const sortedMerchants = merchantsData;
-
-    const data = transform ? transform(sortedMerchants) : sortedMerchants;
-
-    const concat = !page || pageVal === 1 ? false : true;
-
-    dispatch(setMerchants({ data, concat, page: pageVal }));
-
-    dispatch(setIsMerchantsLoading(false));
-  };
 
 export const getMerchants =
   (type, category_id, isSkip, mapRef, setPressedItem) =>
-  async (dispatch, getState) => {
-    const { workStatus } = getState().authReducer;
-    const token = await AsyncStorage.getItem('token');
-    let res;
-    if (type === CLIENT || type === PREMIUM || type === STANDARD) {
-      if (!isSkip) dispatch(setIsMerchantsLoading(true));
+    async (dispatch, getState) => {
+      const { workStatus } = getState().authReducer;
+      const token = await AsyncStorage.getItem('token');
+      let res;
+      if (type === CLIENT || type === PREMIUM || type === STANDARD) {
+        if (!isSkip) dispatch(setIsMerchantsLoading(true));
 
-      res = await merchantApi.getMerchant({
-        params: {
-          token,
-          domain: `[['go_entity', '=', 'merchant'] 
-        ${type ? `, ['merchant_type', '=', '${type}']` : ''}]`,
-          fields:
-            "['id','name','image_url', 'partner_latitude', 'partner_longitude', 'x_online_store']",
-        },
-      });
-
-      dispatch(
-        setPremiumMerchants(
-          workStatus === CONTENT_DISABLED ? [] : res.data.result,
-        ),
-      );
-    } else {
-      if (!isSkip) {
-        dispatch(setIsMerchantsLoading(true));
-        // dispatch(setMerchants({ data: [], concat: false, page: 1 }));
-      }
-
-      if (!setPressedItem) {
-        res = await authApi.getUserData({
+        res = await merchantApi.getMerchant({
           params: {
             token,
+            domain: `[['go_entity', '=', 'merchant'] 
+        ${type ? `, ['merchant_type', '=', '${type}']` : ''}]`,
+            fields:
+              "['id','name','image_url', 'partner_latitude', 'partner_longitude', 'x_online_store']",
           },
         });
 
-        const data =
-          workStatus === CONTENT_DISABLED
-            ? []
-            : res.data.result.banners.sort((a, b) =>
+        dispatch(
+          setPremiumMerchants(
+            workStatus === CONTENT_DISABLED ? [] : res.data.result,
+          ),
+        );
+      } else {
+        if (!isSkip) {
+          dispatch(setIsMerchantsLoading(true));
+          // dispatch(setMerchants({ data: [], concat: false, page: 1 }));
+        }
+
+        if (!setPressedItem) {
+          res = await authApi.getUserData({
+            params: {
+              token,
+            },
+          });
+
+          const data =
+            workStatus === CONTENT_DISABLED
+              ? []
+              : res.data.result.banners.sort((a, b) =>
                 a.x_sequence > b.x_sequence ? 1 : -1,
               );
 
-        dispatch(setPremiumBanners({ data }));
-      }
+          dispatch(setPremiumBanners({ data }));
+        }
 
-      res = await merchantApi.getAllMerchant({
-        params: { token, category_id },
-      });
-      // if (!isSkip) dispatch(setIsMerchantsLoading(false));
+        res = await merchantApi.getAllMerchant({
+          params: { token, category_id },
+        });
+        // if (!isSkip) dispatch(setIsMerchantsLoading(false));
 
-      dispatch(
-        setMerchants({
-          data:
-            workStatus === CONTENT_DISABLED
-              ? []
-              : res.data.result.sort((a, b) =>
+        dispatch(
+          setMerchants({
+            data:
+              workStatus === CONTENT_DISABLED
+                ? []
+                : res.data.result.sort((a, b) =>
                   a.x_sequence > b.x_sequence ? 1 : -1,
                 ),
-          concat: false,
-          page: 1,
-        }),
-      );
+            concat: false,
+            page: 1,
+          }),
+        );
 
-      if (!isSkip) dispatch(setIsMerchantsLoading(false));
+        if (!isSkip) dispatch(setIsMerchantsLoading(false));
 
-      if (mapRef) {
-        mapRef.current?.animateToRegion({
-          latitude: res.data.result[0].partner_latitude - 0.004,
-          longitude: res.data.result[0].partner_longitude,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        });
-        if (setPressedItem) setPressedItem(res.data.result[0]);
+        if (mapRef) {
+          mapRef.current?.animateToRegion({
+            latitude: res.data.result[0].partner_latitude - 0.004,
+            longitude: res.data.result[0].partner_longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+          });
+          if (setPressedItem) setPressedItem(res.data.result[0]);
+        }
       }
-    }
-  };
+    };
 
 export const getMerchantDetails =
   (merchant_id, navigation, t, title, isOrganization, isOnlineStore, isB1G1) =>
-  async (dispatch, getState) => {
-    dispatch(setMerchantDetailsLoading(true));
+    async (dispatch, getState) => {
+      dispatch(setMerchantDetailsLoading(true));
 
-    const { workStatus } = getState().authReducer;
-    const token = await AsyncStorage.getItem('token');
+      const { workStatus } = getState().authReducer;
+      const token = await AsyncStorage.getItem('token');
 
-    let res;
+      let res;
 
-    if (isOrganization) {
-      res = await merchantApi.getOrganizationDetails({
-        params: {
-          token,
-          org_id: merchant_id,
-        },
-      });
-    } else {
-      res = await merchantApi.getMerchantDetails({
-        params: {
-          token,
-          merchant_id,
-        },
-      });
+      if (isOrganization) {
+        res = await merchantApi.getOrganizationDetails({
+          params: {
+            token,
+            org_id: merchant_id,
+          },
+        });
+      } else {
+        res = await merchantApi.getMerchantDetails({
+          params: {
+            token,
+            merchant_id,
+          },
+        });
 
-      const ribbon_text = await getMerchantDisscountForOffers(merchant_id);
+        const ribbon_text = await getMerchantDisscountForOffers(merchant_id);
 
-      res.data.result.ribbon_text = ribbon_text;
-    }
+        res.data.result.ribbon_text = ribbon_text;
+      }
 
-    dispatch(
-      setMerchantDetails(
-        workStatus === CONTENT_DISABLED
-          ? []
-          : {
+      dispatch(
+        setMerchantDetails(
+          workStatus === CONTENT_DISABLED
+            ? []
+            : {
               ...res.data.result,
               id: merchant_id,
               isOrganization,
               isB1G1,
               isOnlineStore,
             },
-      ),
-    );
+        ),
+      );
 
-    const { clickedNotification } = getState().notificationsReducer;
+      const { clickedNotification } = getState().notificationsReducer;
 
-    if (clickedNotification) {
-      dispatch(setClickedNotificationData(null));
-    }
+      if (clickedNotification) {
+        dispatch(setClickedNotificationData(null));
+      }
 
-    navigate('merchant', {
-      screen: 'merchant-info',
-      params: {
-        title,
-        isOrganization,
-        isOnlineStore,
-        isB1G1,
-      },
-    });
+      navigate('merchant', {
+        screen: 'merchant-info',
+        params: {
+          title,
+          isOrganization,
+          isOnlineStore,
+          isB1G1,
+        },
+      });
 
-    await trackMerchantOpensCount(merchant_id);
+      await trackMerchantOpensCount(merchant_id);
 
-    dispatch(setMerchantDetailsLoading(false));
-    
-  };
+      dispatch(setMerchantDetailsLoading(false));
+
+    };
 
 const getNewMerchantIdsToGroupe = (offers, oldMerchantIds) => {
-  const idsObj = {...oldMerchantIds};
+  const idsObj = { ...oldMerchantIds };
 
-  offers.forEach((item) => idsObj[item.merchant_id] = true );
+  offers.forEach((item) => idsObj[item.merchant_id] = true);
 
   return idsObj
 };
@@ -415,7 +418,7 @@ const removeDuplicateOffers = (offers, merchantIdSet) => {
   const result = [];
 
   for (const offer of offers) {
-    const id = String(offer.merchant_id); 
+    const id = String(offer.merchant_id);
 
     if (!seen.has(id)) {
       seen.add(id);
@@ -429,93 +432,93 @@ const removeDuplicateOffers = (offers, merchantIdSet) => {
 
 export const getGroupedByMerchantOffers =
   ({ page, onGetData, params = {} }) =>
-  async (dispatch, getState) => {
-    dispatch(setIsOffersLoading(true));
+    async (dispatch, getState) => {
+      dispatch(setIsOffersLoading(true));
 
-    try {
-      if (page === 1) {
-        dispatch(
-          setOffers({
-            data: [],
-            page: 1,
-            concat: false,
-            merchantIdsToGroup: {},
-          })
+      try {
+        if (page === 1) {
+          dispatch(
+            setOffers({
+              data: [],
+              page: 1,
+              concat: false,
+              merchantIdsToGroup: {},
+            })
+          );
+        }
+
+        const { token } = getState().authReducer;
+        const { offersPage, merchantIdsToGroup } =
+          getState().merchantReducer;
+
+        const pageVal =
+          typeof page === "number" ? page : offersPage + 1;
+
+        const offsetAndLimit = getOffsetAndLimitForOffers(
+          pageVal,
+          10
         );
-      }
 
-      const { token } = getState().authReducer;
-      const { offersPage, merchantIdsToGroup } =
-        getState().merchantReducer;
+        const res = await merchantApi.getNewOffers({
+          params: { token, ...offsetAndLimit, ...params },
+        });
 
-      const pageVal =
-        typeof page === "number" ? page : offersPage + 1;
+        const newOffers = res.data.result ?? [];
 
-      const offsetAndLimit = getOffsetAndLimitForOffers(
-        pageVal,
-        10
-      );
-
-      const res = await merchantApi.getNewOffers({
-        params: { token, ...offsetAndLimit, ...params },
-      });
-
-      const newOffers = res.data.result ?? [];
-
-      // No more data from API
-      if (!newOffers.length) {
-        onGetData?.(0, offsetAndLimit.limit);
-        return;
-      }
-
-      const merchantIdSet = new Set(
-        Object.keys(merchantIdsToGroup)
-      );
-
-      const { offers: groupedOffers, nextMerchantIds } =
-        removeDuplicateOffers(newOffers, merchantIdSet);
-
-      // All offers were duplicates
-      if (!groupedOffers.length) {
-        onGetData?.(newOffers.length, offsetAndLimit.limit);
-
-        // No more pages → stop
-        if (newOffers.length < offsetAndLimit.limit) {
+        // No more data from API
+        if (!newOffers.length) {
+          onGetData?.(0, offsetAndLimit.limit);
           return;
         }
 
-        // Try next page
+        const merchantIdSet = new Set(
+          Object.keys(merchantIdsToGroup)
+        );
+
+        const { offers: groupedOffers, nextMerchantIds } =
+          removeDuplicateOffers(newOffers, merchantIdSet);
+
+        // All offers were duplicates
+        if (!groupedOffers.length) {
+          onGetData?.(newOffers.length, offsetAndLimit.limit);
+
+          // No more pages → stop
+          if (newOffers.length < offsetAndLimit.limit) {
+            return;
+          }
+
+          // Try next page
+          dispatch(
+            getGroupedByMerchantOffers({
+              page: pageVal + 1,
+              onGetData,
+            })
+          );
+          return;
+        }
+
+        onGetData?.(newOffers.length, offsetAndLimit.limit);
+
         dispatch(
-          getGroupedByMerchantOffers({
-            page: pageVal + 1,
-            onGetData,
+          setOffers({
+            data: groupedOffers,
+            page: pageVal,
+            concat: true,
+            merchantIdsToGroup: Object.fromEntries(
+              [...nextMerchantIds].map((id) => [id, true])
+            ),
           })
         );
-        return;
+      } catch (error) {
+        console.error("getGroupedByMerchantOffers error:", error);
+      } finally {
+        dispatch(setIsOffersLoading(false));
       }
-
-      onGetData?.(newOffers.length, offsetAndLimit.limit);
-
-      dispatch(
-        setOffers({
-          data: groupedOffers,
-          page: pageVal,
-          concat: true,
-          merchantIdsToGroup: Object.fromEntries(
-            [...nextMerchantIds].map((id) => [id, true])
-          ),
-        })
-      );
-    } catch (error) {
-      console.error("getGroupedByMerchantOffers error:", error);
-    } finally {
-      dispatch(setIsOffersLoading(false));
-    }
-  };
+    };
 
 
 
-  
+
 
 export const getOffers =
   ({
@@ -525,74 +528,74 @@ export const getOffers =
     params: additionalRequestParams = {},
     onGetData,
   }) =>
-  async (dispatch, getState) => {
-    dispatch(setIsOffersLoading(true));
+    async (dispatch, getState) => {
+      dispatch(setIsOffersLoading(true));
 
-    if (page === 1) {
-      dispatch(
-        setOffers({
-          data: [],
-          page: 1,
-          concat: false,
-        }),
-      );
-    }
-
-    
-
-    const { workStatus } = getState().authReducer;
-    const { token } = getState().authReducer;
-
-    const reqParams = merchant_id
-      ? { token, merchant_id, ...additionalRequestParams }
-      : merchant_category_id
-        ? { token, merchant_category_id, ...additionalRequestParams }
-        : { token, ...additionalRequestParams };
-
-    let pageVal;
-
-    let offsetAndLimit = {};
-    if (page) {
-      const { offersPage } = getState().merchantReducer;
-
-      if (page === 'next') {
-        pageVal = offersPage + 1;
-        offsetAndLimit = getOffsetAndLimit(pageVal);
-      } else if (typeof page === 'number') {
-        pageVal = page;
-        offsetAndLimit = getOffsetAndLimit(page);
+      if (page === 1) {
+        dispatch(
+          setOffers({
+            data: [],
+            page: 1,
+            concat: false,
+          }),
+        );
       }
-    }
 
-    const params = Object.assign(reqParams, offsetAndLimit);
 
-    const res = await merchantApi.getNewOffers({
-      params,
-    });
 
-    if (merchant_id)
-      dispatch(
-        setMerchantOffers(
-          workStatus === CONTENT_DISABLED ? [] : res.data.result,
-        ),
-      );
-    else {
-      const concat = !page || pageVal === 1 ? false : true;
-      const data = res.data.result;
+      const { workStatus } = getState().authReducer;
+      const { token } = getState().authReducer;
 
-      onGetData?.(data?.length, params.limit);
+      const reqParams = merchant_id
+        ? { token, merchant_id, ...additionalRequestParams }
+        : merchant_category_id
+          ? { token, merchant_category_id, ...additionalRequestParams }
+          : { token, ...additionalRequestParams };
 
-      dispatch(
-        setOffers({
-          data: workStatus === CONTENT_DISABLED ? [] : data,
-          page: pageVal,
-          concat,
-        }),
-      );
-    }
+      let pageVal;
 
-    dispatch(setIsOffersLoading(false));
-  };
+      let offsetAndLimit = {};
+      if (page) {
+        const { offersPage } = getState().merchantReducer;
+
+        if (page === 'next') {
+          pageVal = offersPage + 1;
+          offsetAndLimit = getOffsetAndLimit(pageVal);
+        } else if (typeof page === 'number') {
+          pageVal = page;
+          offsetAndLimit = getOffsetAndLimit(page);
+        }
+      }
+
+      const params = Object.assign(reqParams, offsetAndLimit);
+
+      const res = await merchantApi.getNewOffers({
+        params,
+      });
+
+      if (merchant_id)
+        dispatch(
+          setMerchantOffers(
+            workStatus === CONTENT_DISABLED ? [] : res.data.result,
+          ),
+        );
+      else {
+        const concat = !page || pageVal === 1 ? false : true;
+        const data = res.data.result;
+
+        onGetData?.(data?.length, params.limit);
+
+        dispatch(
+          setOffers({
+            data: workStatus === CONTENT_DISABLED ? [] : data,
+            page: pageVal,
+            concat,
+          }),
+        );
+      }
+
+      dispatch(setIsOffersLoading(false));
+    };
 
 export const getOfferById = product_id => async (dispatch, getState) => {
   try {
@@ -613,67 +616,67 @@ export const getOfferById = product_id => async (dispatch, getState) => {
 
 export const getProducts =
   ({ merchant_id, page }) =>
-  async (dispatch, getState) => {
-    const { workStatus } = getState().authReducer;
-    const { token } = getState().authReducer;
+    async (dispatch, getState) => {
+      const { workStatus } = getState().authReducer;
+      const { token } = getState().authReducer;
 
-    const params = {
-      token,
-      fields:
-        "['name', 'lst_price', 'default_code','description', 'barcode', 'image_url']",
-      domain: `[['merchant_id', '=', ${merchant_id}]]`,
+      const params = {
+        token,
+        fields:
+          "['name', 'lst_price', 'default_code','description', 'barcode', 'image_url']",
+        domain: `[['merchant_id', '=', ${merchant_id}]]`,
+      };
+
+      let pageVal = page;
+
+      if (pageVal) {
+        if (pageVal === 1) {
+          params = { ...params, ...getOffsetAndLimit(1) };
+        }
+
+        if (page === 'next') {
+          const { merchantProductsPage } = getState().merchantReducer;
+
+          pageVal = merchantProductsPage + 1;
+          params = { ...params, ...getOffsetAndLimit(pageVal) };
+        }
+      }
+
+      const res = await merchantApi.getProducts({
+        params,
+      });
+
+      dispatch(
+        setMerchantProducts({
+          merchantProducts:
+            workStatus === CONTENT_DISABLED ? [] : res.data.result,
+          merchantProductsPage: pageVal,
+        }),
+      );
     };
-
-    let pageVal = page;
-
-    if (pageVal) {
-      if (pageVal === 1) {
-        params = { ...params, ...getOffsetAndLimit(1) };
-      }
-
-      if (page === 'next') {
-        const { merchantProductsPage } = getState().merchantReducer;
-
-        pageVal = merchantProductsPage + 1;
-        params = { ...params, ...getOffsetAndLimit(pageVal) };
-      }
-    }
-
-    const res = await merchantApi.getProducts({
-      params,
-    });
-
-    dispatch(
-      setMerchantProducts({
-        merchantProducts:
-          workStatus === CONTENT_DISABLED ? [] : res.data.result,
-        merchantProductsPage: pageVal,
-      }),
-    );
-  };
 
 export const getFavoriteOffers =
   (isHideLoading, selectedCategory, isVouchers) =>
-  async (dispatch, getState) => {
-    const { workStatus } = getState().authReducer;
-    const { token } = getState().authReducer;
-    let body = { token, merchant_category_id: selectedCategory };
-    if (isVouchers) {
-      body = { ...body, is_voucher: 'True' };
-    } else {
-      body = { ...body, is_save: 'True' };
-    }
-    if (!isHideLoading) dispatch(setIsOffersLoading(true));
+    async (dispatch, getState) => {
+      const { workStatus } = getState().authReducer;
+      const { token } = getState().authReducer;
+      let body = { token, merchant_category_id: selectedCategory };
+      if (isVouchers) {
+        body = { ...body, is_voucher: 'True' };
+      } else {
+        body = { ...body, is_save: 'True' };
+      }
+      if (!isHideLoading) dispatch(setIsOffersLoading(true));
 
-    const res = await merchantApi.getFavoriteOffers({
-      params: body,
-    });
+      const res = await merchantApi.getFavoriteOffers({
+        params: body,
+      });
 
-    if (!isHideLoading) dispatch(setIsOffersLoading(false));
-    dispatch(
-      setFavoriteOffers(workStatus === CONTENT_DISABLED ? [] : res.data.result),
-    );
-  };
+      if (!isHideLoading) dispatch(setIsOffersLoading(false));
+      dispatch(
+        setFavoriteOffers(workStatus === CONTENT_DISABLED ? [] : res.data.result),
+      );
+    };
 
 export const getLocalClients = () => async (dispatch, getState) => {
   const token = await AsyncStorage.getItem('token');
@@ -720,34 +723,34 @@ export const getInternationalClients = () => async (dispatch, getState) => {
 
 export const getOrganizations =
   ({ transform }) =>
-  async (dispatch, getState) => {
-    const { token } = getState().authReducer;
-    try {
-      dispatch(setIsMerchantsLoading(true));
-      const res = await merchantApi.getOrganizations({
-        params: {
-          token,
-        },
-      });
+    async (dispatch, getState) => {
+      const { token } = getState().authReducer;
+      try {
+        dispatch(setIsMerchantsLoading(true));
+        const res = await merchantApi.getOrganizations({
+          params: {
+            token,
+          },
+        });
 
-      const data = res.data.result
-        .map(d => ({
-          ...d,
-          merchant_logo: d.org_logo,
-          banner_image: d.org_banner,
-          merchant_id: d.org_id,
-          merchant_name: d.org_name,
-          name: d.org_name,
-          isOrganization: true,
-        }))
-        .sort((a, b) => (a.x_sequence > b.x_sequence ? 1 : -1));
+        const data = res.data.result
+          .map(d => ({
+            ...d,
+            merchant_logo: d.org_logo,
+            banner_image: d.org_banner,
+            merchant_id: d.org_id,
+            merchant_name: d.org_name,
+            name: d.org_name,
+            isOrganization: true,
+          }))
+          .sort((a, b) => (a.x_sequence > b.x_sequence ? 1 : -1));
 
-      dispatch(setOrganizations(transform ? transform(data) : data));
-      dispatch(setIsMerchantsLoading(false));
-    } catch (e) {
-      console.log(e);
-    }
-  };
+        dispatch(setOrganizations(transform ? transform(data) : data));
+        dispatch(setIsMerchantsLoading(false));
+      } catch (e) {
+        console.log(e);
+      }
+    };
 
 export const bookNow =
   (body, t, setIsSuccessBook) => async (dispatch, getState) => {
@@ -989,34 +992,34 @@ export const redeem = (body, t) => async (dispatch, getState) => {
 
 export const track =
   (track_type, product_id, isSendEmail, value, onFinishCallBack) =>
-  async (dispatch, getState) => {
-    const { token, user } = getState().authReducer;
-    const userId = await AsyncStorage.getItem('tracking_partner_id');
+    async (dispatch, getState) => {
+      const { token, user } = getState().authReducer;
+      const userId = await AsyncStorage.getItem('tracking_partner_id');
 
-    try {
-      let body = {
-        params: {
-          token,
-          customer_id: userId,
-          customer_name: user.name,
-          customer_phone: user.phone,
-          customer_email: user.email,
-          track_type,
-          product_id,
-          track_value: value,
-          track_date_time: new Date(),
-        },
-      };
-      if (isSendEmail) {
-        const res = await merchantApi.sendEmail(body);
-        console.log('send email', res.data);
-        onFinishCallBack?.();
-      } else {
-        const res = await merchantApi.track(body);
-        console.log('track', res.data);
-        onFinishCallBack?.();
+      try {
+        let body = {
+          params: {
+            token,
+            customer_id: userId,
+            customer_name: user.name,
+            customer_phone: user.phone,
+            customer_email: user.email,
+            track_type,
+            product_id,
+            track_value: value,
+            track_date_time: new Date(),
+          },
+        };
+        if (isSendEmail) {
+          const res = await merchantApi.sendEmail(body);
+          console.log('send email', res.data);
+          onFinishCallBack?.();
+        } else {
+          const res = await merchantApi.track(body);
+          console.log('track', res.data);
+          onFinishCallBack?.();
+        }
+      } catch (e) {
+        console.log(e);
       }
-    } catch (e) {
-      console.log(e);
-    }
-  };
+    };

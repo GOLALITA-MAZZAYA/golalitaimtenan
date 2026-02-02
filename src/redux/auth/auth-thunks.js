@@ -29,6 +29,7 @@ import { getCountries } from '../global/global-thunks';
 import { getAdvert, getParentCategories } from '../merchant/merchant-thunks';
 import { getMessageNotifications } from '../notifications/notifications-thunks';
 import { verifyEmail, verifyPhone } from '../../api/merchants';
+import { BASE_URL, ORG_ID } from '../../constants';
 
 export const getInitialData = () => async (dispatch, getState) => {
   try {
@@ -123,7 +124,7 @@ export const autologin = token => async (dispatch, getState) => {
   const { categoriesType } = getState().merchantReducer;
   let res;
   try {
-    const url = 'https://www.golalita.com/go/api/user/detail/email';
+    const url = `https://${BASE_URL}/go/api/user/detail/email`;
     const payload = {
       params: {
         token: token,
@@ -319,29 +320,29 @@ export const getPublicOrganizations = () => async dispatch => {
 
 export const checkCode =
   (body, setFieldError, t, navigation, registerBody, isNeedCode) =>
-  async () => {
-    try {
-      let res;
-      if (isNeedCode) {
-        res = await authApi.checkCode(body);
-      }
+    async () => {
+      try {
+        let res;
+        if (isNeedCode) {
+          res = await authApi.checkCode(body);
+        }
 
-      if (
-        !isNeedCode ||
-        (res &&
-          res.data.result.length > 0 &&
-          res.data.result[res.data.result.length - 1].org_name ===
+        if (
+          !isNeedCode ||
+          (res &&
+            res.data.result.length > 0 &&
+            res.data.result[res.data.result.length - 1].org_name ===
             body.params.org_name)
-      ) {
-        navigation.navigate('CreatePassword', { registerBody });
-      } else {
+        ) {
+          navigation.navigate('CreatePassword', { registerBody });
+        } else {
+          setFieldError('organizationCode', t('Login.wrongCode'));
+        }
+      } catch (e) {
+        console.log(e);
         setFieldError('organizationCode', t('Login.wrongCode'));
       }
-    } catch (e) {
-      console.log(e);
-      setFieldError('organizationCode', t('Login.wrongCode'));
-    }
-  };
+    };
 
 export const register = body => async dispatch => {
   try {
@@ -413,79 +414,79 @@ export const sendOTP =
     t,
     isForgotPassword,
   ) =>
-  async () => {
-    try {
-      let res;
-      if (isForgotPassword) {
-        res = await authApi.sendOTP({
-          params: body,
-        });
-      } else {
-        res = await authApi.sendOTPRegister({
-          params: body,
-        });
-      }
+    async () => {
+      try {
+        let res;
+        if (isForgotPassword) {
+          res = await authApi.sendOTP({
+            params: body,
+          });
+        } else {
+          res = await authApi.sendOTPRegister({
+            params: body,
+          });
+        }
 
-      if (typeof res.data?.result?.error === 'string') {
-        setFieldError('phone', res.data?.result?.error);
-        return;
-      }
+        if (typeof res.data?.result?.error === 'string') {
+          setFieldError('phone', res.data?.result?.error);
+          return;
+        }
 
-      if (!res?.data?.result) {
+        if (!res?.data?.result) {
+          showMessage({
+            message: t('Login.somethingWrong'),
+            type: 'error',
+          });
+
+          return;
+        }
+
         showMessage({
-          message: t('Login.somethingWrong'),
-          type: 'error',
+          message: res.data.result.success,
+          type: 'success',
         });
 
-        return;
+        navigation.navigate('Verification', {
+          registerBody,
+          phone: body.phone,
+          isForgotPassword,
+        });
+      } catch (e) {
+        setFieldError('phone', t('Login.somethingWrong'));
       }
-
-      showMessage({
-        message: res.data.result.success,
-        type: 'success',
-      });
-
-      navigation.navigate('Verification', {
-        registerBody,
-        phone: body.phone,
-        isForgotPassword,
-      });
-    } catch (e) {
-      setFieldError('phone', t('Login.somethingWrong'));
-    }
-  };
+    };
 
 export const verify =
   (body, navigation, setFieldError, t, registerBody, isForgotPassword) =>
-  async dispatch => {
-    try {
-      dispatch(setProfileLoading(true));
-      let res;
-      if (isForgotPassword) {
-        res = await authApi.verify(body);
-      } else {
-        res = await authApi.verifyRegister(body);
-      }
-
-      if (res.data?.result?.success) {
-        if (isForgotPassword)
-          navigation.navigate('CreatePassword', {
-            isForgotPassword: true,
-            token: res.data.result?.token,
-          });
-        else {
-          dispatch(register(registerBody, navigation, t));
-          navigation.navigate('Login');
+    async dispatch => {
+      try {
+        dispatch(setProfileLoading(true));
+        let res;
+        if (isForgotPassword) {
+          res = await authApi.verify(body);
+        } else {
+          res = await authApi.verifyRegister(body);
         }
-      } else {
-        setFieldError('code', t('Login.wrongCode'));
+
+        if (res.data?.result?.success) {
+          if (isForgotPassword)
+            navigation.navigate('CreatePassword', {
+              isForgotPassword: true,
+              token: res.data.result?.token,
+            });
+          else {
+            dispatch(register(registerBody, navigation, t));
+            navigation.navigate('Login');
+          }
+        } else {
+          setFieldError('code', t('Login.wrongCode'));
+        }
+      } catch (e) {
+        console.log(e);
+      } finally {
+        dispatch(setProfileLoading(false));
       }
-    } catch (e) {
-      console.log(e);
-    } finally {
-      dispatch(setProfileLoading(false));
-    }
-  };
+    };
 
 export const changePassword =
   (body, navigation, setFieldError, t) => async dispatch => {
@@ -529,7 +530,7 @@ export const validate_code = body => async dispatch => {
 
 export const verifyRegisterCode =
   (body, navigation, setFieldError, t) => async () => {
-    const DEFAULT_ORGANIZATION_CODE = '1651';
+    const DEFAULT_ORGANIZATION_CODE = ORG_ID.toString();
 
     try {
       let res;

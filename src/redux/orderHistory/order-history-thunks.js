@@ -5,6 +5,7 @@ import {
 } from "./order-history-actions";
 import { orderHistoryApi } from "./order-history-api";
 import axios from "axios";
+import { BASE_URL } from "../../constants";
 
 export const getOrderHistory = () => async (dispatch, getState) => {
   try {
@@ -13,7 +14,7 @@ export const getOrderHistory = () => async (dispatch, getState) => {
     const { user } = getState().authReducer;
 
     const res = await axios.post(
-      "https://www.golalita.com/go/user/api/user/restro/order/list",
+      `https://${BASE_URL}/go/user/api/user/restro/order/list`,
       {
         params: {
           token,

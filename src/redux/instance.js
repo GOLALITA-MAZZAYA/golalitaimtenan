@@ -11,7 +11,8 @@ import {
 import { refreshToken } from '../api/auth';
 
 // api base url
-export const API_BASE_URL = 'https://www.golalita.com/go/api';
+import { BASE_URL } from '../constants';
+export const API_BASE_URL = `https://${BASE_URL}/go/api`;
 
 // api base url for gcp test
 //export const API_BASE_URL = "https://gcptest.golalita.com/go/api";
