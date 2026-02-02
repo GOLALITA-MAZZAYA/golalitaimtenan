@@ -29,6 +29,7 @@ import BackBtn from "../../components/Btns/BackBtn";
 import { updateProfile, validate_code } from "../../redux/auth/auth-thunks";
 import { setProfileLoading } from "../../redux/auth/auth-actions";
 import Header from "../../components/Header";
+import { ORG_ID } from "../../constants";
 
 const CodeConfirmation = ({
   route,
@@ -109,7 +110,7 @@ const CodeConfirmation = ({
                 }}
                 onSubmit={async (values, { setFieldError }) => {
                   console.log("valuesvaluesvalues:", values);
-                  const DEFAULT_ORGANIZATION_CODE = "1651";
+                  const DEFAULT_ORGANIZATION_CODE = ORG_ID.toString();
                   const RANDOM_CODE = await AsyncStorage.getItem("randomCode");
                   try {
                     let res;

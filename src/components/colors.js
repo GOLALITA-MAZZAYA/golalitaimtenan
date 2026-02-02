@@ -1,4 +1,60 @@
-export const colors = {
+
+export const loyaltyDarkColors = {
+   loyaltyTextMain: "#fff",
+   loyaltyTextMainTitle: "#fff",
+   loyaltyTextSecondary: "#B1B1B4",
+   loyaltyTextSecondary2: "#6B6B6C",
+   loyaltyTextSecondary3: "#6B6B6C",
+   loyaltyTextPrimary: "#D7BC76",
+   loyaltyCardBackground: "#0F0F0F",
+   loyaltyMainBorder: '#1B1B1B',
+   loyaltyBtnTextPrimary: "#000",
+   loyaltyBtnTextRegular: "#D7BC76",
+   loyaltyBackground: "#000",
+   loyaltyPrimary: "#D7BC76",
+   loyaltySecondary: "#B1B1B4",
+   loyaltySecondary2: "#2E2E2E",
+   loyaltyActiveTabText: "#000",
+   loyaltyTabsBackground: "#0F0F0F",
+   loyaltyTabsBorder: '#D7BC76',
+   loyaltyGiftCardText: '#fff',
+   loyaltyRadioBorder: "#272727",
+   loyaltyRadioBorderActive: "#fff",
+   loyaltyTextInputText: "#B1B1B4",
+   loyaltyTextInputTextActive: "#fff",
+   loyaltyCardExpiringText: '#B1B1B4',
+   loyaltyExpiringCard: '#0F0F0F'
+};
+
+export const loyaltyLightColors = {
+   loyaltyTextMain: "#8A1538",
+   loyaltyTextMainTitle: "#000",
+   loyaltyTextSecondary: "#616060",
+   loyaltyTextSecondary2: "#6B6B6C",
+   loyaltyTextSecondary3: "#000",
+   loyaltyTextPrimary: "#8A1538",
+   loyaltyCardBackground: "#D9D9D9",
+   loyaltyMainBorder: 'transparent',
+   loyaltyBtnTextPrimary: "#fff",
+   loyaltyBtnTextRegular: "#8A1538",
+   loyaltyBackground: "#000",
+   loyaltyPrimary: "#8A1538",
+   loyaltySecondary: "#B1B1B4",
+   loyaltySecondary2: "#2E2E2E",
+   loyaltyActiveTabText: "#fff",
+   loyaltyTabsBackground: "#fff",
+   loyaltyTabsBorder: '#fff',
+   loyaltyGiftCardText: '#fff',
+   loyaltyRadioBorder: "#8A1538",
+   loyaltyRadioBorderActive: "#fff",
+   loyaltyTextInputText: "#616060",
+   loyaltyTextInputTextActive: "#fff",
+   loyaltyCardExpiringText: "#000",
+   loyaltyExpiringCard: '#fff'
+
+};
+
+export let colors = {
   darkBlue: "#940037",
   navyBlue: "#072536",
   darkModeBackground: "#000",
@@ -20,4 +76,5 @@ export const colors = {
   highlatedGrey: "#EDEDED",
   borderGrey: "#2F2F2F",
   categoryGrey: "#313131",
+  ...loyaltyLightColors
 };

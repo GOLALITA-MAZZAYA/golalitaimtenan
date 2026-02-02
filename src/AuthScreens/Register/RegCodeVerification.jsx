@@ -153,7 +153,7 @@ const RegCodeVerification = ({
                         onChangeText={handleChange('registration_code')}
                         error={errors.registration_code}
                         returnKeyType={'next'}
-                        wrapperStyle={{ marginBottom: 10 }}
+                        wrapperStyle={{ marginBottom: 25 }}
                       />
 
                       <Input
@@ -167,7 +167,7 @@ const RegCodeVerification = ({
                         returnKeyType={'next'}
                         autoCapitalize="none"
                         wrapperStyle={{ marginBottom: 12 }}
-                        style={{ fontSize: 16, marginTop: 20 }}
+                        style={{ fontSize: 16, }}
                       />
                     </View>
 

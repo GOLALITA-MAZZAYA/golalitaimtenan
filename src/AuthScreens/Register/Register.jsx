@@ -26,6 +26,7 @@ import { connect } from 'react-redux';
 import { register } from '../../redux/auth/auth-thunks';
 import TopCircleShadow from '../../components/TopCircleShadow';
 import Header from '../../components/Header';
+import { ORG_ID } from '../../constants';
 
 const Register = ({ route, navigation, register }) => {
   let params = route?.params;
@@ -95,7 +96,7 @@ const Register = ({ route, navigation, register }) => {
               last_name,
               email,
               phone,
-              parent_id: '1651',
+              parent_id: ORG_ID.toString(),
               active_period: 1,
               password: values.password,
               device_type: Platform.OS

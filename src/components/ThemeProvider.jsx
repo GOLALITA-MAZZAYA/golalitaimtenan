@@ -1,7 +1,7 @@
 import * as React from 'react';
 // import {useColorScheme} from 'react-native-appearance';
 import { StatusBar, Text, TouchableOpacity } from 'react-native';
-import { colors } from './colors';
+import { colors, loyaltyDarkColors, loyaltyLightColors } from './colors';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -52,11 +52,24 @@ export const ThemeProvider = props => {
 
   const setScheme = scheme => {
     if (scheme === 'dark') {
+
+      
+      Object.entries(loyaltyDarkColors).forEach(([key, value]) => {
+        colors[key] = value
+      })
+
       colors.darkBlue = '#000';
       colors.navyBlue = '#000';
     } else {
+
+      Object.entries(loyaltyLightColors).forEach(([key, value]) => {
+        console.log(key,value);
+        colors[key] = value
+      })
+
       colors.darkBlue = '#940037';
       colors.navyBlue = '#072536';
+
     }
     //#072536
     setIsDark(scheme === 'dark');
