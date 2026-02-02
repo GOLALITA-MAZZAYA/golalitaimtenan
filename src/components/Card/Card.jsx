@@ -35,7 +35,7 @@ const Card = ({ name, lname, expiryDate, email, renderHeader }) => {
             textColor={colors.white}
             size={16}
             font={BALOO_SEMIBOLD}
-            title={'Golalita members'}
+            title={''}
           />
 
           {isMumayaz && (
