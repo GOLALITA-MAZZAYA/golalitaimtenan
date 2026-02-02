@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { colors } from "../../components/colors";
 import FullScreenLoader from "../../components/Loaders/FullScreenLoader";
 import Header from "../../components/Header";
+import { ORG_CODE } from "../../constants";
 
 const PrivacyPolicy = () => {
   const { isDark } = useTheme();
@@ -24,7 +25,7 @@ const PrivacyPolicy = () => {
         <WebView
           startInLoadingState
           source={{
-            uri: "https://www.golalita.com/privacy-policy",
+            uri: `https://www.golalita.com/privacy-policy/${ORG_CODE}`,
           }}
           style={styles.webView}
           renderLoading={() => <FullScreenLoader absolutePosition />}
