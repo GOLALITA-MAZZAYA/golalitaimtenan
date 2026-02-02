@@ -1,5 +1,6 @@
 import instance, { API_BASE_URL } from "../instance";
 import axios from "axios";
+import { ORG_CODE } from "../../constants";
 
 const authApi = {
   login: (body) => instance.post("/user/get_token", body),
@@ -15,11 +16,11 @@ const authApi = {
   checkCode: (body) => instance.post("/code/check/v2", body),
   register: (body) =>
     instance.post(
-      `https://www.golalita.com/organisation/employee/registration/v2`,
+      `https://www.golalita.com/organisation/employee/registration/v2/${ORG_CODE}`,
       body
     ),
-  sendOTP: (body) => instance.post("/send/otp/golalita", body),
-  sendOTPEmail: (body) => instance.post("/send/otp/email/golalita", body),
+  sendOTP: (body) => instance.post(`/send/otp/${ORG_CODE}`, body),
+  sendOTPEmail: (body) => instance.post(`/send/otp/email/${ORG_CODE}`, body),
   sendOTPRegister: (body) => instance.post("/send/otp/new_user", body),
   verify: (body) => instance.post("/otp/verify", body),
   verifyRegister: (body) => instance.post("/otp/verify/new_user", body),
