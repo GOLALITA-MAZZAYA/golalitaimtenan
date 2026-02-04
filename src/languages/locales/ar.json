@@ -83,6 +83,7 @@
       "email": "الأيميل",
       "emailPlaceholder": "الأيميل",
       "invalidEmail": "ألأيميل غير صحيح",
+      "invalidEmailDomain": "يجب أن يكون البريد الإلكتروني من نطاق @qcb.gov.qa",
       "invalidPhone": "رقم الهاف غير صحيح",
       "passwordsMustMatch": "كلمة السر غير متطابقة",
       "min8chars": "حد اقل أدخال 8 حروف",

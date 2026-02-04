@@ -29,7 +29,7 @@ export let ButtonTabBar = ({ state, descriptors }) => {
     return null;
   }
 
-  const activeColor = isDark ? colors.mainDarkMode : '#940037';
+  const activeColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const passiveColor = isDark ? 'white' : 'black';
 
   const getColor = screenName => {

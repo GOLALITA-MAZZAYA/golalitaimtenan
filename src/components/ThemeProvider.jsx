@@ -17,7 +17,7 @@ const lightColors = {
 export const ThemeContext = React.createContext({
   isDark: true,
   colors: darkColors,
-  setScheme: () => {},
+  setScheme: () => { },
 });
 
 colors.darkBlue = '#000';
@@ -53,7 +53,7 @@ export const ThemeProvider = props => {
   const setScheme = scheme => {
     if (scheme === 'dark') {
 
-      
+
       Object.entries(loyaltyDarkColors).forEach(([key, value]) => {
         colors[key] = value
       })
@@ -63,11 +63,11 @@ export const ThemeProvider = props => {
     } else {
 
       Object.entries(loyaltyLightColors).forEach(([key, value]) => {
-        console.log(key,value);
+        console.log(key, value);
         colors[key] = value
       })
 
-      colors.darkBlue = '#940037';
+      colors.darkBlue = '#d2b62a';
       colors.navyBlue = '#072536';
 
     }

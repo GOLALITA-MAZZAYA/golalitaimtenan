@@ -100,6 +100,7 @@
       "email": "Email",
       "emailPlaceholder": "Your email",
       "invalidEmail": "Invalid email",
+      "invalidEmailDomain": "Email must be from @qcb.gov.qa domain",
       "invalidPhone": "Phone number is not valid",
       "passwordsMustMatch": "Passwords must match",
       "min8chars": "8 characters minimum",
