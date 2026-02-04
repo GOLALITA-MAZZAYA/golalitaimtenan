@@ -24,7 +24,7 @@ const CategoriesFilter = ({ type, onChange, style }) => {
     const isActive = type === itemType;
 
     if (isActive) {
-      return isDark ? colors.mainDarkModeText : colors.white;
+      return isDark ? colors.darkBlue : colors.white;
     }
 
     return isDark ? colors.white : colors.darkBlue;
