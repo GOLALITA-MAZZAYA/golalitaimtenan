@@ -90,7 +90,7 @@ const BookHotel = ({ user, bookNow, route, navigation }) => {
               return_date: getDateString(return_date),
               ...values,
               hotel_email: params?.email,
-              organisation:"Golalita",
+              organisation: "Imtenan",
               product_price:
                 typeof values.product_price === "number"
                   ? Number(values.product_price)
@@ -161,7 +161,7 @@ const BookHotel = ({ user, bookNow, route, navigation }) => {
                           innerRef={ref_to_input4}
                           label={t("Profile.departureDate")}
                           value={getDateString(values.departure_date)}
-                          onChangeText={() => {}}
+                          onChangeText={() => { }}
                           placeholder={t("Profile.departureDate")}
                           returnKeyType={"next"}
                           error={errors.departure_date}
@@ -173,7 +173,7 @@ const BookHotel = ({ user, bookNow, route, navigation }) => {
                           innerRef={ref_to_input5}
                           label={t("Profile.returnDate")}
                           value={getDateString(values.return_date)}
-                          onChangeText={() => {}}
+                          onChangeText={() => { }}
                           placeholder={t("Profile.returnDate")}
                           returnKeyType={"next"}
                           error={errors.return_date}
