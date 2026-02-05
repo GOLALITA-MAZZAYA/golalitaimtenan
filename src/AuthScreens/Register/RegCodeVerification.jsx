@@ -82,7 +82,7 @@ const RegCodeVerification = ({
           <View style={[mainStyles.p20, { marginTop: getPixel(7), flex: 2 }]}>
             <Formik
               initialValues={{
-                registration_code: '',
+                //  registration_code: '',
                 email: '',
               }}
               validateOnChange={false}
@@ -122,9 +122,14 @@ const RegCodeVerification = ({
                 }
               }}
               validationSchema={Yup.object({
-                registration_code: Yup.string().required(t('Login.required')),
+                //  registration_code: Yup.string().required(t('Login.required')),
                 email: Yup.string()
                   .email(t('Login.invalidEmail'))
+                  // .test(
+                  //   'is-qcb-email',
+                  //   t('Login.invalidEmailDomain'),
+                  //   (value) => !value || value.endsWith('@qcb.gov.qa')
+                  // )
                   .required(t('Login.required')),
               })}
             >
@@ -146,7 +151,7 @@ const RegCodeVerification = ({
                     }}
                   >
                     <View>
-                      <Input
+                      {/* <Input
                         label={t('Login.code')}
                         placeholder={t('Login.code')}
                         value={values.registration_code}
@@ -154,7 +159,7 @@ const RegCodeVerification = ({
                         error={errors.registration_code}
                         returnKeyType={'next'}
                         wrapperStyle={{ marginBottom: 25 }}
-                      />
+                      /> */}
 
                       <Input
                         label={t('Login.email')}
