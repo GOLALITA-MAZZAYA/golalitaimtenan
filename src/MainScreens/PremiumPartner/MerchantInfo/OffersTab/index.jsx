@@ -33,7 +33,7 @@ const OfferTab = ({ merchant }) => {
     try {
       setLoading(true);
       const data = await getAllOffersByMeerchantId(
-        merchant
+        merchant.id
       );
 
       setData(data);
