@@ -60,12 +60,12 @@ const ChildCategories = ({ navigation }) => {
 
   const navigateToMerchant = (category) => {
     console.log("ChildCategories: Navigating to category:", category);
-    
+
     // Check if this is the special "Events & Tickets" item
     if (category.isEventsAndTickets) {
       const countryCode = getCountryCodeFromParent(category.parent_id?.[0]);
       console.log("ChildCategories: Navigating to GlobalTix for Events & Tickets with country code:", countryCode);
-      
+
       navigation.navigate("GlobalTix", {
         initialFilters: {
           countryCode: countryCode,
@@ -89,45 +89,45 @@ const ChildCategories = ({ navigation }) => {
     });
   };
 
-    // Helper function to get country code from parent category
-    const getCountryCodeFromParent = (parentId) => {
-      // Use the parent category data if available
-      if (parentCategoryData?.x_country_code) {
-        return parentCategoryData.x_country_code;
-      }
-      
-      // Fallback to default UAE
-      return 'AE';
-    };
-  
-    const filteredChildCategories = childCategories.filter((item) => {
-      if (item.parent_id[0] === 47 && (item.id === 156 || item.id === 160)) {
-        return false;
-      }
-  
-      return true;
-    });
-  
-    // Add "Events & Tickets" item at the top only if parent has country code
-    const shouldShowEventsTickets = parentCategoryData?.x_country_code;
-    console.log("ChildCategories: Parent category data:", parentCategoryData);
-    console.log("ChildCategories: Should show Events & Tickets:", shouldShowEventsTickets);
-    
-    let categoriesWithEventsTickets = filteredChildCategories;
-    
-    if (shouldShowEventsTickets) {
-      const eventsAndTicketsItem = {
-        id: 'events-and-tickets',
-        name: 'Events & Tickets',
-        x_name_arabic: 'الفعاليات والتذاكر',
-        image3: require('../../../assets/Events&Tickets.png'), // Use the local Events&Tickets image
-        parent_id: childCategories[0]?.parent_id || [],
-        isEventsAndTickets: true, // Special flag to identify this item
-      };
-  
-      // Combine the special item with filtered categories
-      categoriesWithEventsTickets = [eventsAndTicketsItem, ...filteredChildCategories];
+  // Helper function to get country code from parent category
+  const getCountryCodeFromParent = (parentId) => {
+    // Use the parent category data if available
+    if (parentCategoryData?.x_country_code) {
+      return parentCategoryData.x_country_code;
     }
+
+    // Fallback to default UAE
+    return 'AE';
+  };
+
+  const filteredChildCategories = childCategories.filter((item) => {
+    if (item.parent_id[0] === 47 && (item.id === 156 || item.id === 160)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Add "Events & Tickets" item at the top only if parent has country code
+  const shouldShowEventsTickets = false;//parentCategoryData?.x_country_code;
+  console.log("ChildCategories: Parent category data:", parentCategoryData);
+  console.log("ChildCategories: Should show Events & Tickets:", shouldShowEventsTickets);
+
+  let categoriesWithEventsTickets = filteredChildCategories;
+
+  if (shouldShowEventsTickets) {
+    const eventsAndTicketsItem = {
+      id: 'events-and-tickets',
+      name: 'Events & Tickets',
+      x_name_arabic: 'الفعاليات والتذاكر',
+      image3: require('../../../assets/Events&Tickets.png'), // Use the local Events&Tickets image
+      parent_id: childCategories[0]?.parent_id || [],
+      isEventsAndTickets: false, // Special flag to identify this item
+    };
+
+    // Combine the special item with filtered categories
+    categoriesWithEventsTickets = [eventsAndTicketsItem, ...filteredChildCategories];
+  }
 
   return (
     <View
@@ -140,7 +140,7 @@ const ChildCategories = ({ navigation }) => {
         <Header
           label={parentCategoryName}
 
-          // onBackPress={handleBackPress}
+        // onBackPress={handleBackPress}
         />
 
         <FlatList
@@ -177,7 +177,7 @@ const ChildCategories = ({ navigation }) => {
                     },
                   ]}
                   source={
-                    item.isEventsAndTickets 
+                    item.isEventsAndTickets
                       ? item.image3 // Local image (require)
                       : { uri: item.image3 } // Remote URL
                   }
