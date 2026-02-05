@@ -3,7 +3,7 @@ import axios from "axios";
 import { BASE_URL, ORG_CODE } from "../../constants";
 
 const authApi = {
-  login: (body) => instance.post("/user/get_token", body),
+  login: (body) => instance.post(`/user/get_token/${ORG_CODE}`, body),
   logout: (body) => instance.post("/user/delete_token", body),
   updateProfile: (userId, body) =>
     instance.post(`/res.users/update/${userId}`, body),
