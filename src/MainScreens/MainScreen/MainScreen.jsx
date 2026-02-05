@@ -96,14 +96,14 @@ const MainScreen = ({
       >
         <MerchantListHeader isHome={true} />
 
-         {advert !== null && advert.ad_1 && advert.ad_1.length > 0 && (
+        {advert !== null && advert.ad_1 && advert.ad_1.length > 0 && (
           <AdwertSwiper
             data={advert.ad_1}
             onBannerPress={handleBannerPress}
             isDark={isDark}
             style={{ marginTop: 16, overflow: 'hidden', borderRadius: 16 }}
           />
-        )} 
+        )}
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -113,7 +113,7 @@ const MainScreen = ({
 
           <NotificationModal />
 
-          <AdwertisementModal />
+          {/* <AdwertisementModal /> */}
         </ScrollView>
       </MainLayout>
     </>
