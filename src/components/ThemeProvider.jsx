@@ -67,7 +67,7 @@ export const ThemeProvider = props => {
         colors[key] = value
       })
 
-      colors.darkBlue = '#d2b62a';
+      colors.darkBlue = '#a29475';
       colors.navyBlue = '#072536';
 
     }

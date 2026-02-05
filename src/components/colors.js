@@ -55,14 +55,14 @@ export const loyaltyLightColors = {
 };
 
 export let colors = {
-   darkBlue: "#d2b62a",
+   darkBlue: '#a29475',
    navyBlue: "#072536",
    darkModeBackground: "#000",
    mainDarkMode: "#DDBD6B",
    mainDarkModeText: "#000",
    white: "#ffffff",
    bg: "#F0F0F0",
-   grey: "#d2b62a",
+   grey: '#a29475',
    lightGrey: "#DDDFE4",
    darkGrey: "#838383",
    green: "#2DC8D8",

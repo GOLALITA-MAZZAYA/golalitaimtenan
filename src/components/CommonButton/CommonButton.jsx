@@ -29,7 +29,7 @@ const CommonButton = ({
         styles.button,
         style,
         isError && {
-          backgroundColor: colors.lightGrey,
+          backgroundColor: colors.darkBlue,
         },
       ]}
       colors={
@@ -54,14 +54,14 @@ const CommonButton = ({
         {...props}
       >
         {!renderItem?.() && <>
-        {icon && <View style={{ marginRight: 10 }}>{icon}</View>}
-        <TypographyText
-          title={label}
-          textColor={textColor || colors.white}
-          size={18}
-          font={BALOO_SEMIBOLD}
-          style={{ marginTop: 5 }}
-        />
+          {icon && <View style={{ marginRight: 10 }}>{icon}</View>}
+          <TypographyText
+            title={label}
+            textColor={textColor || colors.white}
+            size={18}
+            font={BALOO_SEMIBOLD}
+            style={{ marginTop: 5 }}
+          />
         </>}
         {renderItem?.()}
 
