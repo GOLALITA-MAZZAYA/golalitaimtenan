@@ -97,7 +97,7 @@ const Login = ({
       console.log('isloadingAutologin:', isloadingAutologin);
       console.log('token:', token);
       console.log('processing:', processing);
-      
+
       // Guard: Don't run if already logged in
       const isUserLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
       console.log('isUserLoggedOut:', isUserLoggedOut);
@@ -141,24 +141,24 @@ const Login = ({
         const clipboardContent = await Clipboard.getString();
         console.log('[ANDROID CLIPBOARD] Content length:', clipboardContent?.length || 0);
         console.log('[ANDROID CLIPBOARD] First 200 chars:', clipboardContent?.substring(0, 200));
-        
+
         if (!clipboardContent || clipboardContent.trim() === '') {
           console.log('[ANDROID CLIPBOARD] Content is empty - clipboard might be restricted');
           // On Android, sometimes clipboard returns empty even with content
           // Let's still try to process it in case it contains invisible characters
           return;
         }
-        
+
         const result = processClipboardContent(clipboardContent);
         console.log('[ANDROID] processClipboardContent result:', JSON.stringify(result, null, 2));
-        
+
         if (result.hasToken) {
           console.log('[ANDROID] Token found! Attempting auto-login...');
           setClipboardLoading(true);
           try {
             await autologin(result.token);
             console.log('[ANDROID] Auto-login successful!');
-            
+
             // Clear clipboard after successful auto-login
             await Clipboard.setString('');
             console.log('[ANDROID] Clipboard cleared after successful auto-login');
@@ -264,7 +264,14 @@ const Login = ({
 
   if (loginInputType === LOGIN_INPUT_TYPES.email) {
     validationSchema = Yup.object({
-      email: Yup.string().required(t('Login.required')),
+      email: Yup.string()
+        .email(t('Login.invalidEmail'))
+        // .test(
+        //   'is-qcb-email',
+        //   t('Login.invalidEmailDomain'),
+        //   (value) => !value || value.endsWith('@qcb.gov.qa')
+        // )
+        .required(t('Login.required')),
       password: Yup.string().required(t('Login.required')),
     });
   }
@@ -573,7 +580,7 @@ const styles = {
   logoWrapper: {
     width: '100%',
     alignItems: 'center',
-    paddingTop: 100,
+    paddingTop: 80,
     paddingBottom: 45,
     backgroundColor: 'transparent',
   },
@@ -610,8 +617,8 @@ const styles = {
     paddingVertical: 5,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
   },
   emtiyazWhiteLogo: {
     width: 150,
