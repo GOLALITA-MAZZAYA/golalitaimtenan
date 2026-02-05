@@ -533,25 +533,18 @@ export const verifyRegisterCode =
     const DEFAULT_ORGANIZATION_CODE = ORG_ID.toString();
 
     try {
-      let res;
-      res = body.params.code == DEFAULT_ORGANIZATION_CODE;
-
-      if (res) {
-        const randomCode = Math.floor(1000 + Math.random() * 9000);
-        await AsyncStorage.setItem('randomCode', JSON.stringify(randomCode));
-        const payload = {
-          params: {
-            email: body.params.email,
-            validate_code: randomCode,
-            method: 'email',
-          },
-        };
-        res = await authApi.validate_code(payload);
-        if (res.data.result.status === 'success') {
-          navigation.navigate('CodeConfirmation', body);
-        }
-      } else {
-        setFieldError('registration_code', t('Login.wrongCode'));
+      const randomCode = Math.floor(1000 + Math.random() * 9000);
+      await AsyncStorage.setItem('randomCode', JSON.stringify(randomCode));
+      const payload = {
+        params: {
+          email: body.params.email,
+          validate_code: randomCode,
+          method: 'email',
+        },
+      };
+      res = await authApi.validate_code(payload);
+      if (res.data.result.status === 'success') {
+        navigation.navigate('CodeConfirmation', body);
       }
     } catch (e) {
       console.log(e);
