@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import { phoneRegExp } from "../../../utils";
+import { phoneRegExp, qcbEmailTest } from "../../../utils";
 import i18next from "i18next";
 
 export const getValidationSchema = () => {
@@ -8,6 +8,7 @@ export const getValidationSchema = () => {
     last_name: Yup.string().required(i18next.t("Login.required")),
     email: Yup.string()
       .email(i18next.t("Login.invalidEmail"))
+      .test(qcbEmailTest(i18next.t))
       .required(i18next.t("Login.required")),
     phone: Yup.string()
       .matches(phoneRegExp, i18next.t("Login.invalidPhone"))

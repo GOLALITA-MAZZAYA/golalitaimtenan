@@ -23,6 +23,7 @@ import Header from '../../components/Header';
 import authApi from '../../redux/auth/auth-api';
 import { setRegisterationcodeLoading } from '../../redux/auth/auth-actions';
 import { verifyRegisterCode } from '../../redux/auth/auth-thunks';
+import { qcbEmailTest } from '../../../utils';
 import { ScrollView } from 'react-native-gesture-handler';
 
 const RegCodeVerification = ({
@@ -125,11 +126,7 @@ const RegCodeVerification = ({
                 //  registration_code: Yup.string().required(t('Login.required')),
                 email: Yup.string()
                   .email(t('Login.invalidEmail'))
-                  // .test(
-                  //   'is-qcb-email',
-                  //   t('Login.invalidEmailDomain'),
-                  //   (value) => !value || value.endsWith('@qcb.gov.qa')
-                  // )
+                  .test(qcbEmailTest(t))
                   .required(t('Login.required')),
               })}
             >

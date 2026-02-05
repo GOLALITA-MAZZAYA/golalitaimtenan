@@ -194,6 +194,13 @@ export function removeTags(str) {
 export const phoneRegExp =
   /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
 
+// Reusable Yup test for QCB email domain validation
+export const qcbEmailTest = (t) => ({
+  name: 'is-qcb-email',
+  message: t('Login.invalidEmailDomain'),
+  test: (value) => !value || value.endsWith('@qcb.gov.qa')
+});
+
 export const dateForWeeks = new Date().setDate(new Date().getDate() - 1);
 
 export const reverseString = (str) => str.split("").reverse().join("");
@@ -202,7 +209,7 @@ export const getOffsetAndLimit = (page, limit = 20) => {
   return { offset: (page - 1) * limit, limit };
 };
 
-export const getOffsetAndLimitForOffers = (page=1, limit = 20) => {
+export const getOffsetAndLimitForOffers = (page = 1, limit = 20) => {
   return { offset: page - 1, limit };
 };
 

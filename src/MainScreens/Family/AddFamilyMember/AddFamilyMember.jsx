@@ -27,6 +27,7 @@ import { connect } from "react-redux";
 import { colors } from "../../../components/colors";
 import { useTheme } from "../../../components/ThemeProvider";
 import authApi from "../../../redux/auth/auth-api";
+import { qcbEmailTest } from "../../../../utils";
 import { showMessage } from "react-native-flash-message";
 
 const CameraIcon = sized(CameraSvg, 36, 32);
@@ -76,6 +77,7 @@ const AddFamilyMember = ({
         last_name: Yup.string().required(t("Login.required")),
         email: Yup.string()
           .email(t("ContactUs.enterValidEmail"))
+          .test(qcbEmailTest(t))
           .required(t("Login.required")),
         phone: Yup.string()
           .min(7, t("ContactUs.enterValidPhone"))

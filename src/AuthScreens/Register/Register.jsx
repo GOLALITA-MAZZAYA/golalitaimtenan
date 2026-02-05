@@ -138,7 +138,7 @@ const Register = ({ route, navigation, register }) => {
                     <View
                       style={[
                         mainStyles.centeredRow,
-                        { margin: 30, flexDirection: 'column' },
+                        { margin: 10, alignItems: 'center', flex: 1 },
                       ]}
                     >
                       <Image
@@ -146,7 +146,7 @@ const Register = ({ route, navigation, register }) => {
                         style={{
                           tintColor: isDark
                             ? colors.mainDarkMode
-                            : colors.darkBlue,
+                            : colors.darkBlue, width: 100, height: 100
                         }}
                       />
                     </View>
