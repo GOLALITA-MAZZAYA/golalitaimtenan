@@ -112,7 +112,7 @@
       "createPasswordDescription": "Please create your password",
       "loginWithNewPassword": "Please, login with new password",
       "organizationCodeInfo": "Do you have a discount code ?",
-      "enterRegisterCode": "Enter the registration code and Email",
+      "enterRegisterCode": "Enter the Email for verification",
       "registerCodeHint": "Enter the registration code and Email",
       "rememberMe": "Remember me",
       "otpVerification": "OTP Verification",

@@ -104,7 +104,7 @@
       "verifiedBeforeregister": "يجب التحقق من البريد الإلكتروني قبل التسجيل.",
       "rememberMe": "تذكرنى",
       "code": "الرمز",
-      "enterRegisterCode": "أدخل رمز التعريف",
+      "enterRegisterCode": "أدخل البريد الإلكتروني للتحقق",
       "signInShort": "تسجيل الدخول",
       "lastName": "الاسم الأخير",
       "lastNamePlaceholder": "أدخل اسمك الأخير"
