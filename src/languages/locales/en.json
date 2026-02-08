@@ -470,6 +470,10 @@
       "website": "Website",
       "phone": "Phone number"
     },
+    "Offer": {
+      "info": "Info",
+      "offers": "Offers"
+    },
     "Profile": {
       "changePassword": "Change Password",
       "passwordNotEqual": "Passwords is not equal",
