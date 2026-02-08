@@ -9,6 +9,7 @@ import Geocoder from 'react-native-geocoding';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { initializeSslPinning } from 'react-native-ssl-public-key-pinning';
 import Geolocation from 'react-native-geolocation-service';
+import { BASE_DOMAIN } from './src/constants';
 
 import store from './src/redux/store';
 import { ThemeProvider, useTheme } from './src/components/ThemeProvider';
@@ -38,12 +39,6 @@ import { getKeyHashes } from './src/api/ssl';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
 
-// JS-обёртка над нативным модулем геофенсов (Android + iOS)
-import {
-  setGeofenceAuthData,
-  registerNativeGeofences,
-  testNativeGeofence,
-} from './src/geofence/geofenceNative';
 
 import {
   requestMultiple,
@@ -55,9 +50,11 @@ I18nManager.allowRTL(false);
 
 const queryClient = new QueryClient();
 
-Geocoder.init('AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o', { language: 'en', interpolation: {
-    escapeValue: false 
-  } });
+Geocoder.init('AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o', {
+  language: 'en', interpolation: {
+    escapeValue: false
+  }
+});
 
 // ===== helper: расстояние между двумя точками (Haversine) =====
 const distanceMeters = (lat1, lon1, lat2, lon2) => {
@@ -70,9 +67,9 @@ const distanceMeters = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -124,9 +121,9 @@ let App = ({
 
         const fineGranted =
           result[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] ===
-            RESULTS.GRANTED ||
+          RESULTS.GRANTED ||
           result[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] ===
-            RESULTS.LIMITED;
+          RESULTS.LIMITED;
 
         if (fineGranted) {
           setHasLocationPermission(true);
@@ -162,7 +159,7 @@ let App = ({
 
       if (publicKeyHashes) {
         await initializeSslPinning({
-          'golalita.com': {
+          [BASE_DOMAIN]: {
             includeSubdomains: true,
             publicKeyHashes,
           },
@@ -304,66 +301,62 @@ let App = ({
   //   userId + fcmToken → native (Android + iOS)
   // ==============================
   useEffect(() => {
-  if (!user || !isReady) {
-    console.log(
-      '[Geofence] skip native auth: user=',
-      !!user,
-      'isReady=',
-      isReady,
-      'platform=',
-      Platform.OS,
-    );
-    return;
-  }
-
-  const syncAuthToNative = async () => {
-    if(Platform.OS === 'android'){
-    try {
-      let fcmToken = await AsyncStorage.getItem('deviceToken');
-
-      if (!fcmToken) {
-        console.log(
-          '[Geofence] no FCM token, calling setGeofenceAuthData with empty token',
-        );
-        fcmToken = '';
-      }
-
-      const userId =
-        user?.partner_id ??
-        user?.id ??
-        user?.userId ??
-        user?.user_id ??
-        user?.uid ??
-        null;
-
-      if (!userId) {
-        console.log('[Geofence] no userId for native auth, skip');
-        return;
-      }
-
+    if (!user || !isReady) {
       console.log(
-        '[Geofence] setGeofenceAuthData userId=',
-        userId,
-        'token starts with=',
-        fcmToken.slice(0, 10),
-        'hasLocationPermission=',
-        hasLocationPermission,
+        '[Geofence] skip native auth: user=',
+        !!user,
+        'isReady=',
+        isReady,
+        'platform=',
+        Platform.OS,
       );
-
-      await setGeofenceAuthData(Number(userId), fcmToken);
-
-      // 👇 ДОБАВЬ ТУТ ВЫЗОВ ТЕСТА
-      await testNativeGeofence();
-      // 👆
-
-    } catch (e) {
-      console.log('[Geofence] error in setGeofenceAuthData', e);
+      return;
     }
-   }
-  };
 
-  syncAuthToNative();
-}, [user, isReady, hasLocationPermission]);
+    const syncAuthToNative = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          let fcmToken = await AsyncStorage.getItem('deviceToken');
+
+          if (!fcmToken) {
+            console.log(
+              '[Geofence] no FCM token, calling setGeofenceAuthData with empty token',
+            );
+            fcmToken = '';
+          }
+
+          const userId =
+            user?.partner_id ??
+            user?.id ??
+            user?.userId ??
+            user?.user_id ??
+            user?.uid ??
+            null;
+
+          if (!userId) {
+            console.log('[Geofence] no userId for native auth, skip');
+            return;
+          }
+
+          console.log(
+            '[Geofence] setGeofenceAuthData userId=',
+            userId,
+            'token starts with=',
+            fcmToken.slice(0, 10),
+            'hasLocationPermission=',
+            hasLocationPermission,
+          );
+
+          // await setGeofenceAuthData(Number(userId), fcmToken);
+
+        } catch (e) {
+          console.log('[Geofence] error in setGeofenceAuthData', e);
+        }
+      }
+    };
+
+    syncAuthToNative();
+  }, [user, isReady, hasLocationPermission]);
 
 
   if (STORES_CONFIG.find(item => item.name === user?.organisation)) {
