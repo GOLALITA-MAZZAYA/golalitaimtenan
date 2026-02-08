@@ -38,8 +38,8 @@ export const Authorization = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={isOnBoarding ? 'OnBoarding' : 'Login'}
-      // initialRouteName={'Login'}
+      // initialRouteName={false ? 'OnBoarding' : 'Login'}
+      initialRouteName={'Login'}
       screenOptions={{
         headerShown: false,
         cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
