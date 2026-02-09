@@ -72,7 +72,7 @@ const DrawerItemList = () => {
     {
       icon: () => <ARIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
       title: t('Drawer.offersAroundYou'),
-      onPress: () => navigation.navigate('ARMap',{
+      onPress: () => navigation.navigate('ARMap', {
         screen: 'ARHowToUse'
       }),
       hidden: !isMainUser,
@@ -114,14 +114,14 @@ const DrawerItemList = () => {
           params: { selectedCategory: null },
         }),
     },
-    {
-      icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-      title: t('Drawer.loyaltyPoints'),
-      onPress: () =>
-        navigation.navigate('loyaltyPoints', {
-          screen: 'loyaltyPoints-main',
-        }),
-    },
+    // {
+    //   icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+    //   title: t('Drawer.loyaltyPoints'),
+    //   onPress: () =>
+    //     navigation.navigate('loyaltyPoints', {
+    //       screen: 'loyaltyPoints-main',
+    //     }),
+    // },
     {
       icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Drawer.allOffers'),
