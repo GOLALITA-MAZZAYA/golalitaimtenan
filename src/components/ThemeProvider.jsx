@@ -36,11 +36,8 @@ export const ThemeProvider = props => {
   const setDefaultTheme = async () => {
     const isDark = await AsyncStorage.getItem('isDark');
 
-    if (!isDark) {
-      setScheme('dark');
-    }
-
-    const scheme = isDark === 'false' ? 'light' : 'dark';
+    // Default to 'light' if no preference is stored, otherwise use the stored preference
+    const scheme = isDark === 'true' ? 'dark' : 'light';
 
     setScheme(scheme);
   };
