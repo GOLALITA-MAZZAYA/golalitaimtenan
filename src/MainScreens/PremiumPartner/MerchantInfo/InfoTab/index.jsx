@@ -154,7 +154,7 @@ const InfoTab = ({ merchantDetails }) => {
           }}
         />
 
-        {/* <ContractBtn merchantId={merchantDetails.id} /> */}
+        <ContractBtn merchantId={merchantDetails.id} />
 
         <ComplaintBtn merchantDetails={merchantDetails} />
       </View>
@@ -173,17 +173,14 @@ const InfoTab = ({ merchantDetails }) => {
       {renderInfo(
         t('ProductPage.address'),
         isArabic
-          ? `${merchantDetails.x_arabic_name || ''}${
-              merchantDetails.x_street_ar
-                ? `${merchantDetails.x_street_ar}`
-                : ''
-            }${
-              merchantDetails.x_city_ar ? `,\n${merchantDetails.x_city_ar}` : ''
-            }${
-              merchantDetails.x_country_ar
-                ? `, ${merchantDetails.x_country_ar}`
-                : ''
-            }`
+          ? `${merchantDetails.x_arabic_name || ''}${merchantDetails.x_street_ar
+            ? `${merchantDetails.x_street_ar}`
+            : ''
+          }${merchantDetails.x_city_ar ? `,\n${merchantDetails.x_city_ar}` : ''
+          }${merchantDetails.x_country_ar
+            ? `, ${merchantDetails.x_country_ar}`
+            : ''
+          }`
           : merchantDetails.address,
       )}
 
