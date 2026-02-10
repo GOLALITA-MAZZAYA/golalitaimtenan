@@ -177,31 +177,31 @@ let App = ({
   }, []);
 
   // Первичная инициализация (до isReady)
-  useEffect(() => {
-    (async () => {
-      await initializeGlobalTixToken();
-      const isTokenValid = await checkIfTokenIsValid();
+  // useEffect(() => {
+  //   (async () => {
+  //     await initializeGlobalTixToken();
+  //     const isTokenValid = await checkIfTokenIsValid();
 
-      console.log(isTokenValid, 'isTokenValid (pre-ready)');
+  //     console.log(isTokenValid, 'isTokenValid (pre-ready)');
 
-      if (!isTokenValid) {
-        dispatch(setIsAuthorized(false));
-      }
+  //     if (!isTokenValid) {
+  //       dispatch(setIsAuthorized(false));
+  //     }
 
-      const isLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
+  //     const isLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
 
-      console.log(isLoggedOut, 'isLoggedOut (pre-ready)');
+  //     console.log(isLoggedOut, 'isLoggedOut (pre-ready)');
 
-      if (isLoggedOut === 'true') {
-        dispatch(setIsAuthorized(false));
-        return;
-      }
+  //     if (isLoggedOut === 'true') {
+  //       dispatch(setIsAuthorized(false));
+  //       return;
+  //     }
 
-      if (isLoggedOut === 'false') {
-        dispatch(getInitialData());
-      }
-    })();
-  }, [dispatch]);
+  //     if (isLoggedOut === 'false') {
+  //       dispatch(getInitialData());
+  //     }
+  //   })();
+  // }, [dispatch]);
 
   // Повторная инициализация после isReady
   useEffect(() => {
