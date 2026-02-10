@@ -353,8 +353,7 @@ export default function ARMapScreen({ route }: any) {
       );
 
       console.log(data, 'new merchants');
-
-      setMerchants(data);
+      setMerchants(data || []);
     } catch (err) {
       console.log(err, 'get merchants error');
     } finally {
@@ -471,12 +470,12 @@ export default function ARMapScreen({ route }: any) {
       return () => {
         try {
           fopSub?.stop?.();
-        } catch {}
+        } catch { }
         clearTimeout(fallbackTimer);
         if (iosCompassRunning) {
           try {
             CompassHeading.stop();
-          } catch {}
+          } catch { }
         }
         animBusyRef.current = false;
       };
@@ -541,7 +540,7 @@ export default function ARMapScreen({ route }: any) {
   const nearest5: Merchant[] = useMemo(() => {
     if (!coords) return [];
 
-    const withDist = merchants.filter(hasCoords).map(m => ({
+    const withDist = merchants?.filter(hasCoords).map(m => ({
       m,
       d: '',
     }));
