@@ -75,8 +75,8 @@ export const getAllCategories = async type => {
   });
 
   const parentCategories = res.data.result;
+  return parentCategories || [];
+  //  const newCategories = await getSubCategoriesFunc(parentCategories, type);
 
-  const newCategories = await getSubCategoriesFunc(parentCategories, type);
-
-  return [...parentCategories, ...newCategories] || [];
+  //return [...parentCategories, ...newCategories] || [];
 };
