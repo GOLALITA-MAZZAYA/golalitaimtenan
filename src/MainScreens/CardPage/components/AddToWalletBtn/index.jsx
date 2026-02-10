@@ -27,23 +27,13 @@ const AddToWalletBtn = ({ selectedCardItem }) => {
 
       const data = {
         name: fName,
-        x_user_expiry,
-        organisation: user.organisation,
-        available_points:
-          selectedCardItem.available_points || selectedCardItem.points || 0,
-        organisation_logo: user.organisation_logo,
-        photo: selectedCardItem?.photo || selectedCardItem.image_url,
-        barcode,
-        foregroundColor: '#ffffff',
-        backgroundColor: '#033F4B',
-        textColor: '#b5058c',
-        labelColor: '#e6ad1e',
-        auxiliaryFieldTextColor: '#000000',
-        applink:
-          'https://apps.apple.com/in/app/golalita-rewards-and-discount/id1589276214',
         contact: phone,
-        appId: [1589276214],
-      };
+        organisation: user.organisation,
+        organisationAndroid: user.organisation,
+        x_user_expiry,
+        barcode,
+        device_type: Platform.OS
+      }
 
       setLoading(true);
 
