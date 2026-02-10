@@ -34,7 +34,6 @@ import { colors } from './src/components/colors';
 import './src/languages/index';
 import { resetImageCacheDate } from './src/api/asyncStorage';
 import { checkIfTokenIsValid } from './src/api/auth';
-import { initializeGlobalTixToken } from './src/redux/globalTix/globalTix-api';
 import { getKeyHashes } from './src/api/ssl';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
@@ -56,25 +55,6 @@ Geocoder.init('AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o', {
   }
 });
 
-// ===== helper: расстояние между двумя точками (Haversine) =====
-const distanceMeters = (lat1, lon1, lat2, lon2) => {
-  const R = 6371000; // м
-  const toRad = deg => (deg * Math.PI) / 180;
-
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
-};
 
 let App = ({
   workStatus,
@@ -98,7 +78,7 @@ let App = ({
   usePushNotifications();
 
   useEffect(() => {
-    console.log('[App] user from Redux changed:', user?.id, user?.email);
+    //  console.log('[App] user from Redux changed:', user?.id, user?.email);
   }, [user]);
 
   // =========================
@@ -208,7 +188,7 @@ let App = ({
     if (!isReady) return;
 
     (async () => {
-      await initializeGlobalTixToken();
+      // await initializeGlobalTixToken();
       const isTokenValid = await checkIfTokenIsValid();
 
       console.log(isTokenValid, 'isTokenValid (post-ready)');
@@ -300,63 +280,63 @@ let App = ({
   // ==============================
   //   userId + fcmToken → native (Android + iOS)
   // ==============================
-  useEffect(() => {
-    if (!user || !isReady) {
-      console.log(
-        '[Geofence] skip native auth: user=',
-        !!user,
-        'isReady=',
-        isReady,
-        'platform=',
-        Platform.OS,
-      );
-      return;
-    }
+  // useEffect(() => {
+  //   if (!user || !isReady) {
+  //     console.log(
+  //       '[Geofence] skip native auth: user=',
+  //       !!user,
+  //       'isReady=',
+  //       isReady,
+  //       'platform=',
+  //       Platform.OS,
+  //     );
+  //     return;
+  //   }
 
-    const syncAuthToNative = async () => {
-      if (Platform.OS === 'android') {
-        try {
-          let fcmToken = await AsyncStorage.getItem('deviceToken');
+  //   const syncAuthToNative = async () => {
+  //     if (Platform.OS === 'android') {
+  //       try {
+  //         let fcmToken = await AsyncStorage.getItem('deviceToken');
 
-          if (!fcmToken) {
-            console.log(
-              '[Geofence] no FCM token, calling setGeofenceAuthData with empty token',
-            );
-            fcmToken = '';
-          }
+  //         if (!fcmToken) {
+  //           console.log(
+  //             '[Geofence] no FCM token, calling setGeofenceAuthData with empty token',
+  //           );
+  //           fcmToken = '';
+  //         }
 
-          const userId =
-            user?.partner_id ??
-            user?.id ??
-            user?.userId ??
-            user?.user_id ??
-            user?.uid ??
-            null;
+  //         const userId =
+  //           user?.partner_id ??
+  //           user?.id ??
+  //           user?.userId ??
+  //           user?.user_id ??
+  //           user?.uid ??
+  //           null;
 
-          if (!userId) {
-            console.log('[Geofence] no userId for native auth, skip');
-            return;
-          }
+  //         if (!userId) {
+  //           console.log('[Geofence] no userId for native auth, skip');
+  //           return;
+  //         }
 
-          console.log(
-            '[Geofence] setGeofenceAuthData userId=',
-            userId,
-            'token starts with=',
-            fcmToken.slice(0, 10),
-            'hasLocationPermission=',
-            hasLocationPermission,
-          );
+  //         console.log(
+  //           '[Geofence] setGeofenceAuthData userId=',
+  //           userId,
+  //           'token starts with=',
+  //           fcmToken.slice(0, 10),
+  //           'hasLocationPermission=',
+  //           hasLocationPermission,
+  //         );
 
-          // await setGeofenceAuthData(Number(userId), fcmToken);
+  //         // await setGeofenceAuthData(Number(userId), fcmToken);
 
-        } catch (e) {
-          console.log('[Geofence] error in setGeofenceAuthData', e);
-        }
-      }
-    };
+  //       } catch (e) {
+  //         console.log('[Geofence] error in setGeofenceAuthData', e);
+  //       }
+  //     }
+  //   };
 
-    syncAuthToNative();
-  }, [user, isReady, hasLocationPermission]);
+  //   syncAuthToNative();
+  // }, [user, isReady, hasLocationPermission]);
 
 
   if (STORES_CONFIG.find(item => item.name === user?.organisation)) {
