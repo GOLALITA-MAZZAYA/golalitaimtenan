@@ -66,7 +66,7 @@ const Categories = () => {
       return;
     }
 
-    
+
     navigation.navigate('categories', {
       screen: 'categories-child',
 
@@ -74,7 +74,7 @@ const Categories = () => {
         parentCategoryId: category.id,
         parentCategoryName:
           language === 'ar' ? category?.x_name_arabic : category.name,
-          parentCategoryData: category
+        parentCategoryData: category
       },
     });
   };
@@ -84,9 +84,15 @@ const Categories = () => {
   };
 
   const getCategoryTitle = item => {
-    const words = (language === 'ar' ? item.x_name_arabic : item.name).split(
-      ' ',
-    );
+    const name = language === 'ar' ? item.x_name_arabic : item.name;
+
+    // If the name already contains a newline (e.g., "South Korea\n🇰🇷"), return it as-is
+    if (name.includes('\n')) {
+      return name;
+    }
+
+    // Otherwise, apply the word-splitting logic
+    const words = name.split(' ');
 
     if (words.length === 2) {
       // If there are two words, place the second word in the second line
@@ -141,7 +147,7 @@ const Categories = () => {
         ListEmptyComponent={!loading ? <ListNoData /> : <FullScreenLoader />}
         renderItem={({ item }) => {
           const source = {
-                  uri: item.image3 || undefined,
+            uri: item.image3 || undefined,
           };
 
           return (
@@ -208,11 +214,8 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     marginTop: 4,
-    flex: 1,
-    width: '100%',
     fontWeight: '700',
-    width: 100,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   list: {
     marginTop: 16,
