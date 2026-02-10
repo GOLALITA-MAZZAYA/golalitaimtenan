@@ -92,9 +92,9 @@ let App = ({
           PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION,
         ];
 
-        if (Platform.Version >= 29) {
-          perms.push(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
-        }
+        // if (Platform.Version >= 29) {
+        //   perms.push(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
+        // }
 
         const result = await requestMultiple(perms);
         console.log('[Location] Android permissions result:', result);
