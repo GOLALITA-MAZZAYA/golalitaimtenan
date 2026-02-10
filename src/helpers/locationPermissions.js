@@ -33,26 +33,26 @@ export async function requestLocationPermission() {
     }
 
     // 2) Android 10+ — отдельный запрос на фон
-    if (Platform.Version >= 29) {
-      const bg = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
-        {
-          title: 'Allow location in background',
-          message:
-            'To notify you about nearby offers even when the app is closed, allow background location access.',
-          buttonPositive: 'Allow',
-          buttonNegative: 'Deny',
-        },
-      );
+    // if (Platform.Version >= 29) {
+    //   const bg = await PermissionsAndroid.request(
+    //     PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+    //     {
+    //       title: 'Allow location in background',
+    //       message:
+    //         'To notify you about nearby offers even when the app is closed, allow background location access.',
+    //       buttonPositive: 'Allow',
+    //       buttonNegative: 'Deny',
+    //     },
+    //   );
 
-      if (bg === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('[Geofence] background location granted');
-        return 'granted';
-      } else {
-        console.log('[Geofence] background location NOT granted:', bg);
-        return 'denied';
-      }
-    }
+    //   if (bg === PermissionsAndroid.RESULTS.GRANTED) {
+    //     console.log('[Geofence] background location granted');
+    //     return 'granted';
+    //   } else {
+    //     console.log('[Geofence] background location NOT granted:', bg);
+    //     return 'denied';
+    //   }
+    // }
 
     // Android < 10 — отдельного background-разрешения нет
     console.log('[Geofence] fine location granted (no separate background)');
