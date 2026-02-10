@@ -15,7 +15,6 @@
 
   <!-- Foreground service -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
   <!-- Остальные разрешения, как у тебя было -->
   <uses-permission android:name="android.permission.MEDIA_LIBRARY" />
