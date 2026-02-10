@@ -222,7 +222,7 @@ const Login = ({
                 />
               </View>
 
-              <TypographyText
+              {/* <TypographyText
                 title={t('Login.logInWith')}
                 textColor={colors.white}
                 size={14}
@@ -231,7 +231,7 @@ const Login = ({
                   alignSelf: 'center',
                   marginTop: 50,
                 }}
-              />
+              /> */}
 
               <View
                 style={[
