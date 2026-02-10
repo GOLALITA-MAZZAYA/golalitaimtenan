@@ -47,9 +47,6 @@ import AuthLayout from './component/AuthLayout';
 import TopCircleShadow from '../components/TopCircleShadow';
 import SaveMe from './component/SaveMe';
 import { getIsSaveMe, setIsSaveMe } from '../api/asyncStorage';
-import useInitialURL from '../hooks/useInitialURL';
-import Clipboard from '@react-native-clipboard/clipboard';
-import { processClipboardContent } from '../utils/clipboardUtils';
 
 const LOGIN_INPUT_TYPES = {
   email: 'email',
@@ -75,9 +72,7 @@ const Login = ({
   const dispatch = useDispatch();
   const { t } = useTranslation();
   usePushNotifications();
-  const { token, processing, resetUrlData } = useInitialURL();
   const [isRememberMeActive, setIsRememberMeActive] = useState(false);
-  const [clipboardLoading, setClipboardLoading] = useState(false);
 
   const loginBg = require('../assets/loginBg.png');
   const logoIcon = require('../../assets/logo.png');
@@ -88,95 +83,6 @@ const Login = ({
       isCompatible(true);
     });
   }, []);
-
-  // Unified auto-login handler for both deep link and clipboard
-  useEffect(() => {
-    const handleAutoLogin = async () => {
-      console.log('=== handleAutoLogin START ===');
-      console.log('clipboardLoading:', clipboardLoading);
-      console.log('isloadingAutologin:', isloadingAutologin);
-      console.log('token:', token);
-      console.log('processing:', processing);
-
-      // Guard: Don't run if already logged in
-      const isUserLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
-      console.log('isUserLoggedOut:', isUserLoggedOut);
-      if (isUserLoggedOut === 'false') {
-        console.log('User already logged in, skipping auto-login');
-        return;
-      }
-
-      // Guard: Check for logout timestamp to prevent immediate re-login
-      const lastLogout = await AsyncStorage.getItem('lastLogoutTimestamp');
-      console.log('lastLogout:', lastLogout);
-      if (lastLogout && Date.now() - parseInt(lastLogout) < 3000) {
-        console.log('Blocking auto-login after recent logout');
-        return;
-      }
-
-      // Guard: Don't run if already loading
-      if (clipboardLoading || isloadingAutologin) {
-        console.log('Auto-login already in progress, skipping');
-        return;
-      }
-
-      // Priority 1: Deep link token (if available and not processing)
-      if (!processing && token) {
-        console.log('Auto-login with deep link token');
-        setClipboardLoading(true);
-        try {
-          await autologin(token);
-          resetUrlData();
-          console.log('Auto-login with deep link token successful');
-        } catch (error) {
-          console.log('Auto-login with deep link token failed:', error);
-          setClipboardLoading(false);
-        }
-        return;
-      }
-
-      // Priority 2: Clipboard token (if deep link token not available)
-      try {
-        // Directly read clipboard content
-        const clipboardContent = await Clipboard.getString();
-        console.log('[ANDROID CLIPBOARD] Content length:', clipboardContent?.length || 0);
-        console.log('[ANDROID CLIPBOARD] First 200 chars:', clipboardContent?.substring(0, 200));
-
-        if (!clipboardContent || clipboardContent.trim() === '') {
-          console.log('[ANDROID CLIPBOARD] Content is empty - clipboard might be restricted');
-          // On Android, sometimes clipboard returns empty even with content
-          // Let's still try to process it in case it contains invisible characters
-          return;
-        }
-
-        const result = processClipboardContent(clipboardContent);
-        console.log('[ANDROID] processClipboardContent result:', JSON.stringify(result, null, 2));
-
-        if (result.hasToken) {
-          console.log('[ANDROID] Token found! Attempting auto-login...');
-          setClipboardLoading(true);
-          try {
-            await autologin(result.token);
-            console.log('[ANDROID] Auto-login successful!');
-
-            // Clear clipboard after successful auto-login
-            await Clipboard.setString('');
-            console.log('[ANDROID] Clipboard cleared after successful auto-login');
-          } catch (error) {
-            console.log('[ANDROID] Auto-login failed:', error);
-            setClipboardLoading(false);
-          }
-        } else {
-          console.log('[ANDROID] No valid token found in clipboard');
-        }
-      } catch (error) {
-        console.log('[ANDROID] Clipboard error:', error);
-        console.error('[ANDROID] Error details:', error);
-      }
-    };
-
-    handleAutoLogin();
-  }, [token, processing, autologin, resetUrlData, clipboardLoading, isloadingAutologin]);
 
   useEffect(() => {
     (async () => {
