@@ -17,9 +17,9 @@ import { sized } from '../../Svg';
 import { useTranslation } from 'react-i18next';
 import FullScreenLoader from '../Loaders/FullScreenLoader';
 import { getFlexDirection, isRTL } from '../../../utils';
-import { useSelector} from 'react-redux';
-import { userLocationSelector} from '../../redux/global/global-selectors';
-import {getRoadDistance} from '../../api/user';
+import { useSelector } from 'react-redux';
+import { userLocationSelector } from '../../redux/global/global-selectors';
+import { getRoadDistance } from '../../api/user';
 
 const IMAGE_SIZE = 66;
 
@@ -74,7 +74,7 @@ const CardWithNesetedItems = props => {
   };
 
   const getDistance = async () => {
-      try{
+    try {
 
       setDistanceLoading(true);
 
@@ -87,21 +87,21 @@ const CardWithNesetedItems = props => {
 
       setDistance(distance);
 
-      }catch(err){
-        console.log(err,'err')
+    } catch (err) {
+      console.log(err, 'err')
 
-      }finally {
-        setDistanceLoading(false);
-      }
+    } finally {
+      setDistanceLoading(false);
+    }
   };
 
   useEffect(() => {
 
-    if(userLocation?.latitude && userLocation?.longitude){
+    if (userLocation?.latitude && userLocation?.longitude) {
       getDistance();
     }
 
-  },[userLocation?.latitude, userLocation?.longitude])
+  }, [userLocation?.latitude, userLocation?.longitude])
 
 
   const isRtl = isRTL();
@@ -120,7 +120,7 @@ const CardWithNesetedItems = props => {
         onPress={() => parentProps.onPress()}
         style={[styles.row, getFlexDirection()]}
       >
-        {parentProps.new && (
+        {!!parentProps.new && (
           <View style={{ ...styles.newIcon, ...newIconStyles }}>
             <TypographyText
               textColor={isDark ? colors.white : '#000'}
@@ -131,7 +131,7 @@ const CardWithNesetedItems = props => {
             />
           </View>
         )}
-        {parentProps.goPoints && (
+        {!!parentProps.goPoints && (
           <View style={{ ...styles.newIcon, ...newIconStyles }}>
             <TypographyText
               textColor={isDark ? colors.white : '#000'}
@@ -142,7 +142,7 @@ const CardWithNesetedItems = props => {
             />
           </View>
         )}
-        {parentProps.premium && (
+        {!!parentProps.premium && (
           <View style={{ ...styles.newIcon, ...newIconStyles }}>
             <TypographyText
               textColor={isDark ? colors.white : '#000'}
@@ -204,41 +204,41 @@ const CardWithNesetedItems = props => {
           </View>
         </View>
         <View style={styles.rightBlock}>
-        <TouchableOpacity
-          style={{
-            paddingLeft: !isRTL() ? 13 : 0,
-            paddingRight: isRTL() ? 13 : 0,
-            flex: 1,
-            justifyContent: 'flex-start',
-            alignItems:  'center',
-          }}
-          onPress={() => parentProps.onPressFavourite()}
-        >
-          {parentProps.isSaved ? (
-            <StartIconSmall
-              color={isDark ? colors.mainDarkMode : colors.darkBlue}
-              fill={isDark ? colors.mainDarkMode : colors.darkBlue}
-            />
-          ) : (
-            <StartIconSmall
-              color={isDark ? colors.mainDarkMode : colors.darkBlue}
-            />
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              paddingLeft: !isRTL() ? 13 : 0,
+              paddingRight: isRTL() ? 13 : 0,
+              flex: 1,
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+            }}
+            onPress={() => parentProps.onPressFavourite()}
+          >
+            {parentProps.isSaved ? (
+              <StartIconSmall
+                color={isDark ? colors.mainDarkMode : colors.darkBlue}
+                fill={isDark ? colors.mainDarkMode : colors.darkBlue}
+              />
+            ) : (
+              <StartIconSmall
+                color={isDark ? colors.mainDarkMode : colors.darkBlue}
+              />
+            )}
+          </TouchableOpacity>
 
-        {parentProps.latitude && parentProps.latitude && (
-          <View style={styles.distanceBlock}>
-          {!distanceLoading ? 
-            <TypographyText
-              textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-              size={14}
-              title={distance}
-              font={BALOO_REGULAR}
-            /> 
-            : <ActivityIndicator />}
+          {!!parentProps.latitude && !!parentProps.longitude && (
+            <View style={styles.distanceBlock}>
+              {!distanceLoading ?
+                <TypographyText
+                  textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+                  size={14}
+                  title={distance}
+                  font={BALOO_REGULAR}
+                />
+                : <ActivityIndicator />}
             </View>
-         )}
-         
+          )}
+
         </View>
       </TouchableOpacity>
     </View>
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     // shadowRadius: 4.59,
     //elevation: 5,
     // borderRadius: 10,
-    
+
     marginTop: 16,
     marginBottom: 16,
   },
