@@ -37,7 +37,7 @@ const OfferInfo = ({ route }) => {
   const { productId, title, bookNow = "fasle", merchant = {} } = route.params;
   const { offer, loading, error } = useOffer(productId);
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState(OFFER_TAB_CONSTANTS.OFFERS);
+  const [activeTab, setActiveTab] = useState(OFFER_TAB_CONSTANTS.INFO);
 
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
@@ -112,13 +112,13 @@ const OfferInfo = ({ route }) => {
                 bounces={false}
               >
                 <>
-                  {activeTab === OFFER_TAB_CONSTANTS.OFFERS && (
+                  {/* {activeTab === OFFER_TAB_CONSTANTS.OFFERS && (
                     <OffersTab
                       merchantId={offer.merchant_id}
                       type={offer.offer_type}
                       offerId={offer.product_id}
                     />
-                  )}
+                  )} */}
                   {activeTab === OFFER_TAB_CONSTANTS.INFO && (
                     <InfoTab
                       onMerchantDetailsPress={() => handleMerchatDetails(offer)}
