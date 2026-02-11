@@ -13,8 +13,6 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8E22472DEAC244BF867220D8 /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E60F58B2D12D4EACBF550365 /* BootSplash.storyboard */; };
-		AA3333333333333333333333 /* GeofenceNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* GeofenceNative.swift */; };
-		AA4444444444444444444444 /* GeofenceNative.m in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* GeofenceNative.m */; };
 		CE9964942E6DAC1400DFCC1E /* Baloo-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CE9964932E6DAC1400DFCC1E /* Baloo-Bold.ttf */; };
 		CE9964962E6DAC2200DFCC1E /* Baloo-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CE9964952E6DAC2200DFCC1E /* Baloo-ExtraBold.ttf */; };
 		CE9964982E6DAC2E00DFCC1E /* Baloo-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CE9964972E6DAC2E00DFCC1E /* Baloo-Medium.ttf */; };
@@ -34,8 +32,6 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-golalitaimtenanrewards.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-golalitaimtenanrewards.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = golalitaimtenanrewards/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = golalitaimtenanrewards/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		AA1111111111111111111111 /* GeofenceNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeofenceNative.swift; path = golalitaimtenanrewards/GeofenceNative.swift; sourceTree = "<group>"; };
-		AA2222222222222222222222 /* GeofenceNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = GeofenceNative.m; path = golalitaimtenanrewards/GeofenceNative.m; sourceTree = "<group>"; };
 		B60243C70DB940B7A3D333D5 /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = golalitaimtenanrewards/Colors.xcassets; sourceTree = "<group>"; };
 		CE9964922E6DABE100DFCC1E /* golalitaimtenanrewards.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = golalitaimtenanrewards.entitlements; path = golalitaimtenanrewards/golalitaimtenanrewards.entitlements; sourceTree = "<group>"; };
 		CE9964932E6DAC1400DFCC1E /* Baloo-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Baloo-Bold.ttf"; path = "../assets/fonts/Baloo-Bold.ttf"; sourceTree = "<group>"; };
@@ -66,8 +62,6 @@
 				CE9964922E6DABE100DFCC1E /* golalitaimtenanrewards.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
-				AA1111111111111111111111 /* GeofenceNative.swift */,
-				AA2222222222222222222222 /* GeofenceNative.m */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -301,8 +295,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
-				AA3333333333333333333333 /* GeofenceNative.swift in Sources */,
-				AA4444444444444444444444 /* GeofenceNative.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
