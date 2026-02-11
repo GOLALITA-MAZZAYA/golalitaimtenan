@@ -57,22 +57,6 @@
       </intent-filter>
     </service>
 
-    <!-- Geofence foreground service -->
-    <service
-      android:name=".geofence.GeofenceLocationService"
-      android:exported="false"
-      android:foregroundServiceType="location" />
-
-    <!-- Geofence ресивер -->
-    <receiver
-      android:name=".geofence.GeofenceBroadcastReceiver"
-      android:enabled="true"
-      android:exported="false">
-      <intent-filter>
-        <action android:name="android.intent.action.BOOT_COMPLETED" />
-      </intent-filter>
-    </receiver>
-
     <!-- Google Maps -->
     <meta-data
       android:name="com.google.android.geo.API_KEY"
