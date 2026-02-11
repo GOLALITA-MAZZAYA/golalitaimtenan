@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { colors } from "../../components/colors";
 import FullScreenLoader from "../../components/Loaders/FullScreenLoader";
 import Header from "../../components/Header";
-import { BASE_URL } from "../../constants";
+import { BASE_URL, ORG_CODE } from "../../constants";
 
 const PrivacyPolicy = () => {
   const { isDark } = useTheme();
