@@ -33,7 +33,7 @@ const MerchantsFilters = ({ navigation, route }) => {
   const language = i18n.language;
   const params = route?.params;
 
-  const onReset = () => {};
+  const onReset = () => { };
 
   const onClose = () => {
     navigation.navigate("merchants-list");
