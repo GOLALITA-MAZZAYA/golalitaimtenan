@@ -403,9 +403,9 @@ const Profile = ({
                       onSubmitEditing={Keyboard.dismiss}
                       error={errors.phone}
                       disableInputRtl
-                      // onPressNotVerified={() =>
-                      //   verifyHandler(validation, values, "phone")
-                      // }
+                    // onPressNotVerified={() =>
+                    //   verifyHandler(validation, values, "phone")
+                    // }
                     />
                   )}
 
@@ -444,7 +444,7 @@ const Profile = ({
                             [
                               {
                                 text: t('Profile.no'),
-                                onPress: () => {},
+                                onPress: () => { },
                                 style: 'cancel',
                               },
                               {

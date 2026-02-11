@@ -57,7 +57,7 @@ const CommonButtonSecondary = ({
           textColor={textColor || colors.white}
           size={18}
           font={BALOO_SEMIBOLD}
-          style={{ marginTop: 5 }}
+          style={{ marginTop: 5, width: '100%', textAlign: 'center' }}
         />
 
         {loading && (
