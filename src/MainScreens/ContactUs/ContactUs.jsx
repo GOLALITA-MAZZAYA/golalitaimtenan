@@ -12,6 +12,7 @@ import CallSvg from '../../assets/callf.svg';
 import MailSvg from '../../assets/mailf.svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { isRTL } from '../../../utils';
+import { CONTACT_EMAILS } from '../../constants';
 import Header from '../../components/Header';
 
 const ContactUs = () => {
@@ -86,7 +87,7 @@ const ContactUs = () => {
     );
   };
 
-  const renderInfoEmail = (item, title) => {
+  const renderInfoEmail = (item, emails) => {
     return (
       <View style={styles.infoItem}>
         <View style={styles.infoItemTitleWrapper}>
@@ -109,18 +110,27 @@ const ContactUs = () => {
           </View>
         </View>
 
-        <View style={styles.emailWrapper}>
-          <View
-            style={[styles.infoItemValueContainer, { borderColor: mainColor }]}
-          >
-            <TypographyText
-              textColor={mainColor}
-              size={19}
-              font={BALOO_REGULAR}
-              title={title}
-              onPress={() => Linking.openURL(`mailto:support@golalita.com`)}
-            />
-          </View>
+        <View style={[styles.valuesWrapper, { flexDirection: 'column' }]}>
+          {emails &&
+            emails.map((email, index) => {
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.infoItemValueContainer,
+                    { borderColor: mainColor, marginBottom: 10 },
+                  ]}
+                >
+                  <TypographyText
+                    textColor={mainColor}
+                    size={19}
+                    font={BALOO_REGULAR}
+                    title={email}
+                    onPress={() => Linking.openURL(`mailto:${email}`)}
+                  />
+                </View>
+              );
+            })}
         </View>
       </View>
     );
@@ -144,13 +154,7 @@ const ContactUs = () => {
                 '0097441410398',
               ])}
 
-              {renderInfoEmail(
-                t('ContactUs.email'),
-                ['support@golalita.com'],
-                () => {
-                  Linking.openURL(`mailto:support@golalita.com`);
-                },
-              )}
+              {renderInfoEmail(t('ContactUs.email'), CONTACT_EMAILS)}
             </View>
           </KeyboardAwareScrollView>
         </SafeAreaView>
