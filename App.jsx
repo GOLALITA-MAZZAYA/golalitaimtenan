@@ -278,66 +278,6 @@ let App = ({
     }
   }, [workStatus, isReady]);
 
-  // ==============================
-  //   userId + fcmToken → native (Android + iOS)
-  // ==============================
-  // useEffect(() => {
-  //   if (!user || !isReady) {
-  //     console.log(
-  //       '[Geofence] skip native auth: user=',
-  //       !!user,
-  //       'isReady=',
-  //       isReady,
-  //       'platform=',
-  //       Platform.OS,
-  //     );
-  //     return;
-  //   }
-
-  //   const syncAuthToNative = async () => {
-  //     if (Platform.OS === 'android') {
-  //       try {
-  //         let fcmToken = await AsyncStorage.getItem('deviceToken');
-
-  //         if (!fcmToken) {
-  //           console.log(
-  //             '[Geofence] no FCM token, calling setGeofenceAuthData with empty token',
-  //           );
-  //           fcmToken = '';
-  //         }
-
-  //         const userId =
-  //           user?.partner_id ??
-  //           user?.id ??
-  //           user?.userId ??
-  //           user?.user_id ??
-  //           user?.uid ??
-  //           null;
-
-  //         if (!userId) {
-  //           console.log('[Geofence] no userId for native auth, skip');
-  //           return;
-  //         }
-
-  //         console.log(
-  //           '[Geofence] setGeofenceAuthData userId=',
-  //           userId,
-  //           'token starts with=',
-  //           fcmToken.slice(0, 10),
-  //           'hasLocationPermission=',
-  //           hasLocationPermission,
-  //         );
-
-  //         // await setGeofenceAuthData(Number(userId), fcmToken);
-
-  //       } catch (e) {
-  //         console.log('[Geofence] error in setGeofenceAuthData', e);
-  //       }
-  //     }
-  //   };
-
-  //   syncAuthToNative();
-  // }, [user, isReady, hasLocationPermission]);
 
 
   if (STORES_CONFIG.find(item => item.name === user?.organisation)) {
