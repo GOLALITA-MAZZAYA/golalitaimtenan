@@ -164,8 +164,8 @@ const ChangePassword = ({ user, profileLoading }) => {
                           ? colors.mainDarkModeText
                           : colors.white
                         : isDark
-                        ? colors.mainDarkModeText
-                        : colors.darkBlue
+                          ? colors.mainDarkModeText
+                          : colors.darkBlue
                     }
                     loading={profileLoading}
                   />
