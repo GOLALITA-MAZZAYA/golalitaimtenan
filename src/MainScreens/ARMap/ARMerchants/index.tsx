@@ -353,6 +353,7 @@ export default function ARMapScreen({ route }: any) {
       );
 
       console.log(data, 'new merchants');
+
       setMerchants(data || []);
     } catch (err) {
       console.log(err, 'get merchants error');
@@ -372,7 +373,7 @@ export default function ARMapScreen({ route }: any) {
     if (!isFocused) return;
     const iv = setInterval(() => {
       setHeadingTick(x => (x + 1) & 0xffff);
-    }, 20);
+    }, 50);
     return () => clearInterval(iv);
   }, [isFocused]);
 
@@ -498,7 +499,7 @@ export default function ARMapScreen({ route }: any) {
             longitude: p.coords.longitude,
           };
 
-          // setCoords({ latitude: 25.286106, longitude: 51.534817 });
+          //setCoords({ latitude: 25.3917154, longitude: 51.5200267 });
           setCoords(next);
 
           const course = bearingBetween(
@@ -653,22 +654,16 @@ export default function ARMapScreen({ route }: any) {
             laneIndexFor(m.merchant_id, raw) * LANE_STEP -
             curveOffset(rel);
 
-          const absRel = Math.abs(rel);
-
-          let opacity = 1;
-          if (!inFov) opacity = absRel <= 150 ? 1 - (absRel - 90) / 60 : 0;
 
           return (
             <View
               key={m.merchant_id}
               style={[
                 styles.cardWrap,
-                { top, opacity, transform: [{ translateX: x }] },
+                { top, transform: [{ translateX: x }] },
               ]}
-              pointerEvents={opacity > 0.25 ? 'auto' : 'none'}
             >
               <TouchableOpacity
-                activeOpacity={0.9}
                 onPress={() => setSelectedMerchant(m)}
               >
                 <View style={styles.card}>
@@ -699,7 +694,7 @@ export default function ARMapScreen({ route }: any) {
                     </View>
                   </View>
                   <View style={styles.divider} />
-                  <View hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <View >
                     <Image
                       source={Vector}
                       style={styles.rightIcon}
@@ -720,7 +715,6 @@ export default function ARMapScreen({ route }: any) {
         />
       )}
 
-      {/* Нижняя шторка */}
       <MerchantModal
         merchant={selectedMerchant}
         setSelectedMerchant={setSelectedMerchant}
@@ -795,6 +789,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 10,
     left: SCREEN_W / 2 - CARD_W / 2,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 16,
   },
 
   card: {
