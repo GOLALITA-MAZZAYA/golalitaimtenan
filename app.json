@@ -1,8 +1,8 @@
 {
   "name": "golalitaimtenanrewards",
-  "displayName": "Golalita Imtenan Rewards",
+  "displayName": "Imtenan - امتنان",
   "expo": {
-    "name": "Golalita Imtenan Rewards",
+    "name": "Imtenan - امتنان",
     "slug": "golalitaimtenanrewards",
     "version": "1.0.0",
     "ios": {
