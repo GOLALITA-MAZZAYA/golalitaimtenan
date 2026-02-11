@@ -97,24 +97,24 @@ export const getFamilyMembers = () => async (dispatch, getState) => {
 
 export const transferAmount =
   ({ points, phone }, setFieldError, setIsSubmitSend, setIsSuccessSend) =>
-  async (dispatch, getState) => {
-    const { token } = getState().authReducer;
-    const res = await transactionsApi.transferAmount({
-      params: {
-        token,
-        points,
-        phone,
-      },
-    });
-    if (res.data.result.error) {
-      setFieldError("member", "User not found");
-      setIsSubmitSend(false);
-    } else {
-      dispatch(getUserData(token));
-      setIsSubmitSend(false);
-      setIsSuccessSend(true);
-    }
-  };
+    async (dispatch, getState) => {
+      const { token } = getState().authReducer;
+      const res = await transactionsApi.transferAmount({
+        params: {
+          token,
+          points,
+          phone,
+        },
+      });
+      if (res.data.result.error) {
+        setFieldError("member", "User not found");
+        setIsSubmitSend(false);
+      } else {
+        dispatch(getUserData(token));
+        setIsSubmitSend(false);
+        setIsSuccessSend(true);
+      }
+    };
 
 export const addFamilyMember =
   (body, navigation, onError) => async (dispatch, getState) => {
