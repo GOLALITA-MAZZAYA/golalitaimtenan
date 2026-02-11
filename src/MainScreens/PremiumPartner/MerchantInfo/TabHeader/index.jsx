@@ -12,11 +12,15 @@ import { colors } from "../../../../components/colors";
 import CommonButton from "../../../../components/CommonButton/CommonButton";
 
 const getOnlineStoreText = (merchantDetails, t) => {
-  return `${t('ProductPage.openOnlineStore')} ${merchantDetails.merchant_name.length > 15
-    ? `${merchantDetails.merchant_name.slice(0, 15)}...`
-    : merchantDetails.merchant_name
-    } ${t('TabBar.onlineStore')}`
-}
+  const merchantName = merchantDetails?.merchant_name || '';
+  const displayName =
+    merchantName.length > 15
+      ? `${merchantName.slice(0, 15)}...`
+      : merchantName;
+  return `${t('ProductPage.openOnlineStore')} ${displayName} ${t(
+    'TabBar.onlineStore',
+  )}`;
+};
 
 const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare, ribbonText, title }) => {
 
@@ -65,10 +69,9 @@ const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare
 
       {merchantDetails.x_online_store && (
         <CommonButton
-          text={getOnlineStoreText(merchantDetails, t)}
+          label={getOnlineStoreText(merchantDetails, t)}
           onPress={() => Linking.openURL(merchantDetails.website)}
-          wrapperStyle={styles.onlineStoreBtn}
-          textStyle={styles.storeText}
+          style={styles.onlineStoreBtn}
         />
       )}
 
@@ -91,7 +94,9 @@ const styles = StyleSheet.create({
   onlineStoreBtn: {
     backgroundColor: '#00A3FF',
     borderWidth: 0,
-    marginTop: 25,
+    marginVertical: 15,
+    width: '90%',
+    alignSelf: 'center',
     paddingHorizontal: 20
   },
   storeText: {
