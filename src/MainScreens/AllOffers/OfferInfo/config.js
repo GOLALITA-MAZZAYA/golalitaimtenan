@@ -42,17 +42,17 @@ export const getInfoBtnsConfig = (offer, isDark) => {
         });
       },
     },
-    {
-      visible: offer?.merchant_contract_url,
-      disabled: false,
-      text: i18next.t('Merchants.contract'),
-      icon: MenuBookIcon,
-      onPress: () => {
-        navigate('offer-menu', {
-          company_contract_url: offer?.merchant_contract_url,
-        });
-      },
-    },
+    // {
+    //   visible: offer?.merchant_contract_url,
+    //   disabled: false,
+    //   text: i18next.t('Merchants.contract'),
+    //   icon: MenuBookIcon,
+    //   onPress: () => {
+    //     navigate('offer-menu', {
+    //       company_contract_url: offer?.merchant_contract_url,
+    //     });
+    //   },
+    // },
   ];
 };
 
@@ -88,7 +88,7 @@ export const getInfoBlocksConfig = (offer, bookNow) => {
       title: i18next.t('ProductPage.email'),
       value: offer.merchant_email,
       valueType: 'string',
-      onPress: () => {},
+      onPress: () => { },
     },
   ];
 
