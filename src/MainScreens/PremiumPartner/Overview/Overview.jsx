@@ -138,17 +138,17 @@ const Overview = ({
 
     const imageViwerImages = merchantDetails?.banners?.length
       ? merchantDetails?.banners.map(banner => ({
-          url: banner.banner_image,
+        url: banner.banner_image,
+        width: SCREEN_WIDTH,
+        height: 232,
+      }))
+      : [
+        {
+          url: merchantDetails.map_banner,
           width: SCREEN_WIDTH,
           height: 232,
-        }))
-      : [
-          {
-            url: merchantDetails.map_banner,
-            width: SCREEN_WIDTH,
-            height: 232,
-          },
-        ];
+        },
+      ];
 
     return (
       <View
@@ -285,8 +285,8 @@ const Overview = ({
                   subscribeNotification(
                     !merchantDetails.is_subscribe,
                     merchantDetails.merchant_id ??
-                      merchantDetails.partner_id?.[0] ??
-                      merchantDetails.id,
+                    merchantDetails.partner_id?.[0] ??
+                    merchantDetails.id,
                     t,
                   )
                 }
@@ -315,11 +315,10 @@ const Overview = ({
 
         {merchantDetails.x_online_store && (
           <CommonButton
-            text={`${t('ProductPage.openOnlineStore')} ${
-              merchantDetails.merchant_name.length > 15
-                ? `${merchantDetails.merchant_name.slice(0, 15)}...`
-                : merchantDetails.merchant_name
-            } ${t('TabBar.onlineStore')}`}
+            text={`${t('ProductPage.openOnlineStore')} ${merchantDetails.merchant_name.length > 15
+              ? `${merchantDetails.merchant_name.slice(0, 15)}...`
+              : merchantDetails.merchant_name
+              } ${t('TabBar.onlineStore')}`}
             onPress={() => Linking.openURL(merchantDetails.website)}
             wrapperStyle={{
               backgroundColor: '#00A3FF',
@@ -401,7 +400,7 @@ const Overview = ({
                       },
                       style,
                     ]} // your custom style object
-                    // any supported props by Image
+                  // any supported props by Image
                   />
                 </View>
               );
