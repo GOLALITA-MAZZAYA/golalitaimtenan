@@ -8,7 +8,6 @@ import FlashMessage from 'react-native-flash-message';
 import Geocoder from 'react-native-geocoding';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { initializeSslPinning } from 'react-native-ssl-public-key-pinning';
-import Geolocation from 'react-native-geolocation-service';
 import { BASE_DOMAIN } from './src/constants';
 
 import store from './src/redux/store';
@@ -37,6 +36,7 @@ import { checkIfTokenIsValid } from './src/api/auth';
 import { getKeyHashes } from './src/api/ssl';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
+import { useSecurityCheck } from './src/utils/deviceSecurityCheck';
 
 
 import {
@@ -76,6 +76,7 @@ let App = ({
 
   // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
   usePushNotifications();
+  // useSecurityCheck();
 
   useEffect(() => {
     //  console.log('[App] user from Redux changed:', user?.id, user?.email);
