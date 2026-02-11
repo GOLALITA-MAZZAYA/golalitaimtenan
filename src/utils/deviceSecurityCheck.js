@@ -25,7 +25,7 @@ const securityMessages = {
   systemVPN: 'VPN usage is detected.',
   // passcode: "Device passcode is not set.",
   // deviceID: "Device ID mismatch.",
-  obfuscationIssues: 'Obfuscation verification failed.',
+  //obfuscationIssues: 'Obfuscation verification failed.',
   devMode: 'Developer mode is enabled.',
 };
 
