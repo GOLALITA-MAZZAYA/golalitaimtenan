@@ -1,8 +1,7 @@
 // src/components/AR/api.ts
 import type { Merchant } from "./types";
-import { BASE_URL } from "../../constants";
 
-const BASE = `https://${BASE_URL}/go/api`;
+const BASE = "https://www.golalita.com/go/api";
 const URL = `${BASE}/user/category/merchant/list/nearby`;
 
 /** ================= Helpers: coercion & guards ================= */
