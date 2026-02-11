@@ -14,7 +14,7 @@ export const getNewOffers = async (reqParams) => {
   return res.data.result;
 };
 
-export const getB1G1Offers = async ({params = {}}) => {
+export const getB1G1Offers = async ({ params = {} }) => {
   const token = await AsyncStorage.getItem("token");
 
   const res = await instance.post("/user/offers/v3", {
