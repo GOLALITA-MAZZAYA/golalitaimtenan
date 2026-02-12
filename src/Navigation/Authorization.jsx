@@ -26,7 +26,7 @@ export const Authorization = () => {
     (async () => {
       setTimeout(() => {
         dispatch(setIsSplashScreenVisible(false));
-      }, 2000);
+      }, 1000);
 
       const isBoard = await AsyncStorage.getItem('isBoard');
 

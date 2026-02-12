@@ -42,7 +42,7 @@ const RedirectToStoresModal = ({ organization }) => {
   useEffect(() => {
     setTimeout(() => {
       dispatch(setIsSplashScreenVisible(false));
-    }, 3000);
+    }, 1000);
   }, []);
 
   return (

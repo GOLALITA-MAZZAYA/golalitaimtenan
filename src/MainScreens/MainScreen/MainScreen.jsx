@@ -63,7 +63,7 @@ const MainScreen = ({
   useEffect(() => {
     setTimeout(() => {
       setIsSplashScreenVisible(false);
-    }, 3000);
+    }, 1000);
   }, [isLoaded]);
 
   if (!isLoaded) {
