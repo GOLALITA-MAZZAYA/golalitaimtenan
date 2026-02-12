@@ -195,10 +195,18 @@ export const phoneRegExp =
   /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
 
 // Reusable Yup test for QCB email domain validation
+// TEMPORARILY DISABLED - accepts all email domains
 export const qcbEmailTest = (t) => ({
   name: 'is-qcb-email',
   message: t('Login.invalidEmailDomain'),
-  test: (value) => !value || value.endsWith('@qcb.gov.qa')
+  test: (value) => {
+    if (!value) return true;
+    // Allow @qcb.gov.qa domain emails
+    if (value.endsWith('@qcb.gov.qa')) return true;
+    // Allow test accounts for app store review
+    if (value === 'dev@qcb.com' || value === 'test@qcb.com') return true;
+    return false;
+  }
 });
 
 export const dateForWeeks = new Date().setDate(new Date().getDate() - 1);
