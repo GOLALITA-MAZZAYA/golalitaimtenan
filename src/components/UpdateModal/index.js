@@ -16,7 +16,7 @@ import CommonButton from "../CommonButton/CommonButton";
 const PhoneIcon = sized(PhoneSvg, 120, 160);
 
 const CONFIG = {
-  ios: "https://apps.apple.com/in/app/golalita-rewards-and-discount/id1589276214",
+  ios: "https://apps.apple.com/us/app/imtenan-امتنان/id6758722117",
   android: "https://play.google.com/store/apps/details?id=com.golalitaimtenanrewards",
 };
 
