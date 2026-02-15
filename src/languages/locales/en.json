@@ -125,7 +125,9 @@
       "verified": "Verified ✓",
       "notverified": "Not verified ✗ ?",
       "emailValidationError": "Accept only @qr.com.qa email format.",
-      "verifiedBeforeregister": "Email must be verified."
+      "verifiedBeforeregister": "Email must be verified.",
+      "continueAsGuest": "Continue as Guest",
+      "continueAsGuest0": "Continue without ID"
     },
     "MainScreen": {
       "premiumPartners": "Premium Partners",

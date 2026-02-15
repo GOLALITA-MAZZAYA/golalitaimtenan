@@ -107,7 +107,9 @@
       "enterRegisterCode": "أدخل البريد الإلكتروني للتحقق",
       "signInShort": "تسجيل الدخول",
       "lastName": "الاسم الأخير",
-      "lastNamePlaceholder": "أدخل اسمك الأخير"
+      "lastNamePlaceholder": "أدخل اسمك الأخير",
+      "continueAsGuest": "الاستمرار كضيف",
+      "continueAsGuest0": "الاستمرار بدون معرف"
     },
     "MainScreen": {
       "premiumPartners": "شركاء مميزون",
