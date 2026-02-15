@@ -32,6 +32,7 @@ import CloseSvg from "../../assets/close_white.svg";
 import Share from "react-native-share";
 import i18n from "i18next";
 import FastImage from "react-native-fast-image";
+import useIsGuest from '../../hooks/useIsGuest';
 
 const PremiumIcon = sized(PremiumSvg, 24);
 const StarIcon = sized(StarSvg, 13, 13, "#999CAD");
@@ -55,6 +56,7 @@ const ProductItem = ({
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const viewRef = useRef();
   const [isFullImage, setIsFullImage] = useState(false);
 
@@ -103,7 +105,7 @@ const ProductItem = ({
                     },
                     style,
                   ]} // your custom style object
-                  // any supported props by Image
+                // any supported props by Image
                 />
               </View>
             );
@@ -302,7 +304,7 @@ const ProductItem = ({
                 ? product.x_description_arabic
                 : product.description_sale ?? product.offer_label
             }
-            // style={{marginTop: 10}}
+          // style={{marginTop: 10}}
           />
           <View
             style={[
@@ -311,15 +313,15 @@ const ProductItem = ({
               getFlexDirection(),
             ]}
           >
-            <IconButton
+            {!isGuest && (<IconButton
               style={
                 isSaved ||
-                favoriteOffers?.find?.((o) => o?.id === product?.id) !==
+                  favoriteOffers?.find?.((o) => o?.id === product?.id) !==
                   undefined
                   ? {
-                      backgroundColor: colors.orange,
-                      borderColor: "transparent",
-                    }
+                    backgroundColor: colors.orange,
+                    borderColor: "transparent",
+                  }
                   : {}
               }
               onPress={() => {
@@ -327,14 +329,14 @@ const ProductItem = ({
               }}
               color={
                 isSaved ||
-                favoriteOffers?.find?.((o) => o?.id === product?.id) !==
+                  favoriteOffers?.find?.((o) => o?.id === product?.id) !==
                   undefined
                   ? colors.white
                   : null
               }
               icon={
                 isSaved ||
-                favoriteOffers?.find?.((o) => o?.id === product?.id) !==
+                  favoriteOffers?.find?.((o) => o?.id === product?.id) !==
                   undefined ? (
                   <WhiteStarIcon />
                 ) : isDark ? (
@@ -344,7 +346,7 @@ const ProductItem = ({
                 )
               }
               label={t("Product.save")}
-            />
+            />)}
             <IconButton
               onPress={onShare}
               icon={isDark ? <ShareActiveIcon /> : <ShareIcon />}

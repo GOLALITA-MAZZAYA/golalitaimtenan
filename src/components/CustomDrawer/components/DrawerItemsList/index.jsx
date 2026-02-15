@@ -149,6 +149,8 @@ const DrawerItemList = () => {
       icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Favorites.favorites'),
       onPress: () => navigation.navigate('favouriteMerchants'),
+
+      hidden: isGuest,
     },
     {
       icon: () => <SettingsIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
@@ -179,6 +181,7 @@ const DrawerItemList = () => {
         navigation.navigate('BillScannerHoToUse', {
           title: t('Drawer.scanBill'),
         }),
+      hidden: isGuest,
     },
   ];
 
