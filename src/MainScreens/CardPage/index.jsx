@@ -25,6 +25,7 @@ const CardPage = () => {
   const familyMembers = useSelector(
     state => state.transactionsReducer.familyMembers,
   );
+  console.log('CardPage useruseruseruser', user);
   const [data, setData] = useState([user]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -34,6 +35,7 @@ const CardPage = () => {
 
   useEffect(() => {
     if (familyMembers?.length && isMainUser) {
+      console.log('CardPage familyMembers', familyMembers);
       setData([user, ...familyMembers]);
     }
   }, [familyMembers?.length]);
@@ -107,14 +109,16 @@ const CardPage = () => {
             marginBottom: 5,
           }}
         >
-          <Barcode
-            value={selectedCardItem?.barcode}
-            format="CODE128"
-            width={2}
-            height={70}
-            lineColor="black"
-            background="white"
-          />
+          {selectedCardItem?.barcode ? (
+            <Barcode
+              value={selectedCardItem?.barcode}
+              format="CODE128"
+              width={2}
+              height={70}
+              lineColor="black"
+              background="white"
+            />
+          ) : null}
 
           <TypographyText
             textColor={barcodeLineColor}
