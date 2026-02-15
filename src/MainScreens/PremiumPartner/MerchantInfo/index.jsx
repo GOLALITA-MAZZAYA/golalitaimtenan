@@ -4,7 +4,7 @@ import React, {
   useState,
 } from 'react';
 import {
-    SafeAreaView,
+  SafeAreaView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -22,7 +22,7 @@ import OfferTab from './OffersTab';
 import RoomRatesTab from './RoomRatesTab';
 import TabHeader from './TabHeader';
 import Share from 'react-native-share';
-import {setMerchantDetails} from '../../../redux/merchant/merchant-actions';
+import { setMerchantDetails } from '../../../redux/merchant/merchant-actions';
 import HeaderTabs from './TabHeader/HeaderTabs';
 
 export const CONSTANTS = {
@@ -86,72 +86,72 @@ const MerchantInfo = ({
         backgroundColor: isDark ? colors.darkBlue : colors.white,
       }}
     >
-    <SafeAreaView style={{ flex: 1 }}>
-    <ViewShot ref={viewRef} style={styles.shot}>
-      <View
-        style={{ flex: 1}}
-      >
-        <Tabs.Container
-          renderHeader={() => (
-            <TabHeader 
-               setIsModalVisible={setIsFullImage}
-               isModalVisible={isFullImage}
-               merchantDetails={merchantDetails}
-               onShare={handleSharePress}
-               ribbonText={i18n.language === 'ar'
-                 ? merchantDetails?.ribbon_text?.x_ribbon_text_arabic
-                 : merchantDetails?.ribbon_text?.ribbon_text}
-               title={title
-                ? title
-                : params?.isOrganization
-                  ? t('PremiumPartner.organization')
-                  : merchantDetails?.category}
-            />
-          )}
-          renderTabBar={() => <HeaderTabs setActiveTab={setActiveTab} activeTab={activeTab} isBusinessHotel={isHotel}/>}
-        >
-          <Tabs.Tab name="a">
-            <Tabs.ScrollView
-              contentContainerStyle={{
-                paddingBottom: 30,
-                paddingHorizontal: 20
-              }}
-              showsVerticalScrollIndicator={false}
-              bounces={false}
+      <SafeAreaView style={{ flex: 1 }}>
+        <ViewShot ref={viewRef} style={styles.shot}>
+          <View
+            style={{ flex: 1 }}
+          >
+            <Tabs.Container
+              renderHeader={() => (
+                <TabHeader
+                  setIsModalVisible={setIsFullImage}
+                  isModalVisible={isFullImage}
+                  merchantDetails={merchantDetails}
+                  onShare={handleSharePress}
+                  ribbonText={i18n.language === 'ar'
+                    ? merchantDetails?.ribbon_text?.x_ribbon_text_arabic
+                    : merchantDetails?.ribbon_text?.ribbon_text}
+                  title={title
+                    ? title
+                    : params?.isOrganization
+                      ? t('PremiumPartner.organization')
+                      : merchantDetails?.category}
+                />
+              )}
+              renderTabBar={() => <HeaderTabs setActiveTab={setActiveTab} activeTab={activeTab} isBusinessHotel={isHotel} />}
             >
-              <>
-                {activeTab === CONSTANTS.INFO && (
-                  <InfoTab merchantDetails={merchantDetails} />
-                )}
-                {activeTab === CONSTANTS.LOCATION && (
-                  <MapTab merchantDetails={merchantDetails} />
-                )}
-                {activeTab === CONSTANTS.OFFERS && !isHotel && (
-                  <OfferTab
-                    merchant={merchantDetails}
-                    isHotel={isHotel}
-                  />
-                )}
-                {activeTab === CONSTANTS.ROOM_RATES && isHotel && (
-                  <RoomRatesTab
-                    merchant={merchantDetails}
-                  />
-                )}
-              </>
-            </Tabs.ScrollView>
-          </Tabs.Tab>
-        </Tabs.Container>
-      </View>
-    </ViewShot>
-    </SafeAreaView>
+              <Tabs.Tab name="a">
+                <Tabs.ScrollView
+                  contentContainerStyle={{
+                    paddingBottom: 30,
+                    paddingHorizontal: 20
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  bounces={false}
+                >
+                  <>
+                    {activeTab === CONSTANTS.INFO && (
+                      <InfoTab merchantDetails={merchantDetails} />
+                    )}
+                    {activeTab === CONSTANTS.LOCATION && (
+                      <MapTab merchantDetails={merchantDetails} />
+                    )}
+                    {activeTab === CONSTANTS.OFFERS && !isHotel && (
+                      <OfferTab
+                        merchant={merchantDetails}
+                        isHotel={isHotel}
+                      />
+                    )}
+                    {activeTab === CONSTANTS.ROOM_RATES && isHotel && (
+                      <RoomRatesTab
+                        merchant={merchantDetails}
+                      />
+                    )}
+                  </>
+                </Tabs.ScrollView>
+              </Tabs.Tab>
+            </Tabs.Container>
+          </View>
+        </ViewShot>
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-    shot: {
-      flex: 1
-    }
+  shot: {
+    flex: 1
+  }
 
 });
 
