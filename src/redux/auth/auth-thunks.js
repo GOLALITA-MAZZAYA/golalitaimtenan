@@ -17,6 +17,7 @@ import {
   setVersion,
   setWorkStatus,
   setIsloadingAutologin,
+  setIsGuest
 } from './auth-actions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_DISABLED, APP_ENABLED, CONTENT_DISABLED } from './auth-types';
@@ -109,6 +110,7 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
     dispatch(getParentCategories(categoriesType));
     dispatch(getMessageNotifications());
     dispatch(setIsAuthorized(true));
+    // dispatch(setIsGuest(false));
     onSuccess?.();
   } catch (err) {
     dispatch(setIsLoginError(true));
@@ -160,6 +162,7 @@ export const autologin = token => async (dispatch, getState) => {
       dispatch(getUserData(res.data.result.token));
       dispatch(getAdvert());
       dispatch(setIsAuthorized(true));
+      dispatch(setIsGuest(false));
       dispatch(setIsloadingAutologin(false));
     }
   } catch (err) {
@@ -175,6 +178,7 @@ export const logout = () => async dispatch => {
   dispatch(setUserId(null));
   dispatch(setUser(null));
   dispatch(setIsAuthorized(false));
+  dispatch(setIsGuest(false));
 
   await AsyncStorage.setItem('isUserLoggedOut', 'true');
 };

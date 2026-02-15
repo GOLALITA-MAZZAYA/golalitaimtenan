@@ -15,10 +15,12 @@ import TermsAndConditions from './TermsAndConditions';
 import ContractBtn from './ContractBtn';
 import ComplaintModal from '../../../ComplaintForm/ComplaintModal';
 import ComplaintBtn from './ComplaintBtn';
+import useIsGuest from '../../../../hooks/useIsGuest';
 
 const InfoTab = ({ merchantDetails }) => {
   const { t, i18n } = useTranslation();
   const { isDark } = useTheme()
+  const isGuest = useIsGuest();
 
   const [isComplaintModalVisible, setIsComplaintModalVisible] = useState(false);
   const [complaintData, setComplaintData] = useState({});
@@ -156,7 +158,7 @@ const InfoTab = ({ merchantDetails }) => {
 
         <ContractBtn merchantId={merchantDetails.id} />
 
-        <ComplaintBtn merchantDetails={merchantDetails} />
+        {isGuest ? null : <ComplaintBtn merchantDetails={merchantDetails} />}
       </View>
       {!!merchantDetails.open_from &&
         !!merchantDetails.open_till &&
