@@ -25,7 +25,6 @@ const CardPage = () => {
   const familyMembers = useSelector(
     state => state.transactionsReducer.familyMembers,
   );
-  console.log('CardPage useruseruseruser', user);
   const [data, setData] = useState([user]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -35,7 +34,6 @@ const CardPage = () => {
 
   useEffect(() => {
     if (familyMembers?.length && isMainUser) {
-      console.log('CardPage familyMembers', familyMembers);
       setData([user, ...familyMembers]);
     }
   }, [familyMembers?.length]);
