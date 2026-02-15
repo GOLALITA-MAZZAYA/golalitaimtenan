@@ -20,6 +20,7 @@ import { getFlexDirection, isRTL } from '../../../utils';
 import { useSelector } from 'react-redux';
 import { userLocationSelector } from '../../redux/global/global-selectors';
 import { getRoadDistance } from '../../api/user';
+import useIsGuest from '../../hooks/useIsGuest';
 
 const IMAGE_SIZE = 66;
 
@@ -28,6 +29,7 @@ const CardWithNesetedItems = props => {
 
   const { t } = useTranslation();
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const [openedIndex, setOpenedIndex] = useState(null);
   const [distance, setDistance] = useState('');
   const userLocation = useSelector(userLocationSelector);
@@ -204,7 +206,7 @@ const CardWithNesetedItems = props => {
           </View>
         </View>
         <View style={styles.rightBlock}>
-          <TouchableOpacity
+          {isGuest ? <View /> : <TouchableOpacity
             style={{
               paddingLeft: !isRTL() ? 13 : 0,
               paddingRight: isRTL() ? 13 : 0,
@@ -224,7 +226,7 @@ const CardWithNesetedItems = props => {
                 color={isDark ? colors.mainDarkMode : colors.darkBlue}
               />
             )}
-          </TouchableOpacity>
+          </TouchableOpacity>}
 
           {!!parentProps.latitude && !!parentProps.longitude && (
             <View style={styles.distanceBlock}>

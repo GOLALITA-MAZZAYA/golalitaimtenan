@@ -13,6 +13,7 @@ import StartIcon from "../../assets/star.svg";
 import { sized } from "../../Svg";
 import FullScreenLoader from "../Loaders/FullScreenLoader";
 import { getFlexDirection, isRTL } from "../../../utils";
+import useIsGuest from "../../hooks/useIsGuest";
 
 const IMAGE_SIZE = 66;
 
@@ -20,6 +21,7 @@ const CardWithNesetedItems = (props) => {
   const { parentProps } = props;
 
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
 
   const StartIconSmall = sized(StartIcon, 22, 22);
 
@@ -72,8 +74,8 @@ const CardWithNesetedItems = (props) => {
                 borderLeftColor: isRTL()
                   ? "transparent"
                   : !isDark
-                  ? colors.darkBlue
-                  : "grey",
+                    ? colors.darkBlue
+                    : "grey",
                 borderRightColor: isRTL()
                   ? !isDark
                     ? colors.darkBlue
@@ -95,7 +97,7 @@ const CardWithNesetedItems = (props) => {
                 />
               )}
             </View>
-            <TouchableOpacity onPress={() => parentProps.onPressFavourite()}>
+            {isGuest ? <View /> : <TouchableOpacity onPress={() => parentProps.onPressFavourite()}>
               {parentProps.isSaved ? (
                 <StartIconSmall
                   color={isDark ? colors.mainDarkMode : colors.darkBlue}
@@ -107,7 +109,7 @@ const CardWithNesetedItems = (props) => {
                   fill={isDark ? colors.white : "transparent"}
                 />
               )}
-            </TouchableOpacity>
+            </TouchableOpacity>}
           </View>
 
           {parentProps.loadingDescription && (
