@@ -10,6 +10,7 @@ import NotificationIcon from "./NotificationIcon";
 import { colors } from "../../../../components/colors";
 
 import CommonButton from "../../../../components/CommonButton/CommonButton";
+import useIsGuest from "../../../../hooks/useIsGuest";
 
 const getOnlineStoreText = (merchantDetails, t) => {
   const merchantName = merchantDetails?.merchant_name || '';
@@ -25,6 +26,7 @@ const getOnlineStoreText = (merchantDetails, t) => {
 const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare, ribbonText, title }) => {
 
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
 
@@ -61,10 +63,10 @@ const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare
 
       <View style={styles.actionIcons}>
         <ShareIcon onShare={onShare} />
-        <NotificationIcon
+        {isGuest ? null : <NotificationIcon
           isSubscribe={merchantDetails.is_subscribe}
           merchantId={merchantDetails.merchant_id ?? merchantDetails.partner_id?.[0] ?? merchantDetails.id}
-        />
+        />}
       </View>
 
       {merchantDetails.x_online_store && (
