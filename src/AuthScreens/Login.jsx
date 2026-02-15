@@ -47,6 +47,7 @@ import AuthLayout from './component/AuthLayout';
 import TopCircleShadow from '../components/TopCircleShadow';
 import SaveMe from './component/SaveMe';
 import { getIsSaveMe, setIsSaveMe } from '../api/asyncStorage';
+import ContinueAsGuestBtn from '../components/ContinueAsGuestBtn';
 
 const LOGIN_INPUT_TYPES = {
   email: 'email',
@@ -59,7 +60,6 @@ const Login = ({
   autologin,
   isLoginError,
   isUserJustLogOut,
-  isloadingAutologin,
   loginLoading,
 }) => {
   const { isDark } = useTheme();
@@ -95,8 +95,8 @@ const Login = ({
 
       if (
         isUserLoggedOut === 'true' &&
-        !isUserJustLogOut &&
-        isloadingAutologin !== null
+        !isUserJustLogOut
+        // && isloadingAutologin !== null
       ) {
         authenticateWithTouchId();
       }
@@ -412,49 +412,6 @@ const Login = ({
                             />
                           </TouchableOpacity>
                         </View>
-                        <View style={styles.container}>
-                          <Modal
-                            transparent={true}
-                            animationType="none"
-                            visible={
-                              isloadingAutologin == 'error' ||
-                              isloadingAutologin
-                            }
-                            onRequestClose={() =>
-                              dispatch(setIsloadingAutologin(false))
-                            }
-                          >
-                            <View style={styles.modalBackground}>
-                              <View style={styles.activityIndicatorWrapper}>
-                                <TouchableOpacity
-                                  style={styles.closeButton}
-                                  onPress={() =>
-                                    dispatch(setIsloadingAutologin(false))
-                                  }
-                                >
-                                  <Text style={styles.closeButtonText}>X</Text>
-                                </TouchableOpacity>
-                                <ActivityIndicator
-                                  size={'large'}
-                                  color={colors.darkBlue}
-                                  animating={true}
-                                />
-                                <TypographyText
-                                  title={
-                                    isloadingAutologin == 'error'
-                                      ? 'Auto login failed...!'
-                                      : autoLoginText
-                                  }
-                                  textColor={
-                                    isDark ? colors.green : colors.darkBlue
-                                  }
-                                  size={16}
-                                  font={BALOO_REGULAR}
-                                />
-                              </View>
-                            </View>
-                          </Modal>
-                        </View>
                         <CommonButton
                           onPress={handleSubmit}
                           label={t('Login.login')}
@@ -464,6 +421,8 @@ const Login = ({
                           }
                           style={styles.loginBtn}
                         />
+
+                        <ContinueAsGuestBtn />
                       </>
                     );
                   }}
@@ -599,7 +558,6 @@ const mapStateToProps = state => ({
   isLoginError: state.authReducer.isLoginError,
   token: state.authReducer.token,
   isUserJustLogOut: state.authReducer.isUserJustLogOut,
-  isloadingAutologin: state.authReducer.isloadingAutologin,
   loginLoading: state.authReducer.loginLoading,
 });
 
