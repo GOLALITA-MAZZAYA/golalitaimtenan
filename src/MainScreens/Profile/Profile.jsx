@@ -29,6 +29,7 @@ import { LUSAIL_REGULAR, VERSION } from '../../redux/types';
 import { TypographyText } from '../../components/Typography';
 import { deleteAccount } from '../../redux/merchant/merchant-thunks';
 import TopCircleShadow from '../../components/TopCircleShadow';
+import useIsGuest from '../../hooks/useIsGuest';
 
 import {
   requestMultiple,
@@ -57,6 +58,7 @@ const Profile = ({
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const [isDialogWindow, setIsDialogWindow] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [image, setImage] = useState(null);
@@ -411,7 +413,7 @@ const Profile = ({
 
                   {!isMumayaz && (
                     <>
-                      <CommonButton
+                      {!isGuest && (<CommonButton
                         onPress={handleSubmit}
                         label={t('Profile.updateProfile')}
                         style={{ marginVertical: 27 }}
@@ -419,9 +421,9 @@ const Profile = ({
                           isDark ? colors.mainDarkModeText : colors.white
                         }
                         loading={profileLoading}
-                      />
+                      />)}
 
-                      <CommonButtonSecondary
+                      {!isGuest && (<CommonButtonSecondary
                         onPress={() => navigation.navigate('ChangePassword')}
                         label={t('Profile.changePassword')}
                         style={{
@@ -435,7 +437,8 @@ const Profile = ({
                         }
                         loading={profileLoading}
                       />
-                      <TouchableOpacity
+                      )}
+                      {!isGuest && (<TouchableOpacity
                         disabled={profileLoading}
                         onPress={() => {
                           Alert.alert(
@@ -467,7 +470,7 @@ const Profile = ({
                           font={LUSAIL_REGULAR}
                           style={{ marginTop: 5, fontWeight: '700' }}
                         />
-                      </TouchableOpacity>
+                      </TouchableOpacity>)}
                     </>
                   )}
                 </View>
