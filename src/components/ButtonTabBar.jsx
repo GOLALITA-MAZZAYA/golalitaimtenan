@@ -12,6 +12,8 @@ import { useTranslation } from 'react-i18next';
 import ProfileSvg from '../assets/Profile.svg';
 import { navigate, navigationRef } from '../Navigation/RootNavigation';
 import AnimatedIcon from './AnimatedIcon';
+import useIsGuest from '../hooks/useIsGuest';
+import { showMessage } from 'react-native-flash-message';
 
 const HomeIcon = sized(HomeSvg, 28, 30);
 const CardIcon = sized(CardSvg, 28, 30);
@@ -19,6 +21,7 @@ const ProfileIcon = sized(ProfileSvg, 30, 28);
 
 export let ButtonTabBar = ({ state, descriptors }) => {
   const { t } = useTranslation();
+  const isGuest = useIsGuest();
   const { isDark } = useTheme();
 
   const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
@@ -79,6 +82,14 @@ export let ButtonTabBar = ({ state, descriptors }) => {
         <TouchableOpacity
           style={styles.TabView__item}
           onPress={() => {
+            if (isGuest) {
+              showMessage({
+                type: 'warning',
+                message: t('Drawer.notForGuest'),
+              });
+
+              return;
+            }
             navigate('card');
           }}
         >

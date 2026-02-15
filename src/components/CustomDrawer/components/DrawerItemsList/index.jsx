@@ -23,12 +23,15 @@ import {
   getGoPointMerchatnsCount,
   getPremiumMerchantsCount,
 } from '../../../../api/merchants';
+import { showMessage } from 'react-native-flash-message';
+import useIsGuest from '../../../../hooks/useIsGuest';
 
 const DrawerItemList = () => {
   const { isDark } = useTheme();
   const isMainUser = useSelector(state => state.authReducer.isMainUser);
   const { t, i18n } = useTranslation();
   const navigation = useNavigation();
+  const isGuest = useIsGuest();
 
   const iconColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const FavoritesIcon = sized(FavoritesSvg, 20, 20, iconColor);
@@ -80,8 +83,18 @@ const DrawerItemList = () => {
     {
       icon: () => <FamilyIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
       title: t('Drawer.familyMembers'),
-      onPress: () => navigation.navigate('Family'),
-      hidden: !isMainUser,
+      onPress: () => {
+        if (isGuest) {
+          showMessage({
+            type: 'warning',
+            message: t('Drawer.notForGuest'),
+          });
+
+          return;
+        }
+        navigation.navigate('Family');
+      },
+      hidden: !isMainUser || isGuest,
     },
     {
       icon: () => <PremiumIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
