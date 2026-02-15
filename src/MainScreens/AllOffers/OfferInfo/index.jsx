@@ -30,6 +30,7 @@ import HeaderTabs from "./components/HeaderTabs";
 import OffersTab from "./components/OffersTab";
 import InfoTab from "./components/InfoTab";
 import { Tabs } from "react-native-collapsible-tab-view";
+import useIsGuest from "../../../hooks/useIsGuest";
 
 
 
@@ -37,6 +38,7 @@ const OfferInfo = ({ route }) => {
   const { productId, title, bookNow = "fasle", merchant = {} } = route.params;
   const { offer, loading, error } = useOffer(productId);
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const [activeTab, setActiveTab] = useState(OFFER_TAB_CONSTANTS.INFO);
 
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
@@ -91,7 +93,7 @@ const OfferInfo = ({ route }) => {
                   end_date={transformDate(offer?.end_date)}
                 />
                 <InfoButtons data={infoBtnsConfig} />
-                <OfferTypeInfoButtons data={offerTypeInfoBtnsConfig} />
+                {isGuest ? <View /> : <OfferTypeInfoButtons data={offerTypeInfoBtnsConfig} />}
 
                 <FullScreenImageModal
                   visible={!!selectedImageUrl}
