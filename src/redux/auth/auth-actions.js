@@ -1,5 +1,6 @@
 import {
   SET_IS_AUTHORIZED,
+  SET_IS_GUEST,
   SET_IS_LOGIN_ERROR,
   SET_IS_MAIN_USER,
   SET_IS_USER_JUST_LOG_OUT,
@@ -76,5 +77,11 @@ export const setConfirmationcodeLoading = (confirmationcodeLoading) => ({
 
 export const setIsloadingAutologin = (payload) => ({
   type: SET_ISLOADING_AUTOLOGIN,
+  payload,
+});
+
+
+export const setIsGuest = (payload) => ({
+  type: SET_IS_GUEST,
   payload,
 });

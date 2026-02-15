@@ -16,6 +16,7 @@ import {
   SET_CONFIRMATIONCODE_LOADING,
   SET_REGISTERATIONCODE_LOADING,
   SET_ISLOADING_AUTOLOGIN,
+  SET_IS_GUEST,
 } from './auth-types';
 
 const initialState = {
@@ -37,6 +38,7 @@ const initialState = {
   confirmationcodeLoading: false,
   registrationcodeLoading: false,
   isloadingAutologin: null,
+  isGuest: false,
 };
 
 export const authReducer = (state = initialState, action) => {
@@ -79,6 +81,8 @@ export const authReducer = (state = initialState, action) => {
       };
     case SET_ISLOADING_AUTOLOGIN:
       return { ...state, isloadingAutologin: action.payload };
+    case SET_IS_GUEST:
+      return { ...state, isGuest: action.payload };
     default:
       return state;
   }

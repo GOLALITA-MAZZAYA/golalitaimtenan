@@ -168,7 +168,7 @@ export const autologin = token => async (dispatch, getState) => {
 };
 
 export const logout = () => async dispatch => {
-  await AsyncStorage.setItem('token', '');
+  // await AsyncStorage.setItem('token', '');
   await AsyncStorage.setItem('lastLogoutTimestamp', Date.now().toString());
   dispatch(setIsUserJustLogOut(true));
   dispatch(setToken(null));
