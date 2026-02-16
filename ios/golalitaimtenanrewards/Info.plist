@@ -70,22 +70,20 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Golalita Imtenan Rewards uses media access to display notifications with sound</string>
+
 	<key>NSCameraUsageDescription</key>
 	<string>Golalita Imtenan Rewards uses the camera to let user put a photo in his profile page.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to use Face ID</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Allow $(PRODUCT_NAME) to access your location</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Turning on location services allows us to show you nearby merchants</string>
+	<string>Allow $(PRODUCT_NAME) to access your location to show nearby merchants.</string>
+
+
 	<key>NSLocationUsageDescription</key>
 	<string>Turning on location services allows us to show you nearby merchants</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Golalita Imtenan Rewards uses your location for displaying nearest merchants on the map.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow $(PRODUCT_NAME) to access your microphone</string>
+
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save pictures for certain activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
