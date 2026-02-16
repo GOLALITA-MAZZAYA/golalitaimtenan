@@ -204,7 +204,7 @@ export const qcbEmailTest = (t) => ({
     // Allow @qcb.gov.qa domain emails
     if (value.endsWith('@qcb.gov.qa')) return true;
     // Allow test accounts for app store review
-    if (value === 'dev@qcb.com' || value === 'test@qcb.com' || value === 'guest@qcb.com') return true;
+    if (value === 'dev@qcb.com' || value === 'test@qcb.com' || value === 'testf@qcb.com' || value === 'guest@qcb.com') return true;
     return false;
   }
 });
