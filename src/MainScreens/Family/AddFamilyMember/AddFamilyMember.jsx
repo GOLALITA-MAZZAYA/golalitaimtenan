@@ -213,13 +213,14 @@ const AddFamilyMember = ({
                       showLabel
                     />
                     <Input
-                      label={t("ContactUs.mobileNumber")}
+                      label={t('ContactUs.mobileNumber')}
                       initialValue={values.phone}
-                      onChangePhoneNumber={handleChange("phone")}
-                      returnKeyType={"next"}
+                      onChangePhoneNumber={handleChange('phone')}
+                      returnKeyType={'next'}
                       onSubmitEditing={Keyboard.dismiss}
                       error={errors.phone}
                       wrapperStyle={[styles.input]}
+                      placeholder={t('Login.yourPhone')}
                       disableInputRtl
                       showLabel
                     />
