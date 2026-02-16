@@ -210,6 +210,7 @@ const AddFamilyMember = ({
                       onChangeText={handleChange("password")}
                       error={errors.password}
                       wrapperStyle={styles.input}
+                      showLabel
                     />
                     <Input
                       label={t("ContactUs.mobileNumber")}
@@ -220,6 +221,7 @@ const AddFamilyMember = ({
                       error={errors.phone}
                       wrapperStyle={[styles.input]}
                       disableInputRtl
+                      showLabel
                     />
                   </View>
                   <CommonButton

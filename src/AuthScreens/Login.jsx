@@ -321,6 +321,7 @@ const Login = ({
                               Platform.OS === 'android' ? true : false
                             }
                             wrapperStyle={{ marginTop: 10 }}
+                            hideLabel
                           />
                         )}
 

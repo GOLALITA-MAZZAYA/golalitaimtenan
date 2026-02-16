@@ -28,6 +28,8 @@ const Input = ({
   onPress,
   disableInputRtl,
   labelColor,
+  showLabel,
+  hideLabel,
   ...props
 }) => {
   const { t } = useTranslation();
@@ -86,9 +88,11 @@ const Input = ({
     >
       <TypographyText
         title={
-          label === t('ContactUs.mobileNumber') ||
-            label === t('Login.password') ||
-            label === t('Profile.confirmPassword')
+          hideLabel ||
+            (!showLabel &&
+              (label === t('ContactUs.mobileNumber') ||
+                label === t('Login.password') ||
+                label === t('Profile.confirmPassword')))
             ? ''
             : label
         }

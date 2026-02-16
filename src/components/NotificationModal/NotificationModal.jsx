@@ -37,9 +37,9 @@ const NotificationModal = ({
 
   const isModalShowed = useRef(null);
 
-  const notifications = messageNotifications?.filter(
-    (d) => d.imp_notification === true
-  );
+  const notifications = Array.isArray(messageNotifications)
+    ? messageNotifications.filter((d) => d.imp_notification === true)
+    : [];
 
   const isVisibleVar =
     isVisible &&

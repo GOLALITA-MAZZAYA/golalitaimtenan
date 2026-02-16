@@ -405,6 +405,7 @@ const Profile = ({
                       onSubmitEditing={Keyboard.dismiss}
                       error={errors.phone}
                       disableInputRtl
+                      showLabel
                     // onPressNotVerified={() =>
                     //   verifyHandler(validation, values, "phone")
                     // }
