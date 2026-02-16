@@ -20,14 +20,11 @@ if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
 end
-
 setup_permissions([
-  'Camera',
+   'Camera',
    'FaceID',
    'LocationAccuracy',
-   'LocationAlways',
    'LocationWhenInUse',
-   'MediaLibrary',
    'PhotoLibrary',
    'Motion'
 ])
