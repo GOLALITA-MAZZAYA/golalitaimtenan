@@ -160,7 +160,7 @@ const AddFamilyMember = ({
                 </View>
                 <View style={[mainStyles.p20]}>
                   <Input
-                    label={t("Profile.fullName")}
+                    label={t("Profile.firstName")}
                     value={values.fullName}
                     returnKeyType={"next"}
                     onSubmitEditing={() => ref_to_input2.current.focus()}
