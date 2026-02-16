@@ -77,7 +77,7 @@ const AddFamilyMember = ({
         last_name: Yup.string().required(t("Login.required")),
         email: Yup.string()
           .email(t("ContactUs.enterValidEmail"))
-          .test(qcbEmailTest(t))
+          //.test(qcbEmailTest(t))
           .required(t("Login.required")),
         phone: Yup.string()
           .min(7, t("ContactUs.enterValidPhone"))

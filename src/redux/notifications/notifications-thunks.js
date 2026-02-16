@@ -145,7 +145,7 @@ export const readNotification = (notification_id) => async (dispatch) => {
 export const readAllNotifications = () => async (dispatch, getState) => {
   const { token } = getState().authReducer;
   let { messageNotifications } = getState().notificationsReducer;
-  messageNotifications = messageNotifications.filter(
+  messageNotifications = messageNotifications?.filter(
     (m) => m.state === "unread"
   );
   try {
