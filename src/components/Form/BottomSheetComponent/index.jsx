@@ -26,6 +26,7 @@ import {
   BottomSheetModal,
   BottomSheetFlatList,
   BottomSheetModalProvider,
+  BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import { colors } from '../../colors';
 import Portal from '../../Portal';
@@ -200,7 +201,7 @@ const BottomSheetComponent = props => {
         <SearchSvg color={isDark ? 'white' : '#202226'} />
       </View>
 
-      <TextInput
+      <BottomSheetTextInput
         onChangeText={handleSearchChange}
         style={[styles.searchInput, getTextAlign()]}
         placeholderTextColor={isDark ? colors.white : 'black'}
@@ -385,7 +386,9 @@ const BottomSheetComponent = props => {
               backgroundStyle={{
                 backgroundColor: isDark ? colors.darkBlue : colors.white,
               }}
-              topInset={250}
+              keyboardBehavior="extend"
+              keyboardBlurBehavior="restore"
+              android_keyboardInputMode="adjustResize"
             >
               <View
                 style={{
