@@ -25,7 +25,7 @@ const PrivacyPolicy = () => {
         <WebView
           startInLoadingState
           source={{
-            uri: `https://live.golalita.shop/privacy-policy-${ORG_CODE}`,
+            uri: `https://${BASE_URL}/privacy-policy-${ORG_CODE}`,
           }}
           style={styles.webView}
           renderLoading={() => <FullScreenLoader absolutePosition />}
