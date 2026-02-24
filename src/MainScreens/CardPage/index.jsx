@@ -27,7 +27,7 @@ const CardPage = () => {
   );
   const [data, setData] = useState([user]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
+  console.log('datadatadatadata', data);
   const expiryDate = transformDisplayedExpiryDate(user?.x_user_expiry);
   const mainnBackgroundColor = isDark ? colors.darkModeBackground : '#fff';
   const barcodeLineColor = isDark ? '#fff' : 'black';
@@ -75,18 +75,18 @@ const CardPage = () => {
               barcode={item.barcode}
               expiryDate={expiryDate}
               availablePoints={item.available_points || item.points}
-              renderHeader={() => (
-                <TypographyText
-                  textColor={isDark ? colors.white : colors.darkBlue}
-                  size={16}
-                  title={
-                    item.partner_id
-                      ? t('CardPage.employeeCard')
-                      : t('CardPage.familyCard')
-                  }
-                  style={styles.cardType}
-                />
-              )}
+            // renderHeader={() => (
+            //   <TypographyText
+            //     textColor={isDark ? colors.white : colors.darkBlue}
+            //     size={16}
+            //     title={
+            //       item.partner_id
+            //         ? t('CardPage.employeeCard')
+            //         : t('CardPage.familyCard')
+            //     }
+            //     style={styles.cardType}
+            //   />
+            // )}
             />
           )}
         />
