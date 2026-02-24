@@ -47,7 +47,9 @@ const ForgotPassword = ({
 
   if (inputType === INPUT_TYPES.email) {
     validationSchema = Yup.object({
-      email: Yup.string().required(t('Login.required')),
+      email: Yup.string()
+        .email(t('Login.invalidEmail'))
+        .required(t('Login.required')),
     });
   }
 
