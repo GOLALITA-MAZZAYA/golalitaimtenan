@@ -390,7 +390,7 @@ const Profile = ({
                       Platform.OS === 'ios' ? 'default' : 'visible-password'
                     }
                     // secureTextEntry={true}
-                    editable={!isMumayaz}
+                    editable={false}
                     secureTextEntry={false}
                   />
                   {!isMumayaz && (
