@@ -87,7 +87,7 @@
       "invalidPhone": "رقم الهاف غير صحيح",
       "passwordsMustMatch": "كلمة السر غير متطابقة",
       "min8chars": "حد اقل أدخال 8 حروف",
-      "pleaseEnterData": "نحن بحاجة إلى التحقق من أنك جزء من Imtenan",
+      "pleaseEnterData": "نحن بحاجة إلى التحقق من أنك جزء من إمتينان",
       "phoneDoesntExist": "هذة الرقم غير مسجل",
       "emailDoesntExist": "هذا البريد الإلكتروني غير موجود",
       "verify": "تأكيد",
@@ -163,7 +163,7 @@
       "next": "التالي",
       "skip": "يتخطى",
       "mazaya": "جولاليتا مزايا",
-      "welcomeTo": "مرحبًا بك في Imtenan ، الرجاء اختيار لغتك"
+      "welcomeTo": "أهلاً بك في إمتينان، يرجى اختيار لغتك."
     },
     "AllOffers": {
       "title": "جميع العروض",

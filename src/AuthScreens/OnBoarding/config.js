@@ -27,22 +27,22 @@ export const getConfig = (language) => {
     {
       key: 0,
     },
-    {
-      image: IMAGES[language][0],
-      key: 1,
-    },
-    {
-      image: IMAGES[language][1],
-      key: 2,
-    },
-    {
-      image: IMAGES[language][2],
-      key: 3,
-    },
-    {
-      image: IMAGES[language][3],
-      key: 4,
-    },
+    // {
+    //   image: IMAGES[language][0],
+    //   key: 1,
+    // },
+    // {
+    //   image: IMAGES[language][1],
+    //   key: 2,
+    // },
+    // {
+    //   image: IMAGES[language][2],
+    //   key: 3,
+    // },
+    // {
+    //   image: IMAGES[language][3],
+    //   key: 4,
+    // },
   ];
 
   return CONFIG;
