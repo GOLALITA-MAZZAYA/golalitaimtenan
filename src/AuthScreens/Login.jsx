@@ -33,7 +33,7 @@ import '../pushNotifications/pushNotificationBootStrap';
 import usePushNotifications from '../pushNotifications/usePushNotifications';
 import TouchID from 'react-native-touch-id';
 import TwoButtons from '../components/TwoButtons/TwoButtons';
-import { getFlexDirection, phoneRegExp, qcbEmailTest } from '../../utils';
+import { getFlexDirection, phoneRegExp } from '../../utils';
 import {
   setIsloadingAutologin,
   setIsAuthorized,
@@ -172,7 +172,6 @@ const Login = ({
     validationSchema = Yup.object({
       email: Yup.string()
         .email(t('Login.invalidEmail'))
-        .test(qcbEmailTest(t))
         .required(t('Login.required')),
       password: Yup.string().required(t('Login.required')),
     });
