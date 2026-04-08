@@ -104,7 +104,7 @@
       "invalidPhone": "Phone number is not valid",
       "passwordsMustMatch": "Passwords must match",
       "min8chars": "8 characters minimum",
-      "pleaseEnterData": "We need to verify you are part of program Imtenan",
+      "pleaseEnterData": "We need to verify you are part of program ETIZAZ",
       "phoneDoesntExist": "This phone doesn't exist",
       "emailDoesntExist": "This email doesn`t exist",
       "verify": "Verify",
@@ -176,7 +176,7 @@
       "next": "Next",
       "skip": "Next",
       "mazaya": "Mazaya",
-      "welcomeTo": "Welcome to Imtenan, please choose your language"
+      "welcomeTo": "Welcome to ETIZAZ, please choose your language"
     },
     "AllOffers": {
       "title": "All offers",

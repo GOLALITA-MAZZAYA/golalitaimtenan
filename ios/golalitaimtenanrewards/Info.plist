@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Imtenan - امتنان</string>
+	<string>ETIZAZ - اعــــــتزاز</string>
 	<key>CFBundleExecutable</key>
 	<string>golalitaimtenanrewards</string>
 	<key>CFBundleIdentifier</key>
@@ -72,7 +72,7 @@
 	</dict>
 
 	<key>NSCameraUsageDescription</key>
-	<string>Golalita Imtenan Rewards uses the camera to let user put a photo in his profile page.</string>
+	<string>Golalita ETIZAZ Rewards uses the camera to let user put a photo in his profile page.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to use Face ID</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -82,12 +82,12 @@
 	<key>NSLocationUsageDescription</key>
 	<string>Turning on location services allows us to show you nearby merchants</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Golalita Imtenan Rewards uses your location for displaying nearest merchants on the map.</string>
+	<string>Golalita ETIZAZ Rewards uses your location for displaying nearest merchants on the map.</string>
 
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save pictures for certain activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Golalita Imtenan Rewards accesses the library to let user put a photo in his profile page.</string>
+	<string>Golalita ETIZAZ Rewards accesses the library to let user put a photo in his profile page.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
