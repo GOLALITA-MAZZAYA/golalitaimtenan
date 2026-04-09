@@ -17,4 +17,4 @@ export const B1G1 = 'b1g1';
 export const DISCOUNT = 'discount';
 export const PROMOCODE = 'promocode';
 
-export const VERSION = '1.0.1';
+export const VERSION = '1.0.2';
