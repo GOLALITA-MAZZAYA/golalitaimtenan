@@ -10,7 +10,6 @@ import {
   getInfoBlocksConfig,
   getInfoBtnsConfig,
   getOfferTypeInfoBtnsConfig,
-  OFFER_TAB_CONSTANTS,
 } from "./config";
 import { SCREEN_HEIGHT } from "../../../styles/mainStyles";
 import useOffer from "./hooks/useOffer";
@@ -26,10 +25,7 @@ import { useTranslation } from "react-i18next";
 import { handleMerchantCardPress } from "../../MerchantsPage/helpers";
 import { transformDate } from "./helpers";
 import { navigateToBookNow } from "../helpres";
-import HeaderTabs from "./components/HeaderTabs";
-import OffersTab from "./components/OffersTab";
 import InfoTab from "./components/InfoTab";
-import { Tabs } from "react-native-collapsible-tab-view";
 import useIsGuest from "../../../hooks/useIsGuest";
 
 
@@ -39,7 +35,6 @@ const OfferInfo = ({ route }) => {
   const { offer, loading, error } = useOffer(productId);
   const { isDark } = useTheme();
   const isGuest = useIsGuest();
-  const [activeTab, setActiveTab] = useState(OFFER_TAB_CONSTANTS.INFO);
 
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
@@ -59,8 +54,6 @@ const OfferInfo = ({ route }) => {
     handleMerchantCardPress(offer);
   };
 
-  console.log(offer, 'sdda')
-
   return (
     <>
       <MainLayout
@@ -75,66 +68,46 @@ const OfferInfo = ({ route }) => {
         {error && <NoData />}
 
         {!loading && !error && (
-          <Tabs.Container
-
-            renderHeader={() => (
-              <View style={{ paddingHorizontal: 20 }}>
-                <OfferInfoSwiper
-                  images={[offer.image_url]}
-                  onImagePress={handleImagePress}
-                />
-                <MerchantInfoBlock
-                  merchantName={
-                    isArabic ? offer.merchant_name_arabic : offer.merchant_name
-                  }
-                  merchantUrl={offer.merchant_logo}
-                  offerLabel={isArabic ? offer.label_arabic : offer.offer_label}
-                  start_date={transformDate(offer?.start_date)}
-                  end_date={transformDate(offer?.end_date)}
-                />
-                <InfoButtons data={infoBtnsConfig} />
-                {isGuest ? <View /> : <OfferTypeInfoButtons data={offerTypeInfoBtnsConfig} />}
-
-                <FullScreenImageModal
-                  visible={!!selectedImageUrl}
-                  url={selectedImageUrl}
-                  onClose={closeModal}
-                />
-              </View>
-            )}
-            renderTabBar={() => <HeaderTabs setActiveTab={setActiveTab} activeTab={activeTab} />}
+          <ScrollView
+            contentContainerStyle={{
+              paddingBottom: 30,
+              paddingHorizontal: 20,
+              backgroundColor: isDark ? '#000' : '#fff',
+            }}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            <Tabs.Tab name="oneTab">
-              <Tabs.ScrollView
-                contentContainerStyle={{
-                  paddingBottom: 30,
-                  paddingHorizontal: 20
-                }}
-                showsVerticalScrollIndicator={false}
-                bounces={false}
-              >
-                <>
-                  {/* {activeTab === OFFER_TAB_CONSTANTS.OFFERS && (
-                    <OffersTab
-                      merchantId={offer.merchant_id}
-                      type={offer.offer_type}
-                      offerId={offer.product_id}
-                    />
-                  )} */}
-                  {activeTab === OFFER_TAB_CONSTANTS.INFO && (
-                    <InfoTab
-                      onMerchantDetailsPress={() => handleMerchatDetails(offer)}
-                      onBookNowPress={() => navigateToBookNow(offer, merchant)}
-                      bookNow={bookNow}
-                      selectedImageUrl={selectedImageUrl}
-                      onModalClose={closeModal}
-                      infoBlocksConfig={infoBlocksConfig} />
-                  )}
+            <OfferInfoSwiper
+              images={[offer.image_url]}
+              onImagePress={handleImagePress}
+            />
+            <MerchantInfoBlock
+              merchantName={
+                isArabic ? offer.merchant_name_arabic : offer.merchant_name
+              }
+              merchantUrl={offer.merchant_logo}
+              offerLabel={isArabic ? offer.label_arabic : offer.offer_label}
+              start_date={transformDate(offer?.start_date)}
+              end_date={transformDate(offer?.end_date)}
+            />
+            <InfoButtons data={infoBtnsConfig} />
+            {isGuest ? <View /> : <OfferTypeInfoButtons data={offerTypeInfoBtnsConfig} />}
 
-                </>
-              </Tabs.ScrollView>
-            </Tabs.Tab>
-          </Tabs.Container>
+            <FullScreenImageModal
+              visible={!!selectedImageUrl}
+              url={selectedImageUrl}
+              onClose={closeModal}
+            />
+
+            <InfoTab
+              onMerchantDetailsPress={() => handleMerchatDetails(offer)}
+              onBookNowPress={() => navigateToBookNow(offer, merchant)}
+              bookNow={bookNow}
+              selectedImageUrl={selectedImageUrl}
+              onModalClose={closeModal}
+              infoBlocksConfig={infoBlocksConfig}
+            />
+          </ScrollView>
         )}
       </MainLayout>
     </>
@@ -142,18 +115,8 @@ const OfferInfo = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainerStyle: {
-    flexGrow: 1,
-    paddingBottom: 60,
-  },
   loader: {
     backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  merchantBtn: {
-    marginTop: 20,
   },
 });
 
