@@ -10,6 +10,7 @@ import { navigationRef, flushPendingActions } from './RootNavigation';
 import { linking } from './config';
 import { useTheme } from '../components/ThemeProvider';
 import { colors } from '../components/colors';
+import { useDeepLinking } from '../hooks/useDeepLinking';
 
 export const Root = ({ isAuthorized }) => {
   const { isDark } = useTheme();
@@ -21,6 +22,8 @@ export const Root = ({ isAuthorized }) => {
       background: isDark ? colors.darkModeBackground : '#fff',
     },
   };
+
+  useDeepLinking();
 
   return (
     <NavigationContainer

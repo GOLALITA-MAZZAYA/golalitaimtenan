@@ -1118,6 +1118,15 @@
     "LoyaltyTravel": {
       "title": "Travel With Points",
       "select": "Book now"
+    },
+    "Charities": {
+      "title": "Charities",
+      "giftTitle": "Mark as a gift",
+      "giftDescription": "You have to login to use this feature.",
+      "total": "Total donation",
+      "amountSelectLabel": "Set donation amount",
+      "qar": "QAR",
+      "donate": "Donate"
     }
   }
 }

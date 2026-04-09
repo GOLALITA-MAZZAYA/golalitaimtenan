@@ -20,7 +20,7 @@ export const getMerchants = async (params = {}) => {
 export const getMerchantById = async merchant_id => {
   const token = await AsyncStorage.getItem('token');
 
-  const res = await instance.post('/user/merchant/lists', {
+  const res = await instance.post('/user/merchant/details', {
     params: { token, merchant_id },
   });
 
@@ -103,6 +103,7 @@ export const getAllMerchants = async (otherParams = {}) => {
   const res = await instance.post('/user/category/merchant/lists', {
     params: {
       token,
+      x_org_linked: ORG_CODE,
       ...otherParams,
     },
   });

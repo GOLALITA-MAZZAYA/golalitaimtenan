@@ -1,7 +1,7 @@
 import * as React from 'react';
 // import {useColorScheme} from 'react-native-appearance';
 import { StatusBar, Text, TouchableOpacity } from 'react-native';
-import { colors, loyaltyDarkColors, loyaltyLightColors } from './colors';
+import { charitiesDarkColors, charitiesLightColors, colors, loyaltyDarkColors, loyaltyLightColors } from './colors';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -49,6 +49,9 @@ export const ThemeProvider = props => {
 
   const setScheme = scheme => {
     if (scheme === 'dark') {
+      Object.entries(charitiesDarkColors).forEach(([key, value]) => {
+        colors[key] = value
+      })
 
 
       Object.entries(loyaltyDarkColors).forEach(([key, value]) => {
@@ -58,6 +61,10 @@ export const ThemeProvider = props => {
       colors.darkBlue = '#000';
       colors.navyBlue = '#000';
     } else {
+
+      Object.entries(charitiesLightColors).forEach(([key, value]) => {
+        colors[key] = value
+      })
 
       Object.entries(loyaltyLightColors).forEach(([key, value]) => {
         console.log(key, value);

@@ -1073,6 +1073,15 @@
     "LoyaltyTravel": {
       "title": "السفر باستخدام النقاط",
       "select": "احجز ألان"
+    },
+    "Charities": {
+      "title": "الجمعيات الخيرية",
+      "giftTitle": "وضع كهدية",
+      "giftDescription": "يجب تسجيل الدخول لاستخدام هذه الميزة.",
+      "total": "إجمالي التبرع",
+      "amountSelectLabel": "حدد مبلغ التبرع",
+      "qar": "ر.ق",
+      "donate": "تبرع"
     }
   }
 }

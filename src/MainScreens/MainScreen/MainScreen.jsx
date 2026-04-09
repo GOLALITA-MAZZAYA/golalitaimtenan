@@ -20,6 +20,7 @@ import NotificationModal from '../../components/NotificationModal/NotificationMo
 import MerchantListHeader from '../MerchantsPage/components/MerchantsHeader';
 import Header from '../../components/Header';
 import AdwertisementModal from './components/AdwertisementModal';
+import { CHARITY_MERCHANT_IDS } from '../../constants';
 
 const MainScreen = ({
   navigation,
@@ -46,7 +47,15 @@ const MainScreen = ({
         params: { title: 'Mumayizat Oman' },
       });
     } else if (item.internal) {
-      getMerchantDetails(item.merchant_id, navigation, t);
+      if (item.merchant_id) {
+        if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
+          navigation.navigate('Charities', { merchantId: item.merchant_id });
+
+          return
+        }
+
+        getMerchantDetails(item.merchant_id, navigation, t);
+      }
     } else {
       onBannerPress(
         item.banner_url,

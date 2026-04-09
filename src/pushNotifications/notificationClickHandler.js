@@ -7,6 +7,7 @@ import store from '../redux/store';
 import i18n from 'i18next';
 import { setClickedNotificationData } from '../redux/notifications/notifications-actions';
 import { navigate } from '../Navigation/RootNavigation';
+import { CHARITY_MERCHANT_IDS } from "../constants";
 
 export const NotificatiionClickHanlder = {
   merchant: merchant_id => {
@@ -33,16 +34,22 @@ export const NotificatiionClickHanlder = {
     const id = Number(product_id);
 
     store.dispatch(setClickedNotificationData(notification));
-    
+
     navigate("AllOffers", {
-        screen: "offer-info",
-        params: {
-          productId: id,
-          title: ''
-        },
+      screen: "offer-info",
+      params: {
+        productId: id,
+        title: ''
+      },
     });
     // если нужно открывать экран продукта, сюда тоже можно добавить navigate(...)
   },
+
+  charity: (merchantId) => {
+    store.dispatch(setClickedNotificationData(null));
+    navigate('Charities', { merchantId });
+    return
+  }
 };
 
 export const handleNotificationClick = notification => {
@@ -54,6 +61,11 @@ export const handleNotificationClick = notification => {
 
   if (!data) {
     return;
+  }
+
+  if (data.merchant_id && CHARITY_MERCHANT_IDS.includes(+data.merchant_id)) {
+    NotificatiionClickHanlder.charity(data.merchant_id);
+    return
   }
 
   // иначе пробуем продукт

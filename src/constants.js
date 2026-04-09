@@ -9,3 +9,4 @@ export const CONTACT_EMAILS = [
     'sales@golalita.com',
     'IMTENAN.QCB@qcb.gov.qa',
 ];
+export const CHARITY_MERCHANT_IDS = [165105, 164127, 165389, 165103, 164585, 165104];

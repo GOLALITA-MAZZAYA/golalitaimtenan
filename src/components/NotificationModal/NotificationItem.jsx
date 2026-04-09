@@ -18,17 +18,26 @@ import { useTheme } from "../ThemeProvider";
 import { readNotification } from "../../redux/notifications/notifications-thunks";
 import { getNotificationDescription } from "../../MainScreens/Notifications/helpers";
 import HTMLRenderer from "../HTMLRenderer";
+import { CHARITY_MERCHANT_IDS } from "../../constants";
 
 const NotificationItem = ({ item }) => {
   const dispatch = useDispatch();
   const navigation = navigationRef;
-  const { i18n,t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
 
   const language = i18n.language;
   const handleItemPress = () => {
     if (item.merchant_id) {
+
+      if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
+
+        navigate('Charities', { merchantId: item.merchant_id });
+        dispatch(readNotification(item.notification_id));
+
+        return
+      }
       dispatch(getMerchantDetails(item.merchant_id, navigation, t, "Back"));
       dispatch(readNotification(item.notification_id));
 
@@ -50,11 +59,11 @@ const NotificationItem = ({ item }) => {
         </View>
       )}
       <TypographyText
-        title={language === "ar" ? item?.merchant_name_arabic : item?.merchant_name }
+        title={language === "ar" ? item?.merchant_name_arabic : item?.merchant_name}
         textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
         size={16}
         font={BALOO_MEDIUM}
-        style={[styles.name,{alignSelf:language === "ar" ? "flex-end" :"flex-start"}]}
+        style={[styles.name, { alignSelf: language === "ar" ? "flex-end" : "flex-start" }]}
       />
       <Image
         source={{ uri: item.offer_image }}
@@ -64,7 +73,7 @@ const NotificationItem = ({ item }) => {
         onLoadEnd={() => setLoading(false)}
       />
       {!!descriptionHtml && (
-        <HTMLRenderer value={descriptionHtml} style={{ marginTop: 10 ,alignSelf:language === "ar" ? "flex-end" :"flex-start"}} />
+        <HTMLRenderer value={descriptionHtml} style={{ marginTop: 10, alignSelf: language === "ar" ? "flex-end" : "flex-start" }} />
       )}
 
       {!descriptionHtml && descriptionText && (

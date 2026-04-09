@@ -32,12 +32,13 @@ const ChildCategories = ({ navigation }) => {
   const getChildCategories = async () => {
     try {
       setLoading(true);
-
+      console.log("ChildCategories: Parent category ID:", parentCategoryId);
+      console.log("ChildCategories: Categories type:", categoriesType);
       const data = await getChildCategoriesById(
         parentCategoryId,
         categoriesType,
       );
-
+      console.log("ChildCategories: Data:", data);
       const filteredChildCategories = data.filter(item => {
         if (item.parent_id[0] === 47 && (item.id === 156 || item.id === 160)) {
           return false;
@@ -61,6 +62,13 @@ const ChildCategories = ({ navigation }) => {
   const navigateToMerchant = (category) => {
     console.log("ChildCategories: Navigating to category:", category);
 
+    if (category.parent_id?.[0] === 687) {
+      navigation.navigate('Charities', {
+        categoryId: category.id
+      });
+
+      return
+    }
     // Check if this is the special "Events & Tickets" item
     if (category.isEventsAndTickets) {
       const countryCode = getCountryCodeFromParent(category.parent_id?.[0]);

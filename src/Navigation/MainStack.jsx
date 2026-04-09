@@ -44,6 +44,7 @@ import ARMapNavigator from '../MainScreens/ARMap';
 import LoyaltyPointsNavigator from '../MainScreens/LoyaltyPoints';
 import BillScannerHowToUse from '../MainScreens/BillScannerHoToUse';
 import MerchantNavigator from '../MainScreens/PremiumPartner';
+import Charities from '../MainScreens/Charities';
 
 const MainStack = createStackNavigator();
 
@@ -131,6 +132,10 @@ export const MainStackScreen = ({ navigation, route }) => {
       <MainStack.Screen
         name="categories-child-mainstack"
         component={ChildCategories}
+      />
+      <MainStack.Screen
+        name="Charities"
+        component={Charities}
       />
     </MainStack.Navigator>
   );

@@ -9,6 +9,8 @@ export const linking = {
               myVouchers: {
                 screens: {
                   ["myVouchers-list"]: "giftcards",
+                  Charities: "charities",
+                  Main: "home",
                 },
               },
             },

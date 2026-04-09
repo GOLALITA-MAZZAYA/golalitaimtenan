@@ -54,6 +54,15 @@ export const loyaltyLightColors = {
 
 };
 
+
+export const charitiesDarkColors = {
+   charityBackground: '#000'
+}
+
+export const charitiesLightColors = {
+   charityBackground: '#fff'
+}
+
 export let colors = {
    darkBlue: '#a29475',
    navyBlue: "#072536",
@@ -76,5 +85,6 @@ export let colors = {
    highlatedGrey: "#EDEDED",
    borderGrey: "#2F2F2F",
    categoryGrey: "#313131",
-   ...loyaltyLightColors
+   ...loyaltyLightColors,
+   ...charitiesLightColors,
 };
