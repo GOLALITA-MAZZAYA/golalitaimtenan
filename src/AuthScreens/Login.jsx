@@ -320,7 +320,7 @@ const Login = ({
                               Platform.OS === 'android' ? true : false
                             }
                             wrapperStyle={{ marginTop: 10 }}
-                            hideLabel
+                          //  hideLabel
                           />
                         )}
 
@@ -337,6 +337,7 @@ const Login = ({
                             placeholder={t('Login.yourPhone')}
                             disableInputRtl
                             wrapperStyle={{ marginTop: 10 }}
+                            showLabel
                           />
                         )}
 
@@ -360,6 +361,7 @@ const Login = ({
                           returnKeyType={'next'}
                           onSubmitEditing={Keyboard.dismiss}
                           wrapperStyle={{ marginTop: 20 }}
+                          showLabel
                         />
 
                         <View
