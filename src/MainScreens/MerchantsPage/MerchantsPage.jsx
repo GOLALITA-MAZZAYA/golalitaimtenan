@@ -42,6 +42,7 @@ const MerchantsPage = ({
   let params = route?.params;
   const canGetMoreDataRef = useRef(true);
   const { isDark } = useTheme();
+  const isHotel = params.isHotel;
 
   const parentCategoryName = params?.parentCategoryName;
 
@@ -104,6 +105,12 @@ const MerchantsPage = ({
     tabsData.location,
   ]);
 
+  const favouriteMap = useMemo(() => {
+  const map = new Set();
+  favouriteMerchants.forEach(m => map.add(m.merchant_id));
+  return map;
+}, [favouriteMerchants]);
+
   const handleFavouritePress = (merchant) => {
     toggleFavourites(merchant.merchant_id);
   };
@@ -126,9 +133,8 @@ const MerchantsPage = ({
 
   const renderItem = useCallback(
     ({ item: merchant }) => {
-      const isFavorite = favouriteMerchants.some(
-        (o) => o.merchant_id === merchant.merchant_id
-      );
+      const isFavorite = favouriteMap.has(merchant.merchant_id);
+
       return (
         <View>
           <MerchantsList
@@ -139,10 +145,11 @@ const MerchantsPage = ({
         </View>
       );
     },
-    [favoriteOffers, favouriteMerchants]
+    [favoriteOffers?.length, favouriteMerchants?.length]
   );
 
   const keyExtractor = (_, index) => `${index}`;
+
 
   return (
     <MainLayout

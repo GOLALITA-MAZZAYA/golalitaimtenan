@@ -33,7 +33,7 @@ const MerchantsFilters = ({ navigation, route }) => {
   const language = i18n.language;
   const params = route?.params;
 
-  const onReset = () => { };
+  const onReset = () => {};
 
   const onClose = () => {
     navigation.navigate("merchants-list");
@@ -56,8 +56,10 @@ const MerchantsFilters = ({ navigation, route }) => {
   };
 
   const onBackPress = () => {
+    navigation.goBack()
     navigation.navigate("merchants-list", {
       filters: params?.filters,
+      merge: true,
     });
   };
 

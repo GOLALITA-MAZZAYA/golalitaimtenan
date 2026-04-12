@@ -4,8 +4,10 @@ import BranchItem from "../BranchItem";
 import OfferItem from "../OfferItem";
 import { getToggleBtns } from "./helpers";
 import { handleMerchantCardPress } from "../../helpers";
-import { getMerchantDisscountForOffers } from "../../../../api/merchants";
-import { useEffect, useState } from "react";
+import useMerchantDiscount from "../../../../hooks/useMerchantDiscount";
+import useRoadDistance from "../../../../hooks/useRoadDistance";
+import {userLocationSelector} from "../../../../redux/global/global-selectors";
+import {useSelector} from "react-redux";
 
 const MerchantsList = ({
   merchant,
@@ -15,6 +17,7 @@ const MerchantsList = ({
   isSaved,
 }) => {
   const { i18n } = useTranslation();
+  const userLocation = useSelector(userLocationSelector);
   const language = i18n.language;
 
   const isOrganization = merchant.org_name;
@@ -24,33 +27,8 @@ const MerchantsList = ({
   const isOffersVisible = !isOrganization;
   const isBranchesVisible = !isOrganization && !isBusinessHotel;
 
-  const [loadingDescription, setLoadingDescription] = useState(false);
-  const [description, setDescription] = useState(null);
-
-  const getOffersDiscountValue = async () => {
-
-    if (!merchant || !merchant.merchant_id) {
-      return;
-    }
-
-    try {
-      setLoadingDescription(true);
-
-      const description = await getMerchantDisscountForOffers(
-        merchant.merchant_id
-      );
-
-      setDescription(description);
-    } catch (err) {
-      console.log(err, "err");
-    } finally {
-      setLoadingDescription(false);
-    }
-  };
-
-  useEffect(() => {
-    getOffersDiscountValue();
-  }, []);
+  const {loading, discount} = useMerchantDiscount(merchant.merchant_id);
+  const {distance, distaceLoading} = useRoadDistance(userLocation?.longitude, userLocation?.latitude,merchant.partner_longitude, merchant.partner_latitude)
 
   if (!merchant) {
     return null;
@@ -67,14 +45,14 @@ const MerchantsList = ({
           language === "ar" ? merchant?.x_arabic_name : merchant.merchant_name,
         description:
           language === "ar"
-            ? description?.x_ribbon_text_arabic || ""
-            : description?.ribbon_text || "",
-        loadingDescription,
+            ? discount?.x_ribbon_text_arabic || ""
+            : discount?.ribbon_text || "",
+        loadingDescription: loading,
+        distance,
+        distaceLoading,
         acceptGoLoyaltyPoint: merchant.accept_go_loyalty_point,
         goPoints: merchant.gpoint,
         isSaved: isSaved ? isSaved : isFavorite,
-        latitude: merchant.partner_latitude,
-        longitude: merchant.partner_longitude
       }}
     >
       {isOffersVisible && (

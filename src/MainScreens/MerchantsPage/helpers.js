@@ -6,9 +6,10 @@ import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import store from "../../redux/store";
 
 export const handleMerchantCardPress = (merchant, offer) => {
-  const merchantId = offer
-    ? offer.merchant_sub_id
-    : merchant.merchant_id ?? merchant.partner_id?.[0] ?? merchant.id;
+  const merchantId = merchant?.merchant_id ?
+    merchant.merchant_id : offer.merchant_id
+
+    console.log(merchantId,'merchantId')
 
   store.dispatch(
     getMerchantDetails(
@@ -16,7 +17,8 @@ export const handleMerchantCardPress = (merchant, offer) => {
       navigationRef,
       i18n.t,
       getCategoryNameByIdAndLang(merchant.category_id),
-      merchant.isOrganization
+      merchant.isOrganization,
+      false, false, merchant.restaurantId
     )
   );
 };

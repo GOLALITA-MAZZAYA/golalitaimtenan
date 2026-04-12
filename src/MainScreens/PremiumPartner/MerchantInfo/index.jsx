@@ -87,9 +87,9 @@ const MerchantInfo = ({
       }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <ViewShot ref={viewRef} style={styles.shot}>
+        <ViewShot ref={viewRef} style={[styles.shot, { backgroundColor: isDark ? colors.darkBlue : colors.white }]}>
           <View
-            style={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: isDark ? colors.darkBlue : colors.white }}
           >
             <Tabs.Container
               renderHeader={() => (

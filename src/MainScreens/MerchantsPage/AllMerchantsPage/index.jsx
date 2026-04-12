@@ -1,173 +1,230 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
-import { colors } from '../../../components/colors';
-import { mainStyles, SCREEN_HEIGHT } from '../../../styles/mainStyles';
-import { connect } from 'react-redux';
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { ActivityIndicator, StyleSheet, View, FlatList } from "react-native";
+
+import { colors } from "../../../components/colors";
+import { mainStyles, SCREEN_HEIGHT } from "../../../styles/mainStyles";
+import { connect } from "react-redux";
 import {
   getMerchantList,
   toggleFavourites,
-} from '../../../redux/merchant/merchant-thunks';
-import { useTranslation } from 'react-i18next';
-import { setMerchants } from '../../../redux/merchant/merchant-actions';
-import MainLayout from '../../../components/MainLayout';
-import { useTheme } from '../../../components/ThemeProvider';
-import Header from '../../../components/Header';
-import { getFavouriteMerchantsList } from '../../../redux/favouriteMerchants/favourite-merchants-thunks';
-import { navigationRef } from '../../../Navigation/RootNavigation';
-import MerchantsList from '../components/MerchantList';
-import ListNoData from '../../../components/ListNoData';
-import {getUserLocationThunk} from '../../../redux/global/global-thunks';
+} from "../../../redux/merchant/merchant-thunks";
+import { useTranslation } from "react-i18next";
+import { setMerchants } from "../../../redux/merchant/merchant-actions";
+import MainLayout from "../../../components/MainLayout";
+import { useTheme } from "../../../components/ThemeProvider";
+import Header from "../../../components/Header";
+import { getFavouriteMerchantsList } from "../../../redux/favouriteMerchants/favourite-merchants-thunks";
+import { navigationRef } from "../../../Navigation/RootNavigation";
+import MerchantsList from "../components/MerchantList";
+import ListNoData from "../../../components/ListNoData";
+import { getUserLocationThunk } from "../../../redux/global/global-thunks";
+import HotelsListCard from "./HotelsListCard";
+import { isRTL } from "../../../../utils";
+import { handleMerchantCardPress } from "../helpers";
+import { getHeaderBtnString } from "./helpers";
 
-const MerchantsPage = ({ route,
+const ITEM_HEIGHT = 200;
+
+const MerchantsPage = ({
+  route,
   merchants,
   isMerchantsLoading,
   getMerchantList,
-  favoriteOffers,
   favouriteMerchants,
   toggleFavourites,
   getFavouriteMerchantsList,
-  getUserLocationThunk 
+  getUserLocationThunk,
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
+
   const listRef = useRef(null);
   const canGetMoreDataRef = useRef(true);
-  let params = route?.params;
+  const visibleIdsRef = useRef(new Set());
+
+  const isRtl = isRTL();
+  const params = route?.params;
 
   const parentCategoryName = params?.parentCategoryName;
   const filters = params?.filters;
 
+  const isHotel = merchants?.[0]?.category_id === 185;
 
   const title = parentCategoryName
     ? parentCategoryName
-    : t('Drawer.allMerchants');
+    : t("Drawer.allMerchants");
 
-
-    const handleFavouritePress = (merchant) => {
+  const handleFavouritePress = (merchant) => {
     toggleFavourites(merchant.merchant_id);
   };
 
-    useEffect(() => {
-      if (!favouriteMerchants.length) {
-        getFavouriteMerchantsList();
-      }
-      getUserLocationThunk();
-    }, []);
-  
-    useEffect(() => {
-      canGetMoreDataRef.current = true;
-  
-      getMerchantList({
-        page: 1,
-        filters: filters,
-        onGetData: (dataLength, limit) => {
-          if (dataLength !== limit) {
-            canGetMoreDataRef.current = false;
-          }
-        },
-      });
-    }, [filters]);
-  
-    const data = useMemo(() => {
-      return merchants?.filter((merchant) => merchant.x_moi_show);
-    }, [merchants?.length]);
-  
-    const fetchMoreData = () => {
-      if (isMerchantsLoading || !canGetMoreDataRef.current) {
-        return;
-      }
-  
-      getMerchantList({
-        page: "next",
-        filters: { ...filters },
-        onGetData: (dataLength, limit) => {
-          if (dataLength !== limit) {
-            canGetMoreDataRef.current = false;
-          }
-        },
-      });
-    };
+  const favouriteMap = useMemo(() => {
+    const map = new Set();
+    favouriteMerchants.forEach((m) => map.add(m.merchant_id));
+    return map;
+  }, [favouriteMerchants]);
+
+  useEffect(() => {
+    if (!favouriteMerchants.length) {
+      getFavouriteMerchantsList();
+    }
+
+    getUserLocationThunk();
+  }, []);
+
+  useEffect(() => {
+    canGetMoreDataRef.current = true;
+
+    getMerchantList({
+      page: 1,
+      filters,
+      onGetData: (dataLength, limit) => {
+        if (dataLength !== limit) {
+          canGetMoreDataRef.current = false;
+        }
+      },
+    });
+  }, [filters]);
+
+  const data = useMemo(() => {
+    return merchants?.filter((merchant) => merchant.x_moi_show);
+  }, [merchants]);
+
+  const fetchMoreData = () => {
+    if (isMerchantsLoading || !canGetMoreDataRef.current) return;
+
+    getMerchantList({
+      page: "next",
+      filters: { ...filters },
+      onGetData: (dataLength, limit) => {
+        if (dataLength !== limit) {
+          canGetMoreDataRef.current = false;
+        }
+      },
+    });
+  };
+
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    viewableItems.forEach((v) => {
+      visibleIdsRef.current.add(v.item.merchant_id);
+    });
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 60,
+  }).current;
 
   const renderItem = useCallback(
     ({ item: merchant }) => {
-      const isFavorite = favouriteMerchants.some(
-        (o) => o.merchant_id === merchant.merchant_id
-      );
+      const isFavorite = favouriteMap.has(merchant.merchant_id);
+
+      // if (merchant?.category_id === 185 || merchant?.category_id === 192) {
+      //   return (
+      //     <HotelsListCard
+      //       uri={merchant?.banners?.[0]?.banner_image}
+      //       description={
+      //         isRtl ? merchant?.x_arabic_name : merchant.merchant_name
+      //       }
+      //       rating={merchant.rating}
+      //       onPress={() => handleMerchantCardPress(merchant)}
+      //       merchantId={merchant.merchant_id}
+      //     />
+      //   );
+      // }
+
       return (
-        <View>
-          <MerchantsList
-            merchant={merchant}
-            onPressFavourite={() => handleFavouritePress(merchant)}
-            isFavorite={isFavorite}
-          />
-        </View>
+        <MerchantsList
+          merchant={merchant}
+          onPressFavourite={() => handleFavouritePress(merchant)}
+          isFavorite={isFavorite}
+        />
       );
     },
-    [favoriteOffers, favouriteMerchants]
+    [favouriteMap, isRtl]
   );
 
-  const keyExtractor = (_, index) => `${index}`;
+  const keyExtractor = useCallback(
+    (item) => item.merchant_id.toString(),
+    []
+  );
 
+  const getItemLayout = useCallback((data, index) => ({
+    length: ITEM_HEIGHT,
+    offset: ITEM_HEIGHT * index,
+    index,
+  }), []);
 
   return (
     <MainLayout
       outsideScroll={true}
       headerChildren={
-        <>
-          <Header
-            label={title}
-            style={styles.header}
-            isHome={true}
-            btns={['back','filter']}
-            additionalBtnsProps={{
-              back: {
-                onPress: () => {
-                  if (!parentCategoryName) {
-                    navigationRef.current.navigate('Main');
-                    return;
-                  }
-
-                  navigationRef.current.goBack();
-                },
+        <Header
+          label={title}
+          style={styles.header}
+          isHome={true}
+          btns={getHeaderBtnString(isHotel)}
+          additionalBtnsProps={{
+            back: {
+              onPress: () => {
+                if (!parentCategoryName) {
+                  navigationRef.current.navigate("Main");
+                  return;
+                }
+                navigationRef.current.goBack();
               },
-              filter: {
-                params: {
-                  filters: params?.filters || {},
-                },
+            },
+            filter: {
+              params: {
+                filters: params?.filters || {},
               },
-            }}
-          />
-        </>
+            },
+          }}
+        />
       }
       headerHeight={50}
       contentStyle={styles.contentStyle}
-      style={{ backgroundColor: isDark ? colors.darkBlue : colors.white,   }}
+      style={{
+        backgroundColor: isDark ? colors.darkBlue : colors.white,
+      }}
     >
       <FlatList
-      ref={listRef}
-      contentContainerStyle={styles.contentContainerStyle}
-      showsVerticalScrollIndicator={false}
-      data={data}
-      windowSize={SCREEN_HEIGHT}
-      maxToRenderPerBatch={5}
-      keyExtractor={keyExtractor}
-      onEndReachedThreshold={0.4}
-      onEndReached={fetchMoreData}
-      ListFooterComponent={() =>
-        isMerchantsLoading && (
-          <View style={[mainStyles.centeredRow, styles.loaderWrapper]}>
-            <ActivityIndicator
-              size={"large"}
-              color={isDark ? colors.mainDarkMode : colors.darkBlue}
-            />
-          </View>
-        )
-      }
-      ListEmptyComponent={
-        !isMerchantsLoading && <ListNoData text={t("Merchants.listNoData")} />
-      }
-      renderItem={renderItem}
-    />
+        ref={listRef}
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainerStyle}
+
+        onEndReached={fetchMoreData}
+        onEndReachedThreshold={0.4}
+
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={true}
+        getItemLayout={getItemLayout}
+
+        ListFooterComponent={
+          isMerchantsLoading ? (
+            <View style={[mainStyles.centeredRow, styles.loaderWrapper]}>
+              <ActivityIndicator
+                size="large"
+                color={isDark ? colors.mainDarkMode : colors.darkBlue}
+              />
+            </View>
+          ) : null
+        }
+
+        ListEmptyComponent={
+          !isMerchantsLoading && (
+            <ListNoData text={t("Merchants.listNoData")} />
+          )
+        }
+      />
     </MainLayout>
   );
 };
@@ -176,42 +233,13 @@ const styles = StyleSheet.create({
   loaderWrapper: {
     marginVertical: 30,
   },
-  categoryWrapper: {
-    marginTop: 16,
-  },
-  category: {
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  contentContainerStyle: {
-    paddingBottom: 60,
-    flexGrow: 1,
-  },
-  categoryTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-    loaderWrapper: {
-    marginVertical: 30,
-  },
-  categoryWrapper: {
-    marginTop: 16,
-  },
-  category: {
-    marginTop: 20,
-    marginBottom: 10,
-  },
   contentStyle: {
     height: SCREEN_HEIGHT - 120,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   contentContainerStyle: {
     paddingBottom: 60,
     flexGrow: 1,
-  },
-  categoryTouchable: {
-    flexDirection: "row",
-    alignItems: "center",
   },
 });
 
@@ -228,5 +256,5 @@ export default connect(mapStateToProps, {
   setMerchants,
   toggleFavourites,
   getFavouriteMerchantsList,
-  getUserLocationThunk
+  getUserLocationThunk,
 })(MerchantsPage);

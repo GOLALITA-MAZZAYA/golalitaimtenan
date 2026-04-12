@@ -16,6 +16,7 @@ import {getUserLocationThunk} from "../../../redux/global/global-thunks";
 const PremiumMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
+  
 
   useEffect(() => {
       getUserLocationThunk
