@@ -10,8 +10,8 @@ export const charityAmountInitiate = async (data) => {
     "currency": "QAR",
     "description": "Charity donation for Ramadan campaign",
     "callback_url": "https://www.golalita.com/payment/callback",
-    "return_url": "golalita://charities",
-    "cancel_url": "golalita://charities"
+    "return_url": "golalitaimtenanrewards://charities",
+    "cancel_url": "golalitaimtenanrewards://charities"
   };
 
   const res = await instance.post("/user/amount/charity/initiate", {

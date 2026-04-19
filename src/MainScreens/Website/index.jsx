@@ -17,7 +17,7 @@ const Website = (props) => {
 
   const handleNavigationChange = (navState) => {
     const { url } = navState;
-  
+
     if (url && url.includes("globaltixpaystatus.com")) {
       // Navigate directly to GlobalTixCartScreen to ensure we end up on the right screen
       setTimeout(() => {
@@ -25,6 +25,18 @@ const Website = (props) => {
       }, 100);
     }
   };
+
+  const handleShouldStartLoadWithRequest = (request) => {
+    const { url } = request;
+    console.log('[Website] onShouldStartLoadWithRequest url:', url);
+    if (url && url.startsWith("golalitaimtenanrewards://")) {
+      console.log('[Website] deep link detected — going back');
+      navigation.goBack();
+      return false;
+    }
+    return true;
+  };
+
   return (
     <View
       style={{
@@ -48,8 +60,10 @@ const Website = (props) => {
           allowUniversalAccessFromFileURLs={true}
           javaScriptEnabled={true}
           mixedContentMode={"always"}
+          originWhitelist={["*"]}
           style={{ flex: 1 }}
           onNavigationStateChange={handleNavigationChange}
+          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
         />
       </SafeAreaView>
     </View>

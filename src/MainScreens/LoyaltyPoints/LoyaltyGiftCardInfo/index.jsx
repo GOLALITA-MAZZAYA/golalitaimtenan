@@ -71,7 +71,7 @@ const LoyaltyGiftCardInfo = (props) => {
       receiver_email: user.email,
       receiver_phone: user.phone,
       customer_id: user.partner_id,
-      return_url: "golalita://giftcards?id=",
+      return_url: "golalitaimtenanrewards://giftcards?id=",
       currency_org: giftCard.brand_accepted_currency,
       amount_org: amount_org,
     };

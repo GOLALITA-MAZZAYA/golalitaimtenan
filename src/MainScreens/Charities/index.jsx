@@ -95,7 +95,7 @@ const Charities = ({ navigation, route }) => {
       navigation.navigate('Website', { url: res.payment_url })
 
     } catch (err) {
-      console.log(err, 'error')
+      console.log('[Charities] handleSubmit error:', err)
     } finally {
       setLoading(false)
     }
@@ -107,7 +107,7 @@ const Charities = ({ navigation, route }) => {
       try {
 
         const res = await charityVerify(paymentResponseRef.current.transaction_id);
-        console.log(res, 'charityVerify res')
+        console.log('[Charities] charityVerify res:', res)
 
         if (res.payment_status === 'Paid') {
           showMessage({
