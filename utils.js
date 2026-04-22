@@ -201,8 +201,8 @@ export const qcbEmailTest = (t) => ({
   message: t('Login.invalidEmailDomain'),
   test: (value) => {
     if (!value) return true;
-    // Allow @qcb.gov.qa domain emails
-    if (value.endsWith('@qcb.gov.qa')) return true;
+    // Allow @qcb.gov.qa, @cb.gov.qa, @qfiu.gov.qa domain emails
+    if (value.endsWith('@qcb.gov.qa') || value.endsWith('@cb.gov.qa') || value.endsWith('@qfiu.gov.qa')) return true;
     // Allow test accounts for app store review
     if (value === 'dev@qcb.com' || value === 'test@qcb.com' || value === 'testf@qcb.com' || value === 'guest@qcb.com') return true;
     return false;
