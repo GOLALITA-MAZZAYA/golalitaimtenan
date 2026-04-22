@@ -107,17 +107,17 @@ const DrawerItemList = () => {
       counts: premiumMerchantsCount,
       hidden: premiumMerchantsCount == 0,
     },
-    {
-      icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-      title: t('Drawer.goPoints'),
-      onPress: () =>
-        navigation.navigate('merchants', {
-          screen: 'GoPointsMerchants-list',
-          params: { selectedCategory: null },
-        }),
-      counts: goPointsMerchantsCount,
-      hidden: goPointsMerchantsCount == 0,
-    },
+    // {
+    //   icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+    //   title: t('Drawer.goPoints'),
+    //   onPress: () =>
+    //     navigation.navigate('merchants', {
+    //       screen: 'GoPointsMerchants-list',
+    //       params: { selectedCategory: null },
+    //     }),
+    //   counts: goPointsMerchantsCount,
+    //   hidden: goPointsMerchantsCount == 0,
+    // },
     {
       icon: () => <MerchantsIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Drawer.newMerchants'),
