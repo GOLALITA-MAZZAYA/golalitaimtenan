@@ -100,7 +100,7 @@
       "email": "Email",
       "emailPlaceholder": "Your email",
       "invalidEmail": "Invalid email",
-      "invalidEmailDomain": "Please use your QCB email address (example@qcb.gov.qa)",
+      "invalidEmailDomain": "Please use your official email address (e.g., @qcb.gov.qa, @cb.gov.qa, @qfiu.gov.qa)",
       "invalidPhone": "Phone number is not valid",
       "passwordsMustMatch": "Passwords must match",
       "min8chars": "8 characters minimum",
