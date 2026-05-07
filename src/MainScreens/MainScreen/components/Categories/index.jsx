@@ -49,6 +49,28 @@ const Categories = () => {
       return;
     }
 
+    if (category.id == 708) {
+      navigation.navigate('ARMap', {
+        screen: 'ARHowToUse',
+      });
+      return;
+    }
+
+    if (category.id == 706) {
+      navigation.navigate('merchants', {
+        screen: 'premiumMerchants-list',
+        params: { selectedCategory: null },
+      });
+      return;
+    }
+
+    if (category.id == 707) {
+      navigation.navigate('merchants', {
+        screen: 'newMerchants-list',
+        params: { selectedCategory: null },
+      });
+      return;
+    }
 
     if (!category.x_if_have_child_cat) {
       navigation.navigate('merchants', {
