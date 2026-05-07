@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
 import { TypographyText } from "../Typography";
 import { BALOO_REGULAR, BALOO_SEMIBOLD } from "../../redux/types";
 import { colors } from "../colors";
@@ -31,92 +32,86 @@ const CardWithNesetedItems = (props) => {
       style={[
         styles.wrapper,
         {
+          height: 220,
           backgroundColor: isDark ? colors.categoryGrey : "#F5F5F5",
         },
       ]}
     >
-      <View
-        style={[
-          styles.image,
-          {
-            backgroundColor: isDark ? "#fff" : "#F5F5F5",
-          },
-        ]}
+      <ImageBackground
+        source={{ uri: parentProps.uri }}
+        style={styles.backgroundImage}
+        imageStyle={{ borderRadius: 10 }}
       >
-        <ImageBackground
-          source={{ uri: parentProps.uri }}
-          style={styles.image}
-        ></ImageBackground>
-      </View>
-      <View style={[styles.row, getFlexDirection()]}>
-        <View
-          style={[
-            styles.infoWrapper,
-            { flexDirection: isRTL() ? "row-reverse" : "row" },
-          ]}
-        >
-          <TypographyText
-            textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-            size={18}
-            font={BALOO_SEMIBOLD}
-            title={parentProps.name}
-            style={styles.name}
-            numberOfLines={2}
-          />
-
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.8)"]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={[styles.row, getFlexDirection()]}>
           <View
             style={[
-              styles.discountWrapper,
-              {
-                flexDirection: isRTL() ? "row-reverse" : "row",
-                borderLeftWidth: isRTL() ? 0 : 1,
-                borderRightWidth: isRTL() ? 1 : 0,
-                borderLeftColor: isRTL()
-                  ? "transparent"
-                  : !isDark
-                    ? colors.darkBlue
-                    : "grey",
-                borderRightColor: isRTL()
-                  ? !isDark
-                    ? colors.darkBlue
-                    : colors.mainDarkMode
-                  : "transparent",
-              },
+              styles.infoWrapper,
+              { flexDirection: isRTL() ? "row-reverse" : "row" },
             ]}
           >
-            <View style={styles.discountBlock}>
-              {!!parentProps.description && !parentProps.loadingDescription && (
-                <TypographyText
-                  textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-                  size={14}
-                  font={BALOO_REGULAR}
-                  title={parentProps?.description}
-                  style={{
-                    alignSelf: isRTL() ? "flex-end" : "flex-start",
-                  }}
-                />
-              )}
-            </View>
-            {isGuest ? <View /> : <TouchableOpacity onPress={() => parentProps.onPressFavourite()}>
-              {parentProps.isSaved ? (
-                <StartIconSmall
-                  color={isDark ? colors.mainDarkMode : colors.darkBlue}
-                  fill={isDark ? colors.mainDarkMode : colors.darkBlue}
-                />
-              ) : (
-                <StartIconSmall
-                  color={isDark ? colors.white : colors.darkBlue}
-                  fill={isDark ? colors.white : "transparent"}
-                />
-              )}
-            </TouchableOpacity>}
-          </View>
+            <TypographyText
+              textColor={"#FFFFFF"}
+              size={18}
+              font={BALOO_SEMIBOLD}
+              title={parentProps.name}
+              style={styles.name}
+              numberOfLines={2}
+            />
 
-          {parentProps.loadingDescription && (
-            <FullScreenLoader style={{ alignSelf: "flex-start" }} />
-          )}
+            <View
+              style={[
+                styles.discountWrapper,
+                {
+                  flexDirection: isRTL() ? "row-reverse" : "row",
+                  borderLeftWidth: isRTL() ? 0 : 1,
+                  borderRightWidth: isRTL() ? 1 : 0,
+                  borderLeftColor: isRTL()
+                    ? "transparent"
+                    : "#FFFFFF",
+                  borderRightColor: isRTL()
+                    ? "#FFFFFF"
+                    : "transparent",
+                },
+              ]}
+            >
+              <View style={styles.discountBlock}>
+                {!!parentProps.description && !parentProps.loadingDescription && (
+                  <TypographyText
+                    textColor={"#FFFFFF"}
+                    size={14}
+                    font={BALOO_REGULAR}
+                    title={parentProps?.description}
+                    style={{
+                      alignSelf: isRTL() ? "flex-end" : "flex-start",
+                    }}
+                  />
+                )}
+              </View>
+              {isGuest ? <View /> : <TouchableOpacity onPress={() => parentProps.onPressFavourite()}>
+                {parentProps.isSaved ? (
+                  <StartIconSmall
+                    color={"#FFFFFF"}
+                    fill={"#FFFFFF"}
+                  />
+                ) : (
+                  <StartIconSmall
+                    color={"#FFFFFF"}
+                    fill={"transparent"}
+                  />
+                )}
+              </TouchableOpacity>}
+            </View>
+
+            {parentProps.loadingDescription && (
+              <FullScreenLoader style={{ alignSelf: "flex-start" }} />
+            )}
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     </TouchableOpacity>
   );
 };
@@ -161,6 +156,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 4,
     flex: 1,
     resizeMode: "contain",
+    overflow: "hidden",
+  },
+  backgroundImage: {
+    flex: 1,
+    justifyContent: "flex-end",
+    borderRadius: 10,
     overflow: "hidden",
   },
   infoWrapper: {

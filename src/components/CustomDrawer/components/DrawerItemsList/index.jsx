@@ -72,14 +72,14 @@ const DrawerItemList = () => {
     //   title: "GlobalTix",
     //   onPress: () => navigation.navigate("GlobalTix"),
     // },
-    {
-      icon: () => <ARIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
-      title: t('Drawer.offersAroundYou'),
-      onPress: () => navigation.navigate('ARMap', {
-        screen: 'ARHowToUse'
-      }),
-      hidden: !isMainUser,
-    },
+    // {
+    //   icon: () => <ARIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
+    //   title: t('Drawer.offersAroundYou'),
+    //   onPress: () => navigation.navigate('ARMap', {
+    //     screen: 'ARHowToUse'
+    //   }),
+    //   // hidden: !isMainUser,
+    // },
     {
       icon: () => <FamilyIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
       title: t('Drawer.familyMembers'),
@@ -96,17 +96,17 @@ const DrawerItemList = () => {
       },
       hidden: !isMainUser || isGuest,
     },
-    {
-      icon: () => <PremiumIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-      title: t('Drawer.premiumMerchants'),
-      onPress: () =>
-        navigation.navigate('merchants', {
-          screen: 'premiumMerchants-list',
-          params: { selectedCategory: null },
-        }),
-      counts: premiumMerchantsCount,
-      hidden: premiumMerchantsCount == 0,
-    },
+    // {
+    //   icon: () => <PremiumIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+    //   title: t('Drawer.premiumMerchants'),
+    //   onPress: () =>
+    //     navigation.navigate('merchants', {
+    //       screen: 'premiumMerchants-list',
+    //       params: { selectedCategory: null },
+    //     }),
+    //   counts: premiumMerchantsCount,
+    //   hidden: premiumMerchantsCount == 0,
+    // },
     // {
     //   icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
     //   title: t('Drawer.goPoints'),
@@ -118,15 +118,15 @@ const DrawerItemList = () => {
     //   counts: goPointsMerchantsCount,
     //   hidden: goPointsMerchantsCount == 0,
     // },
-    {
-      icon: () => <MerchantsIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-      title: t('Drawer.newMerchants'),
-      onPress: () =>
-        navigation.navigate('merchants', {
-          screen: 'newMerchants-list',
-          params: { selectedCategory: null },
-        }),
-    },
+    // {
+    //   icon: () => <MerchantsIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+    //   title: t('Drawer.newMerchants'),
+    //   onPress: () =>
+    //     navigation.navigate('merchants', {
+    //       screen: 'newMerchants-list',
+    //       params: { selectedCategory: null },
+    //     }),
+    // },
     // {
     //   icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
     //   title: t('Drawer.loyaltyPoints'),
@@ -140,11 +140,11 @@ const DrawerItemList = () => {
       title: t('Drawer.allOffers'),
       onPress: () => navigation.navigate('AllOffers'),
     },
-    {
-      icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-      title: t('Drawer.b1g1'),
-      onPress: () => navigation.navigate('B1G1'),
-    },
+    // {
+    //   icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+    //   title: t('Drawer.b1g1'),
+    //   onPress: () => navigation.navigate('B1G1'),
+    // },
     {
       icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Favorites.favorites'),
