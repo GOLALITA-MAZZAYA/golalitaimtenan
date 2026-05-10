@@ -174,15 +174,15 @@ const DrawerItemList = () => {
       title: t('ContactUs.contactUs'),
       onPress: () => navigation.navigate('ContactUs'),
     },
-    {
-      icon: () => <ScanIcon style={styles.iconWrapper} />,
-      title: t('Drawer.scanBill'),
-      onPress: () =>
-        navigation.navigate('BillScannerHoToUse', {
-          title: t('Drawer.scanBill'),
-        }),
-      hidden: isGuest,
-    },
+    // {
+    //   icon: () => <ScanIcon style={styles.iconWrapper} />,
+    //   title: t('Drawer.scanBill'),
+    //   onPress: () =>
+    //     navigation.navigate('BillScannerHoToUse', {
+    //       title: t('Drawer.scanBill'),
+    //     }),
+    //   hidden: isGuest,
+    // },
   ];
 
   const filteredDrawerItems = useMemo(() => {
