@@ -11,19 +11,19 @@ import { ScrollView } from "react-native-gesture-handler";
 import { TimeIconDark } from "../../../assets/delivery_assets/index";
 import { useTranslation } from "react-i18next";
 import { getVoucherTotalValue } from "./helpers";
-import {useTheme} from "../../../components/ThemeProvider";
+import { useTheme } from "../../../components/ThemeProvider";
 import Header from "../../../components/Header";
 import LoyaltyVoucherInfoCard from "./LoyaltyVoucherInfoCard";
-import {TypographyText} from "../../../components/Typography";
+import { TypographyText } from "../../../components/Typography";
 import InfoBlock from "../../../components/InfoBlock";
 import HTMLRenderer from "../../../components/HTMLRenderer";
 import LoyaltyVoucherInfoTotal from "./LoyaltyVoucherInfoTotal";
-import {colors} from "../../../components/colors";
+import { colors } from "../../../components/colors";
 import ImageViwerModal from "../../../components/ImageViwer";
 import CommonButton from "../../../components/CommonButton/CommonButton";
-import {showMessage} from "react-native-flash-message";
-import {useState} from "react";
-import {loyaltyPurchaseVoucher} from "../../../api/loyalty";
+import { showMessage } from "react-native-flash-message";
+import { useState } from "react";
+import { loyaltyPurchaseVoucher } from "../../../api/loyalty";
 import RewardsPointsToggle from "../common/RewardPointsToggle";
 import PointsTotal from "../common/PointsTotal";
 import useUserLoyaltyPoints from "../../../hooks/useUserLoyaltyPoints";
@@ -36,10 +36,10 @@ const LoyaltyVoucherInfo = (props) => {
   const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
-    const [isPointsActivated, toggleRewardsPoints] = useState(false);
+  const [isPointsActivated, toggleRewardsPoints] = useState(false);
   const { voucher } = props.route.params;
   const totalValue = getVoucherTotalValue(voucher);
-  const { points} = useUserLoyaltyPoints();
+  const { points } = useUserLoyaltyPoints();
   const language = i18n.language;
 
   if (!voucher) {
@@ -53,49 +53,49 @@ const LoyaltyVoucherInfo = (props) => {
 
   const handleRedeemVoucher = async () => {
 
-    props.navigation.navigate('loyaltyPoints-voucher-redeem',{
-        title: language === 'en' ? voucher.name : voucher.name_arabic,
-        subTitle: '',
-        id: voucher.id,
-        price: voucher.x_minimum_point || 0,
-        code: voucher.code
+    props.navigation.navigate('loyaltyPoints-voucher-redeem', {
+      title: language === 'en' ? voucher.name : voucher.name_arabic,
+      subTitle: '',
+      id: voucher.id,
+      price: voucher.x_minimum_point || 0,
+      code: voucher.code
     })
 
   };
 
-  const handleOrderPress =  async () => {
-     try{
-        setLoading(true);
-        const result = await loyaltyPurchaseVoucher(voucher.code, totalValue);
+  const handleOrderPress = async () => {
+    try {
+      setLoading(true);
+      const result = await loyaltyPurchaseVoucher(voucher.code, totalValue);
 
-        if(result?.error){
-          showMessage({
-            message: result.error
-          })
-
-          return
-        }
-
-        console.log(result,'result')
-
-
-
-        props.navigation.navigate('loyaltyPoints-vouchers-skipcache',{
-            url: result.skipcash_url,
-            title: ''
-        })
-
-        console.log(result)
-
-     }catch(err){
-        console.log(err, 'order voucher error')
+      if (result?.error) {
         showMessage({
-            message: t('General.error')
+          message: result.error
         })
 
-     }finally{
-       setLoading(false)
-     }
+        return
+      }
+
+      console.log(result, 'result')
+
+
+
+      props.navigation.navigate('loyaltyPoints-vouchers-skipcache', {
+        url: result.skipcash_url,
+        title: ''
+      })
+
+      console.log(result)
+
+    } catch (err) {
+      console.log(err, 'order voucher error')
+      showMessage({
+        message: t('General.error')
+      })
+
+    } finally {
+      setLoading(false)
+    }
   };
 
   const amount = voucher.voucher_amount;
@@ -116,7 +116,7 @@ const LoyaltyVoucherInfo = (props) => {
     >
       <SafeAreaView style={styles.safeAreaWrapper}>
         <Header
-          label= {t("Vouchers.vouchers")}
+          label={t("Vouchers.vouchers")}
           btns={['back']}
         />
 
@@ -169,13 +169,13 @@ const LoyaltyVoucherInfo = (props) => {
             </InfoBlock>
           )}
 
-           <RewardsPointsToggle
+          <RewardsPointsToggle
             style={styles.rewardsPoints}
             isChecked={isPointsActivated}
             onToggleSwitch={toggleRewardsPoints}
           />
 
-          {!isPointsActivated &&<LoyaltyVoucherInfoTotal
+          {!isPointsActivated && <LoyaltyVoucherInfoTotal
             style={styles.total}
             discount={voucher.discount_value}
             total={totalValue}
@@ -185,24 +185,24 @@ const LoyaltyVoucherInfo = (props) => {
             pointsEarn={`${voucher.x_points_earn}`}
           />}
 
-        {isPointsActivated && <PointsTotal priceInPoints={voucher.x_minimum_point} availablePoints={points}  style={styles.total} />}
+          {isPointsActivated && <PointsTotal priceInPoints={voucher.x_minimum_point} availablePoints={points} style={styles.total} />}
 
-        {isPointsActivated && 
-          <CommonButton
+          {isPointsActivated &&
+            <CommonButton
               onPress={handleRedeemVoucher}
               label={t("LoyaltyVouchers.redeem")}
               style={styles.callBtn}
               loading={loading}
-        />}
+            />}
 
 
-        {!isPointsActivated && 
-          <CommonButton
+          {!isPointsActivated &&
+            <CommonButton
               onPress={handleOrderPress}
               label={t("LoyaltyVouchers.order")}
               style={styles.callBtn}
               loading={loading}
-        />}
+            />}
 
           {voucher.x_phone && !isPointsActivated && (
             <CommonButton

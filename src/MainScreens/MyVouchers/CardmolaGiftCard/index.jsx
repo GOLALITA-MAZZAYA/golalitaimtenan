@@ -192,10 +192,10 @@ const CardmolaGiftCard = (props) => {
             </InfoBlock>
           )}
 
-          <RewardsPoints
+          {/* <RewardsPoints
             style={styles.rewardsPoints}
             points={user.available_points}
-          />
+          /> */}
 
           <Total
             style={styles.total}

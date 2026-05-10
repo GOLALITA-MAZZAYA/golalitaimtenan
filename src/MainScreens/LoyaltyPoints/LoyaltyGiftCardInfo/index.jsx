@@ -44,7 +44,7 @@ const LoyaltyGiftCardInfo = (props) => {
   const user = useSelector((state) => state.authReducer.user);
   const [loading, setLoading] = useState(false);
   const [isPointsActivated, toggleRewardsPoints] = useState(false);
-  const { points} = useUserLoyaltyPoints();
+  const { points } = useUserLoyaltyPoints();
   const dispatch = useDispatch();
 
 
@@ -98,13 +98,13 @@ const LoyaltyGiftCardInfo = (props) => {
   const handleRedeemPress = () => {
 
 
-     props.navigation.navigate('loyaltyPoints-giftCard-redeem',{
-        title: giftCard.name,
-        subTitle: '',
-        id: giftCard.id,
-        price: giftCard.x_minimum_point,
-        code: giftCard.brandCode
-     })
+    props.navigation.navigate('loyaltyPoints-giftCard-redeem', {
+      title: giftCard.name,
+      subTitle: '',
+      id: giftCard.id,
+      price: giftCard.x_minimum_point,
+      code: giftCard.brandCode
+    })
   };
 
   const onSlidingComplete = (value) => {
@@ -120,8 +120,8 @@ const LoyaltyGiftCardInfo = (props) => {
     setAmount(value * giftCard.x_rate);
   };
 
-  console.log(giftCard,'gift')
-  
+  console.log(giftCard, 'gift')
+
 
   return (
     <View
@@ -197,36 +197,36 @@ const LoyaltyGiftCardInfo = (props) => {
             onToggleSwitch={toggleRewardsPoints}
           />
 
-          {!isPointsActivated &&  (
+          {!isPointsActivated && (
             <>
-          
-           <Total
-            style={styles.total}
-            price={amount}
-            discount={0}
-            commission={getCommission(amount)}
-            total={amount + getCommission(amount)}
-          />
 
-          <CommonButton
-            onPress={handlePaymentPress}
-            label={t("Vouchers.createOrderBtn")}
-            style={styles.paymentBtn}
-          />
+              <Total
+                style={styles.total}
+                price={amount}
+                discount={0}
+                commission={getCommission(amount)}
+                total={amount + getCommission(amount)}
+              />
 
-          </>
-           )}
+              <CommonButton
+                onPress={handlePaymentPress}
+                label={t("Vouchers.createOrderBtn")}
+                style={styles.paymentBtn}
+              />
+
+            </>
+          )}
 
           {isPointsActivated && (
             <>
-            <PointsTotal priceInPoints={giftCard.x_minimum_point} availablePoints={points}  style={styles.total} />
+              <PointsTotal priceInPoints={giftCard.x_minimum_point} availablePoints={points} style={styles.total} />
 
-            <CommonButton
-               onPress={handleRedeemPress}
-               label={t("Vouchers.redeem")}
-               style={styles.paymentBtn}
-            />
-           </>
+              <CommonButton
+                onPress={handleRedeemPress}
+                label={t("Vouchers.redeem")}
+                style={styles.paymentBtn}
+              />
+            </>
           )}
 
 
