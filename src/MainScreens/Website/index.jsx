@@ -19,10 +19,15 @@ const Website = (props) => {
     const { url } = navState;
 
     if (url && url.includes("globaltixpaystatus.com")) {
-      // Navigate directly to GlobalTixCartScreen to ensure we end up on the right screen
       setTimeout(() => {
         navigation.navigate("GlobalTixCartScreen");
       }, 100);
+    }
+
+    if (url && url.startsWith("https://qcbpaystatus.com/")) {
+      navigation.navigate("myVouchers", {
+        screen: "myVouchers-list",
+      });
     }
   };
 

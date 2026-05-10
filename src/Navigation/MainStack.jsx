@@ -42,6 +42,7 @@ import CardPage from '../MainScreens/CardPage';
 import GlobalTixCartScreen from '../MainScreens/GlobalTix/GlobalTixCartScreen';
 import ARMapNavigator from '../MainScreens/ARMap';
 import LoyaltyPointsNavigator from '../MainScreens/LoyaltyPoints';
+import MyVouchersNavigator from '../MainScreens/MyVouchers';
 import BillScannerHowToUse from '../MainScreens/BillScannerHoToUse';
 import MerchantNavigator from '../MainScreens/PremiumPartner';
 import Charities from '../MainScreens/Charities';
@@ -95,6 +96,7 @@ export const MainStackScreen = ({ navigation, route }) => {
       <MainStack.Screen name={'Dashboard'} component={Dashboard} />
       <MainStack.Screen name={'merchants'} component={MerchantsNavigator} />
       <MainStack.Screen name={'loyaltyPoints'} component={LoyaltyPointsNavigator} />
+      <MainStack.Screen name={'myVouchers'} component={MyVouchersNavigator} />
       <MainStack.Screen
         name={'favouriteMerchants'}
         component={FavouriteMerchants}

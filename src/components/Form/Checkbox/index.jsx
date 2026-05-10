@@ -37,15 +37,9 @@ const Checkbox = (props) => {
           <Image
             source={{ uri: isBase64 ? base64Image : flag }}
             style={{
-              width: 25,
-              height: 18,
-              resizeMode: "contain",
+              width: 32,
+              height: 20,
               marginRight: 11,
-              borderRadius: 3,
-              borderWidth: 0.2,
-              padding: 6,
-              elevation: 5,
-              borderColor: "#000",
             }}
           />
         )}

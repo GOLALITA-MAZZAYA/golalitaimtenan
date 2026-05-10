@@ -582,7 +582,8 @@
       "scanBill": "Scan Bill",
       "map": "Near me",
       "loyaltyPoints": "Explore My Rewards",
-      "offersAroundYou": "Offers Around You"
+      "offersAroundYou": "Offers Around You",
+      "vouchersAndGiftCards": "Vouchers & Giftcards"
     },
     "TabBar": {
       "home": "Home",

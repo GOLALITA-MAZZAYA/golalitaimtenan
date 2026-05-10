@@ -14,7 +14,10 @@ import PlanetSvg from '../../../../assets/planet.svg';
 import PremiumSvg from '../../../../assets/premium2.svg';
 import Gopoint from '../../../../assets/goPoints.svg';
 import MerchantsSvg from '../../../../assets/merchants.svg';
+import GiftSvg from '../../../../assets/gift.svg';
+import VouchersSvg from '../../../../assets/vouchers.svg';
 import { useNavigation } from '@react-navigation/native';
+import OffersSvg from "../../../../assets/offers.svg";
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -44,7 +47,10 @@ const DrawerItemList = () => {
   const MerchantsIcon = sized(MerchantsSvg, 20, 20, iconColor);
   const FamilyIcon = sized(FamilySvg, 20, 20, iconColor);
   const ARIcon = sized(ARSvg, 20, 20, iconColor);
+  const GiftIcon = sized(GiftSvg, 20, 20, iconColor);
+  const OffersIcon = sized(OffersSvg, 20, 20, iconColor);
 
+  const VouchersIcon = sized(VouchersSvg, 20, 20, iconColor);
   const [premiumMerchantsCount, setPremiumMerchantsCount] = useState(0);
   const [goPointsMerchantsCount, setGoPointsMerchantsCount] = useState(0);
 
@@ -136,7 +142,14 @@ const DrawerItemList = () => {
     //     }),
     // },
     {
-      icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+      icon: () => <VouchersIcon style={styles.iconWrapper} />,
+      title: t('Drawer.vouchersAndGiftCards'),
+      onPress: () => navigation.navigate('myVouchers', {
+        screen: 'myVouchers-list',
+      }),
+    },
+    {
+      icon: () => <OffersIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Drawer.allOffers'),
       onPress: () => navigation.navigate('AllOffers'),
     },

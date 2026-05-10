@@ -230,10 +230,10 @@ const MyVouchers = ({
       name: t('Vouchers.giftCards'),
       key: '1',
     },
- //   {
-     // name: t('Vouchers.cardmolaGiftCards'),
-     // key: '2',
-   // },
+    //   {
+    // name: t('Vouchers.cardmolaGiftCards'),
+    // key: '2',
+    // },
   ];
 
   const handleCounntryPress = country => {
@@ -276,7 +276,7 @@ const MyVouchers = ({
         }}
         label1={HEADER_ITEMS[0].name}
         label2={HEADER_ITEMS[1].name}
-       // label3={HEADER_ITEMS[2].name}
+      // label3={HEADER_ITEMS[2].name}
       />
 
       <PagerView
@@ -340,7 +340,7 @@ const MyVouchers = ({
               }}
             >
               <CountrySelect onChange={handleCounntryPress} />
-              <UGotGiftCategorySelect onChange={handleUGotGiftCategoryPress} />
+              {/* <UGotGiftCategorySelect onChange={handleUGotGiftCategoryPress} /> */}
             </View>
           </View>
 
