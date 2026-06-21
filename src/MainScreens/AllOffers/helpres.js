@@ -29,7 +29,7 @@ export const navigateToBookNow = (offer, merchant) => {
   navigate("BookHotel", {
     productId: offer.id,
     title: isRTL() ? offer.x_arabic_name : offer.name,
-    merchant_id: merchant.merchant_id,
+    merchant_id: merchant.merchant_id || merchant.id,
     name: offer.merchant_name,
     email: merchant.email,
     product_id: offer.product_id,

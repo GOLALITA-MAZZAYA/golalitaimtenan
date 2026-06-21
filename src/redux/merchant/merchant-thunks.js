@@ -755,7 +755,12 @@ export const getOrganizations =
 export const bookNow =
   (body, t, setIsSuccessBook) => async (dispatch, getState) => {
     const { token } = getState().authReducer;
-
+    console.log("bookNow body", JSON.stringify({
+      params: {
+        ...body,
+        token,
+      },
+    }))
     try {
       const res = await axios.post(
         'https://golalitatwffer.com/api/go/sendinblue_email/V2',

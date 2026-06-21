@@ -22,6 +22,7 @@ import { bookNow } from "../../redux/merchant/merchant-thunks";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ModalInfo from "../../components/ModalInfo/ModalInfo";
 
+import { HEADER_HEIGHT, ORG_ID, BASE_URL } from "../../constants";
 const EditIcon = sized(EditSvg, 17, 19);
 
 const BookHotel = ({ user, bookNow, route, navigation }) => {
@@ -91,6 +92,9 @@ const BookHotel = ({ user, bookNow, route, navigation }) => {
               ...values,
               hotel_email: params?.email,
               organisation: "ETIZAZ",
+              org_id: ORG_ID,
+              merchant_id: params?.merchant_id,
+              odoo_base_url: BASE_URL,
               product_price:
                 typeof values.product_price === "number"
                   ? Number(values.product_price)
