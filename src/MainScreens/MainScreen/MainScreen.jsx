@@ -17,6 +17,8 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { setIsSplashScreenVisible } from '../../redux/auth/auth-actions';
 import Categories from './components/Categories';
 import NotificationModal from '../../components/NotificationModal/NotificationModal';
+import MarketingPopupModal from '../../components/MarketingPopupModal/MarketingPopupModal';
+import { getMarketingPopupThunk } from '../../redux/global/global-thunks';
 import MerchantListHeader from '../MerchantsPage/components/MerchantsHeader';
 import Header from '../../components/Header';
 import AdwertisementModal from './components/AdwertisementModal';
@@ -30,10 +32,16 @@ const MainScreen = ({
   clickedNotification,
   trackBanner,
   setIsSplashScreenVisible,
+  getMarketingPopupThunk,
+  hasShownMarketingPopup,
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const isLoaded = !!advert;
+  const isLoaded = !!advert && hasShownMarketingPopup;
+
+  useEffect(() => {
+    getMarketingPopupThunk();
+  }, []);
 
   useEffect(() => {
     if (clickedNotification) {
@@ -121,6 +129,7 @@ const MainScreen = ({
           <Categories />
 
           <NotificationModal />
+          <MarketingPopupModal />
 
           {/* <AdwertisementModal /> */}
         </ScrollView>
@@ -133,10 +142,12 @@ const mapStateToProps = state => ({
   user: state.authReducer.user,
   advert: state.merchantReducer.advert,
   clickedNotification: state.notificationsReducer.clickedNotification,
+  hasShownMarketingPopup: state.globalReducer.hasShownMarketingPopup,
 });
 
 export default connect(mapStateToProps, {
   trackBanner,
   setIsSplashScreenVisible,
   getMerchantDetails,
+  getMarketingPopupThunk,
 })(MainScreen);

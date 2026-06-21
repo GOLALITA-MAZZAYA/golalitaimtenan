@@ -1,0 +1,16 @@
+
+> golalitaimtenanrewards@1.0.0 ios
+> react-native run-ios
+
+error EPERM: operation not permitted, scandir '/Users/sayedsuhailk/GOLALITA/golalitaimtenan/ios'.
+Error: EPERM: operation not permitted, scandir '/Users/sayedsuhailk/GOLALITA/golalitaimtenan/ios'
+    at Object.readdirSync (node:fs:1569:26)
+    at readdirWithFileTypes (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.scandir/out/providers/sync.js:16:33)
+    at Object.read (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.scandir/out/providers/sync.js:10:16)
+    at SyncReader.scandirSync [as _scandir] (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.scandir/out/index.js:18:17)
+    at SyncReader._handleDirectory (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.walk/out/readers/sync.js:28:34)
+    at SyncReader._handleQueue (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.walk/out/readers/sync.js:23:18)
+    at SyncReader.read (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.walk/out/readers/sync.js:15:14)
+    at SyncProvider.read (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.walk/out/providers/sync.js:11:29)
+    at ReaderSync.walkSync [as _walkSync] (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/@nodelib/fs.walk/out/index.js:20:21)
+    at ReaderSync.dynamic (/Users/sayedsuhailk/GOLALITA/golalitaimtenan/node_modules/fast-glob/out/readers/sync.js:13:21)
