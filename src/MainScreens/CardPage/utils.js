@@ -1,4 +1,5 @@
 export const transformDisplayedExpiryDate = (dateStr) => {
+  if (!dateStr) return '';
   return dateStr.split("-").reverse().join(".");
 };
 

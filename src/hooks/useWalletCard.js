@@ -127,6 +127,10 @@ const useWalletCard = () => {
     }
 
     // iOS flow - use base64 pkpass data
+    if (typeof walletData !== 'string') {
+      throw new Error('Invalid pkpass data received from server');
+    }
+
     const res = await addCard(walletData);
 
     return res;

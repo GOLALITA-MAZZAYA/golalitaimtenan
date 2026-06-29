@@ -19,6 +19,7 @@ const AddToWalletBtn = ({ selectedCardItem }) => {
   const [loading, setLoading] = useState(false);
 
   const handlePress = async () => {
+    if (!selectedCardItem) return;
     try {
       const { name, x_user_expiry, barcode, x_moi_last_name, photo, phone } =
         selectedCardItem;

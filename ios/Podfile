@@ -67,6 +67,22 @@ target 'golalitaimtenanrewards' do
         end
       end
     end
+
+    # Fix: Copy hermes-engine headers into hermes.framework/Headers so that
+    # `#import <hermes/hermes.h>` resolves correctly when use_frameworks! is active.
+    hermes_pods_dir = File.join(installer.sandbox.root, 'hermes-engine')
+    if File.exist?(hermes_pods_dir)
+      src_headers_dir = File.join(hermes_pods_dir, 'destroot', 'include', 'hermes')
+      if File.exist?(src_headers_dir)
+        Pod::UI.puts "Copying hermes headers into framework bundles for use_frameworks! compatibility...".green
+        Dir.glob(File.join(hermes_pods_dir, 'destroot/Library/Frameworks/**/hermes.framework')).each do |framework_dir|
+          dest_headers_dir = File.join(framework_dir, 'Headers')
+          FileUtils.mkdir_p(dest_headers_dir)
+          FileUtils.cp_r(Dir.glob("#{src_headers_dir}/*"), dest_headers_dir)
+          Pod::UI.puts "  -> Copied to #{dest_headers_dir}".green
+        end
+      end
+    end
   end
 end
 
