@@ -79,6 +79,7 @@
     "react-native-phone-number-input": "^2.1.0",
     "react-native-print": "^0.11.0",
     "react-native-qrcode-scanner": "^1.5.5",
+    "react-native-qrcode-svg": "^6.3.21",
     "react-native-reanimated": "3.19.1",
     "react-native-reanimated-carousel": "^4.0.2",
     "react-native-restart": "0.0.27",
@@ -137,5 +138,6 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "packageManager": "yarn@4.12.0+sha512.f45ab632439a67f8bc759bf32ead036a1f413287b9042726b7cc4818b7b49e14e9423ba49b18f9e06ea4941c1ad062385b1d8760a8d5091a1a31e5f6219afca8"
 }

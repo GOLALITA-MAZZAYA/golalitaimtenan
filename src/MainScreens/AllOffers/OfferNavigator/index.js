@@ -4,6 +4,7 @@ import AllOffers from "../AllOffers";
 import OfferInfo from "../OfferInfo";
 import Menu from "../../PremiumPartner/Menu";
 import ApplyCodeConfirmation from "../ApplyCodeConfirmation";
+import MerchantCodeConfirmation from "../MerchantCodeConfirmation";
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,10 @@ const OffersNavigator = () => {
       <Stack.Screen
         name="offer-apply-code-confirmation"
         component={ApplyCodeConfirmation}
+      />
+      <Stack.Screen
+        name="merchant-code-confirmation"
+        component={MerchantCodeConfirmation}
       />
     </Stack.Navigator>
   );

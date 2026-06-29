@@ -417,7 +417,14 @@
       "downloadPromocode": "تحميل الرمز الترويجي",
       "sharePromocode": "شارك الرمز الترويجي",
       "availableOffers": "العروض المتاحة",
-      "branchPlaceholder": "حدد الفرع"
+      "branchPlaceholder": "حدد الفرع",
+      "getPromocode": "الحصول على رمز الخصم",
+      "promocodeInstruction1": "يمكن استخدام معظم رموز الخصم على موقع التاجر الإلكتروني أو التطبيق. يمكنك أيضًا طلب من التاجر مسح رمز QR هذا لتطبيق الخصم داخل المتجر.",
+      "promocodeInstruction2": "إذا لم ينجح المسح، قم بإعطاء هذا الرمز للتاجر.",
+      "promocodeInstruction3": "نصيحة: قم بزيادة سطوع الشاشة لسهولة المسح.",
+      "manualCode": "الرمز اليدوي",
+      "confirmRedemption": "تأكيد الاستبدال",
+      "redeemAt": "استبدال في {{merchantName}}"
     },
     "ProductPage": {
       "offer": "عرض",

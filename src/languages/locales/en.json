@@ -446,7 +446,14 @@
       "downloadPromocode": "Download Promocode",
       "sharePromocode": "Share Promocode",
       "availableOffers": "Available Offers",
-      "branchPlaceholder": "Select branch"
+      "branchPlaceholder": "Select branch",
+      "getPromocode": "Get Promo Code",
+      "promocodeInstruction1": "Most promo codes can be used on the merchant’s website or app. You can also ask the merchant to scan this QR code to apply your discount in-store.",
+      "promocodeInstruction2": "If scanning doesn’t work, provide this code to the merchant.",
+      "promocodeInstruction3": "Tip: Increase your screen brightness for faster scanning.",
+      "manualCode": "Manual code",
+      "confirmRedemption": "Confirm Redemption",
+      "redeemAt": "Redeem at {{merchantName}}"
     },
     "ProductPage": {
       "offer": "Offer",

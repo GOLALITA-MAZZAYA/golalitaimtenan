@@ -23,6 +23,7 @@ const OfferTypeInfoButtons = ({ data }) => {
         }}
         textColor={isDark ? colors.mainDarkModeText : colors.darkBlue}
         onPress={item.onPress}
+        loading={item.loading}
       />
     );
   });

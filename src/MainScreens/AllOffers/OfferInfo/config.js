@@ -103,7 +103,7 @@ export const getInfoBlocksConfig = (offer, bookNow) => {
   return data;
 };
 
-export const getOfferTypeInfoBtnsConfig = offer => {
+export const getOfferTypeInfoBtnsConfig = (offer, handlePromoPress, isSubmitting) => {
   return [
     {
       visible: offer.offer_type === B1G1,
@@ -127,19 +127,8 @@ export const getOfferTypeInfoBtnsConfig = offer => {
     {
       visible: offer.offer_type === PROMOCODE && offer.offer_type_promo_code,
       label: i18next.t('ProductPage.getPromocode'),
-      onPress: () => {
-        navigate('Voucher', {
-          name: offer.name,
-          id: offer.product_id,
-          merchant_name: offer.merchant_name,
-          expiryDate: offer.end_date
-            ? getStringDate(offer.end_date.split(' ')[0])
-            : null,
-          merchant_logo: offer.merchant_logo,
-          promocode: offer.offer_type_promo_code,
-          merchant_id: offer.merchant_id,
-        });
-      },
+      loading: isSubmitting,
+      onPress: handlePromoPress,
     },
   ];
 };
