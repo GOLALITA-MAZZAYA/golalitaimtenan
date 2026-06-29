@@ -47,7 +47,6 @@ const MerchantsFilters = ({ navigation, route }) => {
           ? "qa"
           : filters.country_id?.cca2?.toLowerCase(),
       location_id: filters.location_id,
-      gpoint: filters.gpoint,
       is_premium_merchant: filters.is_premium_merchant,
       category_id: transformCategoryValue(filters.category_id),
     };
@@ -77,12 +76,10 @@ const MerchantsFilters = ({ navigation, route }) => {
       initialValues={{
         category_id: transformCategoryValue(params?.filters?.category_id),
         merchant_name: params?.filters?.merchant_name || "",
-        gpoint: params?.filters?.gpoint || null,
       }}
       defaultValues={{
         category_id: [],
         merchant_name: "",
-        gpoint: null,
       }}
     >
       <FormikSearchInput

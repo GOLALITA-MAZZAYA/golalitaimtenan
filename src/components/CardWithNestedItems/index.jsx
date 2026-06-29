@@ -133,17 +133,6 @@ const CardWithNesetedItems = props => {
             />
           </View>
         )}
-        {!!parentProps.goPoints && (
-          <View style={{ ...styles.newIcon, ...newIconStyles }}>
-            <TypographyText
-              textColor={isDark ? colors.white : '#000'}
-              size={14}
-              font={LUSAIL_REGULAR}
-              title={t('MainScreen.goPoints')}
-              style={styles.newText}
-            />
-          </View>
-        )}
         {!!parentProps.premium && (
           <View style={{ ...styles.newIcon, ...newIconStyles }}>
             <TypographyText

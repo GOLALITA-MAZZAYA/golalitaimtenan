@@ -53,7 +53,6 @@ const MerchantsList = ({
         latitude: merchant.partner_latitude,
         longitude: merchant.partner_longitude,
         acceptGoLoyaltyPoint: merchant.accept_go_loyalty_point,
-        goPoints: merchant.gpoint,
         isSaved: isSaved ? isSaved : isFavorite,
       }}
     >
