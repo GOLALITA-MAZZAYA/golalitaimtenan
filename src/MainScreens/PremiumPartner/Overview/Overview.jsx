@@ -180,10 +180,13 @@ const Overview = ({
               singleBannerUrl={merchantDetails.map_banner}
               onBannerPress={() => setIsFullImage(true)}
               isDark={isDark}
-              aspectRatio={23 / 10}
+              aspectRatio={1.93}
               autoplay={true}
-              autoplayTimeout={3}
+              autoplayTimeout={5}
               loop={true}
+              containerPadding={0}
+              imageStyle={{ borderRadius: 8 }}
+              style={{ borderRadius: 16, overflow: 'hidden' }}
             />
           </View>
         </View>
