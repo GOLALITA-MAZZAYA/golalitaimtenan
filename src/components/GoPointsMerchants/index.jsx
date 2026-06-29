@@ -5,12 +5,11 @@ import { mainStyles } from '../../styles/mainStyles';
 import { colors } from '../colors';
 import { LUSAIL_REGULAR } from '../../redux/types';
 import { sized } from '../../Svg';
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isRTL } from '../../../utils';
 import {
   getGoPointsMerchants,
-  getMerchantDisscountForOffers,
 } from '../../api/merchants';
 import CardWithNesetedItems from '../CardWithNestedItems';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,9 +17,12 @@ import { toggleFavourites } from '../../redux/merchant/merchant-thunks';
 import FullScreenLoader from '../Loaders/FullScreenLoader';
 import ListNoData from '../ListNoData';
 import { HEADER_HEIGHT } from '../../constants';
-import { getToggleBtns } from '../../MainScreens/MerchantsPage/components/MerchantList/helpers';
 import OfferItem from '../../MainScreens/MerchantsPage/components/OfferItem';
 import BranchItem from '../../MainScreens/MerchantsPage/components/BranchItem';
+import { getToggleBtns } from '../../MainScreens/MerchantsPage/components/MerchantList/helpers';
+import { userLocationSelector } from '../../redux/global/global-selectors';
+import useMerchantDiscount from '../../hooks/useMerchantDiscount';
+import useRoadDistance from '../../hooks/useRoadDistance';
 
 const IMAGE_SIZE = 120;
 const PremiumIcon = sized(PremiumSvg, 24, 24, 'white');
@@ -30,8 +32,16 @@ const GoPointsMerchants = props => {
   const { i18n } = useTranslation();
   const dispatch = useDispatch();
   const { favouriteMerchants } = useSelector(
-    state => state.favouriteMerchantsReducer,
+    state => state.favouriteMerchantsReducer
   );
+
+  const favouriteMap = useMemo(() => {
+    const map = new Set();
+    favouriteMerchants.forEach(m => map.add(m.merchant_id));
+    return map;
+  }, [favouriteMerchants]);
+
+  const userLocation = useSelector(userLocationSelector);
 
   const language = i18n.language;
   const [data, setData] = useState([]);
@@ -40,16 +50,8 @@ const GoPointsMerchants = props => {
 
   useEffect(() => {
     getGoPointsMerchants()
-      .then(async i => {
-        const updatedClients = await Promise.all(
-          i.map(async client => {
-            const discountData = await getMerchantDisscountForOffers(
-              client.merchant_id,
-            );
-            return { ...client, ...discountData };
-          }),
-        );
-        setData(updatedClients);
+      .then(async data => {
+        setData(data);
       })
       .catch(error => {
         console.error('Error fetching or updating client data:', error);
@@ -57,45 +59,20 @@ const GoPointsMerchants = props => {
       .finally(() => setLoading(false));
   }, []);
 
-  const renderLocalClient = useCallback(
+  const renderItem = useCallback(
     ({ item }) => {
-      const isSaved = favouriteMerchants.some(
-        o => o.merchant_id === item.merchant_id,
-      );
-
-      const isOrganization = item.org_name;
-      const isBusinessHotel = item.is_business_hotel;
-
-      const toggleBtns = getToggleBtns(item);
-      const isOffersVisible = !isOrganization;
-      const isBranchesVisible = !isOrganization && !isBusinessHotel;
-
       return (
-        <CardWithNesetedItems
-          toggleBtns={toggleBtns}
-          onPress={() => onPress(item.merchant_id)}
-          parentProps={{
-            onPress: () => onPress(item.merchant_id),
-            uri: item.merchant_logo,
-            name: language === 'ar' ? item?.x_arabic_name : item.merchant_name,
-            description:
-              language === 'ar' ? item.x_ribbon_text_arabic : item.ribbon_text,
-            goPoints: true,
-            onPressFavourite: () =>
-              dispatch(toggleFavourites(item.merchant_id)),
-            isSaved,
-            latitude: item.partner_latitude,
-            longitude: item.partner_longitude
-          }}
-        >
-          {isOffersVisible && <OfferItem merchant={item} type={'offers'} />}
-          {isBranchesVisible && (
-            <BranchItem merchantId={item.merchant_id} type={'branches'} />
-          )}
-        </CardWithNesetedItems>
+        <MerchantItem
+          item={item}
+          language={language}
+          onPress={onPress}
+          dispatch={dispatch}
+          isSaved={favouriteMap.has(item.merchant_id)}
+          userLocation={userLocation}
+        />
       );
     },
-    [title, isDark, i18n.language, favouriteMerchants?.length],
+    [language, favouriteMap, userLocation]
   );
 
   return (
@@ -122,7 +99,7 @@ const GoPointsMerchants = props => {
       <FlatList
         data={data}
         showsVerticalScrollIndicator={false}
-        renderItem={renderLocalClient}
+        renderItem={renderItem}
         keyExtractor={item => `${item.merchant_id}`}
         contentContainerStyle={styles.contentContainerStyle}
         ListFooterComponent={() =>
@@ -133,6 +110,70 @@ const GoPointsMerchants = props => {
     </View>
   );
 };
+
+const MerchantItem = React.memo(
+  ({ item, language, onPress, dispatch, isSaved, userLocation }) => {
+    const isOrganization = item.org_name;
+    const isBusinessHotel = item.is_business_hotel;
+
+    const toggleBtns = getToggleBtns(item);
+
+    const isOffersVisible = !isOrganization;
+    const isBranchesVisible = !isOrganization && !isBusinessHotel;
+
+    const { loading, discount } = useMerchantDiscount(item.merchant_id);
+
+    const { distance, distaceLoading } = useRoadDistance(
+      userLocation?.longitude,
+      userLocation?.latitude,
+      item.partner_longitude,
+      item.partner_latitude
+    );
+
+    return (
+      <CardWithNesetedItems
+        toggleBtns={toggleBtns}
+        onPress={() => onPress(item.merchant_id)}
+        parentProps={{
+          onPress: () => onPress(item.merchant_id),
+          uri: item.merchant_logo,
+          name:
+            language === 'ar'
+              ? item?.x_arabic_name
+              : item.merchant_name,
+
+          description:
+            language === 'ar'
+              ? discount?.x_ribbon_text_arabic || ''
+              : discount?.ribbon_text || '',
+
+          loadingDescription: loading,
+
+          goPoints: true,
+
+          distance,
+          distaceLoading,
+
+          latitude: item.partner_latitude,
+          longitude: item.partner_longitude,
+
+          onPressFavourite: () =>
+            dispatch(toggleFavourites(item.merchant_id)),
+
+          isSaved,
+        }}
+      >
+        {isOffersVisible && (
+          <OfferItem merchant={item} type={'offers'} />
+        )}
+
+        {isBranchesVisible && (
+          <BranchItem merchantId={item.merchant_id} type={'branches'} />
+        )}
+      </CardWithNesetedItems>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   titleWrapper: {

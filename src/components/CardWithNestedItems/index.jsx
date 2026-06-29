@@ -228,13 +228,13 @@ const CardWithNesetedItems = props => {
             )}
           </TouchableOpacity>}
 
-          {!!parentProps.latitude && !!parentProps.longitude && (
+          {(parentProps.distance || (!!parentProps.latitude && !!parentProps.longitude)) && (
             <View style={styles.distanceBlock}>
-              {!distanceLoading ?
+              {!(parentProps.distance ? parentProps.distaceLoading : distanceLoading) ?
                 <TypographyText
                   textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
                   size={14}
-                  title={distance}
+                  title={parentProps.distance || distance}
                   font={BALOO_REGULAR}
                 />
                 : <ActivityIndicator />}
