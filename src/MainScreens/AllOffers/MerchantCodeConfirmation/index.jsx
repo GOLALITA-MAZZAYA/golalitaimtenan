@@ -10,7 +10,6 @@ import { colors } from '../../../components/colors';
 import CommonButton from '../../../components/CommonButton/CommonButton';
 import QRCode from 'react-native-qrcode-svg';
 import {BALOO_2} from '../../../redux/types';
-import {isRTL} from '../../../../utils';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { showMessage } from 'react-native-flash-message';
 
@@ -21,7 +20,6 @@ const MerchantCodeConfirmation = ({ navigation }) => {
 
   const merchantName = params?.merchantName;
   const confirmationNumber = params?.confirmationNumber;
-  const isArabic = isRTL();
 
   const { isDark } = useTheme();
 
@@ -31,18 +29,6 @@ const MerchantCodeConfirmation = ({ navigation }) => {
   const handleSubmit = () => {
       navigation.navigate("Main");
   };
-
-  let onlineStoreBtnText;
-
-  if(params.store_website){
-      const displayName = merchantName.length > 15
-          ? `${merchantName.slice(0, 15)}...` : merchantName;
-
-         onlineStoreBtnText = isArabic
-              ? t('ProductPage.openOnlineStore', { name: displayName }) +
-                ` ${t('TabBar.onlineStore')}`
-        : `${t('ProductPage.openOnlineStore')} ${displayName} ${t('TabBar.onlineStore')}`;
-  }
 
   return (
     <>
@@ -137,7 +123,7 @@ const MerchantCodeConfirmation = ({ navigation }) => {
 
         {params.store_website && <CommonButton
           onPress={() => Linking.openURL(params.store_website)}
-          label={onlineStoreBtnText}
+          label={t('PremiumPartner.openOnlineStore')}
           style={styles.button}
           textColor={isDark ? colors.black : colors.white}
         />}

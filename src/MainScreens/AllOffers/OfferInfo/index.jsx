@@ -56,7 +56,7 @@ const OfferInfo = ({ route, navigation }) => {
         offer?.offer_type_promo_code,
         async () => {
           try {
-            await dispatch(track('promocode', offer?.product_id, true, offer?.offer_type_promo_code));
+            await dispatch(track('promocode', offer?.product_id, false, offer?.offer_type_promo_code));
             let store_website;
 
             if(offer.online_store){

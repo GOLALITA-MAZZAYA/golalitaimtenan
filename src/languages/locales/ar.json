@@ -424,7 +424,8 @@
       "promocodeInstruction3": "نصيحة: قم بزيادة سطوع الشاشة لسهولة المسح.",
       "manualCode": "الرمز اليدوي",
       "confirmRedemption": "تأكيد الاستبدال",
-      "redeemAt": "استبدال في {{merchantName}}"
+      "redeemAt": "استبدال في {{merchantName}}",
+      "openOnlineStore": "افتح المتجر الإلكتروني للتاجر"
     },
     "ProductPage": {
       "offer": "عرض",

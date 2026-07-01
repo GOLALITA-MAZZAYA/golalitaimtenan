@@ -453,7 +453,8 @@
       "promocodeInstruction3": "Tip: Increase your screen brightness for faster scanning.",
       "manualCode": "Manual code",
       "confirmRedemption": "Confirm Redemption",
-      "redeemAt": "Redeem at {{merchantName}}"
+      "redeemAt": "Redeem at {{merchantName}}",
+      "openOnlineStore": "Open Merchant's Online Store"
     },
     "ProductPage": {
       "offer": "Offer",
