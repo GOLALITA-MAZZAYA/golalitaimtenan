@@ -1,116 +1,88 @@
+import React, { memo, useMemo } from "react";
 import {
   StyleSheet,
   View,
-  Image,
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
-import LinearGradient from "react-native-linear-gradient";
 import { TypographyText } from "../Typography";
 import { BALOO_REGULAR, BALOO_SEMIBOLD } from "../../redux/types";
-import { colors } from "../colors";
-import { useTheme } from "../ThemeProvider";
 import StartIcon from "../../assets/star.svg";
 import { sized } from "../../Svg";
 import FullScreenLoader from "../Loaders/FullScreenLoader";
 import { getFlexDirection, isRTL } from "../../../utils";
 import useIsGuest from "../../hooks/useIsGuest";
 
-const IMAGE_SIZE = 66;
+const CardWithNesetedItems = ({ parentProps }) => {
+  const {
+    uri,
+    name,
+    description,
+    loadingDescription,
+    isSaved,
+    onPress,
+    onPressFavourite,
+  } = parentProps;
 
-const CardWithNesetedItems = (props) => {
-  const { parentProps } = props;
-
-  const { isDark } = useTheme();
   const isGuest = useIsGuest();
 
-  const StartIconSmall = sized(StartIcon, 22, 22);
+  const StarIconSmall = useMemo(() => sized(StartIcon, 22, 22), []);
 
   return (
     <TouchableOpacity
-      onPress={() => parentProps.onPress()}
-      style={[
-        styles.wrapper,
-        {
-          height: 220,
-          backgroundColor: isDark ? colors.categoryGrey : "#F5F5F5",
-        },
-      ]}
+      activeOpacity={0.9}
+      onPress={onPress}
+      style={styles.wrapper}
     >
       <ImageBackground
-        source={{ uri: parentProps.uri }}
-        style={styles.backgroundImage}
-        imageStyle={{ borderRadius: 10 }}
+        source={{ uri }}
+        style={styles.image}
+        imageStyle={styles.imageBorder}
       >
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.8)"]}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View style={[styles.row, getFlexDirection()]}>
-          <View
-            style={[
-              styles.infoWrapper,
-              { flexDirection: isRTL() ? "row-reverse" : "row" },
-            ]}
-          >
+        <View style={[styles.bottomBlock, getFlexDirection()]}>
+          <View style={styles.infoWrapper}>
             <TypographyText
-              textColor={"#FFFFFF"}
-              size={18}
+              title={name}
+              size={15}
               font={BALOO_SEMIBOLD}
-              title={parentProps.name}
-              style={styles.name}
+              textColor={'white'}
               numberOfLines={2}
+              style={styles.name}
             />
 
-            <View
-              style={[
-                styles.discountWrapper,
-                {
-                  flexDirection: isRTL() ? "row-reverse" : "row",
-                  borderLeftWidth: isRTL() ? 0 : 1,
-                  borderRightWidth: isRTL() ? 1 : 0,
-                  borderLeftColor: isRTL()
-                    ? "transparent"
-                    : "#FFFFFF",
-                  borderRightColor: isRTL()
-                    ? "#FFFFFF"
-                    : "transparent",
-                },
-              ]}
-            >
-              <View style={styles.discountBlock}>
-                {!!parentProps.description && !parentProps.loadingDescription && (
-                  <TypographyText
-                    textColor={"#FFFFFF"}
-                    size={14}
-                    font={BALOO_REGULAR}
-                    title={parentProps?.description}
-                    style={{
-                      alignSelf: isRTL() ? "flex-end" : "flex-start",
-                    }}
-                  />
-                )}
-              </View>
-              {isGuest ? <View /> : <TouchableOpacity onPress={() => parentProps.onPressFavourite()}>
-                {parentProps.isSaved ? (
-                  <StartIconSmall
-                    color={"#FFFFFF"}
-                    fill={"#FFFFFF"}
-                  />
-                ) : (
-                  <StartIconSmall
-                    color={"#FFFFFF"}
-                    fill={"transparent"}
-                  />
-                )}
-              </TouchableOpacity>}
-            </View>
 
-            {parentProps.loadingDescription && (
-              <FullScreenLoader style={{ alignSelf: "flex-start" }} />
+          </View>
+          <View style={[styles.descriptionBlock,{flexDirection: isRTL() ? 'row-reverse': 'row'}]}>
+            {!!description && !loadingDescription && (
+              <TypographyText
+                title={description}
+                size={12}
+                font={BALOO_REGULAR}
+                textColor={'white'}
+                style={styles.description}
+                numberOfLines={2}
+              />
             )}
+
           </View>
         </View>
+
+        {!isGuest && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onPressFavourite}
+            style={styles.favoriteButton}
+          >
+            <StarIconSmall
+              color={'white'}
+              fill={isSaved ? 'white' : "transparent"}
+            />
+          </TouchableOpacity>
+        )}
+
+        {loadingDescription && (
+          <FullScreenLoader style={styles.loader} />
+        )}
       </ImageBackground>
     </TouchableOpacity>
   );
@@ -118,7 +90,12 @@ const CardWithNesetedItems = (props) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    shadowColor: "#000000",
+    marginHorizontal: 5,
+    marginVertical: 16,
+    borderRadius: 14,
+    overflow: "hidden",
+
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 3,
@@ -126,118 +103,58 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 4.59,
     elevation: 5,
-    borderRadius: 10,
-    marginHorizontal: 5,
-    marginTop: 16,
-    marginBottom: 16,
   },
-  name: {
-    flex: 1,
-    flexGrow: 1,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  discountWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  valueText: {
-    color: "#E32251",
-  },
+
   image: {
     width: "100%",
-    height: 150,
-    borderTopRightRadius: 4,
-    borderTopLeftRadius: 4,
-    flex: 1,
-    resizeMode: "contain",
-    overflow: "hidden",
-  },
-  backgroundImage: {
-    flex: 1,
+    height: 200,
     justifyContent: "flex-end",
-    borderRadius: 10,
-    overflow: "hidden",
   },
+
+  imageBorder: {
+    borderRadius: 14,
+  },
+
+  bottomBlock: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingVertical: 10,
+  },
+
   infoWrapper: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    flexDirection: isRTL() ? "row-reverse" : "row",
-    justifyContent: "space-between",
+    marginHorizontal: 10
+  },
 
-    padding: 6,
+  name: {
+    fontWeight: '600'
   },
-  childWrapper: {
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: "#DDDFE4",
-    padding: 8,
-    marginTop: 16,
+
+  description: {
+    alignSelf: isRTL() ? "flex-end" : "flex-start",
+    marginTop: 5
   },
-  childInfoWrapper: {
-    flex: 1,
-    justifyContent: "space-around",
-    height: IMAGE_SIZE,
-    marginLeft: 8,
+
+  favoriteButton: {
+    marginLeft: 12,
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    padding: 5,
+    borderRadius: 16
   },
-  infoLink: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+
   loader: {
-    marginTop: 16,
+    alignSelf: "flex-start",
+    margin: 16,
   },
-  noDataText: {
-    marginTop: 16,
-    alignSelf: "center",
-  },
-  logo: {
-    backgroundColor: "#fff",
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE,
-    borderRadius: 4,
-    padding: 4,
-  },
-  toggleBtn: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  contentContainerStyle: {
-    flexGrow: 1,
-  },
-  discountBlock: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignSelf: "center",
-    alignItems: "center",
-    flex: 1,
-    // width:'100%'
-  },
-  loyaltyImage: {
-    width: 50,
-    height: 25,
-  },
-  newIcon: {
-    position: "absolute",
-    top: -10,
-    right: -16,
-    backgroundColor: "#E32251",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 10,
-  },
-  newText: {
-    color: "#fff",
-  },
+  descriptionBlock: {
+    marginHorizontal: 10
+  }
 });
 
-export default CardWithNesetedItems;
+export default memo(CardWithNesetedItems);
