@@ -15,6 +15,7 @@ import { mainStyles } from "../../styles/mainStyles";
 import { useTheme } from "../../components/ThemeProvider";
 import { connect } from "react-redux";
 import {
+  getOffers,
   saveOffer,
   getFavoriteOffers,
   getGroupedByMerchantOffers,
@@ -32,6 +33,7 @@ const AllOffers = ({
   favoriteOffers,
   getFavoriteOffers,
   getGroupedByMerchantOffers,
+  getOffers
 }) => {
   const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
@@ -57,7 +59,7 @@ const AllOffers = ({
 
     const params = selectedFilter ? { x_offer_type: selectedFilter } : {};
 
-    getGroupedByMerchantOffers({
+    getOffers({
       page: 1,
       params,
       onGetData: (dataLength, limit) => {
@@ -82,7 +84,7 @@ const AllOffers = ({
 
     const params = selectedFilter ? { x_offer_type: selectedFilter } : {};
 
-    getGroupedByMerchantOffers({
+    getOffers({
       page: "next",
       params,
       onGetData: (dataLength, limit) => {
@@ -160,8 +162,8 @@ const AllOffers = ({
                         ? colors.mainDarkModeText
                         : colors.white
                       : isDark
-                      ? colors.white
-                      : "#999CAD"
+                        ? colors.white
+                        : "#999CAD"
                   }
                 />
               </TouchableOpacity>
@@ -238,6 +240,6 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, {
   saveOffer,
-  getGroupedByMerchantOffers,
+  getOffers,
   getFavoriteOffers,
 })(AllOffers);

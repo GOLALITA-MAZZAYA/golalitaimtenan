@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Platform } from 'react-native';
+import { View, ActivityIndicator, Platform, TouchableOpacity, Text } from 'react-native';
 import MainLayout from '../../components/MainLayout';
 import { SCREEN_HEIGHT } from '../../styles/mainStyles';
 import { colors } from '../../components/colors';

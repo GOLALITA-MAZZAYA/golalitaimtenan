@@ -21,10 +21,9 @@ i18n
       useSuspense: false,
     },
     // keySeparator: false, // we do not use keys in form messages.welcome
-    //
-    // interpolation: {
-    //   escapeValue: false, // react already safes from xss
-    // },
+    interpolation: {
+      escapeValue: false, // react native renders plain text, not HTML
+    },
   });
 
 export default i18n;

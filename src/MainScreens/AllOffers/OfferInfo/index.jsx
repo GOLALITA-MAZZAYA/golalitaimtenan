@@ -71,7 +71,10 @@ const OfferInfo = ({ route, navigation }) => {
                 confirmationNumber: offer?.offer_type_promo_code,
                 id: offer?.product_id,
                 promocode: offer?.offer_type_promo_code,
-                store_website
+                store_website,
+                x_is_support_qr_promo: offer?.x_is_support_qr_promo,
+                qr_code_image_link: offer?.qr_code_image_link,
+                promo_code_description: offer?.promo_code_description,
             });
           } catch (e) {
             console.log(e);

@@ -452,6 +452,7 @@
       "promocodeInstruction2": "If scanning doesn’t work, provide this code to the merchant.",
       "promocodeInstruction3": "Tip: Increase your screen brightness for faster scanning.",
       "manualCode": "Manual code",
+      "tapToCopy": "Tap to copy",
       "confirmRedemption": "Confirm Redemption",
       "redeemAt": "Redeem at {{merchantName}}",
       "openOnlineStore": "Open Merchant's Online Store"

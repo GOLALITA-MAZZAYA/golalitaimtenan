@@ -1,4 +1,4 @@
-import { Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MainLayout from '../../../components/MainLayout';
 import Header from '../../../components/Header';
 import { SCREEN_HEIGHT } from '../../../styles/mainStyles';
@@ -20,6 +20,10 @@ const MerchantCodeConfirmation = ({ navigation }) => {
 
   const merchantName = params?.merchantName;
   const confirmationNumber = params?.confirmationNumber;
+
+  const isSupportQrPromo = params?.x_is_support_qr_promo !== false;
+  const qrCodeImageLink = params?.qr_code_image_link;
+  const promoCodeDescription = params?.promo_code_description;
 
   const { isDark } = useTheme();
 
@@ -43,7 +47,7 @@ const MerchantCodeConfirmation = ({ navigation }) => {
         paddingHorizontal: 20,
       }}
     >
-      <ScrollView contentContainerStyle={styles.wrapper} bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.wrapper} bounces={false} showsVerticalScrollIndicator={false}>
         
         <TypographyText
           title={t('PremiumPartner.redeemAt', { merchantName })}
@@ -61,18 +65,26 @@ const MerchantCodeConfirmation = ({ navigation }) => {
         />
 
         <TypographyText
-          title={t('PremiumPartner.promocodeInstruction1')}
+          title={promoCodeDescription || t('PremiumPartner.promocodeInstruction1')}
           textColor={textColor}
           size={16}
           style={styles.instruction}
         />
 
-        {!!confirmationNumber && (
+        {isSupportQrPromo && !!confirmationNumber && (
           <View style={[styles.qrContainer, { backgroundColor: bgColor }]}>
-            <QRCode
-              value={String(confirmationNumber)}
-              size={180}
-            />
+            {qrCodeImageLink ? (
+              <Image
+                source={{ uri: qrCodeImageLink }}
+                style={{ width: 180, height: 180 }}
+                resizeMode="contain"
+              />
+            ) : (
+              <QRCode
+                value={String(confirmationNumber)}
+                size={180}
+              />
+            )}
           </View>
         )}
 
@@ -106,20 +118,32 @@ const MerchantCodeConfirmation = ({ navigation }) => {
         </TouchableOpacity>
 
         <TypographyText
-          title={t('PremiumPartner.promocodeInstruction2')}
-          textColor={textColor}
-          size={14}
-          style={styles.secondaryText}
+          title={t('PremiumPartner.tapToCopy')}
+          textColor={colors.gray}
+          size={11}
+          style={styles.tapToCopy}
           font={BALOO_2}
         />
 
-        <TypographyText
-          title={t('PremiumPartner.promocodeInstruction3')}
-          textColor={colors.gray}
-          size={12}
-          style={styles.tip}
-          font={BALOO_2}
-        />
+        {isSupportQrPromo && (
+          <TypographyText
+            title={t('PremiumPartner.promocodeInstruction2')}
+            textColor={textColor}
+            size={14}
+            style={styles.secondaryText}
+            font={BALOO_2}
+          />
+        )}
+
+        {isSupportQrPromo && (
+          <TypographyText
+            title={t('PremiumPartner.promocodeInstruction3')}
+            textColor={colors.gray}
+            size={12}
+            style={styles.tip}
+            font={BALOO_2}
+          />
+        )}
 
         {params.store_website && <CommonButton
           onPress={() => Linking.openURL(params.store_website)}
@@ -143,9 +167,14 @@ const MerchantCodeConfirmation = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
+
   wrapper: {
+    flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     paddingBottom: 40,
   },
 
@@ -181,6 +210,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: colors.gray,
+  },
+
+  tapToCopy: {
+    marginTop: 6,
   },
 
   secondaryText: {

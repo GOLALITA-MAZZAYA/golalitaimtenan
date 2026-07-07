@@ -423,6 +423,7 @@
       "promocodeInstruction2": "إذا لم ينجح المسح، قم بإعطاء هذا الرمز للتاجر.",
       "promocodeInstruction3": "نصيحة: قم بزيادة سطوع الشاشة لسهولة المسح.",
       "manualCode": "الرمز اليدوي",
+      "tapToCopy": "اضغط للنسخ",
       "confirmRedemption": "تأكيد الاستبدال",
       "redeemAt": "استبدال في {{merchantName}}",
       "openOnlineStore": "افتح المتجر الإلكتروني للتاجر"
