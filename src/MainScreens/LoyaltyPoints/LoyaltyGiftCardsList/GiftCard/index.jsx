@@ -4,7 +4,7 @@ import { BALOO_2 } from "../../../../redux/types";
 import { colors } from "../../../../components/colors";
 
 const BORDER_RADIUS = 34;
-const CARD_HEIGHT = 174;
+const IMAGE_HEIGHT = 174;
 
 const GiftCard = ({ name, onPress, imageUrl, index, tagline }) => {
   return (
@@ -38,19 +38,15 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     borderRadius: BORDER_RADIUS,
-    height: CARD_HEIGHT,
     overflow: 'hidden',
   },
   cardImage: {
-    position: 'relative',
-    height: CARD_HEIGHT,
+    height: IMAGE_HEIGHT,
     width: "100%",
-    borderRadius: 34,
-    flex: 1
   },
   descriptionBlock: {
-    bottom: 20,
-    left: 20
+    paddingHorizontal: 5,
+    paddingVertical: 16
   },
   title: {
     fontWeight: '800'

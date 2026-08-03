@@ -680,7 +680,7 @@ export default function ARMapScreen({ route }: any) {
                       <TypographyText
                         style={styles.cardSub}
                         numberOfLines={1}
-                        title={`${`${isArabic ? m.category_arabic : m.category}` || '—'}`}
+                        title={`${`${isArabic ? m.arabic_category_name : m.category}` || '—'}`}
                       />
                       <Distance
                         latitude={m.partner_latitude}

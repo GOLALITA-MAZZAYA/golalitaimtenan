@@ -24,6 +24,7 @@ setup_permissions([
    'Camera',
    'FaceID',
    'LocationAccuracy',
+   'LocationAlways',
    'LocationWhenInUse',
    'PhotoLibrary',
    'Motion'

@@ -37,6 +37,8 @@ import { getKeyHashes } from './src/api/ssl';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
 import { useSecurityCheck } from './src/utils/deviceSecurityCheck';
+import { useScreenSecurity } from './src/hooks/useScreenSecurity';
+import PrivacyOverlay from './src/components/PrivacyOverlay';
 
 
 import {
@@ -71,12 +73,16 @@ let App = ({
 
   const [updateModal, setUpdateModal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(true);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
 
   // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
   usePushNotifications();
   // useSecurityCheck();
+
+  // Protection is unconditional — every screen, from the first frame. The
+  // hook retries internally if the native call fires too early in boot.
+  useScreenSecurity(true);
 
   useEffect(() => {
     //  console.log('[App] user from Redux changed:', user?.id, user?.email);
@@ -154,7 +160,7 @@ let App = ({
   }
 
   useEffect(() => {
-    runStartupTasks();
+    //  runStartupTasks();
   }, []);
 
   // Первичная инициализация (до isReady)
@@ -300,6 +306,7 @@ let App = ({
         titleStyle={{ color: isDark ? colors.white : colors.darkBlue }}
       />
       <SplashScreenModal isVisible={isSplashScreenVisible} />
+      <PrivacyOverlay />
     </>
   );
 };

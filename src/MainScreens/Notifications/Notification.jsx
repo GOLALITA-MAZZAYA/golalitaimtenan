@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import { deleteNotification } from "../../redux/notifications/notifications-thunks";
 import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
-import { getNotificationDescription } from "./helpers";
+import { getNotificationDescription, getNotificationTitle } from "./helpers";
 
 const DeleteIcon = sized(DeleteSvg, 70, 24);
 const DeleteWhiteIcon = sized(DeleteWhiteSvg, 70, 24);
@@ -108,7 +108,7 @@ const Notification = ({
               font={BALOO_SEMIBOLD}
               title={getTitle(
                 notification.notification_type,
-                notification.merchant_name
+                getNotificationTitle(notification)
               )}
               numberOfLines={2}
             />

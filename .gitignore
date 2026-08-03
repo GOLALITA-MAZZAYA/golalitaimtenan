@@ -111,3 +111,12 @@ src/config/groq.js
 *.bak
 *.swp
 *~.nib
+
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

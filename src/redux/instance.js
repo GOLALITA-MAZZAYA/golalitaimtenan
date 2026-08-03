@@ -9,6 +9,7 @@ import {
   setUserId,
 } from './auth/auth-actions';
 import { refreshToken } from '../api/auth';
+import { logger } from '../utils/logger';
 
 // api base url
 import { BASE_URL } from '../constants';
@@ -59,9 +60,9 @@ const onResponseSuccess = async response => {
     }
 
     try {
-      console.log('calling refresh token');
-      console.log(response?.config?.url, 'response?.config?.url');
-      console.log(errorMessage, 'errorMessage');
+      logger.debug('calling refresh token');
+      logger.debug(response?.config?.url, 'response?.config?.url');
+      logger.debug(errorMessage, 'errorMessage');
       const res = await refreshToken(token);
       const newToken = res?.token;
 

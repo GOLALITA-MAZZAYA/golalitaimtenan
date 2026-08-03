@@ -8436,6 +8436,7 @@ __metadata:
     react-native-phone-input: "npm:^1.3.7"
     react-native-phone-number-input: "npm:^2.1.0"
     react-native-print: "npm:^0.11.0"
+    react-native-privacy-snapshot: "npm:^1.0.0"
     react-native-qrcode-scanner: "npm:^1.5.5"
     react-native-qrcode-svg: "npm:^6.3.21"
     react-native-reanimated: "npm:3.19.1"
@@ -13001,6 +13002,13 @@ __metadata:
     react-native: ">=0.8.0 || 0.8.0-rc || 0.8.0-rc.2 || 0.9.0-rc || 0.10.1"
     react-native-windows: ">=0.62"
   checksum: 10c0/e139c63d2b0035c8d136af8475b349b1b0bd2b786b016e6d95a3d6720b2792b01f9e97cb67d3bbb50428b46a6c89c7fa300cff2511f6fd32b7dfbff74ecc2467
+  languageName: node
+  linkType: hard
+
+"react-native-privacy-snapshot@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "react-native-privacy-snapshot@npm:1.0.0"
+  checksum: 10c0/284dc9a1723952bfa8a5e5ad3ab2b20dd37add88390c339715a312579f497d15f313ca84018e26baee46794fd92f1a598986b5cfd64daba4f3033b5b6a09b18f
   languageName: node
   linkType: hard
 
