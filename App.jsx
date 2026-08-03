@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import FlashMessage from 'react-native-flash-message';
 import Geocoder from 'react-native-geocoding';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { initializeSslPinning } from 'react-native-ssl-public-key-pinning';
 import { BASE_DOMAIN } from './src/constants';
 
 import store from './src/redux/store';
@@ -33,10 +32,10 @@ import { colors } from './src/components/colors';
 import './src/languages/index';
 import { resetImageCacheDate } from './src/api/asyncStorage';
 import { checkIfTokenIsValid } from './src/api/auth';
-import { getKeyHashes } from './src/api/ssl';
+import { initializeAppSslPinning } from './src/api/ssl';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
-import { useSecurityCheck } from './src/utils/deviceSecurityCheck';
+import { useSecurityCheck, isDeviceBlocked } from './src/utils/deviceSecurityCheck';
 import { useScreenSecurity } from './src/hooks/useScreenSecurity';
 import PrivacyOverlay from './src/components/PrivacyOverlay';
 
@@ -78,7 +77,7 @@ let App = ({
 
   // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
   usePushNotifications();
-  // useSecurityCheck();
+  useSecurityCheck();
 
   // Protection is unconditional — every screen, from the first frame. The
   // hook retries internally if the native call fires too early in boot.
@@ -142,16 +141,7 @@ let App = ({
   // SSL pinning и стартовые задачи
   async function runStartupTasks() {
     try {
-      const publicKeyHashes = await getKeyHashes();
-
-      if (publicKeyHashes) {
-        await initializeSslPinning({
-          [BASE_DOMAIN]: {
-            includeSubdomains: true,
-            publicKeyHashes,
-          },
-        });
-      }
+      await initializeAppSslPinning();
     } catch (err) {
       console.log(err, 'error');
     } finally {
@@ -195,6 +185,12 @@ let App = ({
     if (!isReady) return;
 
     (async () => {
+      // An existing session must not auto-resume on a flagged device
+      if (await isDeviceBlocked()) {
+        dispatch(setIsAuthorized(false));
+        return;
+      }
+
       // await initializeGlobalTixToken();
       const isTokenValid = await checkIfTokenIsValid();
 

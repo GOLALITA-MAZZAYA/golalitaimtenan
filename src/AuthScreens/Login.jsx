@@ -248,6 +248,7 @@ const Login = ({
                     password: '',
                   }}
                   onSubmit={values => {
+          
                     isLoggedInWithCredentialsRef.current = true;
 
                     let loginValue = values.email;
@@ -261,6 +262,8 @@ const Login = ({
                       password: values.password,
                       device_type: Platform.OS,
                     });
+
+
                   }}
                   validationSchema={validationSchema}
                 >

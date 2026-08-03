@@ -1,0 +1,23 @@
+diff --git a/node_modules/react-native-privacy-snapshot/react-native-privacy-snapshot.podspec b/node_modules/react-native-privacy-snapshot/react-native-privacy-snapshot.podspec
+new file mode 100644
+index 0000000..087ba47
+--- /dev/null
++++ b/node_modules/react-native-privacy-snapshot/react-native-privacy-snapshot.podspec
+@@ -0,0 +1,17 @@
++require 'json'
++
++package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
++
++Pod::Spec.new do |s|
++  s.name           = "react-native-privacy-snapshot"
++  s.version        = package['version']
++  s.summary        = package['description']
++  s.description    = package['description']
++  s.homepage       = "https://github.com/kayla-tech/react-native-privacy-snapshot"
++  s.license        = package['license']
++  s.author         = package['author']
++  s.platforms      = { :ios => "9.0" }
++  s.source         = { :git => "https://github.com/kayla-tech/react-native-privacy-snapshot.git", :tag => "v#{s.version}" }
++  s.source_files   = "RCTPrivacySnapshot/*.{h,m}"
++  s.dependency "React-Core"
++end

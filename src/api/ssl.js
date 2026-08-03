@@ -1,15 +1,24 @@
 import axios from 'axios';
-import { BASE_URL } from '../constants';
-
-// Known-good pin baked into the app. Used verbatim if the dynamic lookup
-// below can't be reached, so a flaky network never leaves pinning disabled.
-const FALLBACK_PIN = 'duniiKr8Djf0OQy/lGqtmX1cHJAbPOUT09j626viq4U=';
+import {
+  initializeSslPinning,
+  isSslPinningAvailable,
+} from 'react-native-ssl-public-key-pinning';
+import { BASE_DOMAIN, BASE_URL } from '../constants';
+import { getBundledPinHashes } from '../utils/sslPinStorage';
+import logger from '../utils/logger';
 
 const PIN_FETCH_TIMEOUT_MS = 8000;
 const PIN_FETCH_RETRIES = 2;
 const PIN_FETCH_RETRY_DELAY_MS = 1000;
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const buildPinningConfig = publicKeyHashes => ({
+  [BASE_DOMAIN]: {
+    includeSubdomains: true,
+    publicKeyHashes,
+  },
+});
 
 const fetchRemotePinHash = async () => {
   const res = await axios.post(
@@ -32,26 +41,37 @@ const fetchRemotePinHash = async () => {
   return hashKey;
 };
 
-// Fail-closed: this always resolves with at least the baked-in fallback pin,
-// so a flaky/unreachable pin-lookup endpoint never leaves pinning disabled.
-export const getKeyHashes = async () => {
+export const initializeAppSslPinning = async () => {
+  if (!isSslPinningAvailable()) {
+    logger.warn('SSL pinning native module is not available');
+    return;
+  }
+
+  const fallbackPins = getBundledPinHashes() || [];
+
   for (let attempt = 0; attempt <= PIN_FETCH_RETRIES; attempt += 1) {
     try {
       const remoteHash = await fetchRemotePinHash();
-      return [remoteHash, FALLBACK_PIN];
+      const pins = [remoteHash, ...fallbackPins];
+      await initializeSslPinning(buildPinningConfig(pins));
+      logger.info('SSL pinning initialized successfully with remote and fallback pins');
+      return;
     } catch (err) {
       const isLastAttempt = attempt === PIN_FETCH_RETRIES;
-      console.log(
-        `SSL pin fetch attempt ${attempt + 1}/${PIN_FETCH_RETRIES + 1} failed`,
-        err,
+      logger.warn(
+        `SSL pin fetch attempt ${attempt + 1}/${PIN_FETCH_RETRIES + 1} failed: ${err.message}`,
       );
       if (isLastAttempt) {
-        console.log('Falling back to baked-in SSL pin only');
-        return [FALLBACK_PIN];
+        if (fallbackPins.length > 0) {
+          logger.warn('Falling back to bundled SSL pins only');
+          await initializeSslPinning(buildPinningConfig(fallbackPins));
+          logger.info('SSL pinning initialized successfully with fallback pins');
+        } else {
+          logger.error('No SSL pins available (remote failed and no fallback pins found)');
+        }
+        return;
       }
       await delay(PIN_FETCH_RETRY_DELAY_MS);
     }
   }
-
-  return [FALLBACK_PIN];
 };

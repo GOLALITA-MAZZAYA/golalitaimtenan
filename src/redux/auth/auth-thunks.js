@@ -61,8 +61,11 @@ export const getInitialData = () => async (dispatch, getState) => {
 };
 
 export const login = (body, onSuccess) => async (dispatch, getState) => {
+
   dispatch(setLoginLoading(true));
   dispatch(setIsLoginError(false));
+
+  console.log('here')
 
   const pushToken = await AsyncStorage.getItem('deviceToken');
 
@@ -75,9 +78,14 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
     },
   };
 
+  console.log('here 2')
+
   try {
     const { categoriesType } = getState().merchantReducer;
+    console.log('before req')
     const res = await authApi.login(newBody);
+
+    console.log(res,'res')
 
     if (res.data.result.error) {
       dispatch(setIsLoginError(true));
@@ -113,6 +121,8 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
     // dispatch(setIsGuest(false));
     onSuccess?.();
   } catch (err) {
+ 
+    console.log(err,'error')
     dispatch(setIsLoginError(true));
   } finally {
     dispatch(setLoginLoading(false));
