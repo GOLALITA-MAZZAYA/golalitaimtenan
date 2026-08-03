@@ -13,7 +13,7 @@ import { getFavouriteMerchantsList } from "../../redux/favouriteMerchants/favour
 import TwoButtons from "../../components/TwoButtons/TwoButtons";
 import PagerView from "react-native-pager-view";
 import CardWithNesetedItems from "../../components/CardWithNestedItems";
-import { getLocalizedValue } from "../../utils";
+import { getLocalizedValue } from "../../../utils";
 import { useNavigation } from "@react-navigation/native";
 import {
   getFavoriteOffers,

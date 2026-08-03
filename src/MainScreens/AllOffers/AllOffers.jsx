@@ -23,7 +23,7 @@ import {
 import { useTranslation } from "react-i18next";
 import ListNoData from "../../components/ListNoData";
 import CardWithNesetedItems from "../../components/OfferCardWithNestedItems";
-import { getLocalizedValue } from "../../utils";
+import { getLocalizedValue } from "../../../utils";
 import { getDescription, handleOfferCardPress } from "./helpres";
 import { B1G1, DISCOUNT, LUSAIL_REGULAR, PROMOCODE } from "../../redux/types";
 

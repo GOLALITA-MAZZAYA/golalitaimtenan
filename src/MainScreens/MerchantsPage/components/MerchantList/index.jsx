@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import CardWithNesetedItems from "../../../../components/CardWithNestedItems";
-import { getLocalizedValue } from "../../../../utils";
+import { getLocalizedValue } from "../../../../../utils";
 import BranchItem from "../BranchItem";
 import OfferItem from "../OfferItem";
 import { getToggleBtns } from "./helpers";
