@@ -14,7 +14,7 @@ import { Image } from "react-native";
 import store from "../../../../redux/store";
 import { getMerchantDetails } from "../../../../redux/merchant/merchant-thunks";
 import { getCategoryNameByIdAndLang } from "../../../../components/Categories/helpres";
-import { isRTL } from "../../../../../utils";
+import { isRTL, getLocalizedValue } from "../../../../../utils";
 import { useTranslation } from "react-i18next";
 import { getMerchantDisscountForOffers } from "../../../../api/merchants";
 import {
@@ -175,11 +175,7 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
                         }}
                       >
                         <TypographyText
-                          title={
-                            isRTL()
-                              ? merchant?.x_arabic_name
-                              : merchant?.merchant_name
-                          }
+                          title={getLocalizedValue(merchant?.x_arabic_name, merchant?.merchant_name)}
                           textColor={
                             isDark ? colors.mainDarkMode : colors.darkBlue
                           }

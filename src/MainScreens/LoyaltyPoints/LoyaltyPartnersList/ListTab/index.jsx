@@ -8,6 +8,7 @@ import NoData from "../../../Transactions/components/NoData";
 import {useTheme} from "../../../../components/ThemeProvider";
 import {useNavigation} from "@react-navigation/native";
 import ListCard from "../../common/ListCard";
+import { getLocalizedValue } from "../../../../../utils";
 
 const ListTab = () => {
   const {
@@ -37,7 +38,7 @@ const ListTab = () => {
 
 
        navigation.navigate('loyaltyPoints-partners-info',{
-          partnerName: isAr ? item.x_arabic_name: item.merchant_name,
+          partnerName: getLocalizedValue(item.x_arabic_name, item.merchant_name),
           partnerLogo: item.map_banner,
           website: item.website,
           howToRedeem: isAr ? item.x_use_term_ar: item.x_use_term_en
@@ -51,7 +52,7 @@ const ListTab = () => {
         return (
           <ListCard
             icon={item.merchant_logo} 
-            title={isAr ? item.x_arabic_name: item.merchant_name}
+            title={getLocalizedValue(item.x_arabic_name, item.merchant_name)}
             description={"Redeem points for shopping online"}
             onPress={() => handleBookNowPress(item)}
             style={styles.listCard}

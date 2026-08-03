@@ -6,7 +6,7 @@ import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
 import NoData from "../../Transactions/components/NoData";
 import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
-import {isRTL} from "../../../../utils";
+import {isRTL, getLocalizedValue} from "../../../../utils";
 import {useTheme} from "../../../components/ThemeProvider";
 import PartnerListCard from "../common/PartnerListCard";
 import ListCard from "../common/ListCard";
@@ -54,7 +54,7 @@ const LoyaltyTravelList = () => {
         return (
            <ListCard
             icon={item.merchant_logo} 
-            title={isAr ? item.x_arabic_name: item.merchant_name}
+            title={getLocalizedValue(item.x_arabic_name, item.merchant_name)}
             description={"Redeem points for shopping online"}
             onPress={() => handleSelectPress(item)}
             style={styles.listCard}

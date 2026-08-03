@@ -6,7 +6,7 @@ import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
 import NoData from "../../Transactions/components/NoData";
 import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
-import {isRTL} from "../../../../utils";
+import {isRTL, getLocalizedValue} from "../../../../utils";
 import {useTheme} from "../../../components/ThemeProvider";
 import ListCard from "../common/ListCard";
 
@@ -35,7 +35,7 @@ const LoyaltyGoodsList = ({navigation}) => {
 
     const handleBookNowPress = (item) => {
        navigation.navigate('loyaltyPoints-goods-info',{
-          partnerName: isAr ? item.x_arabic_name: item.merchant_name,
+          partnerName: getLocalizedValue(item.x_arabic_name, item.merchant_name),
           partnerLogo: item.map_banner,
           website: item.website,
           howToRedeem: isAr ? item.x_use_term_ar: item.x_use_term_en
@@ -59,7 +59,7 @@ const LoyaltyGoodsList = ({navigation}) => {
         return (
           <ListCard 
             icon={item.merchant_logo} 
-            title={isAr ? item.x_arabic_name: item.merchant_name}
+            title={getLocalizedValue(item.x_arabic_name, item.merchant_name)}
             description={"Redeem points for shopping online"}
             onPress={() => handleBookNowPress(item)}
             style={styles.listCard}

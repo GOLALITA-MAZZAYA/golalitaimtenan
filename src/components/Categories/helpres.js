@@ -1,5 +1,6 @@
 import i18next from "i18next";
 import store from "../../redux/store";
+import { getLocalizedValue } from "../../../utils";
 
 export const getCategoryNameByIdAndLang = (categoryId) => {
   const categories = store.getState().merchantReducer.parentCategories;
@@ -34,9 +35,5 @@ export const getCategoryNameByIdAndLang = (categoryId) => {
     return "";
   }
 
-  const language = i18next.language;
-
-  const name = language === "ar" ? category.x_name_arabic : category.name;
-
-  return name;
+  return getLocalizedValue(category.x_name_arabic, category.name);
 };

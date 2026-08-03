@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { saveOffer } from '../../../../redux/merchant/merchant-thunks';
 import FullScreenLoader from '../../../../components/Loaders/FullScreenLoader';
 import HeartSvg from '../../../../assets/heart.svg';
+import { getLocalizedValue } from '../../../../utils';
 import { sized } from '../../../../Svg';
 import ArrowSvg from '../../../../assets/arrow_right.svg';
 
@@ -109,7 +110,7 @@ const OfferItem = ({ merchant, isB1G1 }) => {
                 textColor={textColor}
                 size={14}
                 font={BALOO_SEMIBOLD}
-                title={language === 'ar' ? item.x_arabic_name : item.name}
+                title={getLocalizedValue(item.x_arabic_name, item.name)}
                 style={styles.name}
                 numberOfLines={2}
               />

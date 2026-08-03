@@ -29,7 +29,7 @@ import { useTheme } from "../../components/ThemeProvider";
 import ShareActiveSvg from "../../assets/share_active.svg";
 import StarActiveSvg from "../../assets/star_active.svg";
 import { useTranslation } from "react-i18next";
-import { getFlexDirection, getStringDate, isRTL } from "../../../utils";
+import { getFlexDirection, getStringDate, isRTL, getLocalizedValue } from "../../../utils";
 import FastImage from "react-native-fast-image";
 import CommonButton from "../../components/CommonButton/CommonButton";
 import { captureRef } from "react-native-view-shot";
@@ -212,13 +212,7 @@ const ProductPage = ({
                     textColor={isDark ? colors.white : colors.darkBlue}
                     size={18}
                     font={LUSAIL_REGULAR}
-                    title={
-                      language === "ar"
-                        ? product?.x_arabic_name
-                          ? product.x_arabic_name
-                          : product.merchant_name
-                        : product.merchant_name
-                    }
+                    title={getLocalizedValue(product?.x_arabic_name, product?.merchant_name)}
                     style={[styles.key, { flex: 1, fontWeight: "700" }]}
                     numberOfLines={1}
                     ellipsizeMode="tail"

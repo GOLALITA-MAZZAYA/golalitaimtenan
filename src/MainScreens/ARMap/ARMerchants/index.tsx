@@ -209,8 +209,20 @@ const MiniMap = memo(function MiniMap({
               latitude: m.partner_latitude,
               longitude: m.partner_longitude,
             }}
-            title={m.merchant_name}
-            description={m.category_name ?? undefined}
+            title={
+              (isArabic && m.x_arabic_name && m.x_arabic_name !== 'undefined' && m.x_arabic_name !== 'null' && m.x_arabic_name.trim() !== '')
+                ? m.x_arabic_name
+                : m.merchant_name || '—'
+            }
+            description={
+              (isArabic && m.arabic_category_name && m.arabic_category_name !== 'undefined' && m.arabic_category_name !== 'null' && m.arabic_category_name.trim() !== '')
+                ? m.arabic_category_name
+                : (m.category && m.category !== 'undefined' && m.category !== 'null' && m.category.trim() !== '')
+                  ? m.category
+                  : (m.category_name && m.category_name !== 'undefined' && m.category_name !== 'null' && m.category_name.trim() !== '')
+                    ? m.category_name
+                    : undefined
+            }
             zIndex={2}
             tracksViewChanges={false}
           />
@@ -674,13 +686,21 @@ export default function ARMapScreen({ route }: any) {
                   />
                   <View style={styles.textCol}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
-                      {isArabic ? m.x_arabic_name : m.merchant_name}
+                      {isArabic && m.x_arabic_name && m.x_arabic_name !== 'undefined' && m.x_arabic_name !== 'null' && m.x_arabic_name.trim() !== '' ? m.x_arabic_name : m.merchant_name}
                     </Text>
                     <View style={styles.categoryWrapper}>
                       <TypographyText
                         style={styles.cardSub}
                         numberOfLines={1}
-                        title={`${`${isArabic ? m.arabic_category_name : m.category}` || '—'}`}
+                        title={
+                          (isArabic && m.arabic_category_name && m.arabic_category_name !== 'undefined' && m.arabic_category_name !== 'null' && m.arabic_category_name.trim() !== '')
+                            ? m.arabic_category_name
+                            : (m.category && m.category !== 'undefined' && m.category !== 'null' && m.category.trim() !== '')
+                              ? m.category
+                              : (m.category_name && m.category_name !== 'undefined' && m.category_name !== 'null' && m.category_name.trim() !== '')
+                                ? m.category_name
+                                : '—'
+                        }
                       />
                       <Distance
                         latitude={m.partner_latitude}

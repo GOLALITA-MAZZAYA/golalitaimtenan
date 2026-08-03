@@ -14,7 +14,7 @@ import { colors } from "../colors";
 import { LUSAIL_REGULAR } from "../../redux/types";
 import { sized } from "../../Svg";
 import { useTranslation } from "react-i18next";
-import { isRTL } from "../../../utils";
+import { isRTL, getLocalizedValue } from "../../../utils";
 import { getPremiumMerchants } from "../../api/merchants";
 import CardWithNesetedItems from "../CardWithNestedItems";
 import { useDispatch, useSelector } from "react-redux";
@@ -148,10 +148,7 @@ const MerchantItem = React.memo(
         parentProps={{
           onPress: () => onPress(item.merchant_id),
           uri: item.merchant_logo,
-          name:
-            language === "ar"
-              ? item?.x_arabic_name
-              : item.merchant_name,
+          name: getLocalizedValue(item?.x_arabic_name, item?.merchant_name),
 
           description:
             language === "ar"

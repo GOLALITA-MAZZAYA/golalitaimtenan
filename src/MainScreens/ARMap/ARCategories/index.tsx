@@ -187,7 +187,7 @@ export default function CategoryListScreen({ navigation }: Props) {
                 style={[styles.title, { color: isDark ? '#fff' : '#000' }]}
                 numberOfLines={1}
               >
-                {isAr ? item?.x_name_arabic : item.name}
+                {isAr && item?.x_name_arabic && item.x_name_arabic !== 'undefined' && item.x_name_arabic !== 'null' && item.x_name_arabic.trim() !== '' ? item.x_name_arabic : item.name}
               </Text>
             </TouchableOpacity>
           );

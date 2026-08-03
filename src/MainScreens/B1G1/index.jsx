@@ -18,6 +18,7 @@ import {
 import { useTranslation } from "react-i18next";
 import ListNoData from "../../components/ListNoData";
 import CardWithNesetedItems from "../../components/OfferCardWithNestedItems";
+import { getLocalizedValue } from "../../utils";
 import { getDescription, handleOfferCardPress } from "../AllOffers/helpres";
 import useB1G1Offers from "./hooks";
 
@@ -56,9 +57,7 @@ const offers =
           onPress: () => handleOfferCardPress(item),
           onPressFavourite: () => handleFavouritePress(item),
           uri: item.image_url,
-          name: isArabic
-            ? item.x_arabic_name || item.name
-            : item.name,
+          name: getLocalizedValue(item.x_arabic_name, item.name),
           description: getDescription(item),
           isSaved: isFavorite,
         }}

@@ -4,7 +4,7 @@ import MainLayout from "../../../components/MainLayout";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "../../../components/ThemeProvider";
 import {colors} from "../../../components/colors";
-import {isRTL} from "../../../../utils";
+import {isRTL, getLocalizedValue} from "../../../../utils";
 import {TypographyText} from "../../../components/Typography";
 import AmountSlider from "./AmountSlider";
 import AmountSelect from "./AmountSelect";
@@ -61,7 +61,7 @@ const LoyaltyPartnersTransfer = ({route}) => {
      <MainLayout
         outsideScroll={true}
         headerChildren={
-          <Header label={isRTL() ? partner.x_arabic_name: partner.merchant_name} btns={['back']} />
+          <Header label={getLocalizedValue(partner.x_arabic_name, partner.merchant_name)} btns={['back']} />
         }
         headerHeight={50}
         contentStyle={styles.contentStyle}

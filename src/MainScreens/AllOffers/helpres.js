@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { getStringDate, isRTL } from "../../../utils";
+import { getStringDate, isRTL, getLocalizedValue } from "../../../utils";
 import { getMerchantDetails, getOffers } from "../../api/merchants";
 import i18n from "../../languages";
 import { navigate } from "../../Navigation/RootNavigation";
@@ -10,7 +10,7 @@ export const handleOfferCardPress = (item, isOfferList) => {
   if (isOfferList) {
     navigate("offer-info", {
       productId: item.id,
-      title: isRTL() ? item.x_arabic_name : item.name,
+      title: getLocalizedValue(item.x_arabic_name, item.name),
     });
 
     return;
@@ -20,7 +20,7 @@ export const handleOfferCardPress = (item, isOfferList) => {
     screen: "offer-info",
     params: {
       productId: item.id,
-      title: isRTL() ? item.x_arabic_name : item.name,
+      title: getLocalizedValue(item.x_arabic_name, item.name),
     },
   });
 };
@@ -28,7 +28,7 @@ export const handleOfferCardPress = (item, isOfferList) => {
 export const navigateToBookNow = (offer, merchant) => {
   navigate("BookHotel", {
     productId: offer.id,
-    title: isRTL() ? offer.x_arabic_name : offer.name,
+    title: getLocalizedValue(offer.x_arabic_name, offer.name),
     merchant_id: merchant.merchant_id || merchant.id,
     name: offer.merchant_name,
     email: merchant.email,
@@ -46,7 +46,7 @@ export const navigateTopProductPage = (offer, merchant) => {
     screen: "offer-info",
     params: {
       productId: offer.id,
-      title: isRTL() ? offer.x_arabic_name : offer.name,
+      title: getLocalizedValue(offer.x_arabic_name, offer.name),
       merchant,
       bookNow: merchant.is_business_hotel ? "true" : "false",
     },
@@ -91,7 +91,7 @@ export const handleInfoTextPress = (offer, merchant) => {
         screen: "offer-info",
         params: {
           productId: offer.id,
-          title: isRTL() ? offer.x_arabic_name : offer.name,
+          title: getLocalizedValue(offer.x_arabic_name, offer.name),
           merchant,
           bookNow: "true",
         },

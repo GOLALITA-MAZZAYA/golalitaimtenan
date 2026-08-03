@@ -14,6 +14,7 @@ import { TypographyText } from "../../../../components/Typography";
 import FullScreenLoader from "../../../../components/Loaders/FullScreenLoader";
 import { saveOffer } from "../../../../redux/merchant/merchant-thunks";
 import OfferItem from "./components/OfferItem";
+import { getLocalizedValue } from "../../../../../utils";
 import { getTranslationForOfferType } from "../../../../helpers";
 import { getAllOffersByMeerchantId } from "../../../../api/merchants";
 
@@ -76,7 +77,7 @@ const OfferTab = ({ merchant }) => {
 
       const discRibbon =
         language === "ar" ? item.x_label_arabic : item.offer_label;
-      const name = language === "ar" ? item.x_arabic_name : item.name;
+      const name = getLocalizedValue(item.x_arabic_name, item.name);
       const type = getTranslationForOfferType(item.x_offer_type);
 
       return (

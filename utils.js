@@ -262,3 +262,27 @@ export function getDistance(lat1, lon1, lat2, lon2, unit) {
     return dist;
   }
 }
+
+export const getLocalizedValue = (arabicValue, englishValue) => {
+  const language = i18next.language;
+  if (language === "ar") {
+    if (
+      arabicValue &&
+      arabicValue !== "undefined" &&
+      arabicValue !== "null" &&
+      String(arabicValue).trim() !== ""
+    ) {
+      return arabicValue;
+    }
+  }
+  if (
+    englishValue &&
+    englishValue !== "undefined" &&
+    englishValue !== "null" &&
+    String(englishValue).trim() !== ""
+  ) {
+    return englishValue;
+  }
+  return "";
+};
+

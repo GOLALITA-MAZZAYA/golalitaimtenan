@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import CardWithNesetedItems from "../../../../components/CardWithNestedItems";
+import { getLocalizedValue } from "../../../../utils";
 import BranchItem from "../BranchItem";
 import OfferItem from "../OfferItem";
 import { getToggleBtns } from "./helpers";
@@ -41,8 +42,7 @@ const MerchantsList = ({
         onPress: () => handleMerchantCardPress(merchant),
         onPressFavourite: () => onPressFavourite(),
         uri: merchant.merchant_logo,
-        name:
-          language === "ar" ? merchant?.x_arabic_name : merchant.merchant_name,
+        name: getLocalizedValue(merchant?.x_arabic_name, merchant?.merchant_name),
         description:
           language === "ar"
             ? discount?.x_ribbon_text_arabic || ""
