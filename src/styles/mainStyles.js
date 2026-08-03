@@ -213,7 +213,7 @@ export const mainStyles = StyleSheet.create({
   },
   notificationModal: {
     width: (SCREEN_WIDTH / 100) * 90,
-    height: SCREEN_HEIGHT / 1.7,
+    maxHeight: SCREEN_HEIGHT / 1.4,
     backgroundColor: colors.white,
     borderRadius: 8,
     position: "relative",
@@ -227,7 +227,7 @@ export const mainStyles = StyleSheet.create({
   notificationModal__button: {
     width: "50%",
     height: 45,
-    marginTop: 30,
+    marginTop: 20,
   },
   notificationModal__close: {
     position: "absolute",

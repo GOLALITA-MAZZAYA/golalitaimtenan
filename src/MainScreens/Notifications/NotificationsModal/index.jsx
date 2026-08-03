@@ -7,6 +7,7 @@ import {
   Linking,
   Modal,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 
 import { sized } from "../../../Svg";
@@ -60,11 +61,12 @@ const NotificationsModal = ({
           >
             <Image
               source={{ uri: notification.offer_image }}
-              style={mainStyles.notificationModal__image}
+              style={styles.image}
+              resizeMode="cover"
             />
           </TouchableOpacity>
           <HTMLRenderer
-            style={{ paddingHorizontal: 16, marginTop: 30 }}
+            style={{ paddingHorizontal: 16, marginTop: 15 }}
             value={descriptionHtml}
             color={"black"}
           />
@@ -178,6 +180,15 @@ const NotificationsModal = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  image: {
+    width: "100%",
+    borderRadius: 8,
+    aspectRatio: 135 / 76,
+    marginBottom: 10,
+  },
+});
 
 export default connect(() => {}, {
   getMerchantDetails,
