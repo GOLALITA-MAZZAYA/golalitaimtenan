@@ -73,7 +73,7 @@ let App = ({
 
   const [updateModal, setUpdateModal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isReady, setIsReady] = useState(true);
+  const [isReady, setIsReady] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
 
   // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
@@ -160,7 +160,7 @@ let App = ({
   }
 
   useEffect(() => {
-    //  runStartupTasks();
+    runStartupTasks();
   }, []);
 
   // Первичная инициализация (до isReady)
