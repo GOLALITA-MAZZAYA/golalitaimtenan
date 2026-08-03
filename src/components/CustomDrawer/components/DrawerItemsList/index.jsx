@@ -28,6 +28,8 @@ import {
 } from '../../../../api/merchants';
 import { showMessage } from 'react-native-flash-message';
 import useIsGuest from '../../../../hooks/useIsGuest';
+import useDrawerMenuVisibility from '../../../../hooks/useDrawerMenuVisibility';
+import { DRAWER_SCREEN_NAMES } from '../../drawerConfig';
 
 const DrawerItemList = () => {
   const { isDark } = useTheme();
@@ -35,6 +37,7 @@ const DrawerItemList = () => {
   const { t, i18n } = useTranslation();
   const navigation = useNavigation();
   const isGuest = useIsGuest();
+  const { isScreenVisible } = useDrawerMenuVisibility();
 
   const iconColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const FavoritesIcon = sized(FavoritesSvg, 20, 20, iconColor);
@@ -87,6 +90,7 @@ const DrawerItemList = () => {
     //   // hidden: !isMainUser,
     // },
     {
+      screenName: DRAWER_SCREEN_NAMES.FAMILY_MEMBERS,
       icon: () => <FamilyIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
       title: t('Drawer.familyMembers'),
       onPress: () => {
@@ -142,6 +146,7 @@ const DrawerItemList = () => {
     //     }),
     // },
     {
+      screenName: DRAWER_SCREEN_NAMES.VOUCHERS,
       icon: () => <VouchersIcon style={styles.iconWrapper} />,
       title: t('Drawer.vouchersAndGiftCards'),
       onPress: () => navigation.navigate('myVouchers', {
@@ -149,6 +154,7 @@ const DrawerItemList = () => {
       }),
     },
     {
+      screenName: DRAWER_SCREEN_NAMES.ALL_OFFERS,
       icon: () => <OffersIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Drawer.allOffers'),
       onPress: () => navigation.navigate('AllOffers'),
@@ -159,6 +165,7 @@ const DrawerItemList = () => {
     //   onPress: () => navigation.navigate('B1G1'),
     // },
     {
+      screenName: DRAWER_SCREEN_NAMES.FAVORITES,
       icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
       title: t('Favorites.favorites'),
       onPress: () => navigation.navigate('favouriteMerchants'),
@@ -166,11 +173,13 @@ const DrawerItemList = () => {
       hidden: isGuest,
     },
     {
+      screenName: DRAWER_SCREEN_NAMES.SETTINGS,
       icon: () => <SettingsIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
       title: t('Settings.settings'),
       onPress: () => navigation.navigate('Settings'),
     },
     {
+      screenName: DRAWER_SCREEN_NAMES.LANGUAGE,
       icon: () => <PlanetIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
       title: t('Drawer.language'),
       onPress: () => {
@@ -183,6 +192,7 @@ const DrawerItemList = () => {
       languages: ['en', 'ar'],
     },
     {
+      screenName: DRAWER_SCREEN_NAMES.CONTACT_US,
       icon: () => <ContactUsIcon style={styles.iconWrapper} />,
       title: t('ContactUs.contactUs'),
       onPress: () => navigation.navigate('ContactUs'),
@@ -199,13 +209,19 @@ const DrawerItemList = () => {
   ];
 
   const filteredDrawerItems = useMemo(() => {
-    return drawerItems.filter(item => !item.hidden);
+    return drawerItems.filter(
+      item =>
+        !item.hidden &&
+        (!item.screenName || isScreenVisible(item.screenName)),
+    );
   }, [
     isMainUser,
     i18n.language,
     isDark,
     premiumMerchantsCount,
     goPointsMerchantsCount,
+    isScreenVisible,
+    isGuest,
   ]);
 
   return (
