@@ -11,6 +11,8 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@react-navigation/elements": "^2.9.25",
+    "color": "^4.2.3",
     "@gorhom/bottom-sheet": "5.2.8",
     "@notifee/react-native": "^9.1.8",
     "@react-native-async-storage/async-storage": "~2.2.0",
@@ -118,10 +120,17 @@
     "@react-native-community/cli": "19.0.0",
     "@react-native-community/cli-platform-android": "19.0.0",
     "@react-native-community/cli-platform-ios": "19.0.0",
+    "@react-native/assets-registry": "0.80.1",
     "@react-native/babel-preset": "0.80.1",
+    "@react-native/codegen": "0.80.1",
+    "@react-native/community-cli-plugin": "0.80.1",
     "@react-native/eslint-config": "0.80.1",
+    "@react-native/gradle-plugin": "0.80.1",
+    "@react-native/js-polyfills": "0.80.1",
     "@react-native/metro-config": "0.80.1",
+    "@react-native/normalize-colors": "0.80.1",
     "@react-native/typescript-config": "0.80.1",
+    "@react-native/virtualized-lists": "0.80.1",
     "@types/jest": "^30.0.0",
     "@types/react": "^19.1.8",
     "@types/react-test-renderer": "^19.1.0",
@@ -140,5 +149,5 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "yarn@4.12.0+sha512.f45ab632439a67f8bc759bf32ead036a1f413287b9042726b7cc4818b7b49e14e9423ba49b18f9e06ea4941c1ad062385b1d8760a8d5091a1a31e5f6219afca8"
+  "packageManager": "pnpm@11.5.0"
 }
