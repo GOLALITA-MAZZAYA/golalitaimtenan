@@ -38,10 +38,11 @@ import axios from 'axios';
 import { getMerchantDisscountForOffers, trackMerchantOpensCount } from '../../api/merchants';
 import { getFavouriteMerchantsList } from '../favouriteMerchants/favourite-merchants-thunks';
 import { ORG_ID, ORG_CODE } from '../../constants';
+import { getAuthToken } from '../../utils/tokenStorage';
 
 export const getCategories = () => async (dispatch, getState) => {
   const { workStatus } = getState().authReducer;
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
   const res = await merchantApi.getCategories({
     params: {
       token,
@@ -57,7 +58,7 @@ export const getCategories = () => async (dispatch, getState) => {
 const getSubCategoriesFunc = async (parentCategories, type, country) => {
   const newCategories = [];
 
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const getSubCategories = async id => {
     return new Promise(async resolve => {
@@ -139,7 +140,7 @@ export const getParentCategories = type => async (dispatch, getState) => {
   try {
     dispatch(setParentCategoriesLoading(true));
 
-    const token = await AsyncStorage.getItem('token');
+    const token = await getAuthToken();
 
     const params = {
       token,
@@ -162,7 +163,7 @@ export const getParentCategories = type => async (dispatch, getState) => {
 };
 
 export const getTravelSubCategories = () => async dispatch => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await merchantApi.getParentCategoriesById({
     params: {
@@ -191,7 +192,7 @@ export const getPremiumBanners =
       const pageVal = page === 'next' ? premiumBannersPage + 1 : page;
       const concat = !page || pageVal === 1 ? false : true;
 
-      const token = await AsyncStorage.getItem('token');
+      const token = await getAuthToken();
 
       const userRes = await authApi.getUserBanners({
         params: {
@@ -219,7 +220,7 @@ export const getMerchantList =
       }
 
       const { workStatus } = getState().authReducer;
-      const token = await AsyncStorage.getItem('token');
+      const token = await getAuthToken();
       const isWorkStatusDisabled = workStatus === CONTENT_DISABLED;
 
       if (isWorkStatusDisabled) {
@@ -264,7 +265,7 @@ export const getMerchants =
   (type, category_id, isSkip, mapRef, setPressedItem) =>
     async (dispatch, getState) => {
       const { workStatus } = getState().authReducer;
-      const token = await AsyncStorage.getItem('token');
+      const token = await getAuthToken();
       let res;
       if (type === CLIENT || type === PREMIUM || type === STANDARD) {
         if (!isSkip) dispatch(setIsMerchantsLoading(true));
@@ -345,7 +346,7 @@ export const getMerchantDetails =
       dispatch(setMerchantDetailsLoading(true));
 
       const { workStatus } = getState().authReducer;
-      const token = await AsyncStorage.getItem('token');
+      const token = await getAuthToken();
 
       let res;
 
@@ -679,7 +680,7 @@ export const getFavoriteOffers =
     };
 
 export const getLocalClients = () => async (dispatch, getState) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
   try {
     const res = await merchantApi.getMerchant({
       params: {
@@ -702,7 +703,7 @@ export const getLocalClients = () => async (dispatch, getState) => {
   }
 };
 export const getInternationalClients = () => async (dispatch, getState) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
   try {
     const res = await merchantApi.getMerchant({
       params: {

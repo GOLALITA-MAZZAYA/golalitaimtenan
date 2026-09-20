@@ -36,6 +36,7 @@
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+  <uses-permission android:name="android.permission.DETECT_SCREEN_CAPTURE" />
 
   <!-- Remove Advertising ID permission to resolve Play Console warning if not using ads -->
   <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
@@ -45,9 +46,10 @@
     android:name=".MainApplication"
     android:label="@string/app_name"
     android:icon="@mipmap/ic_launcher"
-    android:allowBackup="true"
+    android:allowBackup="false"
     android:theme="@style/AppTheme"
-    android:usesCleartextTraffic="true">
+    android:usesCleartextTraffic="false"
+    tools:replace="android:allowBackup">
 
     <!-- Notifee headless -->
     <service
@@ -66,7 +68,12 @@
     <!-- Иконка пушей -->
     <meta-data
       android:name="com.google.firebase.messaging.default_notification_icon"
-      android:resource="@drawable/icon" />
+      android:resource="@drawable/ic_notification"
+      tools:replace="android:resource" />
+    <meta-data
+      android:name="com.google.firebase.messaging.default_notification_color"
+      android:resource="@color/notification_color"
+      tools:replace="android:resource" />
 
     <meta-data
       android:name="com.dieam.reactnativepushnotification.notification_foreground"

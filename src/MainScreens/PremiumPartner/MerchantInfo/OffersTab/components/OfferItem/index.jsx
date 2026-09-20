@@ -6,6 +6,9 @@ import { BALOO_SEMIBOLD } from "../../../../../../redux/types";
 import HeartSvg from "../../../../../../assets/heart.svg";
 import { StyleSheet } from "react-native";
 import OfferSvg from "../../../../../../assets/offer.svg";
+import CalendarSvg from "../../../../../../assets/calendar.svg";
+import { sized } from "../../../../../../Svg";
+import { useTranslation } from "react-i18next";
 
 const IMAGE_SIZE = 66;
 const originalWidth = 283;
@@ -15,8 +18,10 @@ const windowWidth = Dimensions.get("window").width - 40;
 const cardHeight = 120;
 
 const OfferItem = (props) => {
-  const { onItemPress, onSavePress, isLiked, name, type, discRibbon } = props;
+  const { onItemPress, onSavePress, isLiked, name, type, discRibbon, expiryDate } = props;
 
+  const { t } = useTranslation();
+  const CalendarIconSmall = sized(CalendarSvg, 10, 10);
   const heartColor = isLiked ? "black" : "#DDDFE4";
 
   return (
@@ -68,6 +73,18 @@ const OfferItem = (props) => {
           style={styles.descriptionText}
           numberOfLines={2}
         />
+
+        {!!expiryDate && expiryDate !== '...' && (
+          <View style={[styles.row, { justifyContent: 'center', marginTop: 4 }]}>
+            <CalendarIconSmall color="#DDBD6B" style={{ marginRight: 4 }} />
+            <TypographyText
+              textColor="#DDBD6B"
+              size={10}
+              font={BALOO_SEMIBOLD}
+              title={`${t('validTill')} ${expiryDate}`}
+            />
+          </View>
+        )}
 
         <TouchableOpacity onPress={onSavePress} style={styles.heartBtn}>
           <HeartSvg color={heartColor} />

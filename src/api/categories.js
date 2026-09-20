@@ -1,10 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import instance from '../redux/instance';
 import { merchantApi } from '../redux/merchant/merchant-api';
 import { ORG_ID } from '../constants';
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getChildCategoriesById = async (parent_id, type) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/child/category/v2', {
     params: {
@@ -25,7 +25,7 @@ export const getChildCategoriesById = async (parent_id, type) => {
 const getSubCategoriesFunc = async (parentCategories, type, country) => {
   const newCategories = [];
 
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const getSubCategories = async id => {
     return new Promise(async resolve => {
@@ -59,7 +59,7 @@ const getSubCategoriesFunc = async (parentCategories, type, country) => {
 };
 
 export const getAllCategories = async type => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const params = {
     token,

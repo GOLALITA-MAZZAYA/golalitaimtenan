@@ -1,8 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import instance from '../redux/instance';
+import { getAuthToken } from '../utils/tokenStorage';
 
 export async function getRoadDistance(lat, long, lat2, long2) {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const body = {
     params: {

@@ -14,7 +14,7 @@ import { isRTL } from "../../../../../utils";
   
 
 const BranchItem = ({ merchantId }) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const { isDark } = useTheme();
   const { t } = useTranslation();

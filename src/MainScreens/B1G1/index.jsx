@@ -18,14 +18,13 @@ import {
 import { useTranslation } from "react-i18next";
 import ListNoData from "../../components/ListNoData";
 import CardWithNesetedItems from "../../components/OfferCardWithNestedItems";
-import { getLocalizedValue } from "../../../utils";
+import { getLocalizedValue, getStringDate } from "../../../utils";
 import { getDescription, handleOfferCardPress } from "../AllOffers/helpres";
 import useB1G1Offers from "./hooks";
 
 const B1G1 = ({ saveOffer, favoriteOffers, getFavoriteOffers }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
-  const language = i18n.language;
   const {
   data,
   isLoading,
@@ -49,7 +48,6 @@ const offers =
 
   const renderItem = ({ item }) => {
     const isFavorite = favoriteOffers?.some((offer) => offer.id === item.id);
-    const isArabic = language === "ar";
 
     return (
       <CardWithNesetedItems
@@ -60,6 +58,9 @@ const offers =
           name: getLocalizedValue(item.x_arabic_name, item.name),
           description: getDescription(item),
           isSaved: isFavorite,
+          endDate: item.end_date
+            ? getStringDate(item.end_date.split(" ")[0])
+            : null,
         }}
       ></CardWithNesetedItems>
     );

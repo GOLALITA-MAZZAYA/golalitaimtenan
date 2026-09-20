@@ -175,6 +175,7 @@ export default function CategoryListScreen({ navigation }: Props) {
               onPress={() => {
                 if (isSelected) {
                   setSelectedCategory({});
+                  return;
                 }
 
                 setSelectedCategory({

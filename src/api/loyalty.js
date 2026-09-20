@@ -2,9 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
 import store from "../redux/store";
 import { ORG_CODE } from "../constants";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getLoyaltyTransactionHistory = async ({ pageParam = 0 }) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const limit = 50;
   const offset = pageParam * limit;
@@ -32,7 +33,7 @@ export const getLoyaltyTransactionHistory = async ({ pageParam = 0 }) => {
 };
 
 export const getUserPoints = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/points", {
     params: {
@@ -48,7 +49,7 @@ export const getUserPoints = async () => {
 };
 
 export const getLoyaltyProductList = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("loyalty/product/list", {
     params: {
@@ -65,7 +66,7 @@ export const getLoyaltyProductList = async () => {
 };
 
 export const getLoyaltyProductDetails = async (product_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
 
   const res = await instance.post("loyalty/product/details", {
@@ -83,7 +84,7 @@ export const getLoyaltyProductDetails = async (product_id) => {
 };
 
 export const getLoyaltyProductsHistory = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("loyalty/product/user/history", {
     params: {
@@ -100,7 +101,7 @@ export const getLoyaltyProductsHistory = async () => {
 
 
 export const getLoyaltyVouchersList = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/list", {
     params: {
@@ -116,7 +117,7 @@ export const getLoyaltyVouchersList = async () => {
 };
 
 export const getLoyaltyVouchersHistory = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/purchase/list", {
     params: {
@@ -132,7 +133,7 @@ export const getLoyaltyVouchersHistory = async () => {
 };
 
 export const loyaltyPurchaseVoucher = async (code, amount_after_discount) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/purchase", {
     params: {
@@ -152,7 +153,7 @@ export const loyaltyPurchaseVoucher = async (code, amount_after_discount) => {
 };
 
 export const loyaltyRedeemVoucher = async (code, points) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/points/redeem_reward", {
     params: {
@@ -172,7 +173,7 @@ export const loyaltyRedeemVoucher = async (code, points) => {
 
 
 export const redeemLoyaltyProduct = async (product_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("loyalty/product/redeem", {
     params: {
@@ -189,7 +190,7 @@ export const redeemLoyaltyProduct = async (product_id) => {
 };
 
 export const getLoyaltyPartners = async ({ pageParam = 0 }) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const limit = 50;
   const offset = pageParam * limit;
@@ -221,7 +222,7 @@ export const getLoyaltyPartners = async ({ pageParam = 0 }) => {
 };
 
 export const getLoyaltyTransferPartners = async ({ pageParam = 0 }) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const limit = 50;
   const offset = pageParam * limit;
@@ -253,7 +254,7 @@ export const getLoyaltyTransferPartners = async ({ pageParam = 0 }) => {
 };
 
 export const getLoyaltyGoods = async ({ pageParam = 0 }) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const limit = 50;
   const offset = pageParam * limit;
@@ -285,7 +286,7 @@ export const getLoyaltyGoods = async ({ pageParam = 0 }) => {
 };
 
 export const getLoyaltyTavel = async ({ pageParam = 0 }) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const limit = 50;
   const offset = pageParam * limit;
@@ -318,7 +319,7 @@ export const getLoyaltyTavel = async ({ pageParam = 0 }) => {
 
 export const verifyProductCode = async (code, product_id, track_type) => {
   const { user } = store.getState().authReducer;
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
   const userId = await AsyncStorage.getItem('userId');
 
   const res = await instance.post("merchant/redeem/v2", {
@@ -393,7 +394,7 @@ export const sendProductEmail = async (product_id, track_type) => {
 
 
 export const redeemLoyaltyGiftCard = async (gift_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("loyalty/giftcard/redeem", {
     params: {

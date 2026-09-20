@@ -31,11 +31,13 @@ import { getAdvert, getParentCategories } from '../merchant/merchant-thunks';
 import { getMessageNotifications } from '../notifications/notifications-thunks';
 import { verifyEmail, verifyPhone } from '../../api/merchants';
 import { BASE_URL, ORG_ID } from '../../constants';
+import { assertDeviceSecure } from '../../api/auth';
+import { getAuthToken, setAuthToken, clearAuthToken } from '../../utils/tokenStorage';
 
 export const getInitialData = () => async (dispatch, getState) => {
   try {
     const { categoriesType } = getState().merchantReducer;
-    const token = await AsyncStorage.getItem('token');
+    const token = await getAuthToken();
     const userId = await AsyncStorage.getItem('userId');
 
     // setTimeout(() => {
@@ -65,7 +67,12 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
   dispatch(setLoginLoading(true));
   dispatch(setIsLoginError(false));
 
-  console.log('here')
+  try {
+    await assertDeviceSecure();
+  } catch (error) {
+    dispatch(setLoginLoading(false));
+    return;
+  }
 
   const pushToken = await AsyncStorage.getItem('deviceToken');
 
@@ -78,14 +85,9 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
     },
   };
 
-  console.log('here 2')
-
   try {
     const { categoriesType } = getState().merchantReducer;
-    console.log('before req')
     const res = await authApi.login(newBody);
-
-    console.log(res,'res')
 
     if (res.data.result.error) {
       dispatch(setIsLoginError(true));
@@ -106,7 +108,7 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
       'paused_notification',
       `${res.data.result.paused_notification}`,
     );
-    await AsyncStorage.setItem('token', res.data.result.token);
+    await setAuthToken(res.data.result.token);
     await AsyncStorage.setItem('isUserLoggedOut', 'false');
     await setIfEverLoggedIn(true.toString());
 
@@ -162,7 +164,7 @@ export const autologin = token => async (dispatch, getState) => {
         'paused_notification',
         `${res.data.result.paused_notification}`,
       );
-      await AsyncStorage.setItem('token', res.data.result.token);
+      await setAuthToken(res.data.result.token);
       await AsyncStorage.setItem('isUserLoggedOut', 'false');
 
       dispatch(setToken(res.data.result.token));
@@ -181,7 +183,7 @@ export const autologin = token => async (dispatch, getState) => {
 };
 
 export const logout = () => async dispatch => {
-  // await AsyncStorage.setItem('token', '');
+  await clearAuthToken();
   await AsyncStorage.setItem('lastLogoutTimestamp', Date.now().toString());
   dispatch(setIsUserJustLogOut(true));
   dispatch(setToken(null));
@@ -279,7 +281,7 @@ export const getUserData = token => async dispatch => {
     dispatch(setToken(null));
     dispatch(setUserId(null));
 
-    // await AsyncStorage.removeItem("token");
+    // await clearAuthToken();
     await AsyncStorage.removeItem('userId');
     await AsyncStorage.removeItem('family_head_id');
   }

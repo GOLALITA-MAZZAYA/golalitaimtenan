@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   setOrderHistory,
   setOrderHistoryLoading,
@@ -6,11 +5,12 @@ import {
 import { orderHistoryApi } from "./order-history-api";
 import axios from "axios";
 import { BASE_URL } from "../../constants";
+import { getAuthToken } from '../../utils/tokenStorage';
 
 export const getOrderHistory = () => async (dispatch, getState) => {
   try {
     dispatch(setOrderHistoryLoading(true));
-    const token = await AsyncStorage.getItem("token");
+    const token = await getAuthToken();
     const { user } = getState().authReducer;
 
     const res = await axios.post(

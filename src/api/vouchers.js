@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getVouchers = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/list", {
     params: {
@@ -18,7 +18,7 @@ export const getVouchers = async () => {
 };
 
 export const getVoucherStatus = async (code) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/payment_status", {
     params: {
@@ -35,7 +35,7 @@ export const getVoucherStatus = async (code) => {
 };
 
 export const getPurchasedVouchers = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/purchase/list", {
     params: {
@@ -51,7 +51,7 @@ export const getPurchasedVouchers = async () => {
 };
 
 export const getFavouriteVouchers = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/save/list", {
     params: {
@@ -67,7 +67,7 @@ export const getFavouriteVouchers = async () => {
 };
 
 export const saveVoucher = async (code) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/save", {
     params: {
@@ -84,7 +84,7 @@ export const saveVoucher = async (code) => {
 };
 
 export const unsaveVoucher = async (code) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/unsave", {
     params: {
@@ -101,7 +101,7 @@ export const unsaveVoucher = async (code) => {
 };
 
 export const getVoucher = async (code) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/details", {
     params: {
@@ -118,7 +118,7 @@ export const getVoucher = async (code) => {
 };
 
 export const applyVoucher = async (code) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/apply", {
     params: {
@@ -135,7 +135,7 @@ export const applyVoucher = async (code) => {
 };
 
 export const purchaseVoucher = async (code, quantity, priceWithDiscount) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/voucher/purchase", {
     params: {

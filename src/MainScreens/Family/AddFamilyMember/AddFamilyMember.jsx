@@ -27,7 +27,6 @@ import { connect } from "react-redux";
 import { colors } from "../../../components/colors";
 import { useTheme } from "../../../components/ThemeProvider";
 import authApi from "../../../redux/auth/auth-api";
-import { qcbEmailTest } from "../../../../utils";
 import { showMessage } from "react-native-flash-message";
 
 const CameraIcon = sized(CameraSvg, 36, 32);
@@ -45,9 +44,10 @@ const AddFamilyMember = ({
   const ref_to_input2 = useRef();
   const ref_to_input3 = useRef();
   const ref_to_input4 = useRef();
+
   const pickImage = async () => {
     let data = await launchImageLibrary({
-      mediaTypee: "photo",
+      mediaType: "photo",
       quality: 1,
       includeBase64: true,
     });
@@ -77,7 +77,6 @@ const AddFamilyMember = ({
         last_name: Yup.string().required(t("Login.required")),
         email: Yup.string()
           .email(t("ContactUs.enterValidEmail"))
-          //.test(qcbEmailTest(t))
           .required(t("Login.required")),
         phone: Yup.string()
           .min(7, t("ContactUs.enterValidPhone"))
@@ -85,39 +84,62 @@ const AddFamilyMember = ({
         password: Yup.string().required(t("Login.required")),
       })}
       onSubmit={async (values, { setFieldError }) => {
-        let isAnyError = false;
+        if (!params?.isEdit) {
+          const phoneRes = await authApi.checkPhone({
+            params: { phone: values.phone },
+          });
 
-        const phoneRes = await authApi.checkPhone({
-          params: { phone: values.phone },
-        });
-
-        if (phoneRes.data.result?.error) {
-          setFieldError("phone", t("Profile.phoneExists"));
-          return;
+          if (phoneRes.data.result?.error) {
+            setFieldError("phone", t("Profile.phoneExists"));
+            return;
+          }
         }
 
-        if (!isAnyError) {
-          let body = {
-            name: values.fullName,
-            last_name: values.last_name,
-            phone: values.phone,
-            password: values.password,
-            email: values.email,
-            image_1920: image,
-          };
-          if (params?.isEdit) {
-            editFamilyMember(
-              { ...body, member_id: params?.selectedFamily?.id },
-              navigation
-            );
-          } else {
-            addFamilyMember(body, navigation, (errMessage) => {
-              showMessage({
-                message: errMessage,
-                type: "danger",
-              });
-            });
+        const isEmailChanged =
+          !params?.isEdit || values.email !== params?.selectedFamily?.email;
+
+        if (isEmailChanged) {
+          const emailRes = await authApi.checkEmail({
+            params: { email: values.email },
+          });
+
+          // `/user/validate` (OTP send) can reserve the email before the code is
+          // entered. Blocking here after an abandoned OTP makes the email unusable.
+          // For add: continue to verification; addFamilyMember will still fail if
+          // the email truly belongs to another account. For edit: keep hard block.
+          if (emailRes.data.result?.error && params?.isEdit) {
+            setFieldError("email", t("Profile.emailExists"));
+            return;
           }
+        }
+
+        let body = {
+          name: values.fullName,
+          last_name: values.last_name,
+          phone: values.phone,
+          password: values.password,
+          email: values.email,
+          image_1920: image,
+        };
+
+        if (params?.isEdit) {
+          body.member_id = params?.selectedFamily?.id;
+        }
+
+        if (isEmailChanged) {
+          navigation.navigate("FamilyEmailVerification", {
+            ...body,
+            isEdit: params?.isEdit,
+          });
+        } else if (params?.isEdit) {
+          editFamilyMember(body, navigation);
+        } else {
+          addFamilyMember(body, navigation, (errMessage) => {
+            showMessage({
+              message: errMessage,
+              type: "danger",
+            });
+          });
         }
       }}
     >
@@ -194,8 +216,6 @@ const AddFamilyMember = ({
                     keyboardType={
                       Platform.OS === "ios" ? "default" : "visible-password"
                     }
-                    // secureTextEntry={true}
-
                     secureTextEntry={false}
                     wrapperStyle={styles.input}
                   />
@@ -213,14 +233,14 @@ const AddFamilyMember = ({
                       showLabel
                     />
                     <Input
-                      label={t('ContactUs.mobileNumber')}
+                      label={t("ContactUs.mobileNumber")}
                       initialValue={values.phone}
-                      onChangePhoneNumber={handleChange('phone')}
-                      returnKeyType={'next'}
+                      onChangePhoneNumber={handleChange("phone")}
+                      returnKeyType={"next"}
                       onSubmitEditing={Keyboard.dismiss}
                       error={errors.phone}
                       wrapperStyle={[styles.input]}
-                      placeholder={t('Login.yourPhone')}
+                      placeholder={t("Login.yourPhone")}
                       disableInputRtl
                       showLabel
                     />
@@ -244,6 +264,7 @@ const AddFamilyMember = ({
   );
 };
 
-export default connect(null, { addFamilyMember, editFamilyMember })(
-  AddFamilyMember
-);
+export default connect(null, {
+  addFamilyMember,
+  editFamilyMember,
+})(AddFamilyMember);

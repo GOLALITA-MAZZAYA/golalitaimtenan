@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getNewOffers = async (reqParams) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/offers/v3", {
     params: {
@@ -15,7 +15,7 @@ export const getNewOffers = async (reqParams) => {
 };
 
 export const getB1G1Offers = async ({ params = {} }) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/offers/v3", {
     params: {
@@ -29,7 +29,7 @@ export const getB1G1Offers = async ({ params = {} }) => {
 };
 
 export const getOfferById = async (product_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/offer/details", {
     params: {
@@ -42,7 +42,7 @@ export const getOfferById = async (product_id) => {
 };
 
 export const sendRedemptionEmail = async (body) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/send_redemption_email", {
     params: {

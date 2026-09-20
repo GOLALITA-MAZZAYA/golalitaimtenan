@@ -1,3 +1,16 @@
+diff --git a/node_modules/react-native-privacy-snapshot/RCTPrivacySnapshot/RCTPrivacySnapshot.h b/node_modules/react-native-privacy-snapshot/RCTPrivacySnapshot/RCTPrivacySnapshot.h
+index da79c9b..39e75e2 100644
+--- a/node_modules/react-native-privacy-snapshot/RCTPrivacySnapshot/RCTPrivacySnapshot.h
++++ b/node_modules/react-native-privacy-snapshot/RCTPrivacySnapshot/RCTPrivacySnapshot.h
+@@ -6,7 +6,7 @@
+ //  Copyright © 2015 Kayla Technologies. All rights reserved.
+ //
+ 
+-#import <RCTBridge.h>
++#import <React/RCTBridge.h>
+ 
+ @interface RCTPrivacySnapshot : NSObject <RCTBridgeModule>
+ 
 diff --git a/node_modules/react-native-privacy-snapshot/react-native-privacy-snapshot.podspec b/node_modules/react-native-privacy-snapshot/react-native-privacy-snapshot.podspec
 new file mode 100644
 index 0000000..087ba47

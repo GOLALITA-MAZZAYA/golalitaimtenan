@@ -107,6 +107,8 @@ const usePushNotifications = () => {
           android: {
             channelId: NOTIFICATION_DEFAULT_CHANNEL_ID,
             pressAction: { id: 'default' },
+            smallIcon: 'ic_notification',
+            color: '#8D1B3D',
           },
           data,
         });

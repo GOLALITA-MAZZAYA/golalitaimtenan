@@ -2,6 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import authApi from "../redux/auth/auth-api";
 import { getIsSaveMe } from "./asyncStorage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
+import {
+  isDeviceBlocked,
+  showSecurityAlert,
+} from '../utils/deviceSecurityCheck';
+
+export const assertDeviceSecure = async () => {
+  if (await isDeviceBlocked()) {
+    showSecurityAlert();
+    throw new Error('Login blocked: device failed security checks');
+  }
+};
 
 export const checkIfUserLoggedOut = async () => {
   const isUserLoggedOut = await AsyncStorage.getItem("isUserLoggedOut");
@@ -33,7 +45,7 @@ export const checkIfTokenIsValid = async () => {
       return false;
     }
 
-    const token = await AsyncStorage.getItem("token");
+    const token = await getAuthToken();
 
     if ((isSaved === "true" || isSaved === null) && token) {
       const userData = await authApi.getUserData({

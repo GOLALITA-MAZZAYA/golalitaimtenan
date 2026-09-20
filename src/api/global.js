@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getAllCountries = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/res.country/search", {
     params: {
@@ -19,7 +19,7 @@ export const getAllCountries = async () => {
 };
 
 export const getAllLocations = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/get/locations", {
     params: {

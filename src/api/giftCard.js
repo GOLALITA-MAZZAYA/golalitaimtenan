@@ -1,13 +1,13 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
 import axios from "axios";
 import store from "../redux/store";
 import { BASE_URL } from "../constants";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const CARDMOOLA_BASE_URL = "https://api.business.cardmoola.com";
 
 export const getGiftCardCountries = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/ugo2gift.country/search", {
     params: {
@@ -25,7 +25,7 @@ export const getGiftCardCountries = async () => {
 };
 
 export const getGiftCardById = async (reference_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/ugo2gift/search/id", {
     params: {
@@ -42,7 +42,7 @@ export const getGiftCardById = async (reference_id) => {
 };
 
 export const getGiftCardCategories = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("ugo2gift.category/search", {
     params: {
@@ -59,7 +59,7 @@ export const getGiftCardCategories = async () => {
 };
 
 export const createGiftCardOrder = async (body) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const params = {
     token,
@@ -81,7 +81,7 @@ export const createGiftCardOrder = async (body) => {
 };
 
 export const getGiftCardAmount = async (giftCardId) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("ugo2gift.denomination/search", {
     params: {
@@ -99,7 +99,7 @@ export const getGiftCardAmount = async (giftCardId) => {
 };
 
 export const getGiftCards = async (body) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/ugo2gift.brand/search", {
     params: {
@@ -116,7 +116,7 @@ export const getGiftCards = async (body) => {
 };
 
 export const getPurchasedGiftCards = async (customer_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/ugo2gift/bought/list", {
     params: {
@@ -199,7 +199,7 @@ export const getCardmolaGiftCardById = async (encodedId, token) => {
 };
 
 export const requestGiftCardPayment = async (data) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await axios.post(
     `https://${BASE_URL}/cardmola/payment/request`,
@@ -235,7 +235,7 @@ export const getCardmolaCountries = async () => {
 };
 
 export const checkCardmolaPaymentById = async (encodedId) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await axios.post(
     `https://${BASE_URL}/go/api/user/cardmoola/search/id`,
@@ -255,7 +255,7 @@ export const checkCardmolaPaymentById = async (encodedId) => {
 };
 
 export const checkGlobalTixPaymentStatus = async (recordRefNumber, referenceNumber) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await axios.post(
     `https://${BASE_URL}/go/api/globaltix/payment/status`,
@@ -297,7 +297,7 @@ export const getCardmoolaCategories = async (country) => {
 };
 
 export const getCardmolaCurrencies = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await axios.post(
     `https://${BASE_URL}/go/api/res.currency/search`,

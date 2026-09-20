@@ -48,6 +48,7 @@ import TopCircleShadow from '../components/TopCircleShadow';
 import SaveMe from './component/SaveMe';
 import { getIsSaveMe, setIsSaveMe } from '../api/asyncStorage';
 import ContinueAsGuestBtn from '../components/ContinueAsGuestBtn';
+import { getAuthToken } from '../utils/tokenStorage';
 
 const LOGIN_INPUT_TYPES = {
   email: 'email',
@@ -105,7 +106,7 @@ const Login = ({
 
   const authenticateWithTouchId = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await getAuthToken();
 
       if (!token) {
         showMessage({

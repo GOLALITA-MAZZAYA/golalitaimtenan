@@ -6,13 +6,13 @@ import {
   setRestaurantsCategories,
   setRestaurantProductsCategories,
 } from "./delivery-actions";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuthToken } from '../../utils/tokenStorage';
 
 export const getRestaurants =
   (categories, transformData) => async (dispatch) => {
     dispatch(setRestaurantsLoading(true));
 
-    const token = await AsyncStorage.getItem("token");
+    const token = await getAuthToken();
 
     const res = await deliveryApi.getRestaurants({
       params: {
@@ -31,7 +31,7 @@ export const getRestaurants =
   };
 
 export const getRestaurantsItems = (category_id) => async (dispatch) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await deliveryApi.getRestaurantsItems({
     params: {
@@ -44,7 +44,7 @@ export const getRestaurantsItems = (category_id) => async (dispatch) => {
 };
 
 export const getRestaurantsCategories = () => async (dispatch) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await deliveryApi.getRestaurantCategories({
     params: {
@@ -57,7 +57,7 @@ export const getRestaurantsCategories = () => async (dispatch) => {
 
 export const getRestaurantProductsCategories =
   (merchant_id) => async (dispatch) => {
-    const token = await AsyncStorage.getItem("token");
+    const token = await getAuthToken();
 
     const res = await deliveryApi.getRestaurantCategories({
       params: {

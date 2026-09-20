@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getMarketingPopup = async () => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/marketing/get_popup", {
     params: {

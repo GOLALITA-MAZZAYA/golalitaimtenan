@@ -43,8 +43,7 @@ const fetchRemotePinHash = async () => {
 
 export const initializeAppSslPinning = async () => {
   if (!isSslPinningAvailable()) {
-    logger.warn('SSL pinning native module is not available');
-    return;
+    throw new Error('SSL pinning native module is not available');
   }
 
   const fallbackPins = getBundledPinHashes() || [];
@@ -66,10 +65,10 @@ export const initializeAppSslPinning = async () => {
           logger.warn('Falling back to bundled SSL pins only');
           await initializeSslPinning(buildPinningConfig(fallbackPins));
           logger.info('SSL pinning initialized successfully with fallback pins');
-        } else {
-          logger.error('No SSL pins available (remote failed and no fallback pins found)');
+          return;
         }
-        return;
+
+        throw new Error('No SSL pins available (remote failed and no fallback pins found)');
       }
       await delay(PIN_FETCH_RETRY_DELAY_MS);
     }

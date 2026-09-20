@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const charityAmountInitiate = async (data) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const params = {
     token,
@@ -26,7 +26,7 @@ export const charityAmountInitiate = async (data) => {
 };
 
 export const charityVerify = async (transaction_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const params = {
     token,

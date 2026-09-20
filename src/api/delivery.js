@@ -1,11 +1,11 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getRestaurantProductsByCategory = async (
   merchant_id,
   category_id
 ) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/restaurant/product/lists/new", {
     params: {
@@ -23,7 +23,7 @@ export const getRestaurantProductsByCategory = async (
 };
 
 export const createOrder = async (data) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/restaurant/create/order", {
     params: {
@@ -40,7 +40,7 @@ export const createOrder = async (data) => {
 };
 
 export const getDiscountFromVouchercode = async (data) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/voucher/code/search", {
     params: {
@@ -57,7 +57,7 @@ export const getDiscountFromVouchercode = async (data) => {
 };
 
 export const initiatePaymentSkipCash = async (order_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/restaurant/order/payment/start", {
     params: {
@@ -74,7 +74,7 @@ export const initiatePaymentSkipCash = async (order_id) => {
 };
 
 export const checkSkipCashPaymentStatus = async (order_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/restaurant/order/payment/validate", {
     params: {
@@ -94,7 +94,7 @@ export const checkSkipCashPaymentStatus = async (order_id) => {
 //www.golalita.com/go/user/api/user/restro/order/detail/id
 
 export const getOrderDetailById = async (order_id) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("user/restro/order/detail/id", {
     params: {

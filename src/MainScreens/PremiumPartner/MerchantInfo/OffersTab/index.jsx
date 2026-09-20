@@ -14,12 +14,12 @@ import { TypographyText } from "../../../../components/Typography";
 import FullScreenLoader from "../../../../components/Loaders/FullScreenLoader";
 import { saveOffer } from "../../../../redux/merchant/merchant-thunks";
 import OfferItem from "./components/OfferItem";
-import { getLocalizedValue } from "../../../../../utils";
+import { getLocalizedValue, getStringDate } from "../../../../../utils";
 import { getTranslationForOfferType } from "../../../../helpers";
 import { getAllOffersByMeerchantId } from "../../../../api/merchants";
 
 const OfferTab = ({ merchant }) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
@@ -79,6 +79,9 @@ const OfferTab = ({ merchant }) => {
         language === "ar" ? item.x_label_arabic : item.offer_label;
       const name = getLocalizedValue(item.x_arabic_name, item.name);
       const type = getTranslationForOfferType(item.x_offer_type);
+      const expiryDate = item.end_date
+        ? getStringDate(item.end_date.split(" ")[0])
+        : null;
 
       return (
         <OfferItem
@@ -87,6 +90,7 @@ const OfferTab = ({ merchant }) => {
           isLiked={isLiked}
           type={type}
           discRibbon={discRibbon}
+          expiryDate={expiryDate}
           onItemPress={() => navigateTopProductPage(item, merchant)}
           onSavePress={() => dispatch(saveOffer(item.id, t))}
           onInfoItemPress={() => handleInfoTextPress(item, merchant)}

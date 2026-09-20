@@ -4,10 +4,10 @@
   "expo": {
     "name": "ETIZAZ - اعتزاز",
     "slug": "golalitaimtenanrewards",
-    "version": "1.0.0",
+    "version": "1.0.9",
     "ios": {
       "bundleIdentifier": "com.golalitaimtenanrewards.ios",
-      "buildNumber": "1"
+      "buildNumber": "5"
     },
     "extra": {
       "eas": {

@@ -13,6 +13,7 @@ import { showMessage } from "react-native-flash-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setMerchantDetails } from "../merchant/merchant-actions";
 import { setUser } from "../auth/auth-actions";
+import { getAuthToken } from '../../utils/tokenStorage';
 
 export const getNotifications = () => async (dispatch, getState) => {
   dispatch(setIsNotificationsSettingsLoading(true));
@@ -84,7 +85,7 @@ export const subscribeNotification =
   };
 
 export const getMessageNotifications = () => async (dispatch, getState) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const { isNotificationModal } = getState().notificationsReducer;
   try {

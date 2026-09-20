@@ -1,9 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import instance from "../redux/instance";
 import { BASE_URL } from "../constants";
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getTransactionsPoints = async (filters = {}) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post(
     `https://${BASE_URL}/go/user/api/loyalty/transactions`,
@@ -26,7 +26,7 @@ export const getTransactionsPoints = async (filters = {}) => {
 };
 
 export const sharePoints = async (points, phone) => {
-  const token = await AsyncStorage.getItem("token");
+  const token = await getAuthToken();
 
   const res = await instance.post("/user/transfer/points", {
     params: {

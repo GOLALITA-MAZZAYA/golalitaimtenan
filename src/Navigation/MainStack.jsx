@@ -14,6 +14,7 @@ import ContactUs from '../MainScreens/ContactUs/ContactUs';
 import Dashboard from '../MainScreens/Dashboard/Dashboard';
 import MerchantsNavigator from '../MainScreens/MerchantsPage/MerchantsNavigator/index';
 import AddFamilyMember from '../MainScreens/Family/AddFamilyMember/AddFamilyMember';
+import FamilyEmailVerification from '../MainScreens/Family/FamilyEmailVerification';
 import BookHotel from '../MainScreens/BookHotel/BookHotel';
 import SocialMedia from '../MainScreens/SocialMedia/SocialMedia';
 import Promocode from '../MainScreens/Promocode/Promocode';
@@ -103,6 +104,10 @@ export const MainStackScreen = ({ navigation, route }) => {
       />
 
       <MainStack.Screen name={'AddFamilyMember'} component={AddFamilyMember} />
+      <MainStack.Screen
+        name={'FamilyEmailVerification'}
+        component={FamilyEmailVerification}
+      />
       <MainStack.Screen name={'BookHotel'} component={BookHotel} />
       <MainStack.Screen name={'SocialMedia'} component={SocialMedia} />
       <MainStack.Screen name={'Promocode'} component={Promocode} />

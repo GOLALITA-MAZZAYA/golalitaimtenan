@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import instance from "../redux/instance";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuthToken } from '../utils/tokenStorage';
 
 const useGetData = (apiUrl, params = {}) => {
   const [data, setData] = useState(null);
@@ -11,7 +11,7 @@ const useGetData = (apiUrl, params = {}) => {
     try {
       setLoading(true);
 
-      const token = await AsyncStorage.getItem("token");
+      const token = await getAuthToken();
 
       let data = null;
 

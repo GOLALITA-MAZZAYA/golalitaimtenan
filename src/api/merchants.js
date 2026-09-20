@@ -1,9 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import instance from '../redux/instance';
 import { ORG_ID, ORG_CODE } from '../constants';
+import { getAuthToken } from '../utils/tokenStorage';
 
 export const getMerchants = async (params = {}) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   console.log(params, 'params');
   const res = await instance.post('/user/category/merchant/lists', {
@@ -18,7 +18,7 @@ export const getMerchants = async (params = {}) => {
 };
 
 export const getMerchantById = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/merchant/details', {
     params: { token, merchant_id },
@@ -32,7 +32,7 @@ export const getMerchantById = async merchant_id => {
 };
 
 export const getOffers = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/offers/golalita/v3', {
     params: { token, merchant_id },
@@ -46,7 +46,7 @@ export const getOffers = async merchant_id => {
 };
 
 export const getAllOffersByMeerchantId = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/offers/v3', {
     params: { token, merchant_id },
@@ -69,7 +69,7 @@ export const getAllOffersByMeerchantId = async merchant_id => {
 };
 
 export const getMerchantDetails = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/merchant/details', {
     params: {
@@ -83,7 +83,7 @@ export const getMerchantDetails = async merchant_id => {
 };
 
 export const getPasscard = async (userName, expDate, barcode) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/golalta/passcard/v2', {
     params: {
@@ -98,7 +98,7 @@ export const getPasscard = async (userName, expDate, barcode) => {
 };
 
 export const getAllMerchants = async (otherParams = {}) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/category/merchant/lists', {
     params: {
@@ -112,7 +112,7 @@ export const getAllMerchants = async (otherParams = {}) => {
 };
 
 export const getAllMerchantsForScan = async (otherParams = {}) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/scan/merchant/list', {
     params: {
@@ -125,7 +125,7 @@ export const getAllMerchantsForScan = async (otherParams = {}) => {
 };
 
 export const getLocalClients = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/category/new/merchant/lists', {
     params: {
@@ -137,7 +137,7 @@ export const getLocalClients = async () => {
 };
 
 export const getBranchesById = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/merchant/branch/list', {
     params: {
@@ -150,7 +150,7 @@ export const getBranchesById = async merchant_id => {
 };
 
 export const getMerchantDisscountForOffers = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/offers-discount-tag', {
     params: {
@@ -168,7 +168,7 @@ export const getMerchantDisscountForOffers = async merchant_id => {
 };
 
 export const getFavouriteMerchants = async customer_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/get/favourite/merchants', {
     params: {
@@ -181,7 +181,7 @@ export const getFavouriteMerchants = async customer_id => {
 };
 
 export const saveBill = async params => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/scan/merchant/list', {
     params: {
@@ -194,7 +194,7 @@ export const saveBill = async params => {
 };
 
 export const getPremiumMerchants = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/merchant/lists/premium', {
     params: {
@@ -206,7 +206,7 @@ export const getPremiumMerchants = async () => {
 };
 
 export const getGoPointsMerchants = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/category/merchant/lists/', {
     params: {
@@ -221,7 +221,7 @@ export const getGoPointsMerchants = async () => {
 };
 
 export const getNearbyMerchants = async ({ latitude, longitude }) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/category/merchant/list/nearby', {
     params: {
@@ -235,7 +235,7 @@ export const getNearbyMerchants = async ({ latitude, longitude }) => {
 };
 
 export const getTemsAndConditions = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/terms-conditions', {
     params: {
@@ -248,7 +248,7 @@ export const getTemsAndConditions = async merchant_id => {
 };
 
 export const getContracts = async merchant_id => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/contracts', {
     params: {
@@ -261,7 +261,7 @@ export const getContracts = async merchant_id => {
 };
 
 export const getPremiumMerchantsCount = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/merchant/count/premium', {
     params: {
@@ -273,7 +273,7 @@ export const getPremiumMerchantsCount = async () => {
 };
 
 export const getGoPointMerchatnsCount = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/merchant/count/gpoint', {
     params: {
@@ -285,7 +285,7 @@ export const getGoPointMerchatnsCount = async () => {
 };
 
 export const verifyEmail = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/verify/email', {
     params: {
@@ -297,7 +297,7 @@ export const verifyEmail = async () => {
 };
 
 export const verifyPhone = async () => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/verify/phone', {
     params: {
@@ -309,7 +309,7 @@ export const verifyPhone = async () => {
 };
 
 export const submitComplaint = async complaintData => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   console.log('Submitting complaint:', complaintData);
 
@@ -354,7 +354,7 @@ export const getMerchantsByCoordinates = async (
   category_id,
   radius = 5,
 ) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/user/category/merchant/list/nearby', {
     params: {
@@ -372,7 +372,7 @@ export const getMerchantsByCoordinates = async (
 };
 
 export const trackMerchantOpensCount = async (merchant_id) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await getAuthToken();
 
   const res = await instance.post('/merchant/mobile/count/add', {
     params: {

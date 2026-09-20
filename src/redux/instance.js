@@ -1,6 +1,5 @@
 import axios from 'axios';
 import store from './store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   setIsAuthorized,
   setIsUserJustLogOut,
@@ -10,6 +9,7 @@ import {
 } from './auth/auth-actions';
 import { refreshToken } from '../api/auth';
 import { logger } from '../utils/logger';
+import { getAuthToken, setAuthToken, clearAuthToken } from '../utils/tokenStorage';
 
 // api base url
 import { BASE_URL } from '../constants';
@@ -20,16 +20,15 @@ export const API_BASE_URL = `https://${BASE_URL}/go/api`;
 
 const instance = axios.create({
   baseURL: API_BASE_URL,
+  adapter: 'xhr',
   headers: {
     accept: 'application/json',
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    mode: 'no-cors',
   },
 });
 
 const logOutUser = async () => {
-  await AsyncStorage.setItem('token', '');
+  await clearAuthToken();
   store.dispatch(setIsUserJustLogOut(true));
   store.dispatch(setToken(null));
   store.dispatch(setUserId(null));
@@ -51,7 +50,7 @@ const onResponseSuccess = async response => {
   }
 
   if (errorMessage === 'Invalid User Token') {
-    const token = await AsyncStorage.getItem('token');
+    const token = await getAuthToken();
 
     if (!token) {
       await logOutUser();
@@ -72,7 +71,7 @@ const onResponseSuccess = async response => {
         return response;
       }
 
-      await AsyncStorage.setItem('token', newToken);
+      await setAuthToken(newToken);
 
       let newData = response.config.data;
 

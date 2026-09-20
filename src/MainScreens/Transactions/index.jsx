@@ -10,7 +10,7 @@ import { showMessage } from "react-native-flash-message";
 import { useTranslation } from "react-i18next";
 import { getUserData } from "../../redux/auth/auth-thunks";
 import NoData from "./components/NoData";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuthToken } from '../../utils/tokenStorage';
 
 const Transactions = (props) => {
   const { familyMembersLoading, familyMembers, getFamilyMembers } = props;
@@ -30,7 +30,7 @@ const Transactions = (props) => {
       type: "success",
     });
 
-    const token = await AsyncStorage.getItem("token");
+    const token = await getAuthToken();
     dispatch(getUserData(token));
   };
 

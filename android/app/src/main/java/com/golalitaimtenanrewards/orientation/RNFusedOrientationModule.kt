@@ -23,8 +23,11 @@ class RNFusedOrientationModule(private val ctx: ReactApplicationContext)
   }
 
   private val executor = Executors.newSingleThreadExecutor()
-  private val client: FusedOrientationProviderClient =
+  private val client: FusedOrientationProviderClient? = try {
     LocationServices.getFusedOrientationProviderClient(ctx)
+  } catch (e: Throwable) {
+    null
+  }
 
   private var listener: DeviceOrientationListener? = null
 
@@ -41,36 +44,56 @@ class RNFusedOrientationModule(private val ctx: ReactApplicationContext)
 
   @ReactMethod
   fun start(periodMs: Int, promise: Promise) {
-    // periodMs -> микросекунды
-    val micros = if (periodMs > 0) periodMs.toLong() * 1000L
-                 else DeviceOrientationRequest.OUTPUT_PERIOD_DEFAULT
-
-    val req = DeviceOrientationRequest.Builder(micros).build()
-
-    // Если уже слушаем — сначала снимаем
-    stop()
-
-    listener = DeviceOrientationListener { orientation ->
-      // Правильные геттеры у FOP:
-      val heading = orientation.headingDegrees              // float
-      val err = orientation.headingErrorDegrees             // float (≈ точность)
-      send(heading, err)
-    }
-
-    val l = listener ?: run {
-      promise.reject("FOP_START", "Listener is null")
+    val orientationClient = client
+    if (orientationClient == null) {
+      promise.reject("FOP_UNAVAILABLE", "Fused orientation provider is unavailable")
       return
     }
 
-    client.requestOrientationUpdates(req, executor, l)
-      .addOnSuccessListener { promise.resolve(null) }
-      .addOnFailureListener { e -> promise.reject("FOP_START", e) }
+    try {
+      // periodMs -> микросекунды
+      val micros = if (periodMs > 0) periodMs.toLong() * 1000L
+                   else DeviceOrientationRequest.OUTPUT_PERIOD_DEFAULT
+
+      val req = DeviceOrientationRequest.Builder(micros).build()
+
+      // Если уже слушаем — сначала снимаем
+      stop()
+
+      listener = DeviceOrientationListener { orientation ->
+        try {
+          // Правильные геттеры у FOP:
+          val heading = orientation.headingDegrees              // float
+          val err = orientation.headingErrorDegrees             // float (≈ точность)
+          send(heading, err)
+        } catch (_: Throwable) {
+          // Ignore malformed orientation payloads.
+        }
+      }
+
+      val l = listener ?: run {
+        promise.reject("FOP_START", "Listener is null")
+        return
+      }
+
+      orientationClient.requestOrientationUpdates(req, executor, l)
+        .addOnSuccessListener { promise.resolve(null) }
+        .addOnFailureListener { e -> promise.reject("FOP_START", e) }
+    } catch (e: Throwable) {
+      promise.reject("FOP_START", e)
+    }
   }
 
   @ReactMethod
   fun stop() {
-    listener?.let { client.removeOrientationUpdates(it) }
-    listener = null
+    val orientationClient = client ?: return
+    try {
+      listener?.let { orientationClient.removeOrientationUpdates(it) }
+    } catch (_: Throwable) {
+      // Ignore cleanup failures.
+    } finally {
+      listener = null
+    }
   }
 
   // Эти 2 метода нужны для NativeEventEmitter в RN 0.80+

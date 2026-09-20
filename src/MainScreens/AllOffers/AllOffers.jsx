@@ -23,7 +23,7 @@ import {
 import { useTranslation } from "react-i18next";
 import ListNoData from "../../components/ListNoData";
 import CardWithNesetedItems from "../../components/OfferCardWithNestedItems";
-import { getLocalizedValue } from "../../../utils";
+import { getLocalizedValue, getStringDate } from "../../../utils";
 import { getDescription, handleOfferCardPress } from "./helpres";
 import { B1G1, DISCOUNT, LUSAIL_REGULAR, PROMOCODE } from "../../redux/types";
 
@@ -36,12 +36,11 @@ const AllOffers = ({
   getGroupedByMerchantOffers,
   getOffers
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const canGetMoreDataRef = useRef(true);
-  const language = i18n.language;
 
   const TABS = [
     { label: t("AllOffers.allOffers"), value: null },
@@ -69,6 +68,9 @@ const AllOffers = ({
           canGetMoreDataRef.current = false;
         }
       },
+    }).catch(() => {
+      // Still mark ready so empty state can show after a failed request
+      setIsReady(true);
     });
   }, [selectedFilter]);
 
@@ -98,7 +100,6 @@ const AllOffers = ({
 
   const renderItem = ({ item }) => {
     const isFavorite = favoriteOffers?.some((offer) => offer.id === item.id);
-    const isArabic = language === "ar";
 
     return (
       <CardWithNesetedItems
@@ -109,6 +110,9 @@ const AllOffers = ({
           name: getLocalizedValue(item.x_arabic_name, item.name),
           description: getDescription(item),
           isSaved: isFavorite,
+          endDate: item.end_date
+            ? getStringDate(item.end_date.split(" ")[0])
+            : null,
         }}
       />
     );
@@ -181,19 +185,25 @@ const AllOffers = ({
           contentContainerStyle={{ flexGrow: 1, padding: 16 }}
           initialNumToRender={20}
           ListFooterComponent={() =>
-            isOffersLoading ? (
+            isOffersLoading && !!offers?.length ? (
               <View style={[mainStyles.centeredRow, { marginTop: 30 }]}>
                 <ActivityIndicator
                   size={"large"}
-                  color={colors.mainDarkModeText}
+                  color={isDark ? colors.mainDarkMode : colors.darkBlue}
                 />
               </View>
             ) : null
           }
           style={styles.list}
           ListEmptyComponent={
-            !isOffersLoading && !offers.length && (
+            isReady && !offers?.length ? (
               <ListNoData text={t("AllOffers.noOffersFound")} />
+            ) : (
+              <ActivityIndicator
+                size={"large"}
+                color={isDark ? colors.mainDarkMode : colors.darkBlue}
+                style={{ marginTop: 40 }}
+              />
             )
           }
         />

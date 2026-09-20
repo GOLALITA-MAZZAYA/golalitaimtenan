@@ -40,11 +40,12 @@ import { SCREEN_WIDTH } from '@gorhom/bottom-sheet';
 import { colors } from '../../../components/colors';
 import Distance from '../../../components/Distance';
 import { TypographyText } from '../../../components/Typography';
-
-/** ================= DEBUG ================= */
-const DEBUG_MODAL = true;
-const D = (...args: any[]) =>
-  DEBUG_MODAL && console.log('[AR][MODAL]', ...args);
+import {
+  disableScreenshotProtection,
+  enableScreenshotProtection,
+} from '../../../utils/screenshotProtection';
+import { setSecureWindow, setTapjackingProtection } from '../../../utils/windowSecurity';
+import { getLocalizedValue } from '../../../../utils';
 
 /** ---------- ассеты ---------- */
 const Vector = require('../img/Vector.png');
@@ -102,7 +103,7 @@ const curveOffset = (rel: number) => 14 * (Math.abs(rel) / (FOV / 2));
 /** ---------- стрелка ---------- */
 const ArrowIcon = ({
   size = 34,
-  fill = '#FFB000',
+  fill = '#DDBD6B',
   stroke = '#202020',
 }: {
   size?: number;
@@ -209,20 +210,8 @@ const MiniMap = memo(function MiniMap({
               latitude: m.partner_latitude,
               longitude: m.partner_longitude,
             }}
-            title={
-              (isArabic && m.x_arabic_name && m.x_arabic_name !== 'undefined' && m.x_arabic_name !== 'null' && m.x_arabic_name.trim() !== '')
-                ? m.x_arabic_name
-                : m.merchant_name || '—'
-            }
-            description={
-              (isArabic && m.arabic_category_name && m.arabic_category_name !== 'undefined' && m.arabic_category_name !== 'null' && m.arabic_category_name.trim() !== '')
-                ? m.arabic_category_name
-                : (m.category && m.category !== 'undefined' && m.category !== 'null' && m.category.trim() !== '')
-                  ? m.category
-                  : (m.category_name && m.category_name !== 'undefined' && m.category_name !== 'null' && m.category_name.trim() !== '')
-                    ? m.category_name
-                    : undefined
-            }
+            title={m.merchant_name}
+            description={m.category_name ?? undefined}
             zIndex={2}
             tracksViewChanges={false}
           />
@@ -276,7 +265,7 @@ export default function ARMapScreen({ route }: any) {
   const radius: number | undefined | null = route?.params?.radius;
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   // Камера
   const isFocused = useIsFocused();
@@ -302,7 +291,6 @@ export default function ARMapScreen({ route }: any) {
 
   const permAskedRef = useRef(false);
   const geoTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isArabic = i18n.language === 'ar';
 
   /** ---------- выбранный мерчант ---------- */
   const [selectedMerchant, setSelectedMerchant] =
@@ -380,7 +368,7 @@ export default function ARMapScreen({ route }: any) {
     }
   }, [coords?.latitude, coords?.longitude, categoryId, radius]);
 
-  /** UI тикер */
+  /** UI тикер — same as MinistryOfSports */
   useEffect(() => {
     if (!isFocused) return;
     const iv = setInterval(() => {
@@ -388,6 +376,25 @@ export default function ARMapScreen({ route }: any) {
     }, 50);
     return () => clearInterval(iv);
   }, [isFocused]);
+
+  /** Allow camera preview + card presses on Android (secure window / tapjacking) */
+  useFocusEffect(
+    React.useCallback(() => {
+      if (Platform.OS === 'android') {
+        setSecureWindow(false);
+        setTapjackingProtection(false);
+        disableScreenshotProtection().catch(() => {});
+      }
+
+      return () => {
+        if (Platform.OS === 'android') {
+          setSecureWindow(true);
+          setTapjackingProtection(true);
+          enableScreenshotProtection().catch(() => {});
+        }
+      };
+    }, []),
+  );
 
   /** компас: fusedOrientation + iOS fallback */
   useFocusEffect(
@@ -614,10 +621,10 @@ export default function ARMapScreen({ route }: any) {
         activeOpacity={0.9}
         onPress={() => navigation.navigate('ARCategories')}
       >
-        <FilterIcon size={20} color="#FFB000" />
+        <FilterIcon size={20} color={colors.mainDarkMode} />
       </TouchableOpacity>
 
-      {/* Камера фоном */}
+      {/* Camera + cards — same structure as MinistryOfSports (works on Android) */}
       {deviceReady ? (
         <Camera
           style={styles.fill}
@@ -631,12 +638,11 @@ export default function ARMapScreen({ route }: any) {
         <View style={styles.fill} />
       )}
 
-      {!deviceReady ||
-        (merchantsLoading && (
-          <View style={styles.center}>
-            <Text style={styles.loadingText}>{t('General.loading')}</Text>
-          </View>
-        ))}
+      {(!deviceReady || merchantsLoading) && (
+        <View style={styles.center}>
+          <Text style={styles.loadingText}>{t('General.loading')}</Text>
+        </View>
+      )}
 
       {deviceReady && !locOk && (
         <View style={styles.center}>
@@ -656,16 +662,14 @@ export default function ARMapScreen({ route }: any) {
         </View>
       )}
 
-      {/* Карточки */}
       {deviceReady &&
         locOk &&
         coords &&
-        raw.map(({ m, rel, x, inFov }) => {
+        raw.map(({ m, rel, x }) => {
           const top =
             CARD_TOP +
             laneIndexFor(m.merchant_id, raw) * LANE_STEP -
             curveOffset(rel);
-
 
           return (
             <View
@@ -675,9 +679,7 @@ export default function ARMapScreen({ route }: any) {
                 { top, transform: [{ translateX: x }] },
               ]}
             >
-              <TouchableOpacity
-                onPress={() => setSelectedMerchant(m)}
-              >
+              <TouchableOpacity onPress={() => setSelectedMerchant(m)}>
                 <View style={styles.card}>
                   <Image
                     source={ComponentIcon}
@@ -686,20 +688,17 @@ export default function ARMapScreen({ route }: any) {
                   />
                   <View style={styles.textCol}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
-                      {isArabic && m.x_arabic_name && m.x_arabic_name !== 'undefined' && m.x_arabic_name !== 'null' && m.x_arabic_name.trim() !== '' ? m.x_arabic_name : m.merchant_name}
+                      {getLocalizedValue(m.x_arabic_name, m.merchant_name)}
                     </Text>
                     <View style={styles.categoryWrapper}>
                       <TypographyText
                         style={styles.cardSub}
                         numberOfLines={1}
                         title={
-                          (isArabic && m.arabic_category_name && m.arabic_category_name !== 'undefined' && m.arabic_category_name !== 'null' && m.arabic_category_name.trim() !== '')
-                            ? m.arabic_category_name
-                            : (m.category && m.category !== 'undefined' && m.category !== 'null' && m.category.trim() !== '')
-                              ? m.category
-                              : (m.category_name && m.category_name !== 'undefined' && m.category_name !== 'null' && m.category_name.trim() !== '')
-                                ? m.category_name
-                                : '—'
+                          getLocalizedValue(
+                            m.arabic_category_name,
+                            m.category || m.category_name,
+                          ) || '—'
                         }
                       />
                       <Distance
@@ -714,7 +713,7 @@ export default function ARMapScreen({ route }: any) {
                     </View>
                   </View>
                   <View style={styles.divider} />
-                  <View >
+                  <View>
                     <Image
                       source={Vector}
                       style={styles.rightIcon}

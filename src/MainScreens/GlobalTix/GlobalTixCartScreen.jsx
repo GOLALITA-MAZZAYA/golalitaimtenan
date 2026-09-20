@@ -11,7 +11,6 @@ import MainLayout from '../../components/MainLayout';
 import Header from '../../components/Header';
 import { SCREEN_HEIGHT } from '../../styles/mainStyles';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   globalTixCartItemsSelector,
   globalTixCartTotalPriceSelector,
@@ -36,6 +35,7 @@ import { translateText } from '../../utils/translationService';
 import { getTicketSellingPrice } from '../../utils/globalTixPricing';
 import { GLOBALTIX_CONFIG } from '../../config/globalTix';
 import { BASE_URL } from '../../constants';
+import { getAuthToken } from '../../utils/tokenStorage';
 
 const GlobalTixCartScreen = ({ navigation }) => {
   const { isDark } = useTheme();
@@ -767,7 +767,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const sendBookingToBackend = async (globalTixResponse, ticketDetails, customerInfo, totalPrice, bankCharge, finalAmount, selectedPaymentMethod) => {
     try {
 
-      const token = await AsyncStorage.getItem("token");
+      const token = await getAuthToken();
 
       // Validate required data
       if (!token) {

@@ -18,8 +18,8 @@ import { merchantApi } from "../../redux/merchant/merchant-api";
 import { showMessage } from "react-native-flash-message";
 import i18next from "i18next";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setProfileLoading } from "../../redux/auth/auth-actions";
+import { getAuthToken } from '../../utils/tokenStorage';
 
 const MacDonaldsIcon = sized(MacDonaldsSvg, 38, 30);
 
@@ -81,7 +81,7 @@ const ChangePassword = ({ user, profileLoading }) => {
             try {
               dispatch(setProfileLoading(true));
 
-              const token = await AsyncStorage.getItem("token");
+              const token = await getAuthToken();
 
               const res = await merchantApi.changePassword({
                 params: {

@@ -39,7 +39,8 @@ messaging().onMessage(async remoteMessage => {
       android: {
         channelId: NOTIFICATION_DEFAULT_CHANNEL_ID,
         pressAction: { id: 'default' },
-        smallIcon: 'icon', // убедись, что такой иконки нетривиально существует
+        smallIcon: 'ic_notification',
+        color: '#8D1B3D',
       },
     });
   } catch (e) {

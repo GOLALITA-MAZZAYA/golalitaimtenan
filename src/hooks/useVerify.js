@@ -5,10 +5,12 @@ export const useVerify = (validate_code, t) => {
   const [generatedCode, setGeneratedCode] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [type, setType] = useState(null);
+  const [contactValue, setContactValue] = useState(null);
 
   const generateRandomCode = (type, value) => {
     const randomCode = Math.floor(1000 + Math.random() * 9000);
     setGeneratedCode(randomCode);
+    setContactValue(value);
 
     const payload = {
       params: {
@@ -41,6 +43,7 @@ export const useVerify = (validate_code, t) => {
     isModalVisible,
     setModalVisible,
     type,
+    contactValue,
     verifyHandler,
   };
 };

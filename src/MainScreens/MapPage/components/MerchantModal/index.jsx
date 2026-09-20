@@ -23,6 +23,7 @@ import {
 } from "../../../../helpers";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import Distance from "../../../../components/Distance";
+import { useIsFocused } from "@react-navigation/native";
 
 const snapPoints = ["30%"];
 
@@ -32,20 +33,28 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   const { t } = useTranslation();
   const [loadingDescription, setLoadingDescription] = useState(false);
   const [description, setDescription] = useState(null);
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (!isFocused) {
+      setSelectedMerchant(null);
+    }
+  }, [isFocused]);
 
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
 
   const handleCloseModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.close();
+    bottomSheetModalRef.current?.dismiss();
   }, []);
 
   const handleSheetChanges = useCallback((index) => {
+    // Same as MinistryOfSports: clear selection when sheet is not open
     if (index) {
       setSelectedMerchant(null);
     }
-  }, []);
+  }, [setSelectedMerchant]);
 
   const getOffersDiscountValue = async () => {
     try {
@@ -68,7 +77,8 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   };
 
   const handleDetailsPress = () => {
-    bottomSheetModalRef.current?.close();
+    bottomSheetModalRef.current?.dismiss();
+    setSelectedMerchant(null);
 
     store.dispatch(
       getMerchantDetails(
