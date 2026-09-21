@@ -13,6 +13,7 @@ import { globalReducer } from "./global/global-reducer";
 import { globalTixReducer } from "./globalTix/globalTix-reducer";
 import { globalTixCartReducer } from "./globalTix/globalTix-cart-reducer";
 import { cartReducer } from "./cart/cart-reducer";
+import { aiChatReducer } from "./aiChat/aiChat-reducer";
 
 let reducers = combineReducers({
   authReducer,
@@ -27,6 +28,7 @@ let reducers = combineReducers({
   globalTix: globalTixReducer,
   globalTixCart: globalTixCartReducer,
   cartReducer,
+  aiChatReducer,
 });
 
 let store = createStore(reducers, applyMiddleware(thunk));

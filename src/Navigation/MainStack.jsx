@@ -48,19 +48,23 @@ import MyVouchersNavigator from '../MainScreens/MyVouchers';
 import BillScannerHowToUse from '../MainScreens/BillScannerHoToUse';
 import MerchantNavigator from '../MainScreens/PremiumPartner';
 import Charities from '../MainScreens/Charities';
+import AiChat from '../MainScreens/AiChat/AiChat';
 
 const MainStack = createStackNavigator();
 
 export const MainStackScreen = ({ navigation, route }) => {
   useLayoutEffect(() => {
-    let routes = ['ProductItemPage', 'Cart', 'OrderConfirmation']; // routes without tabbar
+    const hideTabBarRoutes = [
+      'ProductItemPage',
+      'Cart',
+      'OrderConfirmation',
+      'AiChat',
+    ];
     const routeName = getFocusedRouteNameFromRoute(route);
     navigation.setOptions({ currentRoute: routeName });
-    if (routes.indexOf(routeName) !== -1 && routeName !== undefined) {
-      navigation.setOptions({ tabBarVisible: false });
-    } else {
-      navigation.setOptions({ tabBarVisible: true });
-    }
+    const shouldHideTabBar =
+      !!routeName && hideTabBarRoutes.includes(routeName);
+    navigation.setOptions({ tabBarVisible: !shouldHideTabBar });
   }, [navigation, route]);
   return (
     <MainStack.Navigator
@@ -149,6 +153,7 @@ export const MainStackScreen = ({ navigation, route }) => {
         name="Charities"
         component={Charities}
       />
+      <MainStack.Screen name={'AiChat'} component={AiChat} />
     </MainStack.Navigator>
   );
 };

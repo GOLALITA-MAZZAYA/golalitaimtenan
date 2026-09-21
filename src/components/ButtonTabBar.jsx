@@ -28,7 +28,10 @@ export let ButtonTabBar = ({ state, descriptors }) => {
 
   let focusedOptions = descriptors[state.routes[state.index].key].options;
 
-  if (focusedOptions.tabBarVisible === false) {
+  const hideForNestedFlow =
+    typeof currentRouteName === 'string' && currentRouteName === 'AiChat';
+
+  if (focusedOptions.tabBarVisible === false || hideForNestedFlow) {
     return null;
   }
 

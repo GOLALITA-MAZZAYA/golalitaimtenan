@@ -33,6 +33,13 @@ import { verifyEmail, verifyPhone } from '../../api/merchants';
 import { BASE_URL, ORG_ID } from '../../constants';
 import { assertDeviceSecure } from '../../api/auth';
 import { getAuthToken, setAuthToken, clearAuthToken } from '../../utils/tokenStorage';
+import { clearAiChatToken } from '../../api/aiChat';
+import { setAiChatMessages } from '../aiChat/aiChat-actions';
+
+const resetAiChatSession = async dispatch => {
+  await clearAiChatToken();
+  dispatch(setAiChatMessages([]));
+};
 
 export const getInitialData = () => async (dispatch, getState) => {
   try {
@@ -115,6 +122,8 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
     dispatch(setToken(res.data.result.token));
     dispatch(setUserId(res.data.result.id));
 
+    await resetAiChatSession(dispatch);
+
     dispatch(getUserData(res.data.result.token));
     dispatch(getAdvert());
     dispatch(getParentCategories(categoriesType));
@@ -123,8 +132,31 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
     // dispatch(setIsGuest(false));
     onSuccess?.();
   } catch (err) {
- 
-    console.log(err,'error')
+    console.log(err, 'login error');
+    console.log(
+      {
+        message: err?.message,
+        code: err?.code,
+        status: err?.response?.status,
+        url: err?.config?.baseURL
+          ? `${err.config.baseURL}${err.config.url || ''}`
+          : err?.config?.url,
+      },
+      'login error details',
+    );
+
+    const message =
+      err?.message === 'Network Error'
+        ? 'Network Error: cannot reach the server. Check API host / SSL pinning.'
+        : err?.response?.data?.result?.error ||
+          err?.message ||
+          i18next.t('Login.somethingWrong');
+
+    showMessage({
+      message: String(message),
+      type: 'danger',
+    });
+
     dispatch(setIsLoginError(true));
   } finally {
     dispatch(setLoginLoading(false));
@@ -192,6 +224,7 @@ export const logout = () => async dispatch => {
   dispatch(setIsAuthorized(false));
   dispatch(setIsGuest(false));
 
+  await resetAiChatSession(dispatch);
   await AsyncStorage.setItem('isUserLoggedOut', 'true');
 };
 

@@ -25,6 +25,7 @@ import AdwertisementModal from './components/AdwertisementModal';
 import { CHARITY_MERCHANT_IDS } from '../../constants';
 import { handleRedirectScreen } from '../../utils/redirectScreen';
 import trackActivity from '../../api/activityTracker';
+import FloatingAiChatButton from '../../components/FloatingAiChatButton';
 
 const MainScreen = ({
   navigation,
@@ -165,6 +166,7 @@ const MainScreen = ({
           {/* <AdwertisementModal /> */}
         </ScrollView>
       </MainLayout>
+      <FloatingAiChatButton />
     </>
   );
 };
