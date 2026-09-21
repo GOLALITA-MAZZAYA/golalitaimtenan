@@ -19,6 +19,7 @@ import {
   setPremiumMerchants,
   setSocialMedia,
   setTravelCategories,
+  setHasEsimCategory,
 } from './merchant-actions';
 import { CLIENT, PREMIUM, STANDARD } from '../types';
 import { Platform } from 'react-native';
@@ -39,6 +40,7 @@ import { getMerchantDisscountForOffers, trackMerchantOpensCount } from '../../ap
 import { getFavouriteMerchantsList } from '../favouriteMerchants/favourite-merchants-thunks';
 import { ORG_ID, ORG_CODE } from '../../constants';
 import { getAuthToken } from '../../utils/tokenStorage';
+import { isEsimCategory } from '../../MainScreens/ESim/esimUtils';
 
 export const getCategories = () => async (dispatch, getState) => {
   const { workStatus } = getState().authReducer;
@@ -155,7 +157,21 @@ export const getParentCategories = type => async dispatch => {
     });
 
     const list = Array.isArray(res.data?.result) ? res.data.result : [];
-    dispatch(setParentCategories(list));
+    const responseHasEsim = list.some(isEsimCategory);
+
+    // Backend flag: local response is authoritative; global can only turn it on
+    // (eSIM may be returned only on local, but we still need it for country screens).
+    if (type === 'local') {
+      dispatch(setHasEsimCategory(responseHasEsim));
+    } else if (responseHasEsim) {
+      dispatch(setHasEsimCategory(true));
+    }
+
+    // Never surface the eSIM parent tile on the Global home grid — only Local.
+    const parentCategories =
+      type === 'global' ? list.filter(item => !isEsimCategory(item)) : list;
+
+    dispatch(setParentCategories(parentCategories));
   } catch (err) {
     console.log(err, 'get parrent categories error');
   } finally {

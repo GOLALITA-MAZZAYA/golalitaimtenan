@@ -1,5 +1,4 @@
 import { SafeAreaView, StyleSheet, View, FlatList, Image } from 'react-native';
-import CommonHeader from '../../../components/CommonHeader/CommonHeader';
 import { useTheme } from '../../../components/ThemeProvider';
 import { colors } from '../../../components/colors';
 import { mainStyles } from '../../../styles/mainStyles';
@@ -8,48 +7,66 @@ import { TouchableOpacity } from 'react-native';
 import { TypographyText } from '../../../components/Typography';
 import { LUSAIL_REGULAR } from '../../../redux/types';
 import { useRoute } from '@react-navigation/native';
-
 import { isRTL } from '../../../../utils';
 import { useEffect, useState } from 'react';
 import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
 import { useSelector } from 'react-redux';
 import { getChildCategoriesById } from '../../../api/categories';
 import Header from '../../../components/Header';
+import { showMessage } from 'react-native-flash-message';
+import { sized } from '../../../Svg';
+import EsimSvg from '../../../assets/esim.svg';
+import {
+  openEsimPlans,
+  resolveEsimDestinationForCategory,
+} from '../../ESim/esimUtils';
+
 const IMAGE_SIZE = 80;
 
 const ChildCategories = ({ navigation }) => {
   const { isDark } = useTheme();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const language = i18n.language;
   const {
     params: { parentCategoryId, parentCategoryName, parentCategoryData },
   } = useRoute();
-  const { categoriesType } = useSelector(state => state.merchantReducer);
+  const { categoriesType, hasEsimCategory, parentCategories } = useSelector(
+    state => state.merchantReducer,
+  );
+
+  // Country-level eSIM row only on Global, and only when backend exposed eSIM.
+  const globalHasEsimCategory =
+    categoriesType === 'global' && !!hasEsimCategory;
 
   const [childCategories, setChildCategories] = useState([]);
+  const [esimDestination, setEsimDestination] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const getChildCategories = async () => {
     try {
       setLoading(true);
-      console.log("ChildCategories: Parent category ID:", parentCategoryId);
-      console.log("ChildCategories: Categories type:", categoriesType);
       const data = await getChildCategoriesById(
         parentCategoryId,
         categoriesType,
       );
-      console.log("ChildCategories: Data:", data);
-      const filteredChildCategories = data.filter(item => {
-        if (item.parent_id[0] === 47 && (item.id === 156 || item.id === 160)) {
-          return false;
-        }
 
-        return true;
-      });
+      const filteredChildCategories = (Array.isArray(data) ? data : []).filter(
+        item => {
+          if (
+            item.parent_id?.[0] === 47 &&
+            (item.id === 156 || item.id === 160)
+          ) {
+            return false;
+          }
+
+          return true;
+        },
+      );
 
       setChildCategories(filteredChildCategories);
     } catch (err) {
       console.log(err, 'err');
+      setChildCategories([]);
     } finally {
       setLoading(false);
     }
@@ -59,83 +76,155 @@ const ChildCategories = ({ navigation }) => {
     getChildCategories();
   }, [parentCategoryId, categoriesType]);
 
-  const navigateToMerchant = (category) => {
-    console.log("ChildCategories: Navigating to category:", category);
+  useEffect(() => {
+    if (!globalHasEsimCategory) {
+      setEsimDestination(null);
+      return;
+    }
+
+    const parentFromStore = (
+      Array.isArray(parentCategories) ? parentCategories : []
+    ).find(item => Number(item?.id) === Number(parentCategoryId));
+
+    let mounted = true;
+    resolveEsimDestinationForCategory({
+      id: parentCategoryId,
+      name: parentFromStore?.name || parentCategoryName || parentCategoryData?.name,
+      x_name_arabic:
+        parentFromStore?.x_name_arabic || parentCategoryData?.x_name_arabic,
+      parentCategoryName,
+      country_code:
+        parentFromStore?.x_country_code ||
+        parentFromStore?.country_code ||
+        parentCategoryData?.x_country_code ||
+        parentCategoryData?.country_code,
+      x_country_code:
+        parentFromStore?.x_country_code ||
+        parentFromStore?.country_code ||
+        parentCategoryData?.x_country_code ||
+        parentCategoryData?.country_code,
+    })
+      .then(destination => {
+        if (mounted) {
+          setEsimDestination(destination);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setEsimDestination(null);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [
+    globalHasEsimCategory,
+    parentCategoryId,
+    parentCategoryName,
+    parentCategories,
+    parentCategoryData,
+  ]);
+
+  const navigateToMerchant = category => {
+    if (category.isEsimEntry) {
+      if (!category.esimDestination) {
+        showMessage({
+          message: t('ESim.unavailableForCountry'),
+          type: 'warning',
+        });
+        return;
+      }
+
+      openEsimPlans(navigation, category.esimDestination);
+      return;
+    }
 
     if (category.parent_id?.[0] === 687) {
       navigation.navigate('Charities', {
-        categoryId: category.id
+        categoryId: category.id,
       });
 
-      return
+      return;
     }
-    // Check if this is the special "Events & Tickets" item
-    if (category.isEventsAndTickets) {
-      const countryCode = getCountryCodeFromParent(category.parent_id?.[0]);
-      console.log("ChildCategories: Navigating to GlobalTix for Events & Tickets with country code:", countryCode);
 
-      navigation.navigate("GlobalTix", {
+    if (category.isEventsAndTickets) {
+      const countryCode =
+        parentCategoryData?.x_country_code ||
+        parentCategoryData?.country_code ||
+        'AE';
+
+      navigation.navigate('GlobalTix', {
         initialFilters: {
-          countryCode: countryCode,
-          categoryIds: undefined, // Let user select entertainment category in GlobalTix
+          countryCode,
+          categoryIds: undefined,
           cityIds: undefined,
         },
-        parentCategoryName: language === "ar" ? parentCategoryData?.x_name_arabic : parentCategoryData?.name
+        parentCategoryName:
+          language === 'ar'
+            ? parentCategoryData?.x_name_arabic
+            : parentCategoryData?.name,
       });
       return;
     }
 
-    navigation.navigate("merchants", {
-      screen: "merchants-list",
+    const categoryName =
+      language === 'ar' ? category?.x_name_arabic : category.name;
+
+    if (category.x_if_have_child_cat) {
+      navigation.navigate('categories', {
+        screen: 'categories-child',
+        params: {
+          parentCategoryId: category.id,
+          parentCategoryName: categoryName,
+          parentCategoryData: category,
+        },
+      });
+      return;
+    }
+
+    navigation.navigate('merchants', {
+      screen: 'merchants-list',
       params: {
         filters: {
           category_id: category.id,
         },
-        parentCategoryId: category?.parent_id?.[0],
-        parentCategoryName,
+        parentCategoryId: category.id,
+        parentCategoryName: categoryName || parentCategoryName,
       },
     });
   };
 
-  // Helper function to get country code from parent category
-  const getCountryCodeFromParent = (parentId) => {
-    // Use the parent category data if available
-    if (parentCategoryData?.x_country_code) {
-      return parentCategoryData.x_country_code;
-    }
+  const shouldShowEventsTickets = false;
+  const eventsAndTicketsItem = shouldShowEventsTickets
+    ? {
+        id: 'events-and-tickets',
+        name: 'Events & Tickets',
+        x_name_arabic: 'الفعاليات والتذاكر',
+        image3: require('../../../assets/Events&Tickets.png'),
+        parent_id: childCategories[0]?.parent_id || [],
+        isEventsAndTickets: true,
+      }
+    : null;
 
-    // Fallback to default UAE
-    return 'AE';
-  };
+  const listData = [
+    ...(globalHasEsimCategory
+      ? [
+          {
+            id: 'esim-for-country',
+            name: t('ESim.title'),
+            x_name_arabic: t('ESim.title'),
+            isEsimEntry: true,
+            esimDestination,
+          },
+        ]
+      : []),
+    ...(eventsAndTicketsItem ? [eventsAndTicketsItem] : []),
+    ...childCategories,
+  ];
 
-  const filteredChildCategories = childCategories.filter((item) => {
-    if (item.parent_id[0] === 47 && (item.id === 156 || item.id === 160)) {
-      return false;
-    }
-
-    return true;
-  });
-
-  // Add "Events & Tickets" item at the top only if parent has country code
-  const shouldShowEventsTickets = false;//parentCategoryData?.x_country_code;
-  console.log("ChildCategories: Parent category data:", parentCategoryData);
-  console.log("ChildCategories: Should show Events & Tickets:", shouldShowEventsTickets);
-
-  let categoriesWithEventsTickets = filteredChildCategories;
-
-  if (shouldShowEventsTickets) {
-    const eventsAndTicketsItem = {
-      id: 'events-and-tickets',
-      name: 'Events & Tickets',
-      x_name_arabic: 'الفعاليات والتذاكر',
-      image3: require('../../../assets/Events&Tickets.png'), // Use the local Events&Tickets image
-      parent_id: childCategories[0]?.parent_id || [],
-      isEventsAndTickets: false, // Special flag to identify this item
-    };
-
-    // Combine the special item with filtered categories
-    categoriesWithEventsTickets = [eventsAndTicketsItem, ...filteredChildCategories];
-  }
+  const tint = isDark ? colors.mainDarkMode : colors.darkBlue;
+  const SimIcon = sized(EsimSvg, 36, 36, tint);
 
   return (
     <View
@@ -145,20 +234,17 @@ const ChildCategories = ({ navigation }) => {
       }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <Header
-          label={parentCategoryName}
-
-        // onBackPress={handleBackPress}
-        />
+        <Header label={parentCategoryName} />
 
         <FlatList
-          data={categoriesWithEventsTickets}
+          data={loading ? [] : listData}
           contentContainerStyle={{
             flexGrow: 1,
             paddingHorizontal: 20,
             marginTop: 16,
             paddingBottom: 60,
           }}
+          keyExtractor={item => String(item.id)}
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => navigateToMerchant(item)}
@@ -177,20 +263,24 @@ const ChildCategories = ({ navigation }) => {
                   },
                 ]}
               >
-                <Image
-                  style={[
-                    styles.image,
-                    {
-                      tintColor: isDark ? colors.mainDarkMode : colors.darkBlue,
-                    },
-                  ]}
-                  source={
-                    item.isEventsAndTickets
-                      ? item.image3 // Local image (require)
-                      : { uri: item.image3 } // Remote URL
-                  }
-                  tintColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-                />
+                {item.isEsimEntry ? (
+                  <SimIcon />
+                ) : (
+                  <Image
+                    style={[
+                      styles.image,
+                      {
+                        tintColor: tint,
+                      },
+                    ]}
+                    source={
+                      item.isEventsAndTickets
+                        ? item.image3
+                        : { uri: item.image3 }
+                    }
+                    tintColor={tint}
+                  />
+                )}
               </View>
               <TypographyText
                 textColor={isDark ? colors.white : colors.darkBlue}
@@ -210,15 +300,10 @@ const ChildCategories = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  wrapper: {},
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 16,
-  },
-  image: {
-    width: 45,
-    height: 45,
   },
   categoryName: {
     marginTop: 4,
@@ -226,10 +311,6 @@ const styles = StyleSheet.create({
     width: IMAGE_SIZE,
     fontWeight: '700',
     marginHorizontal: 30,
-  },
-  list: {
-    marginTop: 16,
-    paddingBottom: 40,
   },
   imageWrapper: {
     ...mainStyles.generalShadow,
@@ -244,14 +325,6 @@ const styles = StyleSheet.create({
     width: IMAGE_SIZE,
     height: IMAGE_SIZE,
     borderRadius: 8,
-  },
-  noData: {
-    height: IMAGE_SIZE + 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentContainerStyle: {
-    paddingLeft: 5,
   },
 });
 

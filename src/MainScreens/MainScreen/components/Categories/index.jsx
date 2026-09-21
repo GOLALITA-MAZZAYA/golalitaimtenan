@@ -13,6 +13,11 @@ import { getParentCategories } from '../../../../redux/merchant/merchant-thunks'
 import ListNoData from '../../../../components/ListNoData';
 import { setCategoriesType } from '../../../../redux/merchant/merchant-actions';
 import useUpdateEffect from '../../../../hooks/useUpdateEffect';
+import { useEffect } from 'react';
+import { isEsimCategory } from '../../../ESim/esimUtils';
+import { getCachedLocalEsimDestinations } from '../../../../api/esim';
+import { sized } from '../../../../Svg';
+import EsimSvg from '../../../../assets/esim.svg';
 
 const IMAGE_SIZE = 70;
 
@@ -22,7 +27,9 @@ const Categories = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { selectedCountry } = useSelector(state => state.globalReducer);
-  const { categoriesType } = useSelector(state => state.merchantReducer);
+  const { categoriesType, hasEsimCategory } = useSelector(
+    state => state.merchantReducer,
+  );
 
   const parentCategories = useSelector(
     state => state.merchantReducer.parentCategories,
@@ -39,7 +46,18 @@ const Categories = () => {
     }
   }, [categoriesType, selectedCountry]);
 
+  useEffect(() => {
+    if (categoriesType === 'global' && hasEsimCategory) {
+      getCachedLocalEsimDestinations().catch(() => {});
+    }
+  }, [categoriesType, hasEsimCategory]);
+
   const navigateToMerchant = category => {
+    if (isEsimCategory(category)) {
+      navigation.navigate('ESim');
+      return;
+    }
+
     if (category.id == 265) {
       navigation.navigate('MumayzInfo', {
         params: {
@@ -79,7 +97,7 @@ const Categories = () => {
           filters: {
             category_id: category.id,
           },
-          parentCategoryId: category?.parent_id?.[0],
+          parentCategoryId: category.id,
           parentCategoryName:
             language === 'ar' ? category?.x_name_arabic : category.name,
         },
@@ -171,6 +189,9 @@ const Categories = () => {
           const source = {
             uri: item.image3 || undefined,
           };
+          const esim = isEsimCategory(item);
+          const tint = isDark ? colors.mainDarkMode : colors.darkBlue;
+          const SimIcon = sized(EsimSvg, 36, 36, tint);
 
           return (
             <TouchableOpacity
@@ -187,16 +208,31 @@ const Categories = () => {
                   },
                 ]}
               >
-                <Image
-                  style={[
-                    styles.categoryImage,
-                    {
-                      tintColor: isDark ? colors.mainDarkMode : colors.darkBlue,
-                    },
-                  ]}
-                  source={source}
-                  tintColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-                />
+                {esim ? (
+                  <SimIcon />
+                ) : (
+                  <Image
+                    style={[
+                      styles.categoryImage,
+                      {
+                        tintColor: tint,
+                      },
+                    ]}
+                    source={source}
+                    tintColor={tint}
+                  />
+                )}
+                {esim ? (
+                  <View style={styles.newBadge}>
+                    <TypographyText
+                      title={t('MainScreen.new')}
+                      size={8}
+                      font={LUSAIL_REGULAR}
+                      textColor={colors.white}
+                      style={styles.newBadgeText}
+                    />
+                  </View>
+                ) : null}
               </View>
               <TypographyText
                 textColor={isDark ? colors.white : '#000'}
@@ -262,6 +298,20 @@ const styles = StyleSheet.create({
     height: IMAGE_SIZE,
     borderRadius: 32,
     resizeMode: 'contain',
+  },
+  newBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: colors.red,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  newBadgeText: {
+    fontWeight: '700',
   },
   contentContainerStyle: { flexGrow: 1, paddingBottom: 60 },
 });

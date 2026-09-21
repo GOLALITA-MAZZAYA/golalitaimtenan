@@ -1,0 +1,124 @@
+{
+  "help": "Help",
+  "catInstallation": "Installation",
+  "catCompatibility": "Compatibility",
+  "catFaq": "FAQ",
+  "catTroubleshooting": "Troubleshooting",
+  "catHotspot": "Hotspot",
+  "searchDevices": "Search compatible devices",
+  "searchDevicesHint": "Search the catalogue for phones that support eSIM.",
+  "articles": {
+    "iosInstallNow": {
+      "title": "iOS with Install on this device",
+      "body": "This method is available only on iPhone with iOS 17.4 or later.\n\nAfter you buy a Etizaz eSIM, open **Installation**. If you left that screen, go to **My eSIMs**, open the order, and tap **Install eSIM**.\n\nStay connected to Wi-Fi until install finishes. An eSIM can be installed only once.\n\n## For iPhone — Install on this device\n- On Installation, tap **Install on this device**\n- Tap **Allow** on the Activate New eSIM pop-up\n- Tap **Continue** until Cellular Setup finishes\n- Give the line a name so you can recognise it (for example Travel)\n- Keep your primary line for calls and iMessage. Set the new eSIM as the line for **Cellular Data**\n- Open the new eSIM, turn the line on, and turn **Data Roaming** on\n- In Cellular Data, confirm the new eSIM is selected\n- Follow **How to activate eSIM?** in the app if you still have no data"
+    },
+    "iosQr": {
+      "title": "iOS with QR code",
+      "body": "After you buy a Etizaz eSIM, open **Installation**. If you left that screen, go to **My eSIMs**, open the order, and tap **Install eSIM**.\n\nStay connected to Wi-Fi until install finishes.\n\n## For iPhone — QR code\n- Open **Settings** > Cellular (or Mobile Data)\n- Tap **Add eSIM**\n- Tap **Use QR Code**\n- Scan the QR code shown on Installation (use another device, or a screenshot)\n- Tap **Continue** until setup finishes\n- Name the line, then set the new eSIM for **Cellular Data**\n- Turn the line on and turn **Data Roaming** on\n- Confirm the new eSIM is selected for Cellular Data"
+    },
+    "androidQr": {
+      "title": "Android with QR code",
+      "body": "After you buy a Etizaz eSIM, open **Installation**. If you left that screen, go to **My eSIMs**, open the order, and tap **Install eSIM**.\n\nStay connected to the internet until install finishes. An eSIM can be installed only once.\n\n## For Android — QR code\n- Share or screenshot the QR code so you can scan it with this phone\n- Go to **Settings > Network & internet** (or Connections)\n- Tap **Add** or **+** next to SIMs / Mobile network\n- Scan the QR code from Installation and confirm\n- Turn the new eSIM on\n- Set it as preferred for mobile data\n- Turn **Data roaming** on\n- Follow **How to activate eSIM?** in the app if APN or roaming steps are required"
+    },
+    "manualIos": {
+      "title": "Manual installation on iOS",
+      "body": "Use this if you cannot scan the QR code.\n\n- Open the Etizaz app\n- Go to **My eSIMs**, open the order, tap **Install eSIM**\n- Open the **Manual** tab\n- Copy the SM-DP+ address and activation code\n\nThen in iPhone Settings:\n- Cellular (or Mobile Data) > **Add eSIM**\n- **Use QR Code** > **Enter Details Manually**\n- Paste the SM-DP+ address and activation code\n- Tap Next, then Continue\n- Keep Primary for calls and iMessage / FaceTime\n- Choose the new eSIM for Cellular Data > Continue > turn the line on\n- Turn **Data Roaming** on"
+    },
+    "manualAndroid": {
+      "title": "Manual installation on Android",
+      "body": "Use this if you cannot scan the QR code. Menu names vary by brand.\n\n- Open the Etizaz app\n- Go to **My eSIMs**, open the order, tap **Install eSIM**\n- Open the **Manual** tab and copy the activation code (full LPA)\n\nThen on the phone:\n- Go to Settings > Connections > SIM Manager > Add eSIM (Samsung) or Settings > Network & internet > SIMs > Add (Pixel and others)\n- Choose to enter the activation code instead of scanning\n- Paste the code from Installation\n- Tap Connect, then Add\n- Set the new eSIM as preferred for mobile data\n- Turn Data roaming on\n- Follow **How to activate eSIM?** if you need to add an APN"
+    },
+    "whichNetwork": {
+      "title": "Which network should I connect to?",
+      "body": "Most of the time the eSIM connects automatically to a supported network in your plan’s coverage area.\n\nIf you have no data, pick the network manually in your phone settings:\n- **iPhone:** Settings > Cellular > your eSIM > Network Selection > turn off automatic and choose a network\n- **Android:** Settings > Connections or Network & internet > Mobile networks > Network operators\n\nYour coverage is the destination of the Etizaz plan you bought (shown on the order). There is no separate supported-networks screen in the app."
+    },
+    "whenPlanStarts": {
+      "title": "When does the data plan start?",
+      "body": "For Etizaz eSIMs, the validity period usually starts when the eSIM is installed and connects to a supported network.\n\n- If the plan starts on first connection at the destination, you can install it before you travel. Data time does not start until it connects there.\n- If you are not sure, install close to departure so you do not start the clock by mistake.\n\nSee **How to activate eSIM?** after install. The app does not show a separate Activation Policy page."
+    },
+    "canDelete": {
+      "title": "Can I delete an eSIM from my phone?",
+      "body": "Yes, but only when you no longer need it.\n\nYou can remove the eSIM when:\n- There is no remaining data package\n- You will not top it up\n\n## iPhone\n- Settings > Cellular\n- Tap the eSIM\n- Remove / Delete eSIM\n\n## Android\n- Settings > Network & internet (or Connections > SIM manager)\n- Select the eSIM and delete it\n\n**Important:** once you delete this eSIM, you cannot install the same one again from Etizaz."
+    },
+    "iosDevices": {
+      "title": "iOS devices",
+      "body": "Your iPhone or iPad must be carrier-unlocked and eSIM-compatible. Country and carrier rules may still apply.\n\n- iPhone XS, iPhone XS Max, iPhone XR or later\n- iPad Air (3rd generation) and later\n- iPad Pro 11-inch (1st generation) and later\n- iPad (7th generation) and later\n- iPad mini (5th generation) and later\n\n## Exceptions\niPhones sold only for mainland China / Hong Kong are **not** eSIM-compatible.\n\nYou can also search the device catalogue from Help Center."
+    },
+    "androidDevices": {
+      "title": "Android devices",
+      "body": "Your phone must be carrier-unlocked and eSIM-compatible. Country and carrier rules may apply. This list is a guide, not a guarantee. Search the catalogue in Help Center for a specific model.\n\n## Samsung\n- Galaxy S20, A54 5G and later\n- Galaxy Z Flip, Z Fold and later\n- Galaxy Note 20 and later\n\n## Google Pixel\n- Pixel 2 and later (see exceptions)\n\n## Huawei\n- P40, P40 Pro\n- Mate 40 Pro and later\n\n## Oppo\n- Reno6 Pro 5G\n- Reno 5A and later\n- Find N2 Flip, X3 Pro, X5, X5 Pro\n\n## Sony\n- Xperia 1 V, 1 IV\n- Xperia 5 IV\n- Xperia 10 III Lite, 10 IV\n\n## Honor\n- Magic4 Pro, Magic5 Pro\n- Honor 90 and later\n\n## Motorola\n- Moto G54, Edge 40 Neo, Edge 40 Pro, Edge+\n- Razr 40 Ultra, Razr 2022, Razr 2019, Razr 5G\n- G53 5G and later\n\n## Nokia\n- G60, XR21, X30 and later\n\n## OnePlus\n- OnePlus 11 and later\n\n## Vivo\n- X90 Pro\n- V29 EU, V29 Lite 5G EU and later\n\n## Rakuten\n- Mini, Big, Big-S, Hand, Hand 5G and later\n\n## Exceptions\nGoogle Pixel 3a from some Southeast Asian countries is **not** compatible. Huawei P40 Pro+ is **not** compatible."
+    },
+    "howToKnow": {
+      "title": "How do I know if my phone supports eSIM?",
+      "body": "Most phones from 2018 onward can support eSIM, but it depends on the model, country, and whether the phone is carrier-unlocked.\n\n## Check if the phone is unlocked\n- Remove the physical SIM\n- Insert a SIM from another operator\n- If you can make a call, the phone is unlocked\n\n## Does my iPhone support eSIM?\nApple’s first eSIM iPhones were iPhone XS, XS Max, and XR (2018). Later models usually support eSIM, except many China-region iPhones.\n\n- Settings > General > About\n- Carrier Lock should say **No SIM restrictions**\n- Scroll to Available SIM (iOS 15+) or Digital SIM\n- An extra 15-digit IMEI means eSIM hardware is present\n\nIf two lines are already active, you may need to turn one off before adding a Etizaz eSIM.\n\n## Does my Android support eSIM?\nAndroid varies by brand. Check the maker, or use the steps below. You can also search Help Center.\n\n## Google Pixel\n- Settings > Network & internet\n- Tap + beside SIMs\n- If you see **Download a SIM instead?**, the phone supports eSIM\n\n## Samsung\n- Settings > Connections\n- SIM card manager\n- If **Add mobile plan** or Add eSIM is available, it supports eSIM\n\n## Huawei and others\n- Settings > About phone > show EID, or dial *#06#\n- If an **EID** number appears, the device has eSIM hardware"
+    },
+    "whatIsEsim": {
+      "title": "What is an eSIM?",
+      "body": "An **eSIM (embedded SIM)** is a digital SIM. You activate a data plan without a plastic card. In Etizaz you buy a plan, then install it from a QR code, activation code, or **Install on this device**.\n\n## Benefits\n- **Convenience:** switch plans without swapping a card\n- **Travel:** stay online abroad on a local or regional plan\n- **No physical SIM:** nothing to lose or replace\n\n## How to use a Etizaz eSIM\n- Buy a plan for your destination\n- Install it from **Installation**\n- Follow **How to activate eSIM?** so data roaming (and APN if needed) are on\n\neSIMs only work on compatible, network-unlocked devices."
+    },
+    "physicalSim": {
+      "title": "Can I still use my physical SIM card?",
+      "body": "Yes. Compatible iPhones and Androids can use Dual SIM: your physical SIM for calls and your Etizaz eSIM for data (or the other way around).\n\nChoose which line is used for mobile data in Cellular / SIM settings."
+    },
+    "remainingData": {
+      "title": "I have remaining data on my eSIM. Can I use it later?",
+      "body": "Each Etizaz eSIM has a data amount and a validity period.\n\nYou can use remaining data only while the validity period is still running. Unused data does not pause if you turn the line off, and it expires when the period ends."
+    },
+    "whenTopup": {
+      "title": "When can I top up an eSIM?",
+      "body": "The eSIM must still be **installed** on the phone. Check Cellular / SIM settings. If it is still there, open **My eSIMs**, open the order, and tap **Top up** if that order allows it.\n\n## Important\nOnce the eSIM is **deleted** from the phone, it **cannot be installed again or topped up**."
+    },
+    "howFarAdvance": {
+      "title": "How far in advance of my trip should I buy an eSIM?",
+      "body": "You can buy a Etizaz eSIM whenever you like. When to **install** it depends on when validity starts.\n\n- If validity starts when the eSIM first connects at the destination, install it before you leave (for example the day before). It should stay inactive until you arrive.\n- If you are not sure, install just before you travel.\n\n**If the plan starts at install, the validity period can run even before you arrive.**"
+    },
+    "reinstallOtherDevice": {
+      "title": "Can I reinstall an eSIM on another device?",
+      "body": "No. A Etizaz eSIM cannot be reinstalled on the same phone or moved to another phone after you delete it. Do **not** remove an eSIM you still want to use.\n\nTo pause data, **turn the line off** instead of deleting it. Validity does **not** pause while it is off. Turning it off can still reduce background data use.\n\n## Turn off on iPhone\n- Settings > Cellular > SIMs\n- Select the eSIM\n- Turn **This Line** off\n\n## Turn off on Android\n- Settings > Network & internet > SIMs (or Connections > SIM manager)\n- Select the eSIM\n- Turn the eSIM off"
+    },
+    "noData": {
+      "title": "Why can't I access data with my eSIM?",
+      "body": "## Is the eSIM installed?\nYou should see it in Settings > Cellular (iPhone) or Settings > Network & internet (Android). If not, follow Installation in the app.\n\n## Is data roaming on?\nOpen the eSIM in those same settings and turn Data Roaming on. Also see **How to activate eSIM?** and the roaming articles.\n\n## Are you in coverage?\nYou must be in the country or region of the plan. Try Airplane Mode on then off, or restart the phone."
+    },
+    "unableActivateIos": {
+      "title": "Unable to activate eSIM (iOS)",
+      "body": "An iPhone may stay on “Activating” or show “Activation failure” if you installed the eSIM before you reached the destination.\n\nThe eSIM can still be fully installed. Activation often finishes when you arrive and the phone can see a supported network. Keep Data Roaming on and wait until you have coverage."
+    },
+    "slowSpeeds": {
+      "title": "I am experiencing slow network speeds",
+      "body": "Speed depends on coverage, congestion, and the local operator. Try this:\n- In Cellular / Mobile settings for the eSIM, temporarily set Voice & Data (iPhone) or Preferred network type (Android) to **3G** or LTE only\n- Turn Airplane Mode on for 30 seconds, then off\n- Manually select another supported network if one is listed"
+    },
+    "roamingIos": {
+      "title": "Roaming on iOS",
+      "body": "Most Etizaz eSIMs need **Data Roaming** on.\n\n- Open **Settings** > **Cellular**\n- Tap the installed eSIM\n- Turn **Data Roaming** on"
+    },
+    "roamingAndroid": {
+      "title": "Roaming on Android",
+      "body": "Most Etizaz eSIMs need **Data roaming** on.\n\n- Open **Settings** > **Connections** or **Network & internet**\n- Select the installed eSIM\n- Turn **Data roaming** on"
+    },
+    "codeNoLongerValid": {
+      "title": "“This code is no longer valid” error",
+      "body": "This appears if the eSIM was already added, or the QR code was scanned with a poor connection.\n\nTo see if it is already installed:\n- iPhone: Settings > General > About — look for the ICCID (it should match My eSIMs)\n- The line must be turned on to show ICCID\n\n**If you already deleted this eSIM, you cannot install it again.**\n\nIf this is the first install, try:\n- Turn off any VPN\n- Use a stable Wi-Fi connection\n- Remove unused eSIMs if the phone is at its limit\n- Update iOS or Android\n- Use another method on the Installation screen (QR, Manual, or Install on this device)"
+    },
+    "iosChecklist": {
+      "title": "iOS troubleshooting checklist",
+      "body": "- **ICCID:** Settings > General > About — should match the ICCID in My eSIMs\n- **APN:** Settings > Cellular > your eSIM > Cellular Data Network — enter the APN from **How to activate eSIM?** if one is shown\n- **Data Roaming:** usually ON\n- **Other plans:** turn off other data lines if they steal traffic\n- **Cellular Data:** select the Etizaz eSIM\n- **Network Selection:** pick a network manually if automatic fails\n- **Limit IP Address Tracking:** off\n- **Voice & Data:** try LTE / 4G"
+    },
+    "pixelChecklist": {
+      "title": "Pixel troubleshooting checklist",
+      "body": "- **ICCID:** Phone app > dial *#06# > Call — find ICCID\n- **APN:** Settings > Network & internet > SIMs > your eSIM > Access point names\n- **Data roaming:** usually ON\n- **Mobile data:** the purchased eSIM must be selected\n- **Network:** pick a supported operator manually if needed\n- **Preferred network type:** 4G or LTE"
+    },
+    "samsungChecklist": {
+      "title": "Samsung troubleshooting checklist",
+      "body": "- **ICCID:** Settings > Connections > SIM manager > eSIM > More information — match My eSIMs\n- **APN:** Settings > Connections > Mobile networks > Access Point Names > add/save the APN from Activation\n- **Data roaming:** usually ON\n- **Mobile data:** select the purchased eSIM in SIM manager\n- **Network operators:** disable automatic and pick a supported network\n- **Network mode:** 4G / LTE"
+    },
+    "hotspotIos": {
+      "title": "Hotspot for iOS",
+      "body": "To turn on Personal Hotspot:\n- **Settings**\n- **Personal Hotspot**\n- Turn on **Allow Others to Join**\n\nIf Activation / your eSIM details show a manual **APN**, set the same APN for the hotspot:\n- Settings > Cellular / Mobile Data\n- Tap the Etizaz eSIM\n- Cellular Data Network\n- In **Personal Hotspot APN**, type the APN in lowercase with no spaces\n- Leave username and password empty"
+    },
+    "hotspotAndroid": {
+      "title": "Hotspot for Android",
+      "body": "Set the **APN** first if Activation says you need one, then enable the hotspot.\n\n- Open **Settings**\n- **Network & internet** (or Connections)\n- **Hotspot & tethering**\n- Turn on **Wi-Fi hotspot**"
+    }
+  }
+}

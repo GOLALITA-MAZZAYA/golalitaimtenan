@@ -28,8 +28,10 @@ export let ButtonTabBar = ({ state, descriptors }) => {
 
   let focusedOptions = descriptors[state.routes[state.index].key].options;
 
+  // Nested ESim screens report as ESimPlans / etc.
   const hideForNestedFlow =
-    typeof currentRouteName === 'string' && currentRouteName === 'AiChat';
+    typeof currentRouteName === 'string' &&
+    (currentRouteName === 'AiChat' || currentRouteName.startsWith('ESim'));
 
   if (focusedOptions.tabBarVisible === false || hideForNestedFlow) {
     return null;

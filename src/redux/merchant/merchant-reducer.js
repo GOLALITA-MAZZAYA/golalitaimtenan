@@ -19,6 +19,7 @@ import {
   SET_MERCHANT_DETAILS_LOADING,
   SET_PARENT_CATEGORIES_LOADING,
   SET_CATEGORIES_TYPE,
+  SET_HAS_ESIM_CATEGORY,
 } from "./merchant-types";
 
 const initialState = {
@@ -38,6 +39,7 @@ const initialState = {
   parentCategoriesLoading: false,
   parentCategories: null,
   categoriesType: "local",
+  hasEsimCategory: false,
   travelCategories: null,
 
   merchantDetails: null,
@@ -96,6 +98,8 @@ export const merchantReducer = (state = initialState, action) => {
       return { ...state, parentCategories: action.parentCategories };
     case SET_PARENT_CATEGORIES_LOADING:
       return { ...state, parentCategoriesLoading: action.loading };
+    case SET_HAS_ESIM_CATEGORY:
+      return { ...state, hasEsimCategory: !!action.hasEsimCategory };
     case SET_TRAVEL_CATEGORIES:
       return { ...state, travelCategories: action.travelCategories };
     case SET_MERCHANT_DETAILS_LOADING:

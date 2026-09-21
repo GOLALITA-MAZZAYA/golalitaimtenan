@@ -49,6 +49,7 @@ import BillScannerHowToUse from '../MainScreens/BillScannerHoToUse';
 import MerchantNavigator from '../MainScreens/PremiumPartner';
 import Charities from '../MainScreens/Charities';
 import AiChat from '../MainScreens/AiChat/AiChat';
+import ESimNavigator from '../MainScreens/ESim';
 
 const MainStack = createStackNavigator();
 
@@ -59,11 +60,15 @@ export const MainStackScreen = ({ navigation, route }) => {
       'Cart',
       'OrderConfirmation',
       'AiChat',
+      'ESim',
     ];
     const routeName = getFocusedRouteNameFromRoute(route);
     navigation.setOptions({ currentRoute: routeName });
+    // Nested eSIM screens are named ESimPlans / ..., not the stack root.
     const shouldHideTabBar =
-      !!routeName && hideTabBarRoutes.includes(routeName);
+      !!routeName &&
+      (hideTabBarRoutes.includes(routeName) ||
+        routeName.startsWith('ESim'));
     navigation.setOptions({ tabBarVisible: !shouldHideTabBar });
   }, [navigation, route]);
   return (
@@ -154,6 +159,7 @@ export const MainStackScreen = ({ navigation, route }) => {
         component={Charities}
       />
       <MainStack.Screen name={'AiChat'} component={AiChat} />
+      <MainStack.Screen name={'ESim'} component={ESimNavigator} />
     </MainStack.Navigator>
   );
 };

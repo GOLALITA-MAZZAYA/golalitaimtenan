@@ -20,6 +20,7 @@ import {
   SET_MERCHANT_DETAILS_LOADING,
   SET_PARENT_CATEGORIES_LOADING,
   SET_CATEGORIES_TYPE,
+  SET_HAS_ESIM_CATEGORY,
 } from "./merchant-types";
 
 export const setMerchants = (merchants) => ({ type: SET_MERCHANTS, merchants });
@@ -54,6 +55,10 @@ export const setParentCategoriesLoading = (loading) => ({
   loading,
 });
 
+export const setHasEsimCategory = (hasEsimCategory) => ({
+  type: SET_HAS_ESIM_CATEGORY,
+  hasEsimCategory,
+});
 
 export const setTravelCategories = (travelCategories) => ({
   type: SET_TRAVEL_CATEGORIES,
