@@ -23,6 +23,8 @@ import MerchantListHeader from '../MerchantsPage/components/MerchantsHeader';
 import Header from '../../components/Header';
 import AdwertisementModal from './components/AdwertisementModal';
 import { CHARITY_MERCHANT_IDS } from '../../constants';
+import { handleRedirectScreen } from '../../utils/redirectScreen';
+import trackActivity from '../../api/activityTracker';
 
 const MainScreen = ({
   navigation,
@@ -50,16 +52,45 @@ const MainScreen = ({
   }, [clickedNotification]);
 
   const handleBannerPress = item => {
+    trackActivity('home_banner_click', {
+      reference: item.tracking_code || item.id,
+      page_name: 'home',
+      merchant_id: item.merchant_id || undefined,
+      product_id: item.product_id || undefined,
+      metadata: { slot: 'ad_1' },
+    });
+
+    if (
+      item.redirectScreen &&
+      handleRedirectScreen(item.redirectScreen, navigation.navigate)
+    ) {
+      return;
+    }
+
+    if (item.product_id) {
+      navigation.navigate('AllOffers', {
+        screen: 'offer-info',
+        params: {
+          productId: item.product_id,
+          title: item.name,
+        },
+      });
+      return;
+    }
+
     if (item.name == 'Mumayizat') {
       navigation.navigate('MumayzInfo', {
         params: { title: 'Mumayizat Oman' },
       });
-    } else if (item.internal) {
+      return;
+    }
+
+    if (item.internal) {
       if (item.merchant_id) {
         if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
           navigation.navigate('Charities', { merchantId: item.merchant_id });
 
-          return
+          return;
         }
 
         getMerchantDetails(item.merchant_id, navigation, t);
