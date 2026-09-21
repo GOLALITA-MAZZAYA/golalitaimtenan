@@ -101,7 +101,7 @@ const ApplyCodeConfirmation = ({ navigation }) => {
 
       setTimeout(() => {
         navigation.navigate('Main');
-      }, 3000);
+      }, 2000);
     } catch (err) {
       console.log(err, 'sendRedemptionEmail error');
       showMessage({

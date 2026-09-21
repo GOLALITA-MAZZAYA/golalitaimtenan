@@ -55,6 +55,9 @@ const FollowUs = () => {
         id: offer.id,
         promocode: offer.x_offer_type_promo_code,
         merchant_id: offer.merchant_id,
+        isB1G1: true,
+        branches: offer.branches,
+        promo_code_description: offer.promo_code_description,
       });
 
       return;

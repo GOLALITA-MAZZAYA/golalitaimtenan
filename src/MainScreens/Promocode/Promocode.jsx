@@ -17,7 +17,7 @@ import PremiumSvg from '../../assets/premium.svg';
 import PresentSvg from '../../assets/present.svg';
 import IconButton from '../../components/IconButton/IconButton';
 import PresentActiveSvg from '../../assets/presend_active.svg';
-import { BALOO_REGULAR, BALOO_SEMIBOLD } from '../../redux/types';
+import { BALOO_REGULAR } from '../../redux/types';
 import { TypographyText } from '../../components/Typography';
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import CommonButton from '../../components/CommonButton/CommonButton';
@@ -122,19 +122,10 @@ const Promocode = ({ route, navigation, redeem }) => {
               </View>
               <TypographyText
                 textColor={!isDark ? colors.darkBlue : colors.white}
-                size={24}
-                font={BALOO_SEMIBOLD}
-                title={params?.name}
-                style={mainStyles.centeredText}
-              />
-              <TypographyText
-                textColor={!isDark ? colors.darkBlue : colors.white}
                 size={18}
                 font={BALOO_REGULAR}
-                title={t('PremiumPartner.promoCodeDescription', {
-                  name: params?.name,
-                })}
-                style={[mainStyles.centeredText, { marginBottom: 20 }]}
+                title={params.promo_code_description || ''}
+                style={[mainStyles.centeredText, { marginVertical: 20 }]}
               />
 
               {!!branchesOptions?.length && (
@@ -156,9 +147,7 @@ const Promocode = ({ route, navigation, redeem }) => {
                 textColor={!isDark ? colors.darkBlue : colors.white}
                 size={12}
                 font={BALOO_REGULAR}
-                title={t('PremiumPartner.askEnterPin', {
-                  name: getBranchName(selectedBranch) || params?.merchant_name,
-                })}
+                title={t('PremiumPartner.askEnterPin')}
               />
 
               <CodeField
@@ -184,15 +173,6 @@ const Promocode = ({ route, navigation, redeem }) => {
                     {symbol || (isFocused ? <Cursor /> : null)}
                   </Text>
                 )}
-              />
-              <TypographyText
-                textColor={!isDark ? colors.darkBlue : colors.white}
-                size={12}
-                font={BALOO_REGULAR}
-                title={t('PremiumPartner.applyThePromo', {
-                  name: getBranchName(selectedBranch) || params?.merchant_name,
-                })}
-                style={[mainStyles.centeredText, styles.codeWrapper]}
               />
               <CommonButton
                 disabled={isSubmitDisabled}

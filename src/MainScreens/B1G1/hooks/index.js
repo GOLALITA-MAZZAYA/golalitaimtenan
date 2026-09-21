@@ -7,7 +7,7 @@ const useB1G1Offers = () => {
   return useInfiniteQuery(
     ["B1G11"],
     async ({ pageParam = 1 }) => {
-      const offset = pageParam - 1;
+      const offset = (pageParam - 1) * PAGE_SIZE;
 
       const offers = await getB1G1Offers({
         params: {

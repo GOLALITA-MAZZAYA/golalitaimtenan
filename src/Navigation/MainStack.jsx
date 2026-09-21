@@ -33,6 +33,7 @@ import CategoriesNavigator from '../MainScreens/Categories';
 import ChildCategories from '../MainScreens/Categories/ChildCategories';
 import BillScanner from '../MainScreens/BillScanner';
 import OffersNavigator from '../MainScreens/AllOffers/OfferNavigator';
+import ApplyCodeConfirmation from '../MainScreens/AllOffers/ApplyCodeConfirmation';
 import B1G1 from '../MainScreens/B1G1';
 import CodeConfirmation from '../AuthScreens/Register/CodeConfirmation';
 import ProfileEmailVerification from '../MainScreens/Profile/ProfileEmailVerification';
@@ -111,6 +112,10 @@ export const MainStackScreen = ({ navigation, route }) => {
       <MainStack.Screen name={'BookHotel'} component={BookHotel} />
       <MainStack.Screen name={'SocialMedia'} component={SocialMedia} />
       <MainStack.Screen name={'Promocode'} component={Promocode} />
+      <MainStack.Screen
+        name={'offer-apply-code-confirmation'}
+        component={ApplyCodeConfirmation}
+      />
       <MainStack.Screen name={'Voucher'} component={Voucher} />
       <MainStack.Screen name={'OnlineStores'} component={OnlineStores} />
       {/* <MainStack.Screen name={"B1G1"} component={OnlineStores} /> */}

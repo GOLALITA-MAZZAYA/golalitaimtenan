@@ -48,6 +48,7 @@ import OfferTab from './components/InfoTabs/OffersTab';
 import i18next from 'i18next';
 import { ScrollView } from 'react-native';
 import BannerSwiper from '../../../components/BannerSwiper';
+import trackActivity from '../../../api/activityTracker';
 import RoomRatesTab from '../MerchantInfo/RoomRatesTab';
 
 const CONSTANTS = {
@@ -322,7 +323,19 @@ const Overview = ({
               ? `${merchantDetails.merchant_name.slice(0, 15)}...`
               : merchantDetails.merchant_name
               } ${t('TabBar.onlineStore')}`}
-            onPress={() => Linking.openURL(merchantDetails.website)}
+            onPress={() => {
+              trackActivity('page_visit', {
+                merchant_id:
+                  merchantDetails.id ?? merchantDetails.merchant_id,
+                page_name: 'merchant_website',
+                metadata: {
+                  link_type: 'website',
+                  link_value: merchantDetails.website,
+                  source: 'overview_header',
+                },
+              });
+              Linking.openURL(merchantDetails.website);
+            }}
             wrapperStyle={{
               backgroundColor: '#00A3FF',
               marginHorizontal: 20,

@@ -14,7 +14,7 @@ import {
 import { SCREEN_HEIGHT } from "../../../styles/mainStyles";
 import useOffer from "./hooks/useOffer";
 import FullScreenImageModal from "./components/FullScreenImageModal";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import MerchantInfoBlock from "./components/MerchatInfoBlock";
 import { isRTL } from "../../../../utils";
@@ -30,6 +30,7 @@ import useIsGuest from "../../../hooks/useIsGuest";
 import { useDispatch } from "react-redux";
 import { track } from "../../../redux/merchant/merchant-thunks";
 import { getMerchantById } from "../../../api/merchants";
+import trackActivity from "../../../api/activityTracker";
 
 
 
@@ -46,6 +47,15 @@ const OfferInfo = ({ route, navigation }) => {
 
   const isArabic = isRTL();
 
+  useEffect(() => {
+    trackActivity("offer_details_visit", {
+      offer_id: productId,
+      merchant_id: merchant?.id || merchant?.merchant_id,
+      page_name: "offer_details",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
+
   const handlePromoPress = useCallback(() => {
     try {
       setIsSubmitting(true);
@@ -60,9 +70,8 @@ const OfferInfo = ({ route, navigation }) => {
             let store_website;
 
             if(offer.online_store){
-              const merchant = await getMerchantById(offer.merchant_id);
-              console.log(merchant,'merchan')
-              store_website = merchant.website;
+              const merchantData = await getMerchantById(offer.merchant_id);
+              store_website = merchantData.website;
             }
 
             navigation.navigate('merchant-code-confirmation', {
@@ -72,6 +81,7 @@ const OfferInfo = ({ route, navigation }) => {
                 id: offer?.product_id,
                 promocode: offer?.offer_type_promo_code,
                 store_website,
+                merchant_id: offer?.merchant_id,
                 x_is_support_qr_promo: offer?.x_is_support_qr_promo,
                 qr_code_image_link: offer?.qr_code_image_link,
                 promo_code_description: offer?.promo_code_description,
@@ -87,7 +97,7 @@ const OfferInfo = ({ route, navigation }) => {
       console.log(err, 'error');
       setIsSubmitting(false);
     }
-  }, [dispatch, offer, navigation, t, isArabic]);
+  }, [dispatch, offer, navigation, isArabic]);
 
   const infoBtnsConfig = getInfoBtnsConfig(offer, isDark);
   const infoBlocksConfig = getInfoBlocksConfig(offer, bookNow);

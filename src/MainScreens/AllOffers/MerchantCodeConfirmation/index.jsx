@@ -9,9 +9,14 @@ import { useTheme } from '../../../components/ThemeProvider';
 import { colors } from '../../../components/colors';
 import CommonButton from '../../../components/CommonButton/CommonButton';
 import QRCode from 'react-native-qrcode-svg';
-import {BALOO_2} from '../../../redux/types';
+import { useState } from 'react';
+import { BALOO_2 } from '../../../redux/types';
+import { track } from '../../../redux/merchant/merchant-thunks';
+import { useDispatch } from 'react-redux';
+import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { showMessage } from 'react-native-flash-message';
+import trackActivity from '../../../api/activityTracker';
 
 const MerchantCodeConfirmation = ({ navigation }) => {
   const route = useRoute();
@@ -20,10 +25,16 @@ const MerchantCodeConfirmation = ({ navigation }) => {
 
   const merchantName = params?.merchantName;
   const confirmationNumber = params?.confirmationNumber;
+  const offerName = params?.offerName;
 
   const isSupportQrPromo = params?.x_is_support_qr_promo !== false;
   const qrCodeImageLink = params?.qr_code_image_link;
   const promoCodeDescription = params?.promo_code_description;
+  const storeWebsite = params?.store_website;
+  const merchantId = params?.merchant_id;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
 
   const { isDark } = useTheme();
 
@@ -31,138 +42,182 @@ const MerchantCodeConfirmation = ({ navigation }) => {
   const bgColor = isDark ? colors.darkBlue : colors.white;
 
   const handleSubmit = () => {
-      navigation.navigate("Main");
+    try {
+      setIsSubmitting(true);
+
+      dispatch(
+        track(
+          'promocode',
+          params?.id,
+          false,
+          params?.promocode,
+          () => {
+            dispatch(track('promocode', params?.id, true, params?.promocode));
+            setIsSubmitting(false);
+
+            setTimeout(() => {
+              navigation.navigate('Main');
+            }, 1000);
+          },
+        ),
+      );
+    } catch (err) {
+      console.log(err, 'error');
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <>
-    <MainLayout
-      outsideScroll={true}
-      headerChildren={
-        <Header label={t('AllOffers.confirmation')} btns={['back']} />
-      }
-      headerHeight={50}
-      contentStyle={{
-        height: SCREEN_HEIGHT - 120,
-        paddingHorizontal: 20,
-      }}
-    >
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.wrapper} bounces={false} showsVerticalScrollIndicator={false}>
-        
-        <TypographyText
-          title={t('PremiumPartner.redeemAt', { merchantName })}
-          textColor={textColor}
-          size={22}
-          style={styles.title}
-          font={BALOO_2}
-        />
-
-        <TypographyText
-          title={params.offerName}
-          textColor={textColor}
-          size={16}
-          style={styles.offerName}
-        />
-
-        <TypographyText
-          title={promoCodeDescription || t('PremiumPartner.promocodeInstruction1')}
-          textColor={textColor}
-          size={16}
-          style={styles.instruction}
-        />
-
-        {isSupportQrPromo && !!confirmationNumber && (
-          <View style={[styles.qrContainer, { backgroundColor: bgColor }]}>
-            {qrCodeImageLink ? (
-              <Image
-                source={{ uri: qrCodeImageLink }}
-                style={{ width: 180, height: 180 }}
-                resizeMode="contain"
-              />
-            ) : (
-              <QRCode
-                value={String(confirmationNumber)}
-                size={180}
-              />
-            )}
-          </View>
-        )}
-
-        <TypographyText
-          title={t('PremiumPartner.manualCode')}
-          textColor={colors.gray}
-          size={12}
-          style={styles.manualLabel}
-          font={BALOO_2}
-        />
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => {
-            if (confirmationNumber) {
-              Clipboard.setString(String(confirmationNumber));
-              showMessage({
-                type: 'success',
-                message: t('General.copied') || 'Copied to clipboard',
-              });
-            }
-          }}
-          style={styles.codeWrapper}
+      <MainLayout
+        outsideScroll={true}
+        headerChildren={
+          <Header label={t('AllOffers.confirmation')} btns={['back']} />
+        }
+        headerHeight={50}
+        contentStyle={{
+          height: SCREEN_HEIGHT - 120,
+          paddingHorizontal: 20,
+        }}
+      >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.wrapper}
+          bounces={false}
+          showsVerticalScrollIndicator={false}
         >
           <TypographyText
-            title={confirmationNumber}
+            title={t('PremiumPartner.redeemAt', { merchantName })}
             textColor={textColor}
-            size={20}
+            size={22}
+            style={styles.title}
             font={BALOO_2}
           />
-        </TouchableOpacity>
 
-        <TypographyText
-          title={t('PremiumPartner.tapToCopy')}
-          textColor={colors.gray}
-          size={11}
-          style={styles.tapToCopy}
-          font={BALOO_2}
-        />
+          {!!offerName && (
+            <TypographyText
+              title={offerName}
+              textColor={textColor}
+              size={16}
+              style={styles.offerName}
+              font={BALOO_2}
+            />
+          )}
 
-        {isSupportQrPromo && (
           <TypographyText
-            title={t('PremiumPartner.promocodeInstruction2')}
+            title={
+              promoCodeDescription || t('PremiumPartner.promocodeInstruction1')
+            }
             textColor={textColor}
-            size={14}
-            style={styles.secondaryText}
+            size={16}
+            style={styles.instruction}
             font={BALOO_2}
           />
-        )}
 
-        {isSupportQrPromo && (
+          {isSupportQrPromo && !!confirmationNumber && (
+            <View style={[styles.qrContainer, { backgroundColor: bgColor }]}>
+              {qrCodeImageLink ? (
+                <Image
+                  source={{ uri: qrCodeImageLink }}
+                  style={styles.qrImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <QRCode value={String(confirmationNumber)} size={180} />
+              )}
+            </View>
+          )}
+
           <TypographyText
-            title={t('PremiumPartner.promocodeInstruction3')}
+            title={t('PremiumPartner.manualCode')}
             textColor={colors.gray}
             size={12}
-            style={styles.tip}
+            style={styles.manualLabel}
             font={BALOO_2}
           />
-        )}
 
-        {params.store_website && <CommonButton
-          onPress={() => Linking.openURL(params.store_website)}
-          label={t('PremiumPartner.openOnlineStore')}
-          style={styles.button}
-          textColor={isDark ? colors.black : colors.white}
-        />}
-        
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              if (confirmationNumber) {
+                Clipboard.setString(String(confirmationNumber));
+                showMessage({
+                  type: 'success',
+                  message: t('General.copied'),
+                });
+              }
+            }}
+            style={styles.codeWrapper}
+          >
+            <TypographyText
+              title={confirmationNumber}
+              textColor={textColor}
+              size={20}
+              font={BALOO_2}
+            />
+          </TouchableOpacity>
 
-        <CommonButton
-          onPress={handleSubmit}
-          label={t('PremiumPartner.confirmRedemption')}
-          style={styles.button}
-          textColor={isDark ? colors.black : colors.white}
-        />
+          <TypographyText
+            title={t('PremiumPartner.tapToCopy')}
+            textColor={colors.gray}
+            size={11}
+            style={styles.tapToCopy}
+            font={BALOO_2}
+          />
 
-      </ScrollView>
-    </MainLayout>
-      </>
+          {isSupportQrPromo && (
+            <TypographyText
+              title={t('PremiumPartner.promocodeInstruction2')}
+              textColor={textColor}
+              size={14}
+              style={styles.secondaryText}
+              font={BALOO_2}
+            />
+          )}
+
+          {isSupportQrPromo && (
+            <TypographyText
+              title={t('PremiumPartner.promocodeInstruction3')}
+              textColor={colors.gray}
+              size={12}
+              style={styles.tip}
+              font={BALOO_2}
+            />
+          )}
+
+          {!!storeWebsite && (
+            <CommonButton
+              onPress={() => {
+                trackActivity('page_visit', {
+                  merchant_id: merchantId,
+                  page_name: 'merchant_website',
+                  metadata: {
+                    link_type: 'website',
+                    link_value: storeWebsite,
+                    source: 'merchant_code_confirmation',
+                  },
+                });
+                Linking.openURL(storeWebsite);
+              }}
+              label={t('PremiumPartner.openOnlineStore')}
+              style={styles.storeButton}
+              textColor={isDark ? colors.black : colors.white}
+            />
+          )}
+
+          <CommonButton
+            onPress={handleSubmit}
+            label={t('PremiumPartner.confirmRedemption')}
+            style={styles.button}
+            textColor={isDark ? colors.black : colors.white}
+            disabled={isSubmitting}
+          />
+        </ScrollView>
+      </MainLayout>
+      {isSubmitting && (
+        <FullScreenLoader absolutePosition style={styles.loader} />
+      )}
+    </>
   );
 };
 
@@ -175,13 +230,18 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 40,
+    paddingBottom: 60,
   },
 
   title: {
     textAlign: 'center',
     fontWeight: '800',
     marginTop: 10,
+  },
+
+  offerName: {
+    marginTop: 5,
+    textAlign: 'center',
   },
 
   instruction: {
@@ -194,6 +254,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
     padding: 20,
     borderRadius: 12,
+  },
+
+  qrImage: {
+    width: 180,
+    height: 180,
   },
 
   manualLabel: {
@@ -225,19 +290,21 @@ const styles = StyleSheet.create({
   tip: {
     marginTop: 10,
     textAlign: 'center',
-    marginBottom: 20
   },
 
   button: {
-    marginTop: 10,
+    marginTop: 30,
     width: '100%',
   },
-  loader: {
-    paddingBottom: 180
+
+  storeButton: {
+    marginTop: 12,
+    width: '100%',
   },
-  offerName: {
-    marginTop: 5
-  }
+
+  loader: {
+    paddingBottom: 180,
+  },
 });
 
 export default MerchantCodeConfirmation;

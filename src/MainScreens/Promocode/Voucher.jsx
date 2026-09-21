@@ -23,6 +23,7 @@ import {
   track,
 } from '../../redux/merchant/merchant-thunks';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { showMessage } from 'react-native-flash-message';
 // import RNPrint from "react-native-print";
 // import { captureRef } from "react-native-view-shot";
 // import Share from "react-native-share";
@@ -130,7 +131,7 @@ const Voucher = ({
                   onEndReached={() => {
                     setIsSlided(true);
 
-                    // saveOffer(params?.id, t, true);
+                    saveOffer(params?.id, t, true);
 
                     track(
                       'promocode',
@@ -172,6 +173,10 @@ const Voucher = ({
                         onPress={async () => {
                           setIsCopied(true);
                           Clipboard.setString(params?.promocode ?? '');
+                          showMessage({
+                            type: 'success',
+                            message: t('General.copied'),
+                          });
 
                           setTimeout(() => {
                             navigation.navigate('Main');
@@ -184,7 +189,7 @@ const Voucher = ({
                           textColor={colors.white}
                           size={24}
                           font={BALOO_SEMIBOLD}
-                          title={isCopied ? 'Copied' : 'Copy'}
+                          title={isCopied ? t('General.copied') : t('General.copy')}
                         />
                       </TouchableOpacity>
                     </View>

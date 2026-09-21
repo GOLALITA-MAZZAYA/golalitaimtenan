@@ -81,6 +81,10 @@ export const getInfoText = (offer, merchant) => {
 };
 
 export const getDescription = (offer) => {
+  if (offer.x_offer_type === B1G1) {
+    return i18n.t("Drawer.B1G1");
+  }
+
   return i18next.language === "ar" ? offer.x_label_arabic : offer.offer_label;
 };
 
@@ -128,6 +132,9 @@ export const handleInfoTextPress = (offer, merchant) => {
       id: offer.id,
       promocode: offer.x_offer_type_promo_code,
       merchant_id: offer.merchant_id,
+      isB1G1: true,
+      branches: offer.branches,
+      promo_code_description: offer.promo_code_description,
     });
   }
 };

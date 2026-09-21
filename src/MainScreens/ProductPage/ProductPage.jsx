@@ -44,6 +44,7 @@ import { connect } from "react-redux";
 import Share from "react-native-share";
 import WhiteStarSvg from "../../assets/star_white.svg";
 import InfoBlock from "../../components/InfoBlock";
+import useIsGuest from "../../hooks/useIsGuest";
 
 const StarIcon = sized(StarSvg, 13, 13, colors.mainDarkMode);
 const StarActiveIcon = sized(StarActiveSvg, 13, 13, colors.mainDarkMode);
@@ -65,6 +66,7 @@ const ProductPage = ({
   const { isDark } = useTheme();
   const viewRef = useRef();
   const [isFullImage, setIsFullImage] = useState(false);
+  const isGuest = useIsGuest();
   const language = i18n.language;
 
   const onShare = async () => {
@@ -398,7 +400,7 @@ const ProductPage = ({
             </View>
 
             <View style={mainStyles.p20}>
-              {product.x_offer_type === B1G1 && (
+              {product.x_offer_type === B1G1 && !isGuest && (
                 <CommonButton
                   label={"B1G1 Free"}
                   style={{
@@ -421,11 +423,14 @@ const ProductPage = ({
                       id: product.id,
                       promocode: product.x_offer_type_promo_code,
                       merchant_id: product.merchant_id,
+                      isB1G1: true,
+                      branches: product.branches,
+                      promo_code_description: product.promo_code_description,
                     });
                   }}
                 />
               )}
-              {product.x_offer_type_promo_code && (
+              {product.x_offer_type_promo_code && !isGuest && (
                 <CommonButton
                   onPress={() => {
                     // track('promocode', product.id, false, params?.promocode)
@@ -453,7 +458,7 @@ const ProductPage = ({
                   textColor={isDark ? colors.mainDarkModeText : colors.darkBlue}
                 />
               )}
-              {product.x_merchant_online_store && (
+              {product.x_merchant_online_store && !isGuest && (
                 <CommonButton
                   label={
                     !product.x_online_store

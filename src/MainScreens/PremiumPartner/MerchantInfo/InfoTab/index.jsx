@@ -16,6 +16,7 @@ import ContractBtn from './ContractBtn';
 import ComplaintModal from '../../../ComplaintForm/ComplaintModal';
 import ComplaintBtn from './ComplaintBtn';
 import useIsGuest from '../../../../hooks/useIsGuest';
+import trackActivity from '../../../../api/activityTracker';
 
 const InfoTab = ({ merchantDetails }) => {
   const { t, i18n } = useTranslation();
@@ -25,6 +26,7 @@ const InfoTab = ({ merchantDetails }) => {
   const [isComplaintModalVisible, setIsComplaintModalVisible] = useState(false);
   const [complaintData, setComplaintData] = useState({});
   const isArabic = i18n.language === 'ar';
+  const merchantId = merchantDetails?.id ?? merchantDetails?.merchant_id;
 
   const backgroundColor = isDark ? colors.navyBlue : '#fff';
   const btnColor = isDark ? colors.mainDarkMode : colors.darkBlue;
@@ -143,6 +145,15 @@ const InfoTab = ({ merchantDetails }) => {
           text={t('Merchants.phone')}
           icon={<CallIcon />}
           onPress={() => {
+            trackActivity('merchant_detail_link_click', {
+              merchant_id: merchantId,
+              page_name: 'merchant_detail',
+              metadata: {
+                link_type: 'phone',
+                link_value: merchantDetails.phone,
+                source: 'info_tab',
+              },
+            });
             Linking.openURL(`tel:${merchantDetails.phone}`);
           }}
           textStyle={{
@@ -187,12 +198,30 @@ const InfoTab = ({ merchantDetails }) => {
       )}
 
       {renderInfo(t('ProductPage.email'), merchantDetails.email, () => {
+        trackActivity('merchant_detail_link_click', {
+          merchant_id: merchantId,
+          page_name: 'merchant_detail',
+          metadata: {
+            link_type: 'email',
+            link_value: merchantDetails.email,
+            source: 'info_tab',
+          },
+        });
         Linking.openURL(`mailto:${merchantDetails.email}`);
       })}
 
-      {renderInfo(t('ProductPage.website'), merchantDetails.website, () =>
-        Linking.openURL(merchantDetails.website),
-      )}
+      {renderInfo(t('ProductPage.website'), merchantDetails.website, () => {
+        trackActivity('page_visit', {
+          merchant_id: merchantId,
+          page_name: 'merchant_website',
+          metadata: {
+            link_type: 'website',
+            link_value: merchantDetails.website,
+            source: 'info_tab',
+          },
+        });
+        Linking.openURL(merchantDetails.website);
+      })}
       <ComplaintModal
         visible={isComplaintModalVisible}
         onClose={() => setIsComplaintModalVisible(false)}

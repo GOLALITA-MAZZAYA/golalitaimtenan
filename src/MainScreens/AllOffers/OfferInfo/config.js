@@ -42,17 +42,17 @@ export const getInfoBtnsConfig = (offer, isDark) => {
         });
       },
     },
-    // {
-    //   visible: offer?.merchant_contract_url,
-    //   disabled: false,
-    //   text: i18next.t('Merchants.contract'),
-    //   icon: MenuBookIcon,
-    //   onPress: () => {
-    //     navigate('offer-menu', {
-    //       company_contract_url: offer?.merchant_contract_url,
-    //     });
-    //   },
-    // },
+    {
+      visible: offer?.merchant_contract_url,
+      disabled: false,
+      text: i18next.t('Merchants.contract'),
+      icon: MenuBookIcon,
+      onPress: () => {
+        navigate('offer-menu', {
+          company_contract_url: offer?.merchant_contract_url,
+        });
+      },
+    },
   ];
 };
 
@@ -110,7 +110,7 @@ export const getOfferTypeInfoBtnsConfig = (offer, handlePromoPress, isSubmitting
       label: i18next.t('ProductPage.b1g1Free'),
       onPress: () => {
         navigate('Promocode', {
-          merchant_name: isRTL() ? offer.arabic_name : offer.name,
+          merchant_name: isRTL() ? offer.merchant_name_arabic : offer.merchant_name,
           name: isRTL() ? offer.arabic_name : offer.name,
           expiryDate: offer.end_date
             ? getStringDate(offer.end_date.split(' ')[0])
@@ -121,6 +121,7 @@ export const getOfferTypeInfoBtnsConfig = (offer, handlePromoPress, isSubmitting
           merchant_id: offer.merchant_id,
           isB1G1: offer.offer_type === B1G1,
           branches: offer.branches,
+          promo_code_description: offer.promo_code_description,
         });
       },
     },
