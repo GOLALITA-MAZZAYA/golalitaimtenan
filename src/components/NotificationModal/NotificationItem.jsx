@@ -13,34 +13,62 @@ import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { navigationRef } from "../../Navigation/RootNavigation";
+import { navigate, navigationRef } from "../../Navigation/RootNavigation";
 import { useTheme } from "../ThemeProvider";
 import { readNotification } from "../../redux/notifications/notifications-thunks";
 import { getNotificationDescription } from "../../MainScreens/Notifications/helpers";
 import HTMLRenderer from "../HTMLRenderer";
 import { CHARITY_MERCHANT_IDS } from "../../constants";
+import { setIsNotificationModal } from "../../redux/notifications/notifications-actions";
+import { handleRedirectScreen } from "../../utils/redirectScreen";
+import trackActivity from "../../api/activityTracker";
 
-const NotificationItem = ({ item }) => {
+const NotificationItem = ({ item, onPress }) => {
   const dispatch = useDispatch();
-  const navigation = navigationRef;
   const { i18n, t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
 
   const language = i18n.language;
   const handleItemPress = () => {
-    if (item.merchant_id) {
+    onPress?.();
+    dispatch(setIsNotificationModal(null));
 
-      if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
+    trackActivity("popup_click", {
+      reference: item.notification_id,
+      page_name: item.redirectScreen || "home",
+      merchant_id: item.merchant_id || undefined,
+      product_id: item.product_id || undefined,
+    });
 
-        navigate('Charities', { merchantId: item.merchant_id });
-        dispatch(readNotification(item.notification_id));
-
-        return
-      }
-      dispatch(getMerchantDetails(item.merchant_id, navigation, t, "Back"));
+    if (
+      item.redirectScreen &&
+      handleRedirectScreen(item.redirectScreen, navigate)
+    ) {
       dispatch(readNotification(item.notification_id));
+      return;
+    }
 
+    if (item.product_id) {
+      navigate("AllOffers", {
+        screen: "offer-info",
+        params: {
+          productId: item.product_id,
+          title: item.merchant_name,
+        },
+      });
+      dispatch(readNotification(item.notification_id));
+      return;
+    }
+
+    if (item.merchant_id) {
+      if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
+        navigate("Charities", { merchantId: item.merchant_id });
+        dispatch(readNotification(item.notification_id));
+        return;
+      }
+      dispatch(getMerchantDetails(item.merchant_id, navigationRef, t, "Back"));
+      dispatch(readNotification(item.notification_id));
       return;
     }
 

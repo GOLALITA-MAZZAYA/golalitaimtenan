@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Image, Linking, Dimensions } from "
 import Modal from "react-native-modal";
 import { connect } from "react-redux";
 import { setMarketingPopup } from "../../redux/global/global-actions";
+import { setIsNotificationModal } from "../../redux/notifications/notifications-actions";
 import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import CloseSvg from "../../assets/close.svg";
 import { sized } from "../../Svg";
@@ -11,6 +12,8 @@ import { BALOO_MEDIUM, BALOO_REGULAR } from "../../redux/types";
 import { colors } from "../colors";
 import { useTranslation } from "react-i18next";
 import { navigate } from "../../Navigation/RootNavigation";
+import { handleRedirectScreen } from "../../utils/redirectScreen";
+import trackActivity from "../../api/activityTracker";
 
 const CloseIcon = sized(CloseSvg, 14);
 const { width, height } = Dimensions.get('window');
@@ -19,9 +22,9 @@ const MarketingPopupModal = ({
   marketingPopup,
   setMarketingPopup,
   getMerchantDetails,
+  setIsNotificationModal,
 }) => {
   const { t } = useTranslation();
-  console.log(marketingPopup, 'marketingPopup')
   if (!marketingPopup) return null;
 
   const handleClose = () => {
@@ -29,8 +32,27 @@ const MarketingPopupModal = ({
   };
 
   const handlePress = () => {
+    setIsNotificationModal(null);
+
+    trackActivity("marketing_popup_click", {
+      reference: marketingPopup.id,
+      page_name: "home",
+      offer_id: marketingPopup.offer_id || undefined,
+      merchant_id: marketingPopup.merchant?.id || undefined,
+      metadata: marketingPopup.action_url
+        ? { action_url: marketingPopup.action_url }
+        : undefined,
+    });
+
+    if (
+      marketingPopup.redirectScreen &&
+      handleRedirectScreen(marketingPopup.redirectScreen, navigate)
+    ) {
+      handleClose();
+      return;
+    }
+
     if (marketingPopup.offer_id) {
-      // Same pattern as helpers.js handleOfferCardPress (from outside AllOffers navigator)
       navigate('AllOffers', {
         screen: 'offer-info',
         params: {
@@ -39,7 +61,6 @@ const MarketingPopupModal = ({
         },
       });
     } else if (marketingPopup.merchant?.id) {
-      // getMerchantDetails internally calls navigate() to merchant-info screen
       getMerchantDetails(
         marketingPopup.merchant.id,
         null,
@@ -160,5 +181,6 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, {
   setMarketingPopup,
-  getMerchantDetails
+  getMerchantDetails,
+  setIsNotificationModal,
 })(MarketingPopupModal);

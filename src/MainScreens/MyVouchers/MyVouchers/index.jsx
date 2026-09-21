@@ -39,6 +39,23 @@ import CardmolaCategoryPicker from '../GiftCardFilters/components/CardmolaCatego
 
 const DEFAULT_COUNTRY = 'QA';
 
+// Tab indices on myVouchers-list: "0" = vouchers, "1" = gift cards, "2" = cardmola.
+// Accepts selectedPage ("0"|"1"|"2") or tab ("vouchers"|"giftcards"|"giftcard").
+const normalizeSelectedPage = value => {
+  if (value === 2 || value === '2') return '2';
+  if (value === 1 || value === '1') return '1';
+  const key = String(value ?? '')
+    .trim()
+    .toLowerCase();
+  if (key === 'cardmola') {
+    return '2';
+  }
+  if (key === 'giftcards' || key === 'giftcard' || key === 'gifts') {
+    return '1';
+  }
+  return '0';
+};
+
 const MyVouchers = ({
   vouchers,
   vouchersLoading,
@@ -52,11 +69,11 @@ const MyVouchers = ({
   navigation,
   route,
 }) => {
-  const propsSelectedPage = route?.params?.selectedPage || '0';
-
   const { i18n, t } = useTranslation();
   const { isDark } = useTheme();
-  const [selectedPage, setSelectedPage] = useState('0');
+  const [selectedPage, setSelectedPage] = useState(() =>
+    normalizeSelectedPage(route?.params?.selectedPage ?? route?.params?.tab),
+  );
   const pagerViewRef = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
   const [selectedCardmolaCountry, setSelectedCardmolaCountry] =
@@ -73,12 +90,30 @@ const MyVouchers = ({
     setSelectedPage(e.nativeEvent.position.toString());
   };
 
+  const applySelectedPage = useCallback(page => {
+    setSelectedPage(page);
+    requestAnimationFrame(() => {
+      pagerViewRef.current?.setPage(+page);
+    });
+  }, []);
+
+  // Honor deep-link / redirect params when landing or re-navigating here.
   useFocusEffect(
-    React.useCallback(() => {
-      if (propsSelectedPage !== selectedPage && !selectedPage) {
-        setSelectedPage(propsSelectedPage);
+    useCallback(() => {
+      const raw = route?.params?.selectedPage ?? route?.params?.tab;
+      if (raw === undefined || raw === null || raw === '') {
+        return;
       }
-    }, []),
+
+      const page = normalizeSelectedPage(raw);
+      applySelectedPage(page);
+      navigation.setParams({ selectedPage: undefined, tab: undefined });
+    }, [
+      applySelectedPage,
+      navigation,
+      route?.params?.selectedPage,
+      route?.params?.tab,
+    ]),
   );
 
   useFocusEffect(

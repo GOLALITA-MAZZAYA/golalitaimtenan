@@ -117,7 +117,9 @@ const NotificationModal = ({
               showsVerticalScrollIndicator={false}
               data={notifications}
               contentContainerStyle={styles.contentContainerStyle}
-              renderItem={({ item }) => <NotificationItem item={item} />}
+              renderItem={({ item }) => (
+                <NotificationItem item={item} onPress={handleClosePress} />
+              )}
               ListEmptyComponent={() => {
                 return <ActivityIndicator />;
               }}

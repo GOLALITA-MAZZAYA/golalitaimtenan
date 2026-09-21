@@ -1,25 +1,26 @@
 // src/pushNotifications/notificationClickHandler.js
-import {
-  getMerchantDetails,
-  getOfferById,
-} from '../redux/merchant/merchant-thunks';
+import { getMerchantDetails } from '../redux/merchant/merchant-thunks';
 import store from '../redux/store';
 import i18n from 'i18next';
 import { setClickedNotificationData } from '../redux/notifications/notifications-actions';
 import { navigate } from '../Navigation/RootNavigation';
-import { CHARITY_MERCHANT_IDS } from "../constants";
+import { CHARITY_MERCHANT_IDS } from '../constants';
+import { handleRedirectScreen } from '../utils/redirectScreen';
+import { getOfferById } from '../api/offers';
+import { isRTL } from '../../utils';
+import trackActivity from '../api/activityTracker';
 
 export const NotificatiionClickHanlder = {
   merchant: merchant_id => {
     const id = Number(merchant_id);
 
-    // очищаем старые данные по уведомлению
+    // Clear previous notification payload
     store.dispatch(setClickedNotificationData(null));
 
-    // грузим детали мерчанта (если где-то ещё нужно в сторе)
+    // Load merchant details into store
     store.dispatch(getMerchantDetails(id, null, i18n.t));
 
-    // 🔹 вложенная навигация:
+    // Nested navigation:
     // Drawer ("Home") -> TabsScreen ("TabsBar") -> MainStack -> MapPage
     navigate('Home', {
       screen: 'TabsBar',
@@ -30,52 +31,101 @@ export const NotificatiionClickHanlder = {
     });
   },
 
-  product: (product_id, notification) => {
+  product: async (product_id, notification) => {
     const id = Number(product_id);
 
     store.dispatch(setClickedNotificationData(notification));
 
-    navigate("AllOffers", {
-      screen: "offer-info",
-      params: {
-        productId: id,
-        title: ''
-      },
-    });
-    // если нужно открывать экран продукта, сюда тоже можно добавить navigate(...)
+    try {
+      const productResult = await getOfferById(id);
+      const product = Array.isArray(productResult)
+        ? productResult[0]
+        : productResult;
+
+      navigate('AllOffers', {
+        screen: 'offer-info',
+        params: {
+          productId: id,
+          title: isRTL()
+            ? product?.x_arabic_name ?? product?.name
+            : product?.name,
+        },
+      });
+    } catch (err) {
+      console.log(err, 'get offer by id error');
+    } finally {
+      store.dispatch(setClickedNotificationData(null));
+    }
   },
 
-  charity: (merchantId) => {
+  charity: merchantId => {
     store.dispatch(setClickedNotificationData(null));
     navigate('Charities', { merchantId });
-    return
-  }
+  },
 };
 
-export const handleNotificationClick = notification => {
+// notifee's onForegroundEvent (iOS) can fire PRESS twice for a single tap.
+let lastHandledKey = null;
+let lastHandledAt = 0;
+const DEDUPE_WINDOW_MS = 3000;
+
+export const handleNotificationClick = (notification, appState) => {
   if (!notification) {
     return;
   }
 
   const { data } = notification;
-
   if (!data) {
+    return;
+  }
+
+  const dedupeKey =
+    notification.messageId || notification.id || JSON.stringify(data);
+  const now = Date.now();
+  if (
+    dedupeKey &&
+    dedupeKey === lastHandledKey &&
+    now - lastHandledAt < DEDUPE_WINDOW_MS
+  ) {
+    return;
+  }
+  lastHandledKey = dedupeKey;
+  lastHandledAt = now;
+
+  trackActivity('push_notification_click', {
+    reference: notification.messageId || notification.id,
+    page_name: data.redirectScreen,
+    merchant_id:
+      data.merchant_id && data.merchant_id !== 'False'
+        ? Number(data.merchant_id)
+        : undefined,
+    product_id:
+      data.product_id && data.product_id !== 'False'
+        ? Number(data.product_id)
+        : undefined,
+    metadata: appState ? { app_state: appState } : undefined,
+  });
+
+  if (
+    data.redirectScreen &&
+    handleRedirectScreen(data.redirectScreen, navigate)
+  ) {
+    store.dispatch(setClickedNotificationData(null));
     return;
   }
 
   if (data.merchant_id && CHARITY_MERCHANT_IDS.includes(+data.merchant_id)) {
     NotificatiionClickHanlder.charity(data.merchant_id);
-    return
+    return;
   }
 
-  // иначе пробуем продукт
-  if (data.product_id && data.product_id !== 'False') {
-    NotificatiionClickHanlder.product(data.product_id, notification);
-  }
-
-  // 🧭 если в data есть merchant_id — считаем, что это клик по мерчанту
+  // Prefer merchant deep-link (MapPage) when merchant_id is present
   if (data.merchant_id && data.merchant_id !== 'False') {
     NotificatiionClickHanlder.merchant(data.merchant_id);
     return;
+  }
+
+  if (data.product_id && data.product_id !== 'False') {
+    NotificatiionClickHanlder.product(data.product_id, notification);
   }
 };
