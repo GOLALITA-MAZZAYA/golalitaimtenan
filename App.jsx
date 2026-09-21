@@ -77,7 +77,7 @@ let App = ({
 
   // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
   usePushNotifications();
-  useSecurityCheck();
+  // useSecurityCheck();
 
   // Protection is unconditional — every screen, from the first frame. The
   // hook retries internally if the native call fires too early in boot.
@@ -138,12 +138,19 @@ let App = ({
     requestLocationPermissions();
   }, []);
 
-  // SSL pinning и стартовые задачи
+  // SSL pinning / startup. Pinning is off in this build — explicitly disable
+  // so a leftover TrustKit config from a previous session cannot block API calls.
   async function runStartupTasks() {
     try {
-      await initializeAppSslPinning();
+      const { disableSslPinning, isSslPinningAvailable } = await import(
+        'react-native-ssl-public-key-pinning'
+      );
+      if (isSslPinningAvailable()) {
+        await disableSslPinning();
+      }
+      // await initializeAppSslPinning();
     } catch (err) {
-      console.log(err, 'error');
+      console.log(err, 'ssl startup error');
     } finally {
       setIsReady(true);
     }
