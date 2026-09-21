@@ -1,5 +1,5 @@
 export const convertCategoriesToOptions = (categories, language) => {
-  return categories?.map((item) => ({
+  return (categories || []).map((item) => ({
     label: language === "ar" ? item.x_name_arabic : item.name,
     value: item.id,
   }));
@@ -8,7 +8,7 @@ export const convertCategoriesToOptions = (categories, language) => {
 export const getAllCategories = (parentCategories) => {
   const allCategoires = [];
 
-  parentCategories.forEach((item) => {
+  (parentCategories || []).forEach((item) => {
     allCategoires.push(item);
 
     if (item.children) {

@@ -54,6 +54,7 @@ export const setParentCategoriesLoading = (loading) => ({
   loading,
 });
 
+
 export const setTravelCategories = (travelCategories) => ({
   type: SET_TRAVEL_CATEGORIES,
   travelCategories,

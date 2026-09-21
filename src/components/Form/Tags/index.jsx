@@ -8,18 +8,19 @@ import BottomSheetComponent from "../BottomSheetComponent";
 import { useTranslation } from "react-i18next";
 
 const Tags = (props) => {
-  const { data, style, onSelect, value } = props;
+  const { data, style, onSelect, value, addLabel, allowEmpty } = props;
 
   const { isDark } = useTheme();
   const { t } = useTranslation();
 
-  if (!data?.length) {
+  if (!data?.length && !allowEmpty) {
     return null;
   }
 
   const passiveTextColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const passiveBackgroundColor = "transparent";
   const passiveBorderColor = isDark ? colors.mainDarkMode : colors.darkBlue;
+  const options = Array.isArray(data) ? data : [];
 
   return (
     <View style={style}>
@@ -39,7 +40,7 @@ const Tags = (props) => {
               <TypographyText
                 textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
                 size={16}
-                title={t("Merchants.addCategory")}
+                title={addLabel || t("Merchants.addCategory")}
                 numberOfLines={1}
                 style={[
                   styles.titleText,
@@ -52,7 +53,7 @@ const Tags = (props) => {
               />
             </View>
           )}
-          options={data}
+          options={options}
           value={value}
           onChange={onSelect}
           onClearPress={() => {
@@ -62,8 +63,8 @@ const Tags = (props) => {
           modalTitle={t("Vouchers.categories")}
         />
 
-        {data?.map((item) => {
-          const isActive = value.includes(item.value);
+        {options.map((item) => {
+          const isActive = value?.includes(item.value);
 
           if (!isActive) {
             return null;

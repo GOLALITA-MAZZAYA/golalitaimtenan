@@ -61,10 +61,12 @@ export const merchantReducer = (state = initialState, action) => {
   switch (action.type) {
     case SET_MERCHANTS:
       const { data = [], concat = false, page = 1 } = action.merchants;
+      const nextData = Array.isArray(data) ? data : [];
+      const current = Array.isArray(state.merchants) ? state.merchants : [];
 
       return {
         ...state,
-        merchants: concat ? state.merchants.concat(data) : data,
+        merchants: concat ? current.concat(nextData) : nextData,
         searchedMerchants: [],
         merchantsPage: page,
       };

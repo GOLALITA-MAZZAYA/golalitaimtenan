@@ -9,9 +9,17 @@ const FilterBtn = (props) => {
   const navigation = useNavigation();
 
   const handlePress = () => {
+    const params = props.params || {};
+    // Prefer in-stack navigation when already inside merchants navigator.
+    // Going through parent "merchants" remounts the stack and drops list params.
+    if (navigation.getState?.()?.routeNames?.includes("merchants-filters")) {
+      navigation.navigate("merchants-filters", params);
+      return;
+    }
+
     navigation.navigate("merchants", {
       screen: "merchants-filters",
-      params: props.params,
+      params,
     });
   };
 

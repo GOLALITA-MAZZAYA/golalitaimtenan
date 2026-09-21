@@ -136,7 +136,7 @@ const getSubCategoriesFunc2 = async (parentCategories, token) => {
   return newCategories;
 };
 
-export const getParentCategories = type => async (dispatch, getState) => {
+export const getParentCategories = type => async dispatch => {
   try {
     dispatch(setParentCategoriesLoading(true));
 
@@ -154,7 +154,8 @@ export const getParentCategories = type => async (dispatch, getState) => {
       params,
     });
 
-    dispatch(setParentCategories(res.data.result || []));
+    const list = Array.isArray(res.data?.result) ? res.data.result : [];
+    dispatch(setParentCategories(list));
   } catch (err) {
     console.log(err, 'get parrent categories error');
   } finally {
@@ -215,50 +216,57 @@ export const getMerchantList =
     async (dispatch, getState) => {
       dispatch(setIsMerchantsLoading(true));
 
-      if (page === 1) {
-        dispatch(setMerchants({ data: [] }));
+      try {
+        if (page === 1) {
+          dispatch(setMerchants({ data: [] }));
+        }
+
+        const { workStatus } = getState().authReducer;
+        const token = await getAuthToken();
+        const isWorkStatusDisabled = workStatus === CONTENT_DISABLED;
+
+        if (isWorkStatusDisabled) {
+          dispatch(setMerchants({ data: [] }));
+          return;
+        }
+
+        const { merchantsPage } = getState().merchantReducer;
+
+        const pageVal = page === 'next' ? merchantsPage + 1 : page;
+
+        const params = {
+          token,
+          ...filters,
+          ...getOffsetAndLimit(pageVal),
+          x_org_linked: ORG_CODE,
+        };
+
+        console.log(params, 'params');
+
+        const merchantsRes = await merchantApi.getAllMerchant({
+          params,
+        });
+
+        const merchantsData = Array.isArray(merchantsRes.data?.result)
+          ? merchantsRes.data.result
+          : [];
+
+        onGetData?.(merchantsData.length, params.limit);
+
+        const data = transform ? transform(merchantsData) : merchantsData;
+        const nextData = Array.isArray(data) ? data : [];
+
+        const concat = !page || pageVal === 1 ? false : true;
+
+        dispatch(setMerchants({ data: nextData, concat, page: pageVal }));
+      } catch (err) {
+        console.log(err, 'getMerchantList error');
+        if (page === 1) {
+          dispatch(setMerchants({ data: [] }));
+        }
+      } finally {
+        dispatch(setIsMerchantsLoading(false));
       }
-
-      const { workStatus } = getState().authReducer;
-      const token = await getAuthToken();
-      const isWorkStatusDisabled = workStatus === CONTENT_DISABLED;
-
-      if (isWorkStatusDisabled) {
-        setMerchants({ data: [] });
-        return;
-      }
-
-      const { merchantsPage } = getState().merchantReducer;
-
-      const pageVal = page === 'next' ? merchantsPage + 1 : page;
-
-      const params = {
-        token,
-        ...filters,
-        ...getOffsetAndLimit(pageVal),
-        x_org_linked: ORG_CODE,
-      };
-
-      console.log(params, 'params')
-
-
-      const merchantsRes = await merchantApi.getAllMerchant({
-        params,
-      });
-
-      const merchantsData = merchantsRes.data.result;
-
-      onGetData?.(merchantsData?.length, params.limit);
-
-      const sortedMerchants = merchantsData;
-
-      const data = transform ? transform(sortedMerchants) : sortedMerchants;
-
-      const concat = !page || pageVal === 1 ? false : true;
-
-      dispatch(setMerchants({ data, concat, page: pageVal }));
-
-      dispatch(setIsMerchantsLoading(false));
     };
 
 export const getMerchants =
@@ -945,7 +953,7 @@ export const toggleFavourites = merchant_id => async (dispatch, getState) => {
   }
 };
 
-export const redeem = (body, t) => async (dispatch, getState) => {
+export const redeem = (body, t, navigation) => async (dispatch, getState) => {
   const { token, user } = getState().authReducer;
   const userId = await AsyncStorage.getItem('userId');
 
@@ -972,13 +980,12 @@ export const redeem = (body, t) => async (dispatch, getState) => {
 
       dispatch(track('b1g1', body.product_id, false, body.merchant_code));
 
-      navigate('AllOffers', {
-        screen: 'offer-apply-code-confirmation',
-        params: {
+      if (navigation) {
+        navigation.navigate('offer-apply-code-confirmation', {
           product_id: body.product_id,
           merchant_id: body.merchant_id,
-        },
-      });
+        });
+      }
     } else {
 
       const errroMsg =

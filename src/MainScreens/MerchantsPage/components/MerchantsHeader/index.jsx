@@ -7,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import { getTextAlign, isRTL } from "../../../../../utils";
 import { useTranslation } from "react-i18next";
+import trackActivity from "../../../../api/activityTracker";
 
 const MerchantListHeader = ({ style, isHome }) => {
   const { isDark } = useTheme();
@@ -19,6 +20,14 @@ const MerchantListHeader = ({ style, isHome }) => {
   };
 
   const handleSearchPress = () => {
+    if (search.length > 0) {
+      trackActivity("search", {
+        search_query: search,
+        page_name: "search",
+        metadata: { search_source: "home_quick_search" },
+      });
+    }
+
     setSearch("");
 
     if (search.length == 0) {
