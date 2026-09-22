@@ -3,11 +3,55 @@ import i18next from "i18next";
 import aiChatApi, { getAiChatToken, clearAiChatToken } from "../../api/aiChat";
 import { getAuthToken } from "../../utils/tokenStorage";
 import {
+  getCurrentLocation,
+  requestLocationPermission,
+} from "../../helpers";
+import {
   addAiChatMessage,
   setAiChatHistoryLoading,
   setAiChatMessages,
   setAiChatSending,
 } from "./aiChat-actions";
+
+const toFiniteNumber = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+const coordsFrom = (source) => {
+  const latitude = toFiniteNumber(
+    source?.latitude ?? source?.coords?.latitude
+  );
+  const longitude = toFiniteNumber(
+    source?.longitude ?? source?.coords?.longitude
+  );
+
+  if (latitude == null || longitude == null) {
+    return null;
+  }
+
+  return { latitude, longitude };
+};
+
+// Prefer live GPS; fall back to cached redux coords. Chat still sends if
+// location is unavailable (params simply omit latitude/longitude).
+const resolveAiChatLocation = async (getState) => {
+  try {
+    const status = await requestLocationPermission();
+
+    if (status === "granted") {
+      const position = await getCurrentLocation();
+      const live = coordsFrom(position?.coords ?? position);
+      if (live) {
+        return live;
+      }
+    }
+  } catch (e) {
+    console.log(e, "resolveAiChatLocation GPS error");
+  }
+
+  return coordsFrom(getState().globalReducer.userLocation);
+};
 
 const normalizeHistoryMessage = (raw) => ({
   id: raw.id,
@@ -89,8 +133,9 @@ export const sendAiChatMessage = (message) => async (dispatch, getState) => {
 
   try {
     dispatch(setAiChatSending(true));
+    const location = await resolveAiChatLocation(getState);
     const res = await withAiChatAuthRetry(getState, (aiToken) =>
-      aiChatApi.sendMessage(trimmed, aiToken)
+      aiChatApi.sendMessage(trimmed, aiToken, location)
     );
     const { reply, intent } = res.data?.data ?? {};
 

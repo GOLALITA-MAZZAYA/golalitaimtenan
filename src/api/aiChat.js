@@ -84,15 +84,28 @@ export const clearAiChatToken = async () => {
 };
 
 const aiChatApi = {
-  sendMessage: (message, token) =>
-    instance.post(
+  sendMessage: (message, token, location) => {
+    const params = { message };
+
+    if (
+      location?.latitude != null &&
+      location?.longitude != null &&
+      Number.isFinite(Number(location.latitude)) &&
+      Number.isFinite(Number(location.longitude))
+    ) {
+      params.latitude = Number(location.latitude);
+      params.longitude = Number(location.longitude);
+    }
+
+    return instance.post(
       "/ai/customer-chat",
-      { params: { message } },
+      { params },
       {
         headers: { Authorization: `Bearer ${token}` },
         timeout: CHAT_REQUEST_TIMEOUT_MS,
       }
-    ),
+    );
+  },
   getHistory: (token, limit = 50) =>
     instance.get("/ai/customer-chat/history", {
       params: { limit },
