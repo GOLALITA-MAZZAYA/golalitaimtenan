@@ -116,6 +116,16 @@ esac
 
 CLASSPATH="\\\"\\\""
 
+# Ensure Homebrew / system Node is visible when Android Studio starts Gradle
+# with a minimal GUI PATH (bare `node`/`npx` otherwise fail).
+if [ -d "/usr/local/bin" ] ; then
+    PATH="/usr/local/bin:$PATH"
+fi
+if [ -d "/opt/homebrew/bin" ] ; then
+    PATH="/opt/homebrew/bin:$PATH"
+fi
+export PATH
+
 
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then

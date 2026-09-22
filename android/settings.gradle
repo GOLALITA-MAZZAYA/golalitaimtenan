@@ -1,6 +1,55 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+
+// Android Studio launches Gradle with a minimal PATH that often excludes
+// Homebrew/nvm, so bare `npx`/`node` fail with "No such file or directory".
+def resolveNodeBinary() {
+    def fromEnv = System.getenv("NODE_BINARY")
+    if (fromEnv != null && !fromEnv.trim().isEmpty()) {
+        return fromEnv.trim()
+    }
+
+    def fromProp = providers.gradleProperty("nodeExecutableAndArgs").orNull
+    if (fromProp != null && !fromProp.trim().isEmpty()) {
+        def cleaned = fromProp.replaceAll(/[\[\]"]/, "").tokenize(', ')[0]
+        if (cleaned) {
+            return cleaned
+        }
+    }
+
+    for (candidate in ["/usr/local/bin/node", "/opt/homebrew/bin/node"]) {
+        if (new File(candidate).exists()) {
+            return candidate
+        }
+    }
+
+    return "node"
+}
+
+def nodeBinary = resolveNodeBinary()
+def nodeDir = new File(nodeBinary).parent
+if (nodeDir != null) {
+    def currentPath = System.getenv("PATH") ?: ""
+    if (!currentPath.split(File.pathSeparator).contains(nodeDir)) {
+        // Patch the live env map so library build scripts that call bare
+        // `node` (gesture-handler, reanimated, …) can resolve it under AS.
+        try {
+            def newPath = nodeDir + File.pathSeparator + currentPath
+            def env = System.getenv()
+            def mapField = env.getClass().getDeclaredField("m")
+            mapField.setAccessible(true)
+            ((Map<String, String>) mapField.get(env)).put("PATH", newPath)
+        } catch (Throwable ignored) {
+            // Best-effort; absolute nodeBinary below still covers autolinking.
+        }
+    }
+}
+
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+    def cliJs = file("../node_modules/@react-native-community/cli/build/bin.js").absolutePath
+    ex.autolinkLibrariesFromCommand([nodeBinary, cliJs, "config"])
+}
+
 rootProject.name = 'golalitaimtenanrewards'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
