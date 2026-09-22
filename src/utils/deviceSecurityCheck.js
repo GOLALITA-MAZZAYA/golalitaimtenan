@@ -40,7 +40,6 @@ const securityMessages = {
   privilegedAccess: 'Root or elevated privileges were detected.',
   debug: 'Debugging tools are enabled.',
   simulator: 'The app is running on an emulator or simulator.',
-  appIntegrity: 'App integrity check failed.',
   unofficialStore: 'The app was installed from an unrecognized source.',
   hooks: 'Security hooking was detected.',
   deviceBinding: 'Device binding mismatch was detected.',
@@ -66,7 +65,6 @@ const hardThreatMessages = new Set([
   securityMessages.privilegedAccess,
   securityMessages.debug,
   securityMessages.simulator,
-  securityMessages.appIntegrity,
   securityMessages.unofficialStore,
   securityMessages.hooks,
   securityMessages.deviceBinding,
@@ -143,15 +141,68 @@ const blockDevice = message => {
 // onboarding), leaving the app usable. Callers must treat `true` as "refuse
 // to authenticate".
 export const isDeviceBlocked = async () => {
-  return false;
+  if (triggeredIssues.size > 0) {
+    return true;
+  }
+
+  try {
+    const stored = await AsyncStorage.getItem(SECURITY_BLOCK_KEY);
+
+    if (!stored) {
+      return false;
+    }
+
+    // Seed the issue list so the alert has content even when this runs
+    // before the mount effect has loaded the persisted issues.
+    let issues;
+    try {
+      issues = JSON.parse(stored);
+    } catch (error) {
+      issues = [genericBlockMessage];
+    }
+
+    issues.forEach(issue => {
+      persistedIssues.add(issue);
+      triggeredIssues.add(issue);
+    });
+
+    return true;
+  } catch (error) {
+    logger.error('Failed to read security block flag');
+    return false;
+  }
 };
 
 export const showSecurityAlert = () => {
-  // Security checks disabled
+  // A failed iOS presentation leaves alertVisible stuck true — reset it so an
+  // explicit enforcement point always gets a fresh attempt.
+  alertVisible = false;
+  showAlert();
 };
 
 const handleThreat = message => () => {
-  // Security checks disabled
+  // Gracefully bypass developer/simulator threats in non-production builds
+  if (!IS_PRODUCTION && (
+    message === securityMessages.simulator ||
+    message === securityMessages.debug ||
+    message === securityMessages.devMode ||
+    message === securityMessages.adbEnabled
+  )) {
+    logger.warn(`[Security] ${message} detected; bypassing alert in non-production build`);
+    return;
+  }
+
+  triggeredIssues.add(message);
+
+  if (hardThreatMessages.has(message)) {
+    if (IS_PRODUCTION) {
+      blockDevice(message);
+    } else {
+      logger.warn(`[Security] Hard security threat detected: ${message}; session kept in non-production build`);
+    }
+  }
+
+  scheduleAlertOnce();
 };
 
 const handleObfuscationIssue = () => {
@@ -169,7 +220,110 @@ const handleMalware = () => {
 };
 
 export const useSecurityCheck = () => {
+  // A device flagged on a previous launch is confronted with the alert again
+  // right away, instead of racing freeRasp's async detection against startup.
+  // The session was already revoked when the threat fired, so even if the
+  // alert is dismissed by killing the app, there is nothing to resume into.
   useEffect(() => {
-    logger.info('Security check is disabled');
+    (async () => {
+      let stored = null;
+
+      try {
+        stored = await AsyncStorage.getItem(SECURITY_BLOCK_KEY);
+      } catch (error) {
+        logger.error('Failed to read persisted security issues');
+      }
+
+      if (!stored) {
+        return;
+      }
+
+      let issues;
+      try {
+        issues = JSON.parse(stored);
+      } catch (error) {
+        issues = [genericBlockMessage];
+      }
+
+      issues.forEach(issue => {
+        persistedIssues.add(issue);
+        triggeredIssues.add(issue);
+      });
+
+      scheduleAlertOnce();
+
+      // On iOS the first presentation can silently fail while the splash
+      // modal is animating, leaving alertVisible stuck true. Force one more
+      // attempt after startup has settled.
+      if (Platform.OS === 'ios') {
+        setTimeout(() => {
+          if (triggeredIssues.size > 0) {
+            showSecurityAlert();
+          }
+        }, 4000);
+      }
+    })();
   }, []);
+
+  // Backgrounding the app can dismiss the alert (Android) or the alert can
+  // fail to present when triggered too early in launch (iOS) — either way the
+  // app behind it stays fully usable. Re-show it on every return to the
+  // foreground while issues are present.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active' && triggeredIssues.size > 0) {
+        alertVisible = false;
+        showAlert();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  const actions = {
+    privilegedAccess: handleThreat(securityMessages.privilegedAccess),
+    debug: handleThreat(securityMessages.debug),
+    simulator: handleThreat(securityMessages.simulator),
+    // freeRASP still fires this callback; ignore so signing/Play Integrity
+    // mismatches never alert or block (common on sideloads / local builds).
+    appIntegrity: () => logger.warn('App integrity check failed (ignored)'),
+    // unofficialStore: handleThreat(securityMessages.unofficialStore),
+    hooks: handleThreat(securityMessages.hooks),
+    deviceBinding: handleThreat(securityMessages.deviceBinding),
+    secureHardwareNotAvailable: handleThreat(
+      securityMessages.secureHardwareNotAvailable,
+    ),
+    systemVPN: handleThreat(securityMessages.systemVPN),
+    passcode: handleThreat(securityMessages.passcode),
+    // Screenshots are the user capturing their own screen — FLAG_SECURE
+    // (useScreenSecurity) already blocks them where it matters, so just log.
+    screenshot: () => logger.warn('Screenshot detected'),
+    screenRecording: handleThreat(securityMessages.screenRecording),
+    obfuscationIssues: handleObfuscationIssue,
+    // devMode: handleThreat(securityMessages.devMode),
+    adbEnabled: handleThreat(securityMessages.adbEnabled),
+    malware: handleMalware,
+    multiInstance: handleThreat(securityMessages.multiInstance),
+  };
+
+  if (Platform.OS === 'ios') {
+    actions.deviceID = handleThreat(securityMessages.deviceID);
+  }
+
+  return useFreeRasp(
+    {
+      isProd: IS_PRODUCTION,
+      androidConfig: {
+        packageName: ANDROID_PACKAGE_NAME,
+        certificateHashes: SIGN_IN_CERTIFICATE_HASHES,
+        malwareConfig: FREERASP_MALWARE_CONFIG,
+      },
+      iosConfig: {
+        appBundleId: IOS_PACKAGE_NAME,
+        appTeamId: IOS_TEAM_ID,
+      },
+      watcherMail: SUPPORTMAIL,
+    },
+    actions,
+  );
 };

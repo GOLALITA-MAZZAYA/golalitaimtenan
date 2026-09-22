@@ -77,7 +77,7 @@ let App = ({
 
   // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
   usePushNotifications();
-  // useSecurityCheck();
+  useSecurityCheck();
 
   // Protection is unconditional — every screen, from the first frame. The
   // hook retries internally if the native call fires too early in boot.
@@ -148,7 +148,7 @@ let App = ({
       if (isSslPinningAvailable()) {
         await disableSslPinning();
       }
-      // await initializeAppSslPinning();
+      await initializeAppSslPinning();
     } catch (err) {
       console.log(err, 'ssl startup error');
     } finally {
