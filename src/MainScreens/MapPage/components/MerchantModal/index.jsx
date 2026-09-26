@@ -92,7 +92,7 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   };
 
   const handleNavigatePress = async () => {
-    bottomSheetModalRef.current?.close();
+    bottomSheetModalRef.current?.dismiss();
 
     try {
       const status = await requestLocationPermission();

@@ -24,8 +24,19 @@ import { userSelector } from "../../redux/auth/auth-selectors";
 import { getHtmlStyleSheet } from "./config";
 import HTMLView from "react-native-htmlview";
 import i18n from "../../languages";
+import { goBackOrMain } from "../../Navigation/RootNavigation";
 
 const amountOptions = [{ label: '10', value: 10 }, { label: '50', value: 50 }, { label: '100', value: 100 }]
+
+const getCharityDescriptionHtml = (merchant, isRtl) => {
+  const arabic =
+    merchant?.x_terms_condition_arabic_new ||
+    merchant?.x_terms_conditionarabic_new;
+  const english = merchant?.x_terms_condition_new;
+  const html = isRtl ? arabic || english : english || arabic;
+
+  return typeof html === 'string' && html.trim() ? html : null;
+};
 
 const Charities = ({ navigation, route }) => {
   const [amount, setAmount] = useState(10);
@@ -39,6 +50,7 @@ const Charities = ({ navigation, route }) => {
   const isRtl = isRTL();
   const category_id = route?.params?.categoryId;
   const merchantId = route?.params?.merchantId;
+  const descriptionHtml = getCharityDescriptionHtml(merchant, isRtl);
 
 
   const getMerchantInformation = async () => {
@@ -176,7 +188,7 @@ const Charities = ({ navigation, route }) => {
 
         <Header btns={['back']} style={styles.header} additionalBtnsProps={{
           back: {
-            onPress: () => navigation.navigate('Main')
+            onPress: () => goBackOrMain(navigation)
           }
         }} />
         <View style={[styles.roundedBorders, { backgroundColor: colors.charityBackground }]} />
@@ -192,17 +204,19 @@ const Charities = ({ navigation, route }) => {
             style={styles.boldText}
           />
 
-          <HTMLView
-            value={isRtl ? merchant.x_terms_conditionarabic_new : merchant.x_terms_condition_new}
-            stylesheet={getHtmlStyleSheet(i18n.language)}
-            addLineBreaks={true}
-            paragraphBreak={false}
-            textComponentProps={{
-              style: {
-                color: colors.loyaltyTextSecondary
-              },
-            }}
-          />
+          {descriptionHtml ? (
+            <HTMLView
+              value={descriptionHtml}
+              stylesheet={getHtmlStyleSheet(i18n.language)}
+              addLineBreaks={true}
+              paragraphBreak={false}
+              textComponentProps={{
+                style: {
+                  color: colors.loyaltyTextSecondary
+                },
+              }}
+            />
+          ) : null}
 
           <View style={styles.amountSelectWrapper}>
             <TypographyText

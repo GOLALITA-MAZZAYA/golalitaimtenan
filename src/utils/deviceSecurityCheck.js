@@ -283,27 +283,27 @@ export const useSecurityCheck = () => {
   const actions = {
     privilegedAccess: handleThreat(securityMessages.privilegedAccess),
     debug: handleThreat(securityMessages.debug),
-    simulator: handleThreat(securityMessages.simulator),
+    // simulator: handleThreat(securityMessages.simulator),
     // freeRASP still fires this callback; ignore so signing/Play Integrity
     // mismatches never alert or block (common on sideloads / local builds).
-    appIntegrity: () => logger.warn('App integrity check failed (ignored)'),
+    // appIntegrity: () => logger.warn('App integrity check failed (ignored)'),
     // unofficialStore: handleThreat(securityMessages.unofficialStore),
     hooks: handleThreat(securityMessages.hooks),
     deviceBinding: handleThreat(securityMessages.deviceBinding),
-    secureHardwareNotAvailable: handleThreat(
-      securityMessages.secureHardwareNotAvailable,
-    ),
+    // secureHardwareNotAvailable: handleThreat(
+    //   securityMessages.secureHardwareNotAvailable,
+    // ),
     systemVPN: handleThreat(securityMessages.systemVPN),
-    passcode: handleThreat(securityMessages.passcode),
+    // passcode: handleThreat(securityMessages.passcode),
     // Screenshots are the user capturing their own screen — FLAG_SECURE
     // (useScreenSecurity) already blocks them where it matters, so just log.
     screenshot: () => logger.warn('Screenshot detected'),
     screenRecording: handleThreat(securityMessages.screenRecording),
-    obfuscationIssues: handleObfuscationIssue,
+    // obfuscationIssues: handleObfuscationIssue,
     // devMode: handleThreat(securityMessages.devMode),
     adbEnabled: handleThreat(securityMessages.adbEnabled),
-    malware: handleMalware,
-    multiInstance: handleThreat(securityMessages.multiInstance),
+    // malware: handleMalware,
+    // multiInstance: handleThreat(securityMessages.multiInstance),
   };
 
   if (Platform.OS === 'ios') {

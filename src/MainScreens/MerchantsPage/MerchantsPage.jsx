@@ -26,6 +26,7 @@ import { TypographyText } from "../../components/Typography";
 import { LUSAIL_REGULAR } from "../../redux/types";
 import MerchantTabs from "./AllMerchantsPage/components/MerchantTabs";
 import { TABS } from "./AllMerchantsPage/components/MerchantTabs/config";
+import { goBackOrMain } from "../../Navigation/RootNavigation";
 
 const MerchantsPage = ({
   route,
@@ -162,15 +163,7 @@ const MerchantsPage = ({
           additionalBtnsProps={{
             back: {
               onPress: () => {
-                const routes = navigation.getState()?.routes;
-                const prevRoute = routes?.[0]?.name;
-
-                if (prevRoute === "merchants-filters") {
-                  navigation.navigate("Main");
-                  return;
-                }
-
-                navigation.goBack();
+                goBackOrMain(navigation);
               },
             },
             filter: {

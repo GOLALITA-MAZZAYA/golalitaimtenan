@@ -11,7 +11,7 @@ import { TypographyText } from "../Typography";
 import { BALOO_MEDIUM, BALOO_REGULAR } from "../../redux/types";
 import { colors } from "../colors";
 import { useTranslation } from "react-i18next";
-import { navigate } from "../../Navigation/RootNavigation";
+import { pushToMainStack } from "../../Navigation/RootNavigation";
 import { handleRedirectScreen } from "../../utils/redirectScreen";
 import trackActivity from "../../api/activityTracker";
 
@@ -46,14 +46,14 @@ const MarketingPopupModal = ({
 
     if (
       marketingPopup.redirectScreen &&
-      handleRedirectScreen(marketingPopup.redirectScreen, navigate)
+      handleRedirectScreen(marketingPopup.redirectScreen)
     ) {
       handleClose();
       return;
     }
 
     if (marketingPopup.offer_id) {
-      navigate('AllOffers', {
+      pushToMainStack('AllOffers', {
         screen: 'offer-info',
         params: {
           productId: marketingPopup.offer_id,
@@ -66,6 +66,10 @@ const MarketingPopupModal = ({
         null,
         t,
         marketingPopup.merchant.name,
+        undefined,
+        undefined,
+        undefined,
+        { pushToStack: true },
       );
     } else if (marketingPopup.action_url) {
       Linking.openURL(marketingPopup.action_url);

@@ -10,6 +10,7 @@ import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import { TypographyText } from "../../../components/Typography";
 import { useTranslation } from "react-i18next";
 import { BALOO_MEDIUM } from "../../../redux/types";
+import { goBackOrMain } from "../../../Navigation/RootNavigation";
 
 const Menu = (props) => {
   const { isDark } = useTheme();
@@ -20,7 +21,7 @@ const Menu = (props) => {
   const [error, setError] = useState(!company_contract_url);
 
   const handleBackPress = () => {
-    navigation.goBack ? navigation.goBack() : navigation.navigate("Main");
+    goBackOrMain(navigation);
   };
 
 

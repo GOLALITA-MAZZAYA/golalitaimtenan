@@ -3,6 +3,7 @@ import BackSvg from '../../../../assets/back.svg';
 import { useTheme } from '../../../ThemeProvider';
 import { colors } from '../../../colors';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { goBackOrMain } from '../../../../Navigation/RootNavigation';
 
 const BackBtn = props => {
   const { isDark } = useTheme();
@@ -15,7 +16,7 @@ const BackBtn = props => {
     }
 
     navigation.dispatch(DrawerActions.closeDrawer());
-    navigation?.goBack();
+    goBackOrMain(navigation);
   };
 
   return (

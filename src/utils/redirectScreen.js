@@ -1,3 +1,5 @@
+import { pushToMainStack } from '../Navigation/RootNavigation';
+
 // Maps redirectScreen keys to drawer destinations
 // (gift cards & vouchers).
 // myVouchers-list tabs: selectedPage "0" = vouchers, "1" = gift cards.
@@ -14,8 +16,9 @@ const REDIRECT_SCREEN_ROUTES = {
 };
 
 // Returns true if `redirectScreen` was recognized and navigation was performed.
-export const handleRedirectScreen = (redirectScreen, navigate) => {
-  if (redirectScreen == null || typeof navigate !== 'function') {
+// Uses push so back returns to the previous screen (not exit the app).
+export const handleRedirectScreen = (redirectScreen, navigateFn = pushToMainStack) => {
+  if (redirectScreen == null || typeof navigateFn !== 'function') {
     return false;
   }
 
@@ -23,6 +26,6 @@ export const handleRedirectScreen = (redirectScreen, navigate) => {
   const route = REDIRECT_SCREEN_ROUTES[key];
   if (!route) return false;
 
-  navigate(...route);
+  navigateFn(...route);
   return true;
 };

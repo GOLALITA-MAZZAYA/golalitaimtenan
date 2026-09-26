@@ -32,9 +32,9 @@ import TopCircleShadow from '../../components/TopCircleShadow';
 import useIsGuest from '../../hooks/useIsGuest';
 
 import {
-  requestMultiple,
+  request,
   PERMISSIONS,
-  checkMultiple,
+  RESULTS,
 } from 'react-native-permissions';
 import Header from '../../components/Header';
 import authApi from '../../redux/auth/auth-api';
@@ -47,6 +47,19 @@ import { verifyRegisterCode } from '../../redux/auth/auth-thunks';
 
 const CameraIcon = sized(CameraSvg, 36, 32);
 const EditIcon = sized(EditSvg, 31);
+
+const waitForModalClose = () =>
+  new Promise(resolve => setTimeout(resolve, 400));
+
+const requestCameraPermission = async () => {
+  const permission =
+    Platform.OS === 'ios'
+      ? PERMISSIONS.IOS.CAMERA
+      : PERMISSIONS.ANDROID.CAMERA;
+
+  const status = await request(permission);
+  return status === RESULTS.GRANTED || status === RESULTS.LIMITED;
+};
 
 const Profile = ({
   navigation,
@@ -70,91 +83,104 @@ const Profile = ({
 
   const validation = getProfileScreenValidationSchema();
 
-  // useEffect(() => {
-  //   (async () => {
-  //     let permissions = [PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE];
-
-  //     if (Platform.OS === 'android') {
-  //       if (Platform.Version >= 33) {
-  //         permissions.push(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
-  //       } else {
-  //         permissions.push(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
-  //       }
-
-  //       try {
-  //         let statuses = await checkMultiple(permissions);
-
-  //         console.log(statuses, 'status');
-
-  //         let notGrantedPermissions = Object.entries(statuses)
-  //           .filter(item => item[1] !== 'granted')
-  //           .map(item => item[0]);
-
-  //         if (notGrantedPermissions.length) {
-  //           statuses = await requestMultiple(notGrantedPermissions);
-
-  //           notGrantedPermissions = Object.entries(statuses)
-  //             .filter(item => item[1] !== 'granted')
-  //             .map(item => item[0]);
-  //         }
-
-  //         console.log(notGrantedPermissions, 'not granted');
-
-  //         if (notGrantedPermissions.length) {
-  //           alert('Sorry, we need camera roll permissions to make this work!');
-  //         }
-  //       } catch (err) {}
-  //     }
-  //   })();
-  // }, []);
-
   const pickImage = async () => {
-    setIsClicked(true);
-    let data = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 1,
-      includeBase64: true,
-    });
-
+    // Dismiss the action sheet first — iOS cannot present the picker over RN Modal.
+    setIsDialogWindow(false);
     setIsClicked(false);
+    await waitForModalClose();
 
-    const base64 = data?.assets?.[0]?.base64;
+    try {
+      const data = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 1,
+        includeBase64: true,
+      });
 
-    if (!base64) {
-      return;
-    }
+      if (data?.didCancel || data?.errorCode) {
+        return;
+      }
 
-    setImage(base64);
-    updateProfile({
-      image_1920: base64,
-    });
-    if (!data.cancelled) {
-      setIsDialogWindow(false);
+      const base64 = data?.assets?.[0]?.base64;
+
+      if (!base64) {
+        return;
+      }
+
+      setImage(base64);
+      updateProfile({
+        image_1920: base64,
+      });
+    } catch (err) {
+      console.log(err, 'pickImage error');
     }
   };
 
   const launchCameraFunc = async () => {
-    setIsClicked(true);
-    let data = await launchCamera({
-      mediaType: 'photo',
-      includeBase64: true,
-      quality: 0.5,
-    });
-
+    // Dismiss the action sheet first — iOS cannot present the camera over RN Modal.
+    setIsDialogWindow(false);
     setIsClicked(false);
+    await waitForModalClose();
 
-    const base64 = data?.assets?.[0]?.base64;
+    try {
+      const granted = await requestCameraPermission();
 
-    if (!base64) {
-      return;
-    }
+      if (!granted) {
+        Alert.alert(
+          t('General.error'),
+          t('Profile.cameraPermissionRequired'),
+        );
+        return;
+      }
 
-    setImage(base64);
-    updateProfile({
-      image_1920: base64,
-    });
-    if (!data.cancelled) {
-      setIsDialogWindow(false);
+      const data = await launchCamera({
+        mediaType: 'photo',
+        includeBase64: true,
+        quality: 0.5,
+      });
+
+      if (data?.didCancel) {
+        return;
+      }
+
+      if (data?.errorCode) {
+        console.log(data.errorCode, data.errorMessage, 'launchCamera');
+
+        if (data.errorCode === 'camera_unavailable') {
+          Alert.alert(
+            t('General.error'),
+            t('Profile.cameraUnavailable', {
+              defaultValue:
+                'Camera is not available on this device. Use a real iPhone or Android phone to test Take Photo. You can still use Choose Photo on the simulator.',
+            }),
+          );
+          return;
+        }
+
+        if (data.errorCode === 'permission') {
+          Alert.alert(
+            t('General.error'),
+            t('Profile.cameraPermissionRequired'),
+          );
+          return;
+        }
+
+        Alert.alert(t('General.error'), data.errorMessage || t('General.error'));
+        return;
+      }
+
+      const base64 = data?.assets?.[0]?.base64;
+
+      if (!base64) {
+        return;
+      }
+
+      setImage(base64);
+      updateProfile({
+        image_1920: base64,
+      });
+    } catch (err) {
+      console.log(err, 'launchCamera error');
+      Alert.alert(t('General.error'), String(err?.message || err));
     }
   };
 

@@ -3,7 +3,7 @@ import { getMerchantDetails } from '../redux/merchant/merchant-thunks';
 import store from '../redux/store';
 import i18n from 'i18next';
 import { setClickedNotificationData } from '../redux/notifications/notifications-actions';
-import { navigate } from '../Navigation/RootNavigation';
+import { pushToMainStack } from '../Navigation/RootNavigation';
 import { CHARITY_MERCHANT_IDS } from '../constants';
 import { handleRedirectScreen } from '../utils/redirectScreen';
 import { getOfferById } from '../api/offers';
@@ -14,21 +14,13 @@ export const NotificatiionClickHanlder = {
   merchant: merchant_id => {
     const id = Number(merchant_id);
 
-    // Clear previous notification payload
     store.dispatch(setClickedNotificationData(null));
-
-    // Load merchant details into store
-    store.dispatch(getMerchantDetails(id, null, i18n.t));
-
-    // Nested navigation:
-    // Drawer ("Home") -> TabsScreen ("TabsBar") -> MainStack -> MapPage
-    navigate('Home', {
-      screen: 'TabsBar',
-      params: {
-        screen: 'MapPage',
-        params: { merchantId: id },
-      },
-    });
+    // Push so device/header back returns to the previous screen.
+    store.dispatch(
+      getMerchantDetails(id, null, i18n.t, undefined, undefined, undefined, undefined, {
+        pushToStack: true,
+      }),
+    );
   },
 
   product: async (product_id, notification) => {
@@ -42,7 +34,7 @@ export const NotificatiionClickHanlder = {
         ? productResult[0]
         : productResult;
 
-      navigate('AllOffers', {
+      pushToMainStack('AllOffers', {
         screen: 'offer-info',
         params: {
           productId: id,
@@ -60,7 +52,7 @@ export const NotificatiionClickHanlder = {
 
   charity: merchantId => {
     store.dispatch(setClickedNotificationData(null));
-    navigate('Charities', { merchantId });
+    pushToMainStack('Charities', { merchantId });
   },
 };
 
@@ -108,7 +100,7 @@ export const handleNotificationClick = (notification, appState) => {
 
   if (
     data.redirectScreen &&
-    handleRedirectScreen(data.redirectScreen, navigate)
+    handleRedirectScreen(data.redirectScreen)
   ) {
     store.dispatch(setClickedNotificationData(null));
     return;
@@ -119,7 +111,6 @@ export const handleNotificationClick = (notification, appState) => {
     return;
   }
 
-  // Prefer merchant deep-link (MapPage) when merchant_id is present
   if (data.merchant_id && data.merchant_id !== 'False') {
     NotificatiionClickHanlder.merchant(data.merchant_id);
     return;

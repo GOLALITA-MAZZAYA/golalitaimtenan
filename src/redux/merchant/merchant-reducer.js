@@ -20,6 +20,7 @@ import {
   SET_PARENT_CATEGORIES_LOADING,
   SET_CATEGORIES_TYPE,
   SET_HAS_ESIM_CATEGORY,
+  SET_PARENT_CATEGORIES_BY_TYPE,
 } from "./merchant-types";
 
 const initialState = {
@@ -38,6 +39,11 @@ const initialState = {
   categories: [],
   parentCategoriesLoading: false,
   parentCategories: null,
+  // Keep last Local/Global lists so switching tabs is instant.
+  parentCategoriesByType: {
+    local: null,
+    global: null,
+  },
   categoriesType: "local",
   hasEsimCategory: false,
   travelCategories: null,
@@ -92,10 +98,33 @@ export const merchantReducer = (state = initialState, action) => {
       return { ...state, merchantOffers: action.merchantOffers };
     case SET_CATEGORIES:
       return { ...state, categories: action.categories };
-    case SET_CATEGORIES_TYPE:
-      return { ...state, categoriesType: action.categoriesType };
+    case SET_CATEGORIES_TYPE: {
+      const nextType = action.categoriesType;
+      const cached = state.parentCategoriesByType?.[nextType];
+
+      return {
+        ...state,
+        categoriesType: nextType,
+        // Instant swap when cached; otherwise clear so the loader can show.
+        parentCategories: Array.isArray(cached) ? cached : [],
+      };
+    }
     case SET_PARENT_CATEGORIES:
       return { ...state, parentCategories: action.parentCategories };
+    case SET_PARENT_CATEGORIES_BY_TYPE: {
+      const type = action.categoriesType;
+      const list = action.parentCategories;
+
+      return {
+        ...state,
+        parentCategoriesByType: {
+          ...state.parentCategoriesByType,
+          [type]: list,
+        },
+        parentCategories:
+          state.categoriesType === type ? list : state.parentCategories,
+      };
+    }
     case SET_PARENT_CATEGORIES_LOADING:
       return { ...state, parentCategoriesLoading: action.loading };
     case SET_HAS_ESIM_CATEGORY:

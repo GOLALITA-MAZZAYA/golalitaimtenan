@@ -41,17 +41,36 @@ const MerchantsFilters = ({ navigation, route }) => {
   const allCategories = getAllCategories(categories || []);
   const options = convertCategoriesToOptions(allCategories, language);
 
+  const listInStack = () =>
+    !!navigation.getState?.()?.routes?.some(r => r.name === 'merchants-list');
+
+  const goToMerchantsList = listParams => {
+    if (listInStack()) {
+      navigation.navigate({
+        name: 'merchants-list',
+        params: listParams,
+        merge: true,
+      });
+      return;
+    }
+
+    // Opened filters as the only nested screen (e.g. home empty search) —
+    // replace so back doesn't return to filters.
+    navigation.replace('merchants-list', listParams);
+  };
+
   const onReset = () => {};
 
   const onClose = () => {
-    navigation.navigate({
-      name: 'merchants-list',
-      params: {
-        filters: params?.filters,
-        parentCategoryName: params?.parentCategoryName,
-        parentCategoryId: params?.parentCategoryId,
-      },
-      merge: true,
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    goToMerchantsList({
+      filters: params?.filters,
+      parentCategoryName: params?.parentCategoryName,
+      parentCategoryId: params?.parentCategoryId,
     });
   };
 
@@ -95,33 +114,30 @@ const MerchantsFilters = ({ navigation, route }) => {
           )
         : null;
 
-    navigation.navigate({
-      name: 'merchants-list',
-      params: {
-        filters: transformedFilters,
-        parentCategoryName: selectedCategory
-          ? language === 'ar'
-            ? selectedCategory.x_name_arabic || selectedCategory.name
-            : selectedCategory.name
-          : params?.parentCategoryName,
-        parentCategoryId:
-          primaryCategoryId ??
-          selectedCategory?.id ??
-          params?.parentCategoryId,
-      },
-      merge: true,
+    goToMerchantsList({
+      filters: transformedFilters,
+      parentCategoryName: selectedCategory
+        ? language === 'ar'
+          ? selectedCategory.x_name_arabic || selectedCategory.name
+          : selectedCategory.name
+        : params?.parentCategoryName,
+      parentCategoryId:
+        primaryCategoryId ??
+        selectedCategory?.id ??
+        params?.parentCategoryId,
     });
   };
 
   const onBackPress = () => {
-    navigation.navigate({
-      name: 'merchants-list',
-      params: {
-        filters: params?.filters,
-        parentCategoryName: params?.parentCategoryName,
-        parentCategoryId: params?.parentCategoryId,
-      },
-      merge: true,
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    goToMerchantsList({
+      filters: params?.filters,
+      parentCategoryName: params?.parentCategoryName,
+      parentCategoryId: params?.parentCategoryId,
     });
   };
 

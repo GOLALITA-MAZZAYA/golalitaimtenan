@@ -13,7 +13,7 @@ import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { navigate, navigationRef } from "../../Navigation/RootNavigation";
+import { pushToMainStack } from "../../Navigation/RootNavigation";
 import { useTheme } from "../ThemeProvider";
 import { readNotification } from "../../redux/notifications/notifications-thunks";
 import { getNotificationDescription } from "../../MainScreens/Notifications/helpers";
@@ -41,16 +41,13 @@ const NotificationItem = ({ item, onPress }) => {
       product_id: item.product_id || undefined,
     });
 
-    if (
-      item.redirectScreen &&
-      handleRedirectScreen(item.redirectScreen, navigate)
-    ) {
+    if (item.redirectScreen && handleRedirectScreen(item.redirectScreen)) {
       dispatch(readNotification(item.notification_id));
       return;
     }
 
     if (item.product_id) {
-      navigate("AllOffers", {
+      pushToMainStack("AllOffers", {
         screen: "offer-info",
         params: {
           productId: item.product_id,
@@ -63,11 +60,15 @@ const NotificationItem = ({ item, onPress }) => {
 
     if (item.merchant_id) {
       if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
-        navigate("Charities", { merchantId: item.merchant_id });
+        pushToMainStack("Charities", { merchantId: item.merchant_id });
         dispatch(readNotification(item.notification_id));
         return;
       }
-      dispatch(getMerchantDetails(item.merchant_id, navigationRef, t, "Back"));
+      dispatch(
+        getMerchantDetails(item.merchant_id, null, t, undefined, undefined, undefined, undefined, {
+          pushToStack: true,
+        }),
+      );
       dispatch(readNotification(item.notification_id));
       return;
     }
@@ -120,7 +121,6 @@ const NotificationItem = ({ item, onPress }) => {
 const styles = StyleSheet.create({
   logo: {
     width: "100%",
-    // height: 150,
     borderRadius: 8,
     aspectRatio: 135 / 76,
     marginBottom: 10,

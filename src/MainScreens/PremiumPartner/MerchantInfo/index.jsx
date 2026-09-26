@@ -4,6 +4,7 @@ import React, {
   useState,
 } from 'react';
 import {
+  BackHandler,
   SafeAreaView,
   StyleSheet,
   View,
@@ -24,6 +25,8 @@ import TabHeader from './TabHeader';
 import Share from 'react-native-share';
 import { setMerchantDetails } from '../../../redux/merchant/merchant-actions';
 import HeaderTabs from './TabHeader/HeaderTabs';
+import { useNavigation } from '@react-navigation/native';
+import { goBackOrMain } from '../../../Navigation/RootNavigation';
 
 export const CONSTANTS = {
   INFO: 'INFO',
@@ -46,6 +49,7 @@ const MerchantInfo = ({
   const { isDark } = useTheme();
   const viewRef = useRef();
   const params = route?.params;
+  const navigation = useNavigation();
 
   useEffect(() => {
     return () => {
@@ -56,6 +60,20 @@ const MerchantInfo = ({
   useEffect(() => {
     getContracts();
   }, []);
+
+  useEffect(() => {
+    const onHardwareBack = () => {
+      goBackOrMain(navigation);
+      return true;
+    };
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onHardwareBack,
+    );
+
+    return () => subscription.remove();
+  }, [navigation]);
 
   const handleSharePress = async () => {
     try {

@@ -11,16 +11,23 @@ import { colors } from "../../../../components/colors";
 
 import CommonButton from "../../../../components/CommonButton/CommonButton";
 import useIsGuest from "../../../../hooks/useIsGuest";
+import {isRTL} from "../../../../../utils";
 
 const getOnlineStoreText = (merchantDetails, t) => {
-  const merchantName = merchantDetails?.merchant_name || '';
-  const displayName =
-    merchantName.length > 15
-      ? `${merchantName.slice(0, 15)}...`
-      : merchantName;
-  return `${t('ProductPage.openOnlineStore')} ${displayName} ${t(
-    'TabBar.onlineStore',
-  )}`;
+  const isArabic = isRTL();
+
+  const merchantName = isArabic
+    ? merchantDetails?.x_arabic_name ||
+      merchantDetails?.merchant_name_arabic ||
+      merchantDetails.merchant_name
+    : merchantDetails.merchant_name;
+
+  const displayName = merchantName || '';
+
+  return isArabic
+    ? t('ProductPage.openOnlineStore', { name: displayName }) +
+        ` ${t('TabBar.onlineStore')}`
+    : `${t('ProductPage.openOnlineStore')} ${displayName} ${t('TabBar.onlineStore')}`;
 };
 
 const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare, ribbonText, title }) => {
@@ -77,6 +84,8 @@ const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare
           label={getOnlineStoreText(merchantDetails, t)}
           onPress={() => Linking.openURL(merchantDetails.website)}
           style={styles.onlineStoreBtn}
+          numberOfLines={2}
+          textStyle={styles.storeText}
         />
       )}
 
@@ -102,10 +111,11 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     width: '90%',
     alignSelf: 'center',
-    paddingHorizontal: 20
+    paddingHorizontal: 16,
   },
   storeText: {
-    color: '#fff'
+    color: '#fff',
+    textAlign: 'center',
   },
   actionIcons: {
     flexDirection: 'row',

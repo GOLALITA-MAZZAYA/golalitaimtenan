@@ -500,6 +500,8 @@
       "deletePhoto": "Delete Photo",
       "takePhoto": "Take Photo",
       "choosePhoto": "Choose Photo",
+      "cameraPermissionRequired": "Camera permission is required to take a photo.",
+      "cameraUnavailable": "Camera is not available on this device. Use a real iPhone to test Take Photo. You can still use Choose Photo on the simulator.",
       "doYouWantSaveChanges": "Do you want to save changes?",
       "yes": "Yes",
       "no": "No",

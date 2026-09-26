@@ -20,13 +20,18 @@ const CommonButton = ({
   textColor,
   loading,
   renderItem,
+  numberOfLines,
+  textStyle,
   ...props
 }) => {
   const { isDark } = useTheme();
+  const isMultiline = numberOfLines > 1;
+
   return (
     <LinearGradient
       style={[
         styles.button,
+        isMultiline && styles.buttonMultiline,
         style,
         isError && {
           backgroundColor: colors.darkBlue,
@@ -45,9 +50,11 @@ const CommonButton = ({
       <TouchableOpacity
         style={{
           width: '100%',
-          height: '100%',
+          height: isMultiline ? undefined : '100%',
+          minHeight: isMultiline ? undefined : '100%',
           justifyContent: 'center',
           ...mainStyles.centeredRow,
+          paddingVertical: isMultiline ? 10 : 0,
         }}
         activeOpacity={0.6}
         disabled={!!loading}
@@ -60,7 +67,12 @@ const CommonButton = ({
             textColor={textColor || colors.white}
             size={18}
             font={BALOO_SEMIBOLD}
-            style={{ marginTop: 5 }}
+            numberOfLines={numberOfLines}
+            style={[
+              { marginTop: isMultiline ? 0 : 5, flexShrink: 1 },
+              isMultiline && { textAlign: 'center', flex: 1 },
+              textStyle,
+            ]}
           />
         </>}
         {renderItem?.()}
@@ -85,6 +97,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.darkBlue,
     borderRadius: 8,
+  },
+  buttonMultiline: {
+    height: undefined,
+    minHeight: 60,
+    paddingVertical: 4,
   },
   loader: {
     marginLeft: 15,

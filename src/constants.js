@@ -3,7 +3,7 @@ export const MUMAYIZATEMAIL = "mumayizat@golalita.com";
 export const BASE_DOMAIN = "golalita.com";
 // Must use www — apex golalita.com 308-redirects to www and strips
 // Authorization headers (breaks AI chat Bearer JWT and similar POSTs).
-export const BASE_URL = `${BASE_DOMAIN}`;
+export const BASE_URL = `www.${BASE_DOMAIN}`;
 export const SUPPORT_EMAIL = "support@golalita.com";
 export const ORG_ID = 155723;
 export const ORG_CODE = "qcb";

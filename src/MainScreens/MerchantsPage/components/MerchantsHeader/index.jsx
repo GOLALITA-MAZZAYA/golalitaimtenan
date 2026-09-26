@@ -15,14 +15,33 @@ const MerchantListHeader = ({ style, isHome }) => {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
+  const isInsideMerchantsStack = () =>
+    !!navigation.getState?.()?.routeNames?.includes("merchants-filters");
+
+  // From Home (Main) we must go through MainStack "merchants".
+  // From inside MerchantsNavigator, navigate to the nested screen directly.
+  const openMerchantsScreen = (screen, params) => {
+    if (isInsideMerchantsStack()) {
+      navigation.navigate(screen, params);
+      return;
+    }
+
+    navigation.navigate("merchants", {
+      screen,
+      params,
+    });
+  };
+
   const handleTextChange = (text) => {
     setSearch(text);
   };
 
   const handleSearchPress = () => {
-    if (search.length > 0) {
+    const query = search;
+
+    if (query.length > 0) {
       trackActivity("search", {
-        search_query: search,
+        search_query: query,
         page_name: "search",
         metadata: { search_source: "home_quick_search" },
       });
@@ -30,19 +49,13 @@ const MerchantListHeader = ({ style, isHome }) => {
 
     setSearch("");
 
-    if (search.length == 0) {
-      navigation.navigate("merchants", {
-        screen: "merchants-filters",
-        params: {
-          filters: { merchant_name: search },
-        },
+    if (query.length === 0) {
+      openMerchantsScreen("merchants-filters", {
+        filters: { merchant_name: query },
       });
     } else {
-      navigation.navigate("merchants", {
-        screen: "merchants-list",
-        params: {
-          filters: { merchant_name: search },
-        },
+      openMerchantsScreen("merchants-list", {
+        filters: { merchant_name: query },
       });
     }
   };
@@ -52,9 +65,7 @@ const MerchantListHeader = ({ style, isHome }) => {
       navigation.openDrawer();
     } else {
       setSearch("");
-      navigation.navigate("merchants", {
-        screen: "merchants-filters",
-      });
+      openMerchantsScreen("merchants-filters");
     }
   };
 

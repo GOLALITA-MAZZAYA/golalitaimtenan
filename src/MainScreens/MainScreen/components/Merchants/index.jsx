@@ -6,7 +6,6 @@ import ExpandedCategoryBlocks from "../../../../components/ExpandedCategoryBlock
 import { useTheme } from "../../../../components/ThemeProvider";
 import { useDispatch } from "react-redux";
 import { getMerchantDetails } from "../../../../redux/merchant/merchant-thunks";
-import { navigationRef } from "../../../../Navigation/RootNavigation";
 import { getOffsetAndLimit } from "../../../../../utils";
 import { getCategoryNameByIdAndLang } from "../../../../components/Categories/helpres";
 
@@ -35,7 +34,7 @@ const Merchants = () => {
     dispatch(
       getMerchantDetails(
         brand,
-        navigationRef,
+        null,
         t,
         getCategoryNameByIdAndLang(brand.category_id),
         false

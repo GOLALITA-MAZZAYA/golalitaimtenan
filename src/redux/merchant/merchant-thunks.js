@@ -13,6 +13,7 @@ import {
   setOffers,
   setOrganizations,
   setParentCategories,
+  setParentCategoriesByType,
   setParentCategoriesLoading,
   setPremiumBanners,
   setPremiumBannersLoading,
@@ -33,7 +34,7 @@ import {
 import { showMessage } from 'react-native-flash-message';
 import { logout } from '../auth/auth-thunks';
 import { getOffsetAndLimit, getOffsetAndLimitForOffers } from '../../../utils';
-import { navigate, push } from '../../Navigation/RootNavigation';
+import { push, pushToMainStack } from '../../Navigation/RootNavigation';
 import { setClickedNotificationData } from '../notifications/notifications-actions';
 import axios from 'axios';
 import { getMerchantDisscountForOffers, trackMerchantOpensCount } from '../../api/merchants';
@@ -138,9 +139,15 @@ const getSubCategoriesFunc2 = async (parentCategories, token) => {
   return newCategories;
 };
 
-export const getParentCategories = type => async dispatch => {
+export const getParentCategories = type => async (dispatch, getState) => {
   try {
-    dispatch(setParentCategoriesLoading(true));
+    const { parentCategoriesByType } = getState().merchantReducer;
+    const hasCache = Array.isArray(parentCategoriesByType?.[type]);
+
+    // Only block the UI when we have nothing to show for this tab.
+    if (!hasCache) {
+      dispatch(setParentCategoriesLoading(true));
+    }
 
     const token = await getAuthToken();
 
@@ -171,6 +178,7 @@ export const getParentCategories = type => async dispatch => {
     const parentCategories =
       type === 'global' ? list.filter(item => !isEsimCategory(item)) : list;
 
+    dispatch(setParentCategoriesByType(type, parentCategories));
     dispatch(setParentCategories(parentCategories));
   } catch (err) {
     console.log(err, 'get parrent categories error');
@@ -365,7 +373,16 @@ export const getMerchants =
     };
 
 export const getMerchantDetails =
-  (merchant_id, navigation, t, title, isOrganization, isOnlineStore, isB1G1) =>
+  (
+    merchant_id,
+    navigation,
+    t,
+    title,
+    isOrganization,
+    isOnlineStore,
+    isB1G1,
+    _options = {},
+  ) =>
     async (dispatch, getState) => {
       dispatch(setMerchantDetailsLoading(true));
 
@@ -414,7 +431,7 @@ export const getMerchantDetails =
         dispatch(setClickedNotificationData(null));
       }
 
-      navigate('merchant', {
+      const merchantParams = {
         screen: 'merchant-info',
         params: {
           title,
@@ -422,7 +439,12 @@ export const getMerchantDetails =
           isOnlineStore,
           isB1G1,
         },
-      });
+      };
+
+      // Always open via MainStack push so merchants list / Home stay underneath
+      // and Android back returns there. pushToMainStack merges when merchant is
+      // already on top (avoids stacking while browsing).
+      pushToMainStack('merchant', merchantParams);
 
       await trackMerchantOpensCount(merchant_id);
 

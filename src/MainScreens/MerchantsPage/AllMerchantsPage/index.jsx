@@ -28,7 +28,7 @@ import MainLayout from "../../../components/MainLayout";
 import { useTheme } from "../../../components/ThemeProvider";
 import Header from "../../../components/Header";
 import { getFavouriteMerchantsList } from "../../../redux/favouriteMerchants/favourite-merchants-thunks";
-import { navigationRef } from "../../../Navigation/RootNavigation";
+import { navigationRef, goBackOrMain } from "../../../Navigation/RootNavigation";
 import MerchantsList from "../components/MerchantList";
 import ListNoData from "../../../components/ListNoData";
 import { getUserLocationThunk } from "../../../redux/global/global-thunks";
@@ -423,13 +423,7 @@ const MerchantsPage = ({
           btns={getHeaderBtnString(isHotel)}
           additionalBtnsProps={{
             back: {
-              onPress: () => {
-                if (!parentCategoryName) {
-                  navigationRef.current.navigate("Main");
-                  return;
-                }
-                navigationRef.current.goBack();
-              },
+              onPress: () => goBackOrMain(navigationRef.current),
             },
             filter: {
               params: {

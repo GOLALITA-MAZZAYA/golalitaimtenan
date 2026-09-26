@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import { useTheme } from '../../../components/ThemeProvider';
 import { colors } from '../../../components/colors';
-import CommonHeader from '../../../components/CommonHeader/CommonHeader';
 import { TypographyText } from '../../../components/Typography';
 import { BALOO_REGULAR } from '../../../redux/types';
 import { TouchableOpacity } from 'react-native';
@@ -24,6 +23,7 @@ import ImageViwerModal from '../../../components/ImageViwer';
 import { Image } from 'react-native';
 import CommonButton from '../../../components/CommonButton/CommonButton';
 import VoucherInfoCard from '../components/VoucherInfoCard';
+import Header from '../../../components/Header';
 
 const { width } = Dimensions.get('screen');
 
@@ -60,11 +60,9 @@ const Voucher = (props) => {
       ]}
     >
       <SafeAreaView style={styles.safeAreaWrapper}>
-        <CommonHeader
-          isWhite={isDark}
-          isNotifications={true}
+        <Header
           label={t('Vouchers.vouchers')}
-          style={{ backgroundColor: isDark ? colors.darkBlue : undefined }}
+          btns={['back']}
         />
 
         <ScrollView

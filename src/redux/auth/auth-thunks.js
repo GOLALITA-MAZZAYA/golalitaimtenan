@@ -115,7 +115,13 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
       'paused_notification',
       `${res.data.result.paused_notification}`,
     );
-    await setAuthToken(res.data.result.token);
+
+    const tokenSaved = await setAuthToken(res.data.result.token);
+
+    if (!tokenSaved) {
+      throw new Error('Failed to save auth token');
+    }
+
     await AsyncStorage.setItem('isUserLoggedOut', 'false');
     await setIfEverLoggedIn(true.toString());
 

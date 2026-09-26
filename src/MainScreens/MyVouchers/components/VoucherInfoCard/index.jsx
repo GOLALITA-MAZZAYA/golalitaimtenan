@@ -3,14 +3,19 @@ import { TypographyText } from '../../../../components/Typography';
 import { useTheme } from '../../../../components/ThemeProvider';
 import { colors } from '../../../../components/colors';
 import { useTranslation } from 'react-i18next';
+import {isRTL} from '../../../../../utils';
 
 const VoucherInfoCard = (props) => {
   const { isDark } = useTheme();
   const { t } = useTranslation();
   const voucher = props.voucher;
 
+  const name = isRTL() ? voucher.name_arabic : voucher.name;
+
+  console.log(voucher,'voucher')
+
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper,{flexDirection: isRTL() ? 'row-reverse': 'row'}]}>
       {voucher?.x_merchant_logo && (
         <View style={styles.logoWrapper}>
           <Image
@@ -21,7 +26,7 @@ const VoucherInfoCard = (props) => {
       )}
       <View style={styles.textWrapper}>
         <TypographyText
-          title={voucher.name}
+          title={name}
           textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
           size={14}
           style={styles.name}
