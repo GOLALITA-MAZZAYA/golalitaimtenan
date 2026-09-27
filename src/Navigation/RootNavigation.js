@@ -7,34 +7,30 @@ import {
 
 export const navigationRef = createNavigationContainerRef();
 
-const pendingActions = [];
-
-// Nested screens → their MainStack parent navigator.
-// RootNavigation.navigate('offer-info') becomes navigate('AllOffers', { screen: 'offer-info' }).
-const SUB_STACK_MAP = {
-  // MerchantsNavigator
+/**
+ * Nested child → MainStack parent.
+ * Tree: Drawer(Home) → MainStack → [Main | merchant | AllOffers | …]
+ */
+const NESTED_PARENT = {
   'merchants-list': 'merchants',
   'merchants-filters': 'merchants',
   'newMerchants-list': 'merchants',
   'premiumMerchants-list': 'merchants',
 
-  // OffersNavigator (MainStack: AllOffers)
+  'offers-list': 'AllOffers',
   'offer-info': 'AllOffers',
   'offer-menu': 'AllOffers',
   'offer-apply-code-confirmation': 'AllOffers',
   'merchant-code-confirmation': 'AllOffers',
 
-  // MerchantNavigator
   'merchant-info': 'merchant',
   'merchant-menu': 'merchant',
 
-  // MyVouchersNavigator
   'myVouchers-list': 'myVouchers',
   'myVouchers-giftCard': 'myVouchers',
   'myVouchers-cardmolaGiftCard': 'myVouchers',
   'myVouchers-voucher': 'myVouchers',
 
-  // LoyaltyPointsNavigator
   'loyaltyPoints-main': 'loyaltyPoints',
   'loyaltyPoints-info': 'loyaltyPoints',
   'loyaltyPoints-transactions': 'loyaltyPoints',
@@ -59,17 +55,15 @@ const SUB_STACK_MAP = {
   'loyaltyPoints-goods-list': 'loyaltyPoints',
   'loyaltyPoints-goods-info': 'loyaltyPoints',
 
-  // ARMapNavigator
   ARMerchants: 'ARMap',
   ARHowToUse: 'ARMap',
   ARCategories: 'ARMap',
 
-  // CategoriesNavigator
   'categories-child': 'categories',
 };
 
-// Screens registered on MainStack (for pushToMainStack / navigateDeep).
 const MAIN_STACK_SCREENS = new Set([
+  'Main',
   'merchant',
   'ARMap',
   'AllOffers',
@@ -115,109 +109,56 @@ const MAIN_STACK_SCREENS = new Set([
   'Charities',
   'AiChat',
   'ESim',
-  'Main',
 ]);
 
-/**
- * Walk parent navigators and go back on the first that has history.
- */
-export function safeGoBack(navigation = navigationRef) {
-  if (!navigation) {
-    return false;
-  }
+/** Bottom-bar destinations (fake tabs on MainStack). */
+export const TAB_SCREENS = new Set(['Main', 'MapPage', 'card', 'Profile']);
 
-  let current = navigation;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-  while (current) {
-    if (typeof current.canGoBack === 'function' && current.canGoBack()) {
-      current.goBack();
-      return true;
-    }
-
-    current =
-      typeof current.getParent === 'function' ? current.getParent() : null;
-  }
-
-  if (
-    navigationRef.isReady() &&
-    navigation !== navigationRef &&
-    navigationRef.canGoBack()
-  ) {
-    navigationRef.goBack();
-    return true;
-  }
-
-  return false;
-}
-
-export function goBackOrMain(navigation = navigationRef) {
-  if (safeGoBack(navigation)) {
-    return;
-  }
-
-  if (navigationRef.isReady()) {
-    navigationRef.navigate('Main');
-    return;
-  }
-
-  if (navigation && typeof navigation.navigate === 'function') {
-    navigation.navigate('Main');
-  }
-}
-
-const getMainStackKey = () => {
-  if (!navigationRef.isReady()) {
+const findMainStackState = state => {
+  if (!state?.routes) {
     return null;
   }
 
-  const findStackWithMain = state => {
-    if (!state?.routes) {
-      return null;
+  // MainStack is the navigator that contains the Home screen "Main".
+  if (state.routes.some(route => route.name === 'Main')) {
+    return state;
+  }
+
+  for (const route of state.routes) {
+    const found = findMainStackState(route.state);
+    if (found) {
+      return found;
     }
+  }
 
-    if (state.routes.some(route => route.name === 'Main')) {
-      return state.key;
-    }
-
-    for (const route of state.routes) {
-      const found = findStackWithMain(route.state);
-      if (found) {
-        return found;
-      }
-    }
-
-    return null;
-  };
-
-  return findStackWithMain(navigationRef.getRootState());
+  return null;
 };
 
 const getMainStackState = () => {
   if (!navigationRef.isReady()) {
     return null;
   }
-
-  const findStackWithMain = state => {
-    if (!state?.routes) {
-      return null;
-    }
-
-    if (state.routes.some(route => route.name === 'Main')) {
-      return state;
-    }
-
-    for (const route of state.routes) {
-      const found = findStackWithMain(route.state);
-      if (found) {
-        return found;
-      }
-    }
-
-    return null;
-  };
-
-  return findStackWithMain(navigationRef.getRootState());
+  return findMainStackState(navigationRef.getRootState());
 };
+
+/** Focused MainStack route name (e.g. Main, MapPage, merchant). */
+export function getFocusedMainStackRouteName() {
+  const mainStackState = getMainStackState();
+  if (!mainStackState?.routes?.length) {
+    return 'Main';
+  }
+  return (
+    mainStackState.routes[mainStackState.index ?? 0]?.name ?? 'Main'
+  );
+}
+
+/** Which tab icon should be selected, or null when on a non-tab screen. */
+export function getActiveTabRouteName() {
+  const name = getFocusedMainStackRouteName();
+  return TAB_SCREENS.has(name) ? name : null;
+}
 
 const routeExistsInState = (state, routeName) => {
   if (!state?.routes) {
@@ -237,9 +178,12 @@ const routeExistsInState = (state, routeName) => {
 };
 
 const resolveMainStackTarget = (name, params) => {
-  const parent = SUB_STACK_MAP[name];
+  const parent = NESTED_PARENT[name];
 
   if (parent) {
+    if (params?.screen) {
+      return { name: parent, params };
+    }
     return {
       name: parent,
       params: {
@@ -249,21 +193,41 @@ const resolveMainStackTarget = (name, params) => {
     };
   }
 
+  // Opening AllOffers list explicitly.
+  if (name === 'AllOffers' && !params?.screen) {
+    return {
+      name: 'AllOffers',
+      params: {
+        screen: 'offers-list',
+        params: params ?? undefined,
+      },
+    };
+  }
+
   return { name, params };
 };
 
+const dispatchOnMainStack = (action, stackKey) => {
+  if (stackKey) {
+    navigationRef.dispatch({ ...action, target: stackKey });
+    return;
+  }
+  navigationRef.dispatch(action);
+};
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 /**
- * Push onto MainStack so Home / list stays under the new screen for back.
- *
- * Optimizations to stop unbounded stack growth:
- * 1) Same screen already on top → merge params (no push).
- * 2) Same screen exists earlier in MainStack → drop those copies, then push
- *    once (e.g. notification opens merchant while another merchant is under
- *    AllOffers). Keeps at most one instance of the target screen.
+ * Push onto MainStack so Home / previous screens stay underneath for back.
+ * Use for notifications, deep links, banners, modals, drawer, merchants, tabs.
  */
-export function pushToMainStack(name, params) {
+export function openScreen(name, params) {
   if (!navigationRef.isReady()) {
-    pendingActions.push({ type: 'pushToMainStack', name, params });
+    return;
+  }
+
+  if (name === 'Main' || name === 'home') {
+    goHome();
     return;
   }
 
@@ -275,7 +239,7 @@ export function pushToMainStack(name, params) {
     return;
   }
 
-  const stackKey = mainStackState.key ?? getMainStackKey();
+  const stackKey = mainStackState.key;
   const activeRoutes = mainStackState.routes.slice(
     0,
     mainStackState.index + 1,
@@ -283,79 +247,59 @@ export function pushToMainStack(name, params) {
   const topRoute = activeRoutes[activeRoutes.length - 1];
 
   if (topRoute?.name === target.name) {
-    navigationRef.navigate({
-      name: target.name,
-      params: target.params,
-      merge: true,
-    });
+    dispatchOnMainStack(
+      StackActions.replace(target.name, target.params),
+      stackKey,
+    );
     return;
   }
 
-  const hasDuplicate = activeRoutes.some(route => route.name === target.name);
+  const firstIdx = activeRoutes.findIndex(route => route.name === target.name);
 
-  if (!hasDuplicate && stackKey) {
-    navigationRef.dispatch({
-      ...StackActions.push(target.name, target.params),
-      target: stackKey,
-    });
+  if (firstIdx === -1) {
+    dispatchOnMainStack(
+      StackActions.push(target.name, target.params),
+      stackKey,
+    );
     return;
   }
 
-  // Rebuild MainStack without prior copies of this screen, then place the
-  // new route on top so back still returns to Home / merchants / etc.
-  const preservedRoutes = activeRoutes
-    .filter(route => route.name !== target.name)
-    .map(route => ({
-      key: route.key,
-      name: route.name,
-      params: route.params,
-      state: route.state,
-    }));
+  const preservedRoutes = activeRoutes.slice(0, firstIdx).map(route => ({
+    key: route.key,
+    name: route.name,
+    params: route.params,
+    state: route.state,
+  }));
 
-  const nextRoutes = [
-    ...preservedRoutes,
-    {
-      name: target.name,
-      params: target.params,
-    },
-  ];
-
-  if (stackKey) {
-    navigationRef.dispatch({
-      ...CommonActions.reset({
-        index: nextRoutes.length - 1,
-        routes: nextRoutes,
-      }),
-      target: stackKey,
-    });
-    return;
-  }
-
-  navigationRef.navigate(target.name, target.params);
+  dispatchOnMainStack(
+    CommonActions.reset({
+      index: preservedRoutes.length,
+      routes: [
+        ...preservedRoutes,
+        {
+          name: target.name,
+          params: target.params,
+        },
+      ],
+    }),
+    stackKey,
+  );
 }
 
 /**
- * Default in-app navigate. Resolves nested routes so RootNavigation.navigate
- * ('offer-info' / 'loyaltyPoints-*' / 'merchants-filters') keeps working.
- * For external opens that must keep back history, use pushToMainStack().
- *
- * When the nested parent is already mounted (e.g. offers list → offer-info),
- * navigate by the child screen name. Remapping to parent+screen can no-op
- * because MainStack's AllOffers and the list screen share the same name.
+ * Navigate inside an already-mounted nested stack (list → detail).
+ * Falls back to openScreen when the parent is not mounted.
  */
-export function navigate(name, params) {
+export function navigateNested(name, params) {
   if (!navigationRef.isReady()) {
-    pendingActions.push({ type: 'navigate', name, params });
     return;
   }
 
-  const parent = SUB_STACK_MAP[name];
+  const parent = NESTED_PARENT[name];
 
   if (parent) {
     const rootState = navigationRef.getRootState();
-    const parentMounted = routeExistsInState(rootState, parent);
-
-    if (parentMounted) {
+    if (routeExistsInState(rootState, parent)) {
       navigationRef.navigate({
         name,
         params,
@@ -363,25 +307,12 @@ export function navigate(name, params) {
       });
       return;
     }
-
-    navigationRef.navigate({
-      name: parent,
-      params: {
-        screen: name,
-        params,
-      },
-      merge: true,
-    });
+    openScreen(name, params);
     return;
   }
 
-  // Caller already passed a parent + nested screen (e.g. AllOffers / offer-info).
-  if (params?.screen) {
-    navigationRef.navigate({
-      name,
-      params,
-      merge: true,
-    });
+  if (params?.screen || MAIN_STACK_SCREENS.has(name)) {
+    openScreen(name, params);
     return;
   }
 
@@ -389,42 +320,174 @@ export function navigate(name, params) {
 }
 
 /**
- * Deep links / redirects: push MainStack screens so back works.
+ * Return to Home (Main).
+ * - Already on Main → no-op (avoids remount / “new Home under Home” animation)
+ * - Detail screens above Main → popToTop (React Navigation’s usual pattern)
  */
-export function navigateDeep(name, params) {
-  const target = resolveMainStackTarget(name, params);
-
-  if (MAIN_STACK_SCREENS.has(target.name) || SUB_STACK_MAP[name]) {
-    pushToMainStack(name, params);
+export function goHome() {
+  if (!navigationRef.isReady()) {
     return;
   }
 
-  navigate(name, params);
+  const mainStackState = getMainStackState();
+  const stackKey = mainStackState?.key;
+
+  if (!mainStackState?.routes?.length || !stackKey) {
+    navigationRef.navigate('Main');
+    return;
+  }
+
+  const activeRoutes = mainStackState.routes.slice(
+    0,
+    mainStackState.index + 1,
+  );
+  const topRoute = activeRoutes[activeRoutes.length - 1];
+
+  // Already on Home — do not reset/remount.
+  if (topRoute?.name === 'Main' && mainStackState.index === 0) {
+    return;
+  }
+
+  // Main is the initial route; pop everything above it.
+  if (activeRoutes.some(route => route.name === 'Main')) {
+    dispatchOnMainStack(StackActions.popToTop(), stackKey);
+    return;
+  }
+
+  dispatchOnMainStack(
+    CommonActions.reset({
+      index: 0,
+      routes: [{ name: 'Main' }],
+    }),
+    stackKey,
+  );
+}
+
+/**
+ * Switch a bottom-tab destination (Map / Card / Profile / Home).
+ * Keeps a single tab screen above Main — does not stack tabs on each other.
+ */
+export function openTab(name, params) {
+  if (!navigationRef.isReady()) {
+    return;
+  }
+
+  if (name === 'Main' || name === 'home') {
+    goHome();
+    return;
+  }
+
+  if (!TAB_SCREENS.has(name)) {
+    openScreen(name, params);
+    return;
+  }
+
+  const mainStackState = getMainStackState();
+  const stackKey = mainStackState?.key;
+
+  if (!mainStackState?.routes?.length || !stackKey) {
+    navigationRef.navigate(name, params);
+    return;
+  }
+
+  const topRoute = mainStackState.routes[mainStackState.index ?? 0];
+
+  // Already on this tab — no remount.
+  if (topRoute?.name === name) {
+    return;
+  }
+
+  dispatchOnMainStack(
+    CommonActions.reset({
+      index: 1,
+      routes: [{ name: 'Main' }, { name, params }],
+    }),
+    stackKey,
+  );
+}
+
+export function goBack(navigation = navigationRef) {
+  if (!navigation) {
+    return false;
+  }
+
+  let current = navigation;
+
+  while (current) {
+    if (typeof current.canGoBack === 'function' && current.canGoBack()) {
+      current.goBack();
+      return true;
+    }
+    current =
+      typeof current.getParent === 'function' ? current.getParent() : null;
+  }
+
+  if (
+    navigationRef.isReady() &&
+    navigation !== navigationRef &&
+    navigationRef.canGoBack()
+  ) {
+    navigationRef.goBack();
+    return true;
+  }
+
+  return false;
+}
+
+export function goBackOrHome(navigation = navigationRef) {
+  if (goBack(navigation)) {
+    return true;
+  }
+
+  const mainStackState = getMainStackState();
+  const top =
+    mainStackState?.routes?.[mainStackState.index ?? 0];
+
+  // Already on Home root — match “no Header back”: let Android exit the app.
+  if (top?.name === 'Main' && mainStackState.index === 0) {
+    return false;
+  }
+
+  // No MainStack (e.g. auth) and nowhere to go — system default.
+  if (!mainStackState) {
+    return false;
+  }
+
+  goHome();
+  return true;
+}
+
+/**
+ * Smart in-app navigate. Prefer openScreen / navigateNested when intent is clear.
+ */
+export function navigate(name, params) {
+  if (!navigationRef.isReady()) {
+    return;
+  }
+
+  if (name === 'Main' || name === 'home') {
+    goHome();
+    return;
+  }
+
+  if (NESTED_PARENT[name]) {
+    navigateNested(name, params);
+    return;
+  }
+
+  if (params?.screen || MAIN_STACK_SCREENS.has(name)) {
+    openScreen(name, params);
+    return;
+  }
+
+  navigationRef.navigate(name, params);
 }
 
 export function push(...args) {
-  if (navigationRef.isReady()) {
-    navigationRef.dispatch(StackActions.push(...args));
-  } else {
-    pendingActions.push({ type: 'push', args });
+  if (!navigationRef.isReady()) {
+    return;
   }
+  navigationRef.dispatch(StackActions.push(...args));
 }
 
 export const getNavigation = () => navigationRef.current;
-
-export function flushPendingActions() {
-  if (!navigationRef.isReady()) return;
-
-  while (pendingActions.length) {
-    const action = pendingActions.shift();
-    if (!action) return;
-
-    if (action.type === 'navigate') {
-      navigate(action.name, action.params);
-    } else if (action.type === 'push') {
-      navigationRef.dispatch(StackActions.push(...action.args));
-    } else if (action.type === 'pushToMainStack') {
-      pushToMainStack(action.name, action.params);
-    }
-  }
-}

@@ -24,6 +24,7 @@ import Header from '../../components/Header';
 import AdwertisementModal from './components/AdwertisementModal';
 import { CHARITY_MERCHANT_IDS } from '../../constants';
 import { handleRedirectScreen } from '../../utils/redirectScreen';
+import { openScreen } from '../../Navigation/RootNavigation';
 import trackActivity from '../../api/activityTracker';
 import FloatingAiChatButton from '../../components/FloatingAiChatButton';
 
@@ -61,15 +62,12 @@ const MainScreen = ({
       metadata: { slot: 'ad_1' },
     });
 
-    if (
-      item.redirectScreen &&
-      handleRedirectScreen(item.redirectScreen, navigation.navigate)
-    ) {
+    if (item.redirectScreen && handleRedirectScreen(item.redirectScreen)) {
       return;
     }
 
     if (item.product_id) {
-      navigation.navigate('AllOffers', {
+      openScreen('AllOffers', {
         screen: 'offer-info',
         params: {
           productId: item.product_id,
@@ -80,21 +78,18 @@ const MainScreen = ({
     }
 
     if (item.name == 'Mumayizat') {
-      navigation.navigate('MumayzInfo', {
-        params: { title: 'Mumayizat Oman' },
-      });
+      openScreen('MumayzInfo', { title: 'Mumayizat Oman' });
       return;
     }
 
     if (item.internal) {
       if (item.merchant_id) {
         if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
-          navigation.navigate('Charities', { merchantId: item.merchant_id });
-
+          openScreen('Charities', { merchantId: item.merchant_id });
           return;
         }
 
-        getMerchantDetails(item.merchant_id, navigation, t);
+        getMerchantDetails(item.merchant_id, null, t);
       }
     } else {
       onBannerPress(

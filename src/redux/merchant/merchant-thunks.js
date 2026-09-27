@@ -34,7 +34,7 @@ import {
 import { showMessage } from 'react-native-flash-message';
 import { logout } from '../auth/auth-thunks';
 import { getOffsetAndLimit, getOffsetAndLimitForOffers } from '../../../utils';
-import { push, pushToMainStack } from '../../Navigation/RootNavigation';
+import { openScreen } from '../../Navigation/RootNavigation';
 import { setClickedNotificationData } from '../notifications/notifications-actions';
 import axios from 'axios';
 import { getMerchantDisscountForOffers, trackMerchantOpensCount } from '../../api/merchants';
@@ -438,13 +438,12 @@ export const getMerchantDetails =
           isOrganization,
           isOnlineStore,
           isB1G1,
+          merchantId: merchant_id,
         },
       };
 
-      // Always open via MainStack push so merchants list / Home stay underneath
-      // and Android back returns there. pushToMainStack merges when merchant is
-      // already on top (avoids stacking while browsing).
-      pushToMainStack('merchant', merchantParams);
+      // Always push onto MainStack so Home / list stay underneath for back.
+      openScreen('merchant', merchantParams);
 
       await trackMerchantOpensCount(merchant_id);
 
@@ -653,7 +652,7 @@ export const getOfferById = product_id => async (dispatch, getState) => {
 
     const product = res.data.result?.[0];
 
-    push('ProductPage', { product });
+    openScreen('ProductPage', { product });
   } catch (err) {
     console.log(err, 'get offer by id error');
   } finally {

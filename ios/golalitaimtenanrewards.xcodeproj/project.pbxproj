@@ -318,7 +318,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = golalitaimtenanrewards/golalitaimtenanrewards.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = V83QSUA898;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = golalitaimtenanrewards/Info.plist;
@@ -353,7 +353,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = golalitaimtenanrewards/golalitaimtenanrewards.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = V83QSUA898;
 				INFOPLIST_FILE = golalitaimtenanrewards/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;

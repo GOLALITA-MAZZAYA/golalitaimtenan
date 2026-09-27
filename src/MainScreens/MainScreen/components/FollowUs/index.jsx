@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { getOffsetAndLimit, getStringDate } from "../../../../../utils";
 import { ALL_OFFERS_ID } from "./config";
 import { colors } from "../../../../components/colors";
+import { openScreen } from "../../../../Navigation/RootNavigation";
 
 const { width } = Dimensions.get("screen");
 const itemWidth = (width - 64) / 3;
@@ -39,13 +40,13 @@ const FollowUs = () => {
 
   const handlePress = (offerId, parentId, offer) => {
     if (offer.id === ALL_OFFERS_ID) {
-      navigation.navigate("AllOffers");
+      openScreen("AllOffers");
 
       return;
     }
 
     if (offer.x_offer_type === B1G1) {
-      navigation.navigate("Promocode", {
+      openScreen("Promocode", {
         merchant_name: offer.merchant_name,
         name: offer.name,
         expiryDate: offer.end_date
@@ -63,7 +64,7 @@ const FollowUs = () => {
       return;
     }
 
-    navigation.navigate("ProductPage", {
+    openScreen("ProductPage", {
       product: {
         ...offer,
         merchant_logo: offer.merchant_logo,

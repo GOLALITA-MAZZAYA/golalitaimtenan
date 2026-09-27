@@ -2,31 +2,29 @@ import i18next from "i18next";
 import { getStringDate, isRTL, getLocalizedValue } from "../../../utils";
 import { getMerchantDetails, getOffers } from "../../api/merchants";
 import i18n from "../../languages";
-import { navigate } from "../../Navigation/RootNavigation";
+import { navigateNested, openScreen } from "../../Navigation/RootNavigation";
 import store from "../../redux/store";
 import { B1G1 } from "../../redux/types";
 
 export const handleOfferCardPress = (item, isOfferList) => {
-  if (isOfferList) {
-    navigate("offer-info", {
-      productId: item.id,
-      title: getLocalizedValue(item.x_arabic_name, item.name),
-    });
+  const params = {
+    productId: item.id,
+    title: getLocalizedValue(item.x_arabic_name, item.name),
+  };
 
+  if (isOfferList) {
+    navigateNested("offer-info", params);
     return;
   }
 
-  navigate("AllOffers", {
+  openScreen("AllOffers", {
     screen: "offer-info",
-    params: {
-      productId: item.id,
-      title: getLocalizedValue(item.x_arabic_name, item.name),
-    },
+    params,
   });
 };
 
 export const navigateToBookNow = (offer, merchant) => {
-  navigate("BookHotel", {
+  openScreen("BookHotel", {
     productId: offer.id,
     title: getLocalizedValue(offer.x_arabic_name, offer.name),
     merchant_id: merchant.merchant_id || merchant.id,
@@ -42,7 +40,7 @@ export const navigateTopProductPage = (offer, merchant) => {
   console.log(merchant.is_business_hotel, "merchant.is_business_hotel");
   console.log(offer, "offer");
 
-  navigate("AllOffers", {
+  openScreen("AllOffers", {
     screen: "offer-info",
     params: {
       productId: offer.id,
@@ -91,7 +89,7 @@ export const getDescription = (offer) => {
 export const handleInfoTextPress = (offer, merchant) => {
   if (merchant.is_business_hotel || offer.is_business_hotel) {
     if (merchant.is_business_hotel) {
-      navigate("AllOffers", {
+      openScreen("AllOffers", {
         screen: "offer-info",
         params: {
           productId: offer.id,
@@ -106,7 +104,7 @@ export const handleInfoTextPress = (offer, merchant) => {
   }
 
   if (offer.x_offer_type_promo_code) {
-    navigate("Voucher", {
+    openScreen("Voucher", {
       name: offer.name,
       id: offer.id,
       merchant_name: offer.merchant_name,
@@ -122,7 +120,7 @@ export const handleInfoTextPress = (offer, merchant) => {
   }
 
   if (offer.x_offer_type === B1G1) {
-    navigate("Promocode", {
+    openScreen("Promocode", {
       merchant_name: offer.merchant_name,
       name: offer.name,
       expiryDate: offer.end_date

@@ -24,7 +24,7 @@ import { userSelector } from "../../redux/auth/auth-selectors";
 import { getHtmlStyleSheet } from "./config";
 import HTMLView from "react-native-htmlview";
 import i18n from "../../languages";
-import { goBackOrMain } from "../../Navigation/RootNavigation";
+import { goBackOrHome } from "../../Navigation/RootNavigation";
 
 const amountOptions = [{ label: '10', value: 10 }, { label: '50', value: 50 }, { label: '100', value: 100 }]
 
@@ -188,7 +188,7 @@ const Charities = ({ navigation, route }) => {
 
         <Header btns={['back']} style={styles.header} additionalBtnsProps={{
           back: {
-            onPress: () => goBackOrMain(navigation)
+            onPress: () => goBackOrHome(navigation)
           }
         }} />
         <View style={[styles.roundedBorders, { backgroundColor: colors.charityBackground }]} />

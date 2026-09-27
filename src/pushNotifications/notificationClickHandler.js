@@ -3,7 +3,7 @@ import { getMerchantDetails } from '../redux/merchant/merchant-thunks';
 import store from '../redux/store';
 import i18n from 'i18next';
 import { setClickedNotificationData } from '../redux/notifications/notifications-actions';
-import { pushToMainStack } from '../Navigation/RootNavigation';
+import { openScreen } from '../Navigation/RootNavigation';
 import { CHARITY_MERCHANT_IDS } from '../constants';
 import { handleRedirectScreen } from '../utils/redirectScreen';
 import { getOfferById } from '../api/offers';
@@ -15,11 +15,8 @@ export const NotificatiionClickHanlder = {
     const id = Number(merchant_id);
 
     store.dispatch(setClickedNotificationData(null));
-    // Push so device/header back returns to the previous screen.
     store.dispatch(
-      getMerchantDetails(id, null, i18n.t, undefined, undefined, undefined, undefined, {
-        pushToStack: true,
-      }),
+      getMerchantDetails(id, null, i18n.t),
     );
   },
 
@@ -34,7 +31,7 @@ export const NotificatiionClickHanlder = {
         ? productResult[0]
         : productResult;
 
-      pushToMainStack('AllOffers', {
+      openScreen('AllOffers', {
         screen: 'offer-info',
         params: {
           productId: id,
@@ -52,7 +49,7 @@ export const NotificatiionClickHanlder = {
 
   charity: merchantId => {
     store.dispatch(setClickedNotificationData(null));
-    pushToMainStack('Charities', { merchantId });
+    openScreen('Charities', { merchantId });
   },
 };
 

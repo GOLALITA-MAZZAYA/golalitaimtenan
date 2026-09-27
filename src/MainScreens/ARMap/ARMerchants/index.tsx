@@ -35,7 +35,7 @@ import CompassHeading from 'react-native-compass-heading';
 import { getMerchantsByCoordinates } from '../../../api/merchants';
 import MerchantModal from '../../MapPage/components/MerchantModal';
 import Header from '../../../components/Header';
-import { goBackOrMain } from '../../../Navigation/RootNavigation';
+import { goBackOrHome } from '../../../Navigation/RootNavigation';
 import { SCREEN_HEIGHT } from '../../../styles/mainStyles';
 import { SCREEN_WIDTH } from '@gorhom/bottom-sheet';
 import { colors } from '../../../components/colors';
@@ -612,7 +612,7 @@ export default function ARMapScreen({ route }: any) {
         additionalBtnsProps={{
           back: {
             btnColor: colors.white,
-            onPress: () => goBackOrMain(navigation),
+            onPress: () => goBackOrHome(navigation),
           },
         }}
       />

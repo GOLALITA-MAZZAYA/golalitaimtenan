@@ -4,7 +4,7 @@ import CommonHeader from "../../components/CommonHeader/CommonHeader";
 import { colors } from "../../components/colors";
 import { useTheme } from "../../components/ThemeProvider";
 import WebView from "react-native-webview";
-import { goBackOrMain } from "../../Navigation/RootNavigation";
+import { goBackOrHome } from "../../Navigation/RootNavigation";
 
 const Website = (props) => {
   const { isDark } = useTheme();
@@ -13,7 +13,7 @@ const Website = (props) => {
   let params = props.route?.params;
 
   const handleBackPress = () => {
-    goBackOrMain(navigation);
+    goBackOrHome(navigation);
   };
 
   const handleNavigationChange = (navState) => {

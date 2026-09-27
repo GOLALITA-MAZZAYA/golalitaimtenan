@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { sized } from '../Svg';
 import { TypographyText } from './Typography';
@@ -10,7 +10,12 @@ import { mainStyles } from '../styles/mainStyles';
 import { useTheme } from './ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import ProfileSvg from '../assets/Profile.svg';
-import { navigate, navigationRef } from '../Navigation/RootNavigation';
+import {
+  goHome,
+  openTab,
+  navigationRef,
+  getActiveTabRouteName,
+} from '../Navigation/RootNavigation';
 import AnimatedIcon from './AnimatedIcon';
 import useIsGuest from '../hooks/useIsGuest';
 import { showMessage } from 'react-native-flash-message';
@@ -19,30 +24,36 @@ const HomeIcon = sized(HomeSvg, 28, 30);
 const CardIcon = sized(CardSvg, 28, 30);
 const ProfileIcon = sized(ProfileSvg, 30, 28);
 
-export let ButtonTabBar = ({ state, descriptors }) => {
+/**
+ * App bottom bar overlay (not a real Tabs navigator).
+ * Subscribes to navigation state so the selected icon stays in sync.
+ */
+export const ButtonTabBar = () => {
   const { t } = useTranslation();
   const isGuest = useIsGuest();
   const { isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState(() => getActiveTabRouteName());
 
-  const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
+  useEffect(() => {
+    const syncActiveTab = () => {
+      setActiveTab(getActiveTabRouteName());
+    };
 
-  let focusedOptions = descriptors[state.routes[state.index].key].options;
+    syncActiveTab();
 
-  // Nested ESim screens report as ESimPlans / etc.
-  const hideForNestedFlow =
-    typeof currentRouteName === 'string' &&
-    (currentRouteName === 'AiChat' || currentRouteName.startsWith('ESim'));
+    if (!navigationRef.isReady()) {
+      return undefined;
+    }
 
-  if (focusedOptions.tabBarVisible === false || hideForNestedFlow) {
-    return null;
-  }
+    const unsubscribe = navigationRef.addListener('state', syncActiveTab);
+    return unsubscribe;
+  }, []);
 
   const activeColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const passiveColor = isDark ? 'white' : 'black';
 
-  const getColor = screenName => {
-    return currentRouteName === screenName ? activeColor : passiveColor;
-  };
+  const getColor = screenName =>
+    activeTab === screenName ? activeColor : passiveColor;
 
   return (
     <View style={styles.TabView__wrapper}>
@@ -52,10 +63,7 @@ export let ButtonTabBar = ({ state, descriptors }) => {
           { backgroundColor: isDark ? '#2E2E2E' : '#fff' },
         ]}
       >
-        <TouchableOpacity
-          style={styles.TabView__item}
-          onPress={() => navigate('Main')}
-        >
+        <TouchableOpacity style={styles.TabView__item} onPress={() => goHome()}>
           <View style={styles.iconWrapper}>
             <HomeIcon color={getColor('Main')} />
           </View>
@@ -64,17 +72,15 @@ export let ButtonTabBar = ({ state, descriptors }) => {
             size={13}
             font={LUSAIL_REGULAR}
             title={t('TabBar.home')}
-            style={{
-              color: getColor('Main'),
-            }}
+            style={{ color: getColor('Main') }}
           />
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.TabView__item}
-          onPress={() => navigate('MapPage')}
+          onPress={() => openTab('MapPage')}
         >
           <AnimatedIcon color={getColor('MapPage')} />
-
           <TypographyText
             textColor={colors.lightGrey}
             size={13}
@@ -92,10 +98,9 @@ export let ButtonTabBar = ({ state, descriptors }) => {
                 type: 'warning',
                 message: t('Drawer.notForGuest'),
               });
-
               return;
             }
-            navigate('card');
+            openTab('card');
           }}
         >
           <View style={styles.iconWrapper}>
@@ -109,11 +114,10 @@ export let ButtonTabBar = ({ state, descriptors }) => {
             style={{ color: getColor('card') }}
           />
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.TabView__item}
-          onPress={() => {
-            navigate('Profile');
-          }}
+          onPress={() => openTab('Profile')}
         >
           <View style={styles.iconWrapper}>
             <ProfileIcon color={getColor('Profile')} />
@@ -132,54 +136,26 @@ export let ButtonTabBar = ({ state, descriptors }) => {
 };
 
 const styles = StyleSheet.create({
-  TabView__wrapper: {},
+  TabView__wrapper: {
+    backgroundColor: 'transparent',
+  },
   TabView: {
     ...mainStyles.shadow,
     backgroundColor: '#FFFFFF',
     height: 65,
     paddingHorizontal: Platform.OS === 'ios' ? 20 : 10,
-    bottom: 0,
-    left: 0,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 21 : 8,
-    zIndex: -1,
   },
   TabView__item: {
-    width: '20%',
+    width: '25%',
     alignItems: 'center',
-  },
-  TabView__caption: {
-    // marginTop: 6
   },
   iconWrapper: {
     position: 'relative',
-  },
-  cardButton: {
-    width: 63,
-    height: 63,
-    backgroundColor: 'red',
-    borderRadius: 30,
-    top: -15,
-    zIndex: 1000,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#072536',
-    borderColor: '#fff',
-    borderWidth: 1,
-  },
-  TabView__notifications: {
-    width: 10,
-    height: 10,
-    backgroundColor: '#FF406E',
-    borderRadius: 50,
-    position: 'absolute',
-    top: -5,
-    right: -3,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

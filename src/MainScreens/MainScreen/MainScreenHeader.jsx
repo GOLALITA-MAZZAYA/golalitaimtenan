@@ -13,7 +13,7 @@ import DarkBurgerSvg from "../../assets/dark_burger.svg";
 import { connect } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { getFlexDirection, isRTL } from "../../../utils";
-import { goBackOrMain } from "../../Navigation/RootNavigation";
+import { goBackOrHome } from "../../Navigation/RootNavigation";
 
 const BurgerIcon = sized(BurgerSvg, 29, 24);
 const DarkBurgerIcon = sized(DarkBurgerSvg, 29, 24);
@@ -41,7 +41,7 @@ const MainScreenHeader = ({ headerLabel, user }) => {
             isRTL() && { transform: [{ rotate: "180deg" }] },
           ]}
           onPress={() => {
-            if (headerLabel) goBackOrMain(navigation);
+            if (headerLabel) goBackOrHome(navigation);
             else navigation.openDrawer();
           }}
         >

@@ -12,6 +12,7 @@ import CategoriesTypes from './components/CategoriesTypes';
 import MerchantTypes from './components/MerchantTypes';
 import SubCategoriesTags from './components/SubCategoriesTags';
 import trackActivity from '../../../api/activityTracker';
+import { useHardwareBackHandler } from '../../../hooks/useHardwareBackButton';
 
 const transformCategoryValue = category => {
   if (category == null || category === '') {
@@ -140,6 +141,8 @@ const MerchantsFilters = ({ navigation, route }) => {
       parentCategoryId: params?.parentCategoryId,
     });
   };
+
+  useHardwareBackHandler(onBackPress);
 
   return (
     <FilterScreen

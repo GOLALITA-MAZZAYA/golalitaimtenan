@@ -4,7 +4,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  BackHandler,
   SafeAreaView,
   StyleSheet,
   View,
@@ -25,8 +24,7 @@ import TabHeader from './TabHeader';
 import Share from 'react-native-share';
 import { setMerchantDetails } from '../../../redux/merchant/merchant-actions';
 import HeaderTabs from './TabHeader/HeaderTabs';
-import { useNavigation } from '@react-navigation/native';
-import { goBackOrMain } from '../../../Navigation/RootNavigation';
+import store from '../../../redux/store';
 
 export const CONSTANTS = {
   INFO: 'INFO',
@@ -35,6 +33,8 @@ export const CONSTANTS = {
   ROOM_RATES: "ROOM_RATES"
 };
 
+const getMerchantId = merchant =>
+  merchant?.id ?? merchant?.merchant_id ?? merchant?.partner_id?.[0] ?? null;
 
 const MerchantInfo = ({
   route,
@@ -49,31 +49,37 @@ const MerchantInfo = ({
   const { isDark } = useTheme();
   const viewRef = useRef();
   const params = route?.params;
-  const navigation = useNavigation();
+  const mountedMerchantIdRef = useRef(getMerchantId(merchantDetails));
 
   useEffect(() => {
+    const id = getMerchantId(merchantDetails);
+    if (id != null) {
+      mountedMerchantIdRef.current = id;
+    }
+  }, [merchantDetails]);
+
+  // Clear shared Redux details only when this screen's merchant is still the
+  // one in the store. Avoid wiping a newly loaded merchant when push/replace
+  // remounts MerchantInfo (Home → reopen, notification while merchant open).
+  useEffect(() => {
     return () => {
-      setMerchantDetails(null);
+      const state = store.getState().merchantReducer;
+      if (state.merchantDetailsLoading) {
+        return;
+      }
+
+      const currentId = getMerchantId(state.merchantDetails);
+      const mountedId = mountedMerchantIdRef.current;
+
+      if (currentId == null || currentId === mountedId) {
+        setMerchantDetails(null);
+      }
     };
-  }, []);
+  }, [setMerchantDetails]);
 
   useEffect(() => {
     getContracts();
   }, []);
-
-  useEffect(() => {
-    const onHardwareBack = () => {
-      goBackOrMain(navigation);
-      return true;
-    };
-
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      onHardwareBack,
-    );
-
-    return () => subscription.remove();
-  }, [navigation]);
 
   const handleSharePress = async () => {
     try {

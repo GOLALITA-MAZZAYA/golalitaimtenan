@@ -1,9 +1,99 @@
 import { useEffect, useState } from 'react';
 import { Linking } from 'react-native';
-import { navigate, navigateDeep, navigationRef } from '../Navigation/RootNavigation';
+import { goHome, openScreen, navigationRef } from '../Navigation/RootNavigation';
+import store from '../redux/store';
+import { getMerchantDetails } from '../redux/merchant/merchant-thunks';
+import i18n from 'i18next';
 
+/**
+ * Custom deep-link handler (scheme golalitaimtenanrewards://).
+ * Always uses openScreen / goHome so back behavior matches notifications
+ * and home banner opens. Complements RN linking config in config.js.
+ */
 export const useDeepLinking = () => {
   const [pendingURL, setPendingURL] = useState(null);
+
+  const openFromDeepLink = (screen, params) => {
+    if (screen === 'home' || screen === 'Main') {
+      goHome();
+      return;
+    }
+
+    if (screen === 'charities' || screen === 'Charities') {
+      openScreen('Charities', params);
+      return;
+    }
+
+    if (screen === 'giftcards' || screen === 'giftcard') {
+      openScreen('myVouchers', {
+        screen: 'myVouchers-list',
+        params: { selectedPage: '1', ...params },
+      });
+      return;
+    }
+
+    if (screen === 'vouchers') {
+      openScreen('myVouchers', {
+        screen: 'myVouchers-list',
+        params: { selectedPage: '0', ...params },
+      });
+      return;
+    }
+
+    // offers / offers/info → AllOffers → offer-info
+    if (screen === 'offers' || screen === 'offers/info') {
+      if (params?.productId || params?.product_id || screen === 'offers/info') {
+        openScreen('AllOffers', {
+          screen: 'offer-info',
+          params: {
+            ...params,
+            productId: Number(params.productId || params.product_id) || params.productId,
+          },
+        });
+        return;
+      }
+      openScreen('AllOffers');
+      return;
+    }
+
+    // merchant / merchant/info — fetch details then open (same as notifications)
+    if (screen === 'merchant' || screen === 'merchant/info') {
+      const merchantId = Number(
+        params?.merchant_id || params?.merchantId || params?.id,
+      );
+      if (merchantId) {
+        store.dispatch(getMerchantDetails(merchantId, null, i18n.t));
+        return;
+      }
+      openScreen('merchant', {
+        screen: 'merchant-info',
+        params,
+      });
+      return;
+    }
+
+    if (screen === 'ar' || screen === 'ar/howto') {
+      openScreen('ARMap', { screen: 'ARHowToUse', params });
+      return;
+    }
+
+    if (screen === 'ar/merchants') {
+      openScreen('ARMap', { screen: 'ARMerchants', params });
+      return;
+    }
+
+    if (screen === 'map') {
+      openScreen('MapPage', params);
+      return;
+    }
+
+    if (screen === 'notifications') {
+      openScreen('Notifications', params);
+      return;
+    }
+
+    openScreen(screen, params);
+  };
 
   const handleDeepLink = url => {
     if (!url) return;
@@ -14,34 +104,7 @@ export const useDeepLinking = () => {
     const { screen, params } = parsed;
 
     if (navigationRef.isReady()) {
-      // Push onto MainStack so back returns to the previous screen.
-      if (screen === 'charities') {
-        navigateDeep('Charities', params);
-        return;
-      }
-
-      if (screen === 'giftcards' || screen === 'giftcard') {
-        navigateDeep('myVouchers', {
-          screen: 'myVouchers-list',
-          params: { selectedPage: '1', ...params },
-        });
-        return;
-      }
-
-      if (screen === 'vouchers') {
-        navigateDeep('myVouchers', {
-          screen: 'myVouchers-list',
-          params: { selectedPage: '0', ...params },
-        });
-        return;
-      }
-
-      if (screen === 'home') {
-        navigate('Main');
-        return;
-      }
-
-      navigateDeep(screen, params);
+      openFromDeepLink(screen, params);
     } else {
       setPendingURL({ screen, params });
     }
@@ -69,33 +132,10 @@ export const useDeepLinking = () => {
 
     const { screen, params } = pendingURL;
     setPendingURL(null);
-
-    if (screen === 'charities') {
-      navigateDeep('Charities', params);
-      return;
-    }
-    if (screen === 'giftcards' || screen === 'giftcard') {
-      navigateDeep('myVouchers', {
-        screen: 'myVouchers-list',
-        params: { selectedPage: '1', ...params },
-      });
-      return;
-    }
-    if (screen === 'vouchers') {
-      navigateDeep('myVouchers', {
-        screen: 'myVouchers-list',
-        params: { selectedPage: '0', ...params },
-      });
-      return;
-    }
-    if (screen === 'home') {
-      navigate('Main');
-      return;
-    }
-
-    navigateDeep(screen, params);
+    openFromDeepLink(screen, params);
   }, [pendingURL]);
 };
+
 const parseURL = url => {
   try {
     const withoutScheme = url.replace(/^golalitaimtenanrewards:\/\//, '');
@@ -107,7 +147,7 @@ const parseURL = url => {
     if (queryPart) {
       queryPart.split('&').forEach(pair => {
         const [key, value] = pair.split('=');
-        params[key] = value;
+        params[key] = decodeURIComponent(value ?? '');
       });
     }
 

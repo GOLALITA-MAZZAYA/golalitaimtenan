@@ -3,6 +3,7 @@ import FilterScreen from "../../../components/FiltersScreen";
 import AsyncCountryPicker from "./components/AsyncCountryPicker";
 import AsyncCategorySelect from "./components/AsyncCategorySelect";
 import { useRoute } from "@react-navigation/native";
+import { useHardwareBackHandler } from "../../../hooks/useHardwareBackButton";
 
 const GiftCardFilters = ({ navigation }) => {
   const route = useRoute();
@@ -27,6 +28,8 @@ const GiftCardFilters = ({ navigation }) => {
   const onBackPress = () => {
     navigation.navigate("myVouchers-list");
   };
+
+  useHardwareBackHandler(onBackPress);
 
   return (
     <FilterScreen

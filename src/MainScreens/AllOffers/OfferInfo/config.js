@@ -6,7 +6,7 @@ import { Linking } from 'react-native';
 import { getStringDate, isRTL } from '../../../../utils';
 import { B1G1, PROMOCODE } from '../../../redux/types';
 import { colors } from '../../../components/colors';
-import { navigate } from '../../../Navigation/RootNavigation';
+import { navigateNested, openScreen } from '../../../Navigation/RootNavigation';
 
 export const OFFER_TAB_CONSTANTS = {
   OFFERS: "OFFERS",
@@ -37,7 +37,7 @@ export const getInfoBtnsConfig = (offer, isDark) => {
       text: i18next.t('Merchants.offerContract'),
       icon: MenuBookIcon,
       onPress: () => {
-        navigate('offer-menu', {
+        navigateNested('offer-menu', {
           company_contract_url: offer.offer_detail_url,
         });
       },
@@ -48,7 +48,7 @@ export const getInfoBtnsConfig = (offer, isDark) => {
       text: i18next.t('Merchants.contract'),
       icon: MenuBookIcon,
       onPress: () => {
-        navigate('offer-menu', {
+        navigateNested('offer-menu', {
           company_contract_url: offer?.merchant_contract_url,
         });
       },
@@ -109,7 +109,7 @@ export const getOfferTypeInfoBtnsConfig = (offer, handlePromoPress, isSubmitting
       visible: offer.offer_type === B1G1,
       label: i18next.t('ProductPage.b1g1Free'),
       onPress: () => {
-        navigate('Promocode', {
+        openScreen('Promocode', {
           merchant_name: isRTL() ? offer.merchant_name_arabic : offer.merchant_name,
           name: isRTL() ? offer.arabic_name : offer.name,
           expiryDate: offer.end_date

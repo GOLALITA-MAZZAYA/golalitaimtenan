@@ -54,7 +54,8 @@ const NotificationModal = ({
   }, []);
 
   const handleClosePress = () => {
-    setIsNotificationModal(null);
+    setIsNotificationModal(false);
+    bottomSheetModalRef.current?.dismiss();
   };
 
   useEffect(() => {
@@ -72,7 +73,8 @@ const NotificationModal = ({
     if (!isVisibleVar && !!isModalShowed.current) {
       // dismiss() clears the modal BackHandler; close() can leave it armed
       // so the next Android back press exits the app from merchant-info.
-      bottomSheetModalRef?.current?.dismiss();
+      bottomSheetModalRef.current?.dismiss();
+      isModalShowed.current = false;
     }
   }, [isVisibleVar]);
 

@@ -1,19 +1,36 @@
-import React from "react";
-import { StyleSheet } from "react-native";
-import CustomDrawer from "./CustomDrawer";
-import { colors } from "../colors";
+import React from 'react';
+import { StyleSheet } from 'react-native';
+import CustomDrawer from './CustomDrawer';
+import { colors } from '../colors';
 
-const CustomDrawerContent = ({ navigation, descriptors, state }) => {
-  let focusedOptions = descriptors[state.routes[state.index].key].options;
-  let routeName =
-    state.routes[state.routes.length - 1]?.state?.routes[0]?.state?.routes[
-      state.routes[state.routes.length - 1]?.state?.routes[0]?.state?.routes
-        ?.length - 1
-    ]?.name;
+/**
+ * Resolve the focused MainStack route name from Drawer state.
+ * Tree: Drawer(Home) → MainStack → [optional nested stack]
+ */
+const getFocusedMainStackRouteName = state => {
+  const drawerRoute = state?.routes?.[state.index];
+  const mainStackState = drawerRoute?.state;
 
-  if (focusedOptions.tabBarVisible === false) {
-    return null;
+  if (!mainStackState?.routes?.length) {
+    return 'Main';
   }
+
+  const stackRoute =
+    mainStackState.routes[
+      mainStackState.index ?? mainStackState.routes.length - 1
+    ];
+
+  let current = stackRoute;
+  while (current?.state?.routes?.length) {
+    const nested = current.state;
+    current = nested.routes[nested.index ?? nested.routes.length - 1];
+  }
+
+  return current?.name ?? stackRoute?.name ?? 'Main';
+};
+
+const CustomDrawerContent = ({ state }) => {
+  const routeName = getFocusedMainStackRouteName(state);
 
   return <CustomDrawer routeName={routeName} styles={styles} />;
 };
@@ -28,29 +45,29 @@ const styles = StyleSheet.create({
   close: {},
 
   row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
     paddingHorizontal: 15,
   },
   icons: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 11,
   },
   bottom: {
     marginBottom: 30,
   },
   imgWrapper: {
-    position: "relative",
+    position: 'relative',
     marginRight: 11,
     padding: 1,
     backgroundColor: colors.white,
     borderRadius: 50,
   },
   premiumIcon: {
-    position: "absolute",
+    position: 'absolute',
     top: -5,
     left: 0,
   },
@@ -63,12 +80,12 @@ const styles = StyleSheet.create({
     width: 34,
     height: 26,
     borderRadius: 100,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginHorizontal: 3,
-    borderStyle: "solid",
+    borderStyle: 'solid',
     borderWidth: 1,
-    borderColor: "#fff",
+    borderColor: '#fff',
   },
   iconWrapper: {
     marginRight: 0,

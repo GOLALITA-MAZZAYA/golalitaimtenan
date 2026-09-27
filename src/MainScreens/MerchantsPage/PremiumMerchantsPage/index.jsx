@@ -12,7 +12,7 @@ import PremiumMerchants from "../../../components/PremiumMerchants";
 import { getMerchantDetails } from "../../../redux/merchant/merchant-thunks";
 import Header from "../../../components/Header";
 import {getUserLocationThunk} from "../../../redux/global/global-thunks";
-import { goBackOrMain } from "../../../Navigation/RootNavigation";
+import { goBackOrHome } from "../../../Navigation/RootNavigation";
 
 const PremiumMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk }) => {
   const { t } = useTranslation();
@@ -32,7 +32,7 @@ const PremiumMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationT
           btns={["back"]}
           additionalBtnsProps={{
             back: {
-              onPress: () => goBackOrMain(navigation),
+              onPress: () => goBackOrHome(navigation),
             },
           }}
         />

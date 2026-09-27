@@ -15,7 +15,7 @@ import Svg, {
 } from "react-native-svg";
 import { colors } from "../colors";
 import { useTheme } from "../ThemeProvider";
-import { navigate } from "../../Navigation/RootNavigation";
+import { openScreen } from "../../Navigation/RootNavigation";
 import { isRTL } from "../../../utils";
 
 const FloatingAiChatButton = () => {
@@ -65,7 +65,7 @@ const FloatingAiChatButton = () => {
           activeOpacity={0.9}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          onPress={() => navigate("AiChat")}
+          onPress={() => openScreen("AiChat")}
           style={styles.touchable}
           accessibilityLabel="AI Chat"
           accessibilityRole="button"

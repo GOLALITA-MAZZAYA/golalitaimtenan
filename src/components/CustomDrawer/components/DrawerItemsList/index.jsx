@@ -16,8 +16,8 @@ import Gopoint from '../../../../assets/goPoints.svg';
 import MerchantsSvg from '../../../../assets/merchants.svg';
 import GiftSvg from '../../../../assets/gift.svg';
 import VouchersSvg from '../../../../assets/vouchers.svg';
-import { useNavigation } from '@react-navigation/native';
-import OffersSvg from "../../../../assets/offers.svg";
+import { DrawerActions, useNavigation } from '@react-navigation/native';
+import OffersSvg from '../../../../assets/offers.svg';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,6 +30,7 @@ import { showMessage } from 'react-native-flash-message';
 import useIsGuest from '../../../../hooks/useIsGuest';
 import useDrawerMenuVisibility from '../../../../hooks/useDrawerMenuVisibility';
 import { DRAWER_SCREEN_NAMES } from '../../drawerConfig';
+import { openScreen } from '../../../../Navigation/RootNavigation';
 
 const DrawerItemList = () => {
   const { isDark } = useTheme();
@@ -43,19 +44,19 @@ const DrawerItemList = () => {
   const FavoritesIcon = sized(FavoritesSvg, 20, 20, iconColor);
   const SettingsIcon = sized(SettingsSvg, 20, 20, iconColor);
   const ContactUsIcon = sized(ContactUsSvg, 20, 20, iconColor);
-  const GopointIcon = sized(Gopoint, 20, 20, iconColor);
-  const PremiumIcon = sized(PremiumSvg, 20, 20, iconColor);
-  const ScanIcon = sized(ScanSvg, 20, 20, iconColor);
   const PlanetIcon = sized(PlanetSvg, 20, 20, iconColor);
-  const MerchantsIcon = sized(MerchantsSvg, 20, 20, iconColor);
   const FamilyIcon = sized(FamilySvg, 20, 20, iconColor);
-  const ARIcon = sized(ARSvg, 20, 20, iconColor);
-  const GiftIcon = sized(GiftSvg, 20, 20, iconColor);
   const OffersIcon = sized(OffersSvg, 20, 20, iconColor);
-
   const VouchersIcon = sized(VouchersSvg, 20, 20, iconColor);
+
   const [premiumMerchantsCount, setPremiumMerchantsCount] = useState(0);
   const [goPointsMerchantsCount, setGoPointsMerchantsCount] = useState(0);
+
+  // openScreen pushes on MainStack and does not auto-close the drawer.
+  const openFromDrawer = (name, params) => {
+    navigation.dispatch(DrawerActions.closeDrawer());
+    openScreen(name, params);
+  };
 
   useEffect(() => {
     getPremiumMerchantsCount()
@@ -76,22 +77,9 @@ const DrawerItemList = () => {
   }, []);
 
   const drawerItems = [
-    // {
-    //   icon: () => <VouchersIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
-    //   title: "GlobalTix",
-    //   onPress: () => navigation.navigate("GlobalTix"),
-    // },
-    // {
-    //   icon: () => <ARIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
-    //   title: t('Drawer.offersAroundYou'),
-    //   onPress: () => navigation.navigate('ARMap', {
-    //     screen: 'ARHowToUse'
-    //   }),
-    //   // hidden: !isMainUser,
-    // },
     {
       screenName: DRAWER_SCREEN_NAMES.FAMILY_MEMBERS,
-      icon: () => <FamilyIcon style={styles.iconWrapper} />, //routeName === 'Cart' ? <BagActiveIcon /> : <BagIcon />,
+      icon: () => <FamilyIcon style={styles.iconWrapper} />,
       title: t('Drawer.familyMembers'),
       onPress: () => {
         if (isGuest) {
@@ -99,92 +87,46 @@ const DrawerItemList = () => {
             type: 'warning',
             message: t('Drawer.notForGuest'),
           });
-
           return;
         }
-        navigation.navigate('Family');
+        openFromDrawer('Family');
       },
       hidden: !isMainUser || isGuest,
     },
-    // {
-    //   icon: () => <PremiumIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-    //   title: t('Drawer.premiumMerchants'),
-    //   onPress: () =>
-    //     navigation.navigate('merchants', {
-    //       screen: 'premiumMerchants-list',
-    //       params: { selectedCategory: null },
-    //     }),
-    //   counts: premiumMerchantsCount,
-    //   hidden: premiumMerchantsCount == 0,
-    // },
-    // {
-    //   icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-    //   title: t('Drawer.goPoints'),
-    //   onPress: () =>
-    //     navigation.navigate('merchants', {
-    //       screen: 'GoPointsMerchants-list',
-    //       params: { selectedCategory: null },
-    //     }),
-    //   counts: goPointsMerchantsCount,
-    //   hidden: goPointsMerchantsCount == 0,
-    // },
-    // {
-    //   icon: () => <MerchantsIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-    //   title: t('Drawer.newMerchants'),
-    //   onPress: () =>
-    //     navigation.navigate('merchants', {
-    //       screen: 'newMerchants-list',
-    //       params: { selectedCategory: null },
-    //     }),
-    // },
-    // {
-    //   icon: () => <GopointIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-    //   title: t('Drawer.loyaltyPoints'),
-    //   onPress: () =>
-    //     navigation.navigate('loyaltyPoints', {
-    //       screen: 'loyaltyPoints-main',
-    //     }),
-    // },
     {
       screenName: DRAWER_SCREEN_NAMES.VOUCHERS,
       icon: () => <VouchersIcon style={styles.iconWrapper} />,
       title: t('Drawer.vouchersAndGiftCards'),
-      onPress: () => navigation.navigate('myVouchers', {
-        screen: 'myVouchers-list',
-      }),
+      onPress: () =>
+        openFromDrawer('myVouchers', {
+          screen: 'myVouchers-list',
+        }),
     },
     {
       screenName: DRAWER_SCREEN_NAMES.ALL_OFFERS,
-      icon: () => <OffersIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+      icon: () => <OffersIcon style={styles.iconWrapper} />,
       title: t('Drawer.allOffers'),
-      onPress: () => navigation.navigate('AllOffers'),
+      onPress: () => openFromDrawer('AllOffers'),
     },
-    // {
-    //   icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
-    //   title: t('Drawer.b1g1'),
-    //   onPress: () => navigation.navigate('B1G1'),
-    // },
     {
       screenName: DRAWER_SCREEN_NAMES.FAVORITES,
-      icon: () => <FavoritesIcon style={styles.iconWrapper} />, //routeName === 'Discount' ? <DiscountsActiveIcon /> : <DiscountsIcon />,
+      icon: () => <FavoritesIcon style={styles.iconWrapper} />,
       title: t('Favorites.favorites'),
-      onPress: () => navigation.navigate('favouriteMerchants'),
-
+      onPress: () => openFromDrawer('favouriteMerchants'),
       hidden: isGuest,
     },
     {
       screenName: DRAWER_SCREEN_NAMES.SETTINGS,
-      icon: () => <SettingsIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
+      icon: () => <SettingsIcon style={styles.iconWrapper} />,
       title: t('Settings.settings'),
-      onPress: () => navigation.navigate('Settings'),
+      onPress: () => openFromDrawer('Settings'),
     },
     {
       screenName: DRAWER_SCREEN_NAMES.LANGUAGE,
-      icon: () => <PlanetIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
+      icon: () => <PlanetIcon style={styles.iconWrapper} />,
       title: t('Drawer.language'),
       onPress: () => {
         const newLang = i18n.language === 'ar' ? 'en' : 'ar';
-
         i18next.changeLanguage(newLang);
         AsyncStorage.setItem('lang', newLang);
       },
@@ -195,17 +137,8 @@ const DrawerItemList = () => {
       screenName: DRAWER_SCREEN_NAMES.CONTACT_US,
       icon: () => <ContactUsIcon style={styles.iconWrapper} />,
       title: t('ContactUs.contactUs'),
-      onPress: () => navigation.navigate('ContactUs'),
+      onPress: () => openFromDrawer('ContactUs'),
     },
-    // {
-    //   icon: () => <ScanIcon style={styles.iconWrapper} />,
-    //   title: t('Drawer.scanBill'),
-    //   onPress: () =>
-    //     navigation.navigate('BillScannerHoToUse', {
-    //       title: t('Drawer.scanBill'),
-    //     }),
-    //   hidden: isGuest,
-    // },
   ];
 
   const filteredDrawerItems = useMemo(() => {

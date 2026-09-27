@@ -15,7 +15,7 @@ import { getFavoriteOffers } from "../../redux/merchant/merchant-thunks";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import ListNoData from "../../components/ListNoData";
-import { goBackOrMain } from "../../Navigation/RootNavigation";
+import { goBackOrHome } from "../../Navigation/RootNavigation";
 
 const Favorites = ({ favoriteOffers, isOffersLoading, getFavoriteOffers }) => {
   const { t } = useTranslation();
@@ -27,7 +27,7 @@ const Favorites = ({ favoriteOffers, isOffersLoading, getFavoriteOffers }) => {
   }, []);
 
   const handleBackPress = () => {
-    goBackOrMain(navigation);
+    goBackOrHome(navigation);
   };
 
   return (

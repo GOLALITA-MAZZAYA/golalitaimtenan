@@ -17,7 +17,7 @@ import { getFlexDirection, isRTL } from "../../../utils";
 import NotificationSvg from "../../assets/notification.svg";
 import NotificationActiveSvg from "../../assets/notification_active.svg";
 import { useTheme } from "../ThemeProvider";
-import { goBackOrMain } from "../../Navigation/RootNavigation";
+import { goBackOrHome } from "../../Navigation/RootNavigation";
 
 const SmallBackIcon = sized(SmallBackSvg, 7, 14);
 
@@ -71,7 +71,7 @@ const CommonHeader = ({
           justifyContent: "center",
           transform: [{ rotate: isRTL() ? "180deg" : "0deg" }],
         }}
-        onPress={onBackPress ?? (() => goBackOrMain(navigation))}
+        onPress={onBackPress ?? (() => goBackOrHome(navigation))}
       >
         {isWhite ? <BackWhiteIcon /> : <BackIcon />}
       </TouchableOpacity>

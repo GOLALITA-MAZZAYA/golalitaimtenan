@@ -13,7 +13,7 @@ import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { pushToMainStack } from "../../Navigation/RootNavigation";
+import { openScreen } from "../../Navigation/RootNavigation";
 import { useTheme } from "../ThemeProvider";
 import { readNotification } from "../../redux/notifications/notifications-thunks";
 import { getNotificationDescription } from "../../MainScreens/Notifications/helpers";
@@ -31,8 +31,9 @@ const NotificationItem = ({ item, onPress }) => {
 
   const language = i18n.language;
   const handleItemPress = () => {
+    // Close sheet first so it does not stay open over merchant/offer screens.
     onPress?.();
-    dispatch(setIsNotificationModal(null));
+    dispatch(setIsNotificationModal(false));
 
     trackActivity("popup_click", {
       reference: item.notification_id,
@@ -47,7 +48,7 @@ const NotificationItem = ({ item, onPress }) => {
     }
 
     if (item.product_id) {
-      pushToMainStack("AllOffers", {
+      openScreen("AllOffers", {
         screen: "offer-info",
         params: {
           productId: item.product_id,
@@ -60,15 +61,11 @@ const NotificationItem = ({ item, onPress }) => {
 
     if (item.merchant_id) {
       if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
-        pushToMainStack("Charities", { merchantId: item.merchant_id });
+        openScreen("Charities", { merchantId: item.merchant_id });
         dispatch(readNotification(item.notification_id));
         return;
       }
-      dispatch(
-        getMerchantDetails(item.merchant_id, null, t, undefined, undefined, undefined, undefined, {
-          pushToStack: true,
-        }),
-      );
+      dispatch(getMerchantDetails(item.merchant_id, null, t));
       dispatch(readNotification(item.notification_id));
       return;
     }
