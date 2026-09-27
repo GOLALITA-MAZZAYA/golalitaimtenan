@@ -47,25 +47,24 @@ export const getInitialData = () => async (dispatch, getState) => {
     const token = await getAuthToken();
     const userId = await AsyncStorage.getItem('userId');
 
-    // setTimeout(() => {
-    //   if (Platform.OS === "android") {
-    //     SplashScreen.hide();
-    //   } else {
-    //     dispatch(setIsSplashScreenVisible(false));
-    //   }
-    // }, 3000);
-
     if (userId) dispatch(setUserId(userId));
-    if (token) {
-      dispatch(getUserData(token));
-      dispatch(setToken(token));
-      dispatch(getAdvert());
-      dispatch(getParentCategories(categoriesType));
-      dispatch(getCountries());
-      dispatch(getMessageNotifications());
+
+    if (!token) {
+      dispatch(setIsAuthorized(false));
+      return;
     }
+
+    dispatch(getUserData(token));
+    dispatch(setToken(token));
+    dispatch(getAdvert());
+    dispatch(getParentCategories(categoriesType));
+    dispatch(getCountries());
+    dispatch(getMessageNotifications());
+    // Ensure Root can mount even before getUserData finishes (avoids splash hang).
+    dispatch(setIsAuthorized(true));
   } catch (err) {
     console.log(err, 'user error');
+    dispatch(setIsAuthorized(false));
   }
 };
 

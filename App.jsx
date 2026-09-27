@@ -38,6 +38,7 @@ import usePushNotifications from './src/pushNotifications/usePushNotifications';
 import { useSecurityCheck, isDeviceBlocked } from './src/utils/deviceSecurityCheck';
 import { useScreenSecurity } from './src/hooks/useScreenSecurity';
 import PrivacyOverlay from './src/components/PrivacyOverlay';
+import { clearAuthToken } from './src/utils/tokenStorage';
 
 
 import {
@@ -187,39 +188,65 @@ let App = ({
   //   })();
   // }, [dispatch]);
 
-  // Повторная инициализация после isReady
+  // Resolve auth after SSL/startup is ready. Must always set isAuthorized to a
+  // boolean — otherwise Root never mounts and splash stays forever.
+  // Fresh TestFlight reinstalls often keep a Keychain token while AsyncStorage
+  // flags (isUserLoggedOut) are missing.
   useEffect(() => {
     if (!isReady) return;
 
+    let cancelled = false;
+
     (async () => {
-      // An existing session must not auto-resume on a flagged device
-      if (await isDeviceBlocked()) {
+      try {
+        if (await isDeviceBlocked()) {
+          if (!cancelled) {
+            dispatch(setIsAuthorized(false));
+          }
+          return;
+        }
+
+        const isLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
+        const isTokenValid = await checkIfTokenIsValid();
+
+        console.log(isTokenValid, 'isTokenValid (post-ready)');
+        console.log(isLoggedOut, 'isLoggedOut (post-ready)');
+
+        if (cancelled) {
+          return;
+        }
+
+        // User explicitly logged out — never auto-resume, wipe surviving Keychain.
+        if (isLoggedOut === 'true') {
+          await clearAuthToken();
+          dispatch(setIsAuthorized(false));
+          return;
+        }
+
+        // Valid token + logged-in flag, OR reinstall with Keychain token still
+        // present while isUserLoggedOut was wiped with AsyncStorage.
+        if (isTokenValid) {
+          if (isLoggedOut !== 'false') {
+            await AsyncStorage.setItem('isUserLoggedOut', 'false');
+          }
+          dispatch(getInitialData());
+          return;
+        }
+
+        // No usable session — clear any stale Keychain token from a previous install.
+        await clearAuthToken();
         dispatch(setIsAuthorized(false));
-        return;
-      }
-
-      // await initializeGlobalTixToken();
-      const isTokenValid = await checkIfTokenIsValid();
-
-      console.log(isTokenValid, 'isTokenValid (post-ready)');
-
-      if (!isTokenValid) {
-        dispatch(setIsAuthorized(false));
-      }
-
-      const isLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
-
-      console.log(isLoggedOut, 'isLoggedOut (post-ready)');
-
-      if (isLoggedOut === 'true') {
-        dispatch(setIsAuthorized(false));
-        return;
-      }
-
-      if (isLoggedOut === 'false') {
-        dispatch(getInitialData());
+      } catch (err) {
+        console.log(err, 'startup auth resolve error');
+        if (!cancelled) {
+          dispatch(setIsAuthorized(false));
+        }
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isReady, dispatch]);
 
   useEffect(() => {
