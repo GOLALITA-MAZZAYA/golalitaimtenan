@@ -10,7 +10,7 @@ import MyLocationBtn from './components/MyLocationBtn';
 import FiltersModal from './components/FiltersModal';
 import MapLoader from './components/MapLoader';
 import MerchantModal from './components/MerchantModal';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 
 const MapPage = () => {
   const { t } = useTranslation();
@@ -19,6 +19,15 @@ const MapPage = () => {
   const [selectedMerchant, setSelectedMerchant] = useState(null);
 
   const route = useRoute();
+
+  // Close the merchant bottom sheet when this screen loses focus, since its
+  // Portal renders at the app root and would otherwise keep showing on top
+  // of whatever screen is navigated to next.
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => setSelectedMerchant(null);
+    }, []),
+  );
 
   const { isLoading, isError, data, error } = useMerchants(
     filters?.location?.latitude,

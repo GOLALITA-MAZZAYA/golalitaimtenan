@@ -170,12 +170,14 @@ type MiniMapProps = {
   coords: LatLng;
   nearest5: Merchant[];
   headingRotate: RNAnimated.AnimatedInterpolation<string | number>;
+  isArabic: boolean;
 };
 
 const MiniMap = memo(function MiniMap({
   coords,
   nearest5,
   headingRotate,
+  isArabic,
 }: MiniMapProps) {
   const mapRef = useRef<MapView | null>(null);
 
@@ -296,6 +298,15 @@ export default function ARMapScreen({ route }: any) {
   /** ---------- выбранный мерчант ---------- */
   const [selectedMerchant, setSelectedMerchant] =
     useState<ModalMerchant | null>(null);
+
+  // Close the merchant bottom sheet when this screen loses focus, since its
+  // Portal renders at the app root and would otherwise keep showing on top
+  // of whatever screen is navigated to next.
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => setSelectedMerchant(null);
+    }, []),
+  );
 
   /** permissions */
   useEffect(() => {
@@ -732,6 +743,7 @@ export default function ARMapScreen({ route }: any) {
           coords={coords}
           nearest5={nearest5}
           headingRotate={headingRotate}
+          isArabic={isArabic}
         />
       )}
 
