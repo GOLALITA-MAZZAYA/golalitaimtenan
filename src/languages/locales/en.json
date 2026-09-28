@@ -234,7 +234,8 @@
       "golalitaCard": "Add card to E-Wallet",
       "employeeCard": "Employee Card",
       "familyCard": "Family Card",
-      "addedCardMsg": "You have already added this card."
+      "addedCardMsg": "You have already added this card.",
+      "addCardSuccessMsg": "Card added to Wallet."
     },
     "ContactUs": {
       "contactUs": "Contact Us",

@@ -1,0 +1,154 @@
+diff --git a/node_modules/react-native-barcode-expo/dist/index.cjs b/node_modules/react-native-barcode-expo/dist/index.cjs
+index 2e4a469..ceb58b3 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.cjs
++++ b/node_modules/react-native-barcode-expo/dist/index.cjs
+@@ -52,7 +52,7 @@ var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
+   _proto.render = function render() {
+     if (this.state.hasError) {
+       // You can render any custom fallback UI
+-      return /*#__PURE__*/React__default["default"].createElement("h1", null, "Something went wrong.");
++      return /*#__PURE__*/null;
+     }
+ 
+     return this.props.children;
+@@ -192,7 +192,7 @@ var Barcode = function Barcode(_ref) {
+   };
+   return /*#__PURE__*/React__default["default"].createElement(ErrorBoundary, null, /*#__PURE__*/React__default["default"].createElement(reactNative.View, {
+     style: [styles.svgContainer, backgroundStyle]
+-  }, /*#__PURE__*/React__default["default"].createElement(Svg__default["default"], {
++  }, /*#__PURE__*/React__default["default"].createElement(Svg.default || Svg, {
+     height: height,
+     width: barCodeWidth,
+     fill: lineColor
+diff --git a/node_modules/react-native-barcode-expo/dist/index.esm.js b/node_modules/react-native-barcode-expo/dist/index.esm.js
+index 04cb512..3e03e52 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.esm.js
++++ b/node_modules/react-native-barcode-expo/dist/index.esm.js
+@@ -46,7 +46,7 @@ var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
+   _proto.render = function render() {
+     if (this.state.hasError) {
+       // You can render any custom fallback UI
+-      return /*#__PURE__*/React.createElement("h1", null, "Something went wrong.");
++      return /*#__PURE__*/null;
+     }
+ 
+     return this.props.children;
+@@ -186,7 +186,7 @@ var Barcode = function Barcode(_ref) {
+   };
+   return /*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(View, {
+     style: [styles.svgContainer, backgroundStyle]
+-  }, /*#__PURE__*/React.createElement(Svg, {
++  }, /*#__PURE__*/React.createElement(Svg.default || Svg, {
+     height: height,
+     width: barCodeWidth,
+     fill: lineColor
+diff --git a/node_modules/react-native-barcode-expo/dist/index.esm.mjs b/node_modules/react-native-barcode-expo/dist/index.esm.mjs
+index 4ad2b6e..4db7222 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.esm.mjs
++++ b/node_modules/react-native-barcode-expo/dist/index.esm.mjs
+@@ -46,7 +46,7 @@ var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
+   _proto.render = function render() {
+     if (this.state.hasError) {
+       // You can render any custom fallback UI
+-      return /*#__PURE__*/React.createElement("h1", null, "Something went wrong.");
++      return /*#__PURE__*/null;
+     }
+ 
+     return this.props.children;
+@@ -186,7 +186,7 @@ var Barcode = function Barcode(_ref) {
+   };
+   return /*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(View, {
+     style: [styles.svgContainer, backgroundStyle]
+-  }, /*#__PURE__*/React.createElement(Svg, {
++  }, /*#__PURE__*/React.createElement(Svg.default || Svg, {
+     height: height,
+     width: barCodeWidth,
+     fill: lineColor
+diff --git a/node_modules/react-native-barcode-expo/dist/index.js b/node_modules/react-native-barcode-expo/dist/index.js
+index 7ff6b6d..f080aaa 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.js
++++ b/node_modules/react-native-barcode-expo/dist/index.js
+@@ -52,7 +52,7 @@ var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
+   _proto.render = function render() {
+     if (this.state.hasError) {
+       // You can render any custom fallback UI
+-      return /*#__PURE__*/React__default["default"].createElement("h1", null, "Something went wrong.");
++      return /*#__PURE__*/null;
+     }
+ 
+     return this.props.children;
+@@ -192,7 +192,7 @@ var Barcode = function Barcode(_ref) {
+   };
+   return /*#__PURE__*/React__default["default"].createElement(ErrorBoundary, null, /*#__PURE__*/React__default["default"].createElement(reactNative.View, {
+     style: [styles.svgContainer, backgroundStyle]
+-  }, /*#__PURE__*/React__default["default"].createElement(Svg__default["default"], {
++  }, /*#__PURE__*/React__default["default"].createElement(Svg.default || Svg, {
+     height: height,
+     width: barCodeWidth,
+     fill: lineColor
+diff --git a/node_modules/react-native-barcode-expo/dist/index.modern.js b/node_modules/react-native-barcode-expo/dist/index.modern.js
+index f79551d..9f50068 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.modern.js
++++ b/node_modules/react-native-barcode-expo/dist/index.modern.js
+@@ -24,7 +24,7 @@ class ErrorBoundary extends React.Component {
+   render() {
+     if (this.state.hasError) {
+       // You can render any custom fallback UI
+-      return /*#__PURE__*/React.createElement("h1", null, "Something went wrong.");
++      return /*#__PURE__*/null;
+     }
+ 
+     return this.props.children;
+@@ -151,7 +151,7 @@ const Barcode = ({
+   };
+   return /*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(View, {
+     style: [styles.svgContainer, backgroundStyle]
+-  }, /*#__PURE__*/React.createElement(Svg, {
++  }, /*#__PURE__*/React.createElement(Svg.default || Svg, {
+     height: _height,
+     width: barCodeWidth,
+     fill: _lineColor
+diff --git a/node_modules/react-native-barcode-expo/dist/index.modern.mjs b/node_modules/react-native-barcode-expo/dist/index.modern.mjs
+index 99c282b..dd167f2 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.modern.mjs
++++ b/node_modules/react-native-barcode-expo/dist/index.modern.mjs
+@@ -24,7 +24,7 @@ class ErrorBoundary extends React.Component {
+   render() {
+     if (this.state.hasError) {
+       // You can render any custom fallback UI
+-      return /*#__PURE__*/React.createElement("h1", null, "Something went wrong.");
++      return /*#__PURE__*/null;
+     }
+ 
+     return this.props.children;
+@@ -151,7 +151,7 @@ const Barcode = ({
+   };
+   return /*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(View, {
+     style: [styles.svgContainer, backgroundStyle]
+-  }, /*#__PURE__*/React.createElement(Svg, {
++  }, /*#__PURE__*/React.createElement(Svg.default || Svg, {
+     height: _height,
+     width: barCodeWidth,
+     fill: _lineColor
+diff --git a/node_modules/react-native-barcode-expo/dist/index.umd.js b/node_modules/react-native-barcode-expo/dist/index.umd.js
+index 788178d..2f836b1 100644
+--- a/node_modules/react-native-barcode-expo/dist/index.umd.js
++++ b/node_modules/react-native-barcode-expo/dist/index.umd.js
+@@ -52,7 +52,7 @@
+     _proto.render = function render() {
+       if (this.state.hasError) {
+         // You can render any custom fallback UI
+-        return /*#__PURE__*/React__default["default"].createElement("h1", null, "Something went wrong.");
++        return /*#__PURE__*/null;
+       }
+ 
+       return this.props.children;
+@@ -192,7 +192,7 @@
+     };
+     return /*#__PURE__*/React__default["default"].createElement(ErrorBoundary, null, /*#__PURE__*/React__default["default"].createElement(reactNative.View, {
+       style: [styles.svgContainer, backgroundStyle]
+-    }, /*#__PURE__*/React__default["default"].createElement(Svg__default["default"], {
++    }, /*#__PURE__*/React__default["default"].createElement(Svg.default || Svg, {
+       height: height,
+       width: barCodeWidth,
+       fill: lineColor

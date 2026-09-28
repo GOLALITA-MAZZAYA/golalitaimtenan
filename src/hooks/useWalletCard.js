@@ -1,11 +1,11 @@
 import { Linking, Platform } from "react-native";
-import { getBase64PkpassFile } from "../api/wallet";
+import { getBase64PkpassFile, reportWalletEvent } from "../api/wallet";
 import { WalletPasses } from "react-native-wallet-passes";
 
 const isIos = Platform.OS === "ios";
 const isAndroid = Platform.OS === "android";
-const Brand = Platform.constants.Brand;
-const Manufacturer = Platform.constants.Manufacturer;
+const Brand = Platform.constants?.Brand;
+const Manufacturer = Platform.constants?.Manufacturer;
 
 const useWalletCard = () => {
   const addCard = async (base64EncodedPass) => {
@@ -52,7 +52,6 @@ const useWalletCard = () => {
 
     const playMarketUrl =
       "https://appgallery.cloud.huawei.com/ag/n/app/C102754379?locale=en_GB&source=appshare&subsource=C102754379&shareTo=com.android.bluetooth&shareFrom=appmarket&shareIds=7206081f16e242c783d37bada6e588af_com.android.bluetooth&callType=SHARE";
-    // "https://play.google.com/store/apps/details?id=io.walletpasses.android";
 
     const canOpenPlayMarketURL = await Linking.canOpenURL(playMarketUrl);
 
@@ -108,30 +107,69 @@ const useWalletCard = () => {
       throw "err";
     }
 
-    const walletData = await getBase64PkpassFile(data);
+    const {
+      walletData,
+      serialNumber,
+      campaignId,
+      organizationId,
+      organizationName,
+    } = await getBase64PkpassFile(data);
+
+    const platform = isAndroid ? "GOOGLE" : "APPLE";
+    const organisation =
+      data.organisation || data.organisationAndroid || organizationName || null;
+    const resolvedOrganizationId = organizationId || data.organizationId || null;
 
     // Handle Android differently - use saveUrl to open Google Wallet
     if (isAndroid) {
-      if (walletData.saveUrl) {
+      if (walletData?.saveUrl) {
         const canOpen = await Linking.canOpenURL(walletData.saveUrl);
 
         if (canOpen) {
+          // CRITICAL: Report INSTALL before opening Google Wallet.
+          // Opening Google Wallet backgrounds the app and aborts in-flight axios requests.
+          const installResult = await reportWalletEvent({
+            eventType: "INSTALL",
+            platform,
+            serialNumber,
+            campaignId,
+            organizationId: resolvedOrganizationId,
+            organisation,
+            barcode: data.barcode,
+            googleObjectId: walletData.passId || serialNumber,
+            appUserId: data.appUserId,
+            userEmail: data.userEmail,
+          });
+
           await Linking.openURL(walletData.saveUrl);
-          return true;
+          return { opened: true, installResult };
         } else {
-          throw new Error('Cannot open Google Wallet URL');
+          throw new Error("Cannot open Google Wallet URL");
         }
       } else {
-        throw new Error('No saveUrl in Android wallet data');
+        throw new Error("No saveUrl in Android wallet data");
       }
     }
 
     // iOS flow - use base64 pkpass data
-    if (typeof walletData !== 'string') {
-      throw new Error('Invalid pkpass data received from server');
+    if (typeof walletData !== "string") {
+      throw new Error("Invalid pkpass data received from server");
     }
 
     const res = await addCard(walletData);
+
+    // iOS: report INSTALL after adding pass to Apple Wallet
+    void reportWalletEvent({
+      eventType: "INSTALL",
+      platform,
+      serialNumber,
+      campaignId,
+      organizationId: resolvedOrganizationId,
+      organisation,
+      barcode: data.barcode,
+      appUserId: data.appUserId,
+      userEmail: data.userEmail,
+    });
 
     return res;
   };

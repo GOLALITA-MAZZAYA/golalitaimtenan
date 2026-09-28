@@ -9,6 +9,7 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
+const path = require('path');
 
 const defaultConfig = getDefaultConfig(__dirname);
 
@@ -29,6 +30,9 @@ const config = {
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
+    extraNodeModules: {
+      'react-native-svg': path.resolve(__dirname, 'node_modules/react-native-svg'),
+    },
   },
 };
 
