@@ -86,7 +86,7 @@ export const getGiftCardAmount = async (giftCardId) => {
   const res = await instance.post("ugo2gift.denomination/search", {
     params: {
       token,
-      domain: `[ ['brand_id', '=', ${giftCardId},['is_active','=',True]]`,
+      domain: `[ ['brand_id', '=', ${giftCardId}], ['is_active', '=', True] ]`,
       fields: "['amount','min_amount', 'max_amount', 'currency', 'brand_id']",
     },
   });

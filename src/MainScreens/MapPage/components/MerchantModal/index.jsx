@@ -129,9 +129,9 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   }, [merchant]);
 
   useEffect(() => {
-    if(merchant?.merchant_id){
+    if (merchant?.merchant_id) {
 
-    getOffersDiscountValue();
+      getOffersDiscountValue();
 
     }
   }, [merchant?.merchant_id]);
