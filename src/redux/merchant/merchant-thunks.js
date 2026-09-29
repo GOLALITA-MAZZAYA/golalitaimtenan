@@ -166,20 +166,11 @@ export const getParentCategories = type => async (dispatch, getState) => {
     const list = Array.isArray(res.data?.result) ? res.data.result : [];
     const responseHasEsim = list.some(isEsimCategory);
 
-    // Backend flag: local response is authoritative; global can only turn it on
-    // (eSIM may be returned only on local, but we still need it for country screens).
-    if (type === 'local') {
-      dispatch(setHasEsimCategory(responseHasEsim));
-    } else if (responseHasEsim) {
-      dispatch(setHasEsimCategory(true));
-    }
-
-    // Never surface the eSIM parent tile on the Global home grid — only Local.
-    const parentCategories =
-      type === 'global' ? list.filter(item => !isEsimCategory(item)) : list;
-
-    dispatch(setParentCategoriesByType(type, parentCategories));
-    dispatch(setParentCategories(parentCategories));
+    // Keep eSIM on the home grid whenever the API returns it (Local and Global).
+    // Country screens use the same flag so they only inject eSIM when home shows it.
+    dispatch(setHasEsimCategory(responseHasEsim));
+    dispatch(setParentCategoriesByType(type, list));
+    dispatch(setParentCategories(list));
   } catch (err) {
     console.log(err, 'get parrent categories error');
   } finally {

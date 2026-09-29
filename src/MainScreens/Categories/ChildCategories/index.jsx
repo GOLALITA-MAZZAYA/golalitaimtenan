@@ -24,6 +24,7 @@ import { sized } from '../../../Svg';
 import {
   openEsimPlans,
   resolveEsimDestinationForCategory,
+  isEsimCategory,
 } from '../../ESim/esimUtils';
 
 // rowItem: paddingVertical 14*2 + iconWrapper height 60 + borderBottomWidth 1
@@ -54,8 +55,15 @@ const ChildCategories = ({ navigation }) => {
   const { categoriesType, hasEsimCategory, parentCategories } = useSelector(
     state => state.merchantReducer,
   );
-  const globalHasEsimCategory =
-    categoriesType === 'global' && !!hasEsimCategory;
+
+  // Country eSIM row only when Global home is also showing the eSIM tile
+  // (API returned category 709 for type=global — mirrored in hasEsimCategory /
+  // parentCategories).
+  const homeShowsEsim =
+    (Array.isArray(parentCategories) ? parentCategories : []).some(
+      isEsimCategory,
+    ) || !!hasEsimCategory;
+  const showCountryEsim = categoriesType === 'global' && homeShowsEsim;
 
   const [childCategories, setChildCategories] = useState([]);
   const [esimDestination, setEsimDestination] = useState(null);
@@ -114,7 +122,7 @@ const ChildCategories = ({ navigation }) => {
   }, [parentCategoryId, categoriesType]);
 
   useEffect(() => {
-    if (!globalHasEsimCategory) {
+    if (!showCountryEsim) {
       setEsimDestination(null);
       return;
     }
@@ -156,7 +164,7 @@ const ChildCategories = ({ navigation }) => {
       mounted = false;
     };
   }, [
-    globalHasEsimCategory,
+    showCountryEsim,
     parentCategoryId,
     parentCategoryName,
     parentCategories,
@@ -300,7 +308,7 @@ const ChildCategories = ({ navigation }) => {
     ];
   }
 
-  if (globalHasEsimCategory && esimDestination) {
+  if (showCountryEsim && esimDestination) {
     const esimItem = {
       id: 'esim-for-country',
       name: t('ESim.title'),
