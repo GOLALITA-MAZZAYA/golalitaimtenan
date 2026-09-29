@@ -1,16 +1,29 @@
 // GlobalTix Configuration
-// Update these credentials with your actual GlobalTix account details
-import { BASE_URL } from '../constants';
+import {
+  GLOBALTIX_USERNAME,
+  GLOBALTIX_AGENT,
+  GLOBALTIX_API_KEY,
+  GLOBALTIX_PROD_USERNAME,
+  GLOBALTIX_PROD_AGENT,
+  GLOBALTIX_PROD_API_KEY,
+  BASE_URL,
+} from '../constants';
 
 export const GLOBALTIX_CONFIG = {
   // Staging Environment (for testing)
   STAGING: {
     BASE_URL: `https://${BASE_URL}/go/api/globaltix/proxy`,
+    USERNAME: GLOBALTIX_USERNAME,
+    AGENT: GLOBALTIX_AGENT,
+    API_KEY: GLOBALTIX_API_KEY,
   },
 
   // Production Environment (for live)
   PRODUCTION: {
     BASE_URL: `https://${BASE_URL}/go/api/globaltix/proxy`,
+    USERNAME: GLOBALTIX_PROD_USERNAME,
+    AGENT: GLOBALTIX_PROD_AGENT,
+    API_KEY: GLOBALTIX_PROD_API_KEY,
   },
 
   // Current environment (change to 'PRODUCTION' when ready) else 'STAGING'
@@ -40,5 +53,3 @@ export const getCurrentConfig = () => {
 export const getBaseUrl = () => {
   return getCurrentConfig().BASE_URL;
 };
-
-

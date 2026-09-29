@@ -18,6 +18,15 @@ export const CHARITY_MERCHANT_IDS = [165105, 164127, 165389, 165103, 164585, 165
 export const APP_VERSIONS_APP_NAME = 'Etizaz';
 export const APP_VERSIONS_ORGANISATION = '';
 
+// --- GlobalTix ticketing partner API credentials ---
+export const GLOBALTIX_USERNAME = "r014361-api@globaltix.com";
+export const GLOBALTIX_AGENT = "R014361";
+export const GLOBALTIX_API_KEY = "be67d9255f3e6e94db4fb16d5c092a405452761a87dbf3f5761cf21fce3e958b";
+
+export const GLOBALTIX_PROD_USERNAME = "r018744-api@globaltix.com";
+export const GLOBALTIX_PROD_AGENT = "R018744";
+export const GLOBALTIX_PROD_API_KEY = "ef29b0de4d493086cdd7051917c54ef9d8b197b670e8ea19d0196d2494b7366d";
+
 // --- Security Configurations ---
 export const IS_PRODUCTION = !__DEV__;
 export const ANDROID_PACKAGE_NAME = "com.golalitaimtenanrewards";

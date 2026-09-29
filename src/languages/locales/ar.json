@@ -973,7 +973,8 @@
           "noSpecificExclusions": "لا توجد استثناءات محددة مدرجة",
           "dailyOperatingHours": "يومياً: 10 صباحاً - 7 مساءً"
         }
-      }
+      },
+      "countryUnavailable": "الفعاليات والتذاكر غير متوفرة لهذا البلد حالياً"
     },
     "LoyaltyMain": {
       "availablePoints": "النقاط المتاحة",

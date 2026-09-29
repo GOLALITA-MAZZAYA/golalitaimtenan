@@ -6,17 +6,17 @@ const config = getCurrentConfig();
 const BASE_URL = config.BASE_URL;
 const API_VERSION = config.API_VERSION || '1.0';
 
-// Login credentials for token refresh
+// Login credentials for token refresh — sourced from config (staging vs production)
 const LOGIN_CREDENTIALS = {
- // username: "ali.alyafei@golalita.com", //DEV
- // password: "GolalitaAlyafie32!"  //DEV
-  username: "developer@golalita.com", //PROD
-  password: "GolalitaGlobalTix1!" //PROD
+  username: config.USERNAME,
+  agent: config.AGENT,
+  apiKey: config.API_KEY,
 };
 
-// Token storage keys
-const TOKEN_STORAGE_KEY = 'globaltix_access_token';
-const TOKEN_EXPIRY_KEY = 'globaltix_token_expiry';
+// Token storage keys — environment-scoped so switching envs forces a fresh login
+const ENV_SUFFIX = (config.USERNAME || 'default').split('@')[0];
+const TOKEN_STORAGE_KEY = `globaltix_access_token_${ENV_SUFFIX}`;
+const TOKEN_EXPIRY_KEY = `globaltix_token_expiry_${ENV_SUFFIX}`;
 
 // Token management
 let currentAccessToken = null;
@@ -78,37 +78,48 @@ const refreshAccessToken = async () => {
     try {
       console.log('=== Refreshing GlobalTix Access Token ===');
       console.log('Proxy URL:', BASE_URL);
-      console.log('Login Endpoint: /api/auth/login');
+      console.log('Login Endpoint: /api/auth/authorize');
       console.log('Username:', LOGIN_CREDENTIALS.username);
-      console.log('Password:', '*** (hidden)');
-      
+
       const result = await makeProxyRequest({
         method: 'POST',
-        endpoint: '/api/auth/login',
-        headers: {},
-        body: LOGIN_CREDENTIALS,
+        endpoint: '/api/auth/authorize',
+        headers: {
+          'x-api-agent': LOGIN_CREDENTIALS.agent,
+          'x-api-key': `${LOGIN_CREDENTIALS.agent}/${LOGIN_CREDENTIALS.apiKey}`,
+        },
+        body: { username: LOGIN_CREDENTIALS.username },
       });
 
       console.log('Login Response Success:', result.success);
       console.log('Login Response Data:', result.data ? 'Present' : 'Null');
       console.log('Login Response Error:', result.error || 'None');
 
-      if (result.success && result.data && result.data.access_token) {
-        // Use the expires_in field from the response (in seconds)
-        const expiresInSeconds = result.data.expires_in || 86400; // Default to 24 hours if not provided
-        const expiryTime = Date.now() + (expiresInSeconds * 1000);
-        
-        await storeToken(result.data.access_token, expiryTime);
+      // The new API response nests the token under data.data.accessToken
+      const responseData = result.data?.data || result.data;
+      const accessToken =
+        responseData?.accessToken || responseData?.access_token;
+
+      if (result.success && accessToken) {
+        // Use the expiration field from the response (in seconds)
+        const expiresInSeconds =
+          responseData?.expiration || responseData?.expires_in || 86400;
+        const expiryTime = Date.now() + expiresInSeconds * 1000;
+
+        await storeToken(accessToken, expiryTime);
         console.log('✅ GlobalTix access token refreshed successfully');
-        console.log('Token Preview:', result.data.access_token.substring(0, 20) + '...');
+        console.log('Token Preview:', accessToken.substring(0, 20) + '...');
         console.log('Token expires in:', expiresInSeconds, 'seconds');
         console.log('Token expires at:', new Date(expiryTime).toISOString());
         console.log('=== End Token Refresh ===');
-        return result.data.access_token;
+        return accessToken;
       } else {
         console.error('❌ Token refresh failed - no access token in response');
         console.error('Response:', JSON.stringify(result, null, 2));
-        throw new Error(result.error?.message || 'No access token received from login response');
+        throw new Error(
+          result.error?.message ||
+            'No access token received from login response',
+        );
       }
     } catch (error) {
       console.error('=== Error Refreshing Access Token ===');

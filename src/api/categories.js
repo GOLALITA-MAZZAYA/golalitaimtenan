@@ -94,7 +94,7 @@ export const getAllCategories = async type => {
   const params = {
     token,
     fields:
-      "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image']",
+      "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image', 'x_country_code', 'x_if_have_child_cat']",
     type,
     org_id: ORG_ID,
   };

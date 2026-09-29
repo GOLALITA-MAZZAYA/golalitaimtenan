@@ -174,7 +174,12 @@ const Categories = () => {
         return;
       }
 
-      if (!category.x_if_have_child_cat) {
+      // Global country tiles always open the country screen (eSIM + banners live
+      // there); any other leaf category goes straight to its merchant list.
+      const isGlobalCountry =
+        categoriesType === 'global' && !!category.x_country_code;
+
+      if (!category.x_if_have_child_cat && !isGlobalCountry) {
         navigation.navigate('merchants', {
           screen: 'merchants-list',
           params: {
@@ -184,6 +189,7 @@ const Categories = () => {
             parentCategoryId: category.id,
             parentCategoryName:
               language === 'ar' ? category?.x_name_arabic : category.name,
+            parentCategoryData: category,
           },
         });
 
@@ -200,7 +206,7 @@ const Categories = () => {
         },
       });
     },
-    [language, navigation],
+    [language, navigation, categoriesType],
   );
 
   const handleTypeChange = type => {

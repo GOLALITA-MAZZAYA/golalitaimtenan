@@ -1018,7 +1018,8 @@
           "noSpecificExclusions": "No specific exclusions listed",
           "dailyOperatingHours": "Daily: 10am - 7pm"
         }
-      }
+      },
+      "countryUnavailable": "Events & Tickets are not available for this country yet"
     },
     "LoyaltyMain": {
       "availablePoints": "Availalble Points",

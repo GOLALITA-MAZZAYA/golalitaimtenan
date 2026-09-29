@@ -154,7 +154,7 @@ export const getParentCategories = type => async (dispatch, getState) => {
     const params = {
       token,
       fields:
-        "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image']",
+        "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image', 'x_country_code', 'x_if_have_child_cat']",
       type,
       org_id: ORG_ID,
     };
@@ -853,6 +853,16 @@ export const deleteAccount = () => async (dispatch, getState) => {
   }
 };
 
+const filterAdvertSlot = items =>
+  (items || [])
+    .filter(
+      item =>
+        !item.is_sjc &&
+        (Platform.OS === 'android' ? item.x_android : item.x_ios),
+    )
+    .sort((a, b) => a.sequence - b.sequence);
+
+// Home screen banners; Global country screens fetch their own via getCountryBanners.
 export const getAdvert = () => async (dispatch, getState) => {
   const { token } = getState().authReducer;
   try {
@@ -862,31 +872,28 @@ export const getAdvert = () => async (dispatch, getState) => {
 
     dispatch(
       setAdvert({
-        ad_1: res.data.result.ad_1
-          .filter(
-            item =>
-              !item.is_sjc &&
-              (Platform.OS === 'android' ? item.x_android : item.x_ios),
-          )
-          .sort((a, b) => a.sequence - b.sequence),
-        ad_2: res.data.result.ad_2
-          .filter(
-            item =>
-              !item.is_sjc &&
-              (Platform.OS === 'android' ? item.x_android : item.x_ios),
-          )
-          .sort((a, b) => a.sequence - b.sequence),
-        ad_3: res.data.result.ad_3
-          .filter(
-            item =>
-              !item.is_sjc &&
-              (Platform.OS === 'android' ? item.x_android : item.x_ios),
-          )
-          .sort((a, b) => a.sequence - b.sequence),
+        ad_1: filterAdvertSlot(res.data?.result?.ad_1),
+        ad_2: filterAdvertSlot(res.data?.result?.ad_2),
+        ad_3: filterAdvertSlot(res.data?.result?.ad_3),
       }),
     );
   } catch (e) {
     console.log(e);
+  }
+};
+
+// Top-slot banners for one Global country screen (e.g. K.S.A). Returned
+// rather than stored so it doesn't overwrite the Home screen's banners.
+export const getCountryBanners = countryCode => async (dispatch, getState) => {
+  const { token } = getState().authReducer;
+  try {
+    const res = await merchantApi.getAdvert({
+      params: { token, country: countryCode },
+    });
+    return filterAdvertSlot(res.data?.result?.ad_1);
+  } catch (e) {
+    console.log(e, 'getCountryBanners error');
+    return [];
   }
 };
 
