@@ -154,6 +154,34 @@ const getCurrentAccessToken = async () => {
 };
 
 // Helper function to make JSON-RPC 2.0 proxy requests
+// Proxy wraps GlobalTix payloads once more: result.data = { data, error, size, success }.
+// Flatten to the shape callers expect (result.data = list/object).
+const unwrapGlobalTixResult = (result) => {
+  if (!result || typeof result !== 'object') {
+    return result;
+  }
+
+  const payload = result.data;
+  const isNestedPayload =
+    payload &&
+    typeof payload === 'object' &&
+    !Array.isArray(payload) &&
+    ('data' in payload || 'success' in payload) &&
+    ('error' in payload || 'size' in payload || 'success' in payload);
+
+  if (!isNestedPayload) {
+    return result;
+  }
+
+  return {
+    ...result,
+    success: result.success !== false && payload.success !== false,
+    data: payload.data,
+    error: payload.error ?? result.error,
+    size: payload.size ?? result.size,
+  };
+};
+
 const makeProxyRequest = async ({ method, endpoint, headers = {}, body = {}, queryParams = {} }) => {
   try {
     // Build endpoint with query parameters for all requests
@@ -229,14 +257,15 @@ const makeProxyRequest = async ({ method, endpoint, headers = {}, body = {}, que
       throw new Error('No result in JSON-RPC response');
     }
 
-    console.log('Unwrapped Result:', JSON.stringify(jsonRpcResponse.result, null, 2));
-    console.log('Result Success:', jsonRpcResponse.result.success);
-    console.log('Result Data:', jsonRpcResponse.result.data ? 'Present' : 'Null');
-    console.log('Result Error:', jsonRpcResponse.result.error || 'None');
+    const result = unwrapGlobalTixResult(jsonRpcResponse.result);
+
+    console.log('Unwrapped Result:', JSON.stringify(result, null, 2));
+    console.log('Result Success:', result.success);
+    console.log('Result Data:', result.data ? 'Present' : 'Null');
+    console.log('Result Error:', result.error || 'None');
     console.log('=== End Proxy Request ===');
 
-    // Return the unwrapped result (which contains success, data, error, size)
-    return jsonRpcResponse.result;
+    return result;
   } catch (error) {
     console.error('=== Proxy Request Error ===');
     console.error('Error Message:', error.message);
@@ -500,21 +529,21 @@ export const globalTixAPI = {
         }
 
         console.log("fetchCountries data:", result);
-      
-      // Transform the response to include cities in a more accessible format
-        if (result.success && result.data) {
+
+        // Transform the response to include cities in a more accessible format
+        if (result.success && Array.isArray(result.data)) {
           const transformedData = result.data.map(country => ({
-          ...country,
-          // Ensure cities are properly formatted
-          cities: country.cities || []
-        }));
-        
-        return {
+            ...country,
+            // Ensure cities are properly formatted
+            cities: country.cities || [],
+          }));
+
+          return {
             ...result,
-          data: transformedData
-        };
-      }
-      
+            data: transformedData,
+          };
+        }
+
         return result;
     } catch (error) {
       console.error('Error fetching countries:', error);
