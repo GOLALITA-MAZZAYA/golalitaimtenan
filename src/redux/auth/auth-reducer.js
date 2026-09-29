@@ -5,7 +5,6 @@ import {
   SET_TOKEN,
   SET_USER,
   SET_USER_ID,
-  SET_VERSION,
   SET_WORK_STATUS,
   SET_IS_USER_JUST_LOG_OUT,
   SET_IS_AUTHORIZED,
@@ -30,7 +29,6 @@ const initialState = {
   userId: null,
   workStatus: null,
   publicOrganizations: [],
-  version: null,
   isUserJustLogOut: false,
   isAuthorized: null,
   isSplashScreenVisible: true,
@@ -61,8 +59,6 @@ export const authReducer = (state = initialState, action) => {
       return { ...state, workStatus: action.workStatus };
     case SET_PUBLIC_ORGANIZATIONS:
       return { ...state, publicOrganizations: action.publicOrganizations };
-    case SET_VERSION:
-      return { ...state, version: action.version };
     case SET_IS_USER_JUST_LOG_OUT:
       return { ...state, isUserJustLogOut: action.payload };
     case SET_IS_AUTHORIZED:

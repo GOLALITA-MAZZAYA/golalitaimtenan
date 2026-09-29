@@ -1,6 +1,6 @@
-import instance, { API_BASE_URL } from "../instance";
+import instance from "../instance";
 import axios from "axios";
-import { BASE_URL, ORG_CODE, ORG_ID } from "../../constants";
+import { BASE_URL, ORG_CODE } from "../../constants";
 
 const authApi = {
   login: (body) => instance.post(`/user/get_token/${ORG_CODE}`, body),
@@ -28,10 +28,6 @@ const authApi = {
   checkEmail: (body) => instance.post("/user/email/check", body),
   validate_code: (body) => instance.post("/user/validate", body),
   checkPhone: (body) => instance.post("/user/phone/check", body),
-  getVersion: () =>
-    instance.post(`https://${BASE_URL}/mobile/version_org`, {
-      params: { app_company_id: ORG_ID },
-    }),
   getAppStatus: () =>
     axios.get("https://keepcalmlabs.com/wp-json/wp/v2/apps/401"),
 };

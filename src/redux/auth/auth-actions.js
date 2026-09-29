@@ -11,7 +11,6 @@ import {
   SET_TOKEN,
   SET_USER,
   SET_USER_ID,
-  SET_VERSION,
   SET_WORK_STATUS,
   SET_CONFIRMATIONCODE_LOADING,
   SET_REGISTERATIONCODE_LOADING,
@@ -47,7 +46,6 @@ export const setPublicOrganizations = (publicOrganizations) => ({
   type: SET_PUBLIC_ORGANIZATIONS,
   publicOrganizations,
 });
-export const setVersion = (version) => ({ type: SET_VERSION, version });
 
 export const setIsUserJustLogOut = (payload) => ({
   type: SET_IS_USER_JUST_LOG_OUT,

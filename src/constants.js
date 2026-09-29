@@ -13,6 +13,11 @@ export const CONTACT_EMAILS = [
 ];
 export const CHARITY_MERCHANT_IDS = [165105, 164127, 165389, 165103, 164585, 165104];
 
+// Public /go/api/public/app/versions filters (partial, case-insensitive match).
+// Update these once the app profile is registered in GoLalita admin.
+export const APP_VERSIONS_APP_NAME = 'Etizaz';
+export const APP_VERSIONS_ORGANISATION = '';
+
 // --- Security Configurations ---
 export const IS_PRODUCTION = !__DEV__;
 export const ANDROID_PACKAGE_NAME = "com.golalitaimtenanrewards";

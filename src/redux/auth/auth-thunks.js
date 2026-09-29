@@ -14,7 +14,6 @@ import {
   setToken,
   setUser,
   setUserId,
-  setVersion,
   setWorkStatus,
   setIsloadingAutologin,
   setIsGuest
@@ -558,16 +557,6 @@ export const changePassword =
       dispatch(setProfileLoading(false));
     }
   };
-
-export const getVersion = () => async dispatch => {
-  try {
-    const res = await authApi.getVersion();
-
-    dispatch(setVersion(res.data.result.current_mobile_version));
-  } catch (e) {
-    console.log(e);
-  }
-};
 
 export const validate_code = body => async dispatch => {
   try {

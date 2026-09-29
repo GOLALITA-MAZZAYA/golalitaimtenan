@@ -14,10 +14,8 @@ import { ThemeProvider, useTheme } from './src/components/ThemeProvider';
 import {
   getAppStatus,
   getInitialData,
-  getVersion,
 } from './src/redux/auth/auth-thunks';
 import { APP_DISABLED } from './src/redux/auth/auth-types';
-import { VERSION } from './src/redux/types';
 import { setIsAuthorized } from './src/redux/auth/auth-actions';
 
 import { Root } from './src/Navigation/Root';
@@ -60,9 +58,7 @@ Geocoder.init('AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o', {
 
 let App = ({
   workStatus,
-  version,
   getAppStatus,
-  getVersion,
   user,
   isAuthorized,
   isSplashScreenVisible,
@@ -71,7 +67,6 @@ let App = ({
   const { i18n } = useTranslation();
   const { isDark } = useTheme();
 
-  const [updateModal, setUpdateModal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
@@ -264,9 +259,8 @@ let App = ({
   useEffect(() => {
     if (isReady) {
       resetImageCacheDate();
-      getVersion();
     }
-  }, [isReady, getVersion]);
+  }, [isReady]);
 
   useEffect(() => {
     if (isReady) {
@@ -277,35 +271,6 @@ let App = ({
       })();
     }
   }, [isReady, getAppStatus, i18n]);
-
-  // Проверка версии
-  useEffect(() => {
-    if (version && isReady) {
-      let latestVersion = version;
-      let lastLatestVersionNumber =
-        latestVersion.split('.')[latestVersion.split('.').length - 1];
-      let secondLatestVersionNumber =
-        latestVersion.split('.')[latestVersion.split('.').length - 2];
-      let lastCurrentVersionNumber =
-        VERSION.split('.')[VERSION.split('.').length - 1];
-      let secondCurrentVersionNumber =
-        VERSION.split('.')[VERSION.split('.').length - 2];
-      let latestVersionNumber = latestVersion.split('.').join('');
-      let currentVersionNumber = VERSION.split('.').join('');
-
-      if (latestVersionNumber > currentVersionNumber) {
-        if (
-          lastLatestVersionNumber !== lastCurrentVersionNumber &&
-          latestVersionNumber - currentVersionNumber < 5
-        ) {
-          setUpdateModal('easy');
-        } else if (secondLatestVersionNumber !== secondCurrentVersionNumber) {
-          setUpdateModal('hard');
-        }
-      }
-      console.log('latestVersion', latestVersion, VERSION === latestVersion);
-    }
-  }, [version, isReady]);
 
   // Выключение приложения при APP_DISABLED
   useEffect(() => {
@@ -323,13 +288,7 @@ let App = ({
   return (
     <>
       {isAuthorized !== null && isReady && <Root isAuthorized={isAuthorized} />}
-      {updateModal && isReady && (
-        <UpdateModal
-          updateModal={updateModal}
-          setUpdateModal={setUpdateModal}
-          version={version}
-        />
-      )}
+      {isReady && <UpdateModal />}
       <FlashMessage
         position="center"
         style={{ backgroundColor: isDark ? colors.darkBlue : colors.white }}
@@ -344,12 +303,11 @@ let App = ({
 const mapStateToProps = state => ({
   user: state.authReducer.user,
   workStatus: state.authReducer.workStatus,
-  version: state.authReducer.version,
   isAuthorized: state.authReducer.isAuthorized,
   isSplashScreenVisible: state.authReducer.isSplashScreenVisible,
 });
 
-App = connect(mapStateToProps, { getAppStatus, getVersion })(App);
+App = connect(mapStateToProps, { getAppStatus })(App);
 
 const AppWrapper = () => {
   return (
