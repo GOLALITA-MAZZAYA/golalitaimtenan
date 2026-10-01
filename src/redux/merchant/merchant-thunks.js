@@ -853,12 +853,13 @@ const filterAdvertSlot = items =>
     )
     .sort((a, b) => a.sequence - b.sequence);
 
-// Home screen banners; Global country screens fetch their own via getCountryBanners.
+// Home screen banners are Qatar-only; Global country screens fetch their own
+// via getCountryBanners below.
 export const getAdvert = () => async (dispatch, getState) => {
   const { token } = getState().authReducer;
   try {
     const res = await merchantApi.getAdvert({
-      params: { token },
+      params: { token, country: 'QA' },
     });
 
     dispatch(
