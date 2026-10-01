@@ -54,7 +54,7 @@ const offers =
         parentProps={{
           onPress: () => handleOfferCardPress(item),
           onPressFavourite: () => handleFavouritePress(item),
-          uri: item.image_url,
+          uri: item.merchant_logo || item.image_url,
           name: getLocalizedValue(item.x_arabic_name, item.name),
           description: getDescription(item),
           isSaved: isFavorite,

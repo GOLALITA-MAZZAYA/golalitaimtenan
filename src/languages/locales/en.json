@@ -202,7 +202,8 @@
       "b1g1Type": "B1G1",
       "promocodeType": "PROMOCODE",
       "discountType": "DISCOUNT",
-      "giftcardType": "GIFTCARD"
+      "giftcardType": "GIFTCARD",
+      "allTags": "All"
     },
     "Product": {
       "points": "Points",

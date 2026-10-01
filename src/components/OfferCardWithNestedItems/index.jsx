@@ -1,128 +1,174 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo } from 'react';
 import {
   StyleSheet,
   View,
   TouchableOpacity,
-  ImageBackground,
-} from "react-native";
-import { TypographyText } from "../Typography";
-import { BALOO_REGULAR, BALOO_SEMIBOLD } from "../../redux/types";
-import StartIcon from "../../assets/star.svg";
-import { sized } from "../../Svg";
-import FullScreenLoader from "../Loaders/FullScreenLoader";
-import { getFlexDirection, isRTL } from "../../../utils";
-import useIsGuest from "../../hooks/useIsGuest";
-import { useTheme } from "../ThemeProvider";
-import { colors } from "../colors";
-import { useTranslation } from "react-i18next";
+  Image,
+} from 'react-native';
+import { TypographyText } from '../Typography';
+import { LUSAIL_REGULAR } from '../../redux/types';
+import StartIcon from '../../assets/star.svg';
+import { sized } from '../../Svg';
+import FullScreenLoader from '../Loaders/FullScreenLoader';
+import { getFlexDirection, isRTL } from '../../../utils';
+import { colors } from '../colors';
+import { useTheme } from '../ThemeProvider';
+import { useTranslation } from 'react-i18next';
+import useIsGuest from '../../hooks/useIsGuest';
+
+const IMAGE_SIZE = 64;
 
 const CardWithNesetedItems = ({ parentProps }) => {
   const {
     uri,
     name,
     description,
+    endDate,
     loadingDescription,
     isSaved,
     onPress,
     onPressFavourite,
-    expiryDate,
-    endDate,
+    distance,
   } = parentProps;
 
-  const date = endDate || expiryDate;
   const { t } = useTranslation();
-  const isGuest = useIsGuest();
   const { isDark } = useTheme();
-  const StarIconSmall = useMemo(() => sized(StartIcon, 22, 22), []);
+  const isGuest = useIsGuest();
   const isRtl = isRTL();
 
-  // Golalita layout + Etizaz palette
-  const cardBg = isDark ? "#0F0F0F" : colors.white;
-  const titleColor = isDark ? colors.white : colors.black;
-  const descriptionColor = isDark ? "#B1B1B4" : colors.darkGrey;
-  const expiryTextColor = colors.mainDarkMode;
+  const StarIconSmall = useMemo(() => sized(StartIcon, 20, 20), []);
+  const starColor = isDark ? colors.mainDarkMode : colors.darkBlue;
 
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.8}
       onPress={onPress}
       style={[
         styles.wrapper,
-        !isDark && styles.wrapperLightBorder,
+        {
+          backgroundColor: isDark ? colors.darkBlue : colors.white,
+          borderBottomColor: isDark ? colors.borderGrey : colors.highlatedGrey,
+        },
       ]}
     >
-      <ImageBackground
-        source={{ uri }}
-        style={styles.image}
-        imageStyle={styles.imageBorder}
-      >
-        {!isGuest && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onPressFavourite}
-            style={[
-              styles.favoriteButton,
-              {
-                right: isRtl ? undefined : 10,
-                left: isRtl ? 10 : undefined,
-              },
-            ]}
-          >
-            <StarIconSmall
-              color={"white"}
-              fill={isSaved ? "white" : "transparent"}
-            />
-          </TouchableOpacity>
-        )}
+      <View style={[styles.row, getFlexDirection()]}>
+        <View
+          style={[
+            styles.imageWrapper,
+            {
+              backgroundColor: isDark ? colors.white : colors.highlatedGrey,
+              marginLeft: isRtl ? 14 : 0,
+              marginRight: isRtl ? 0 : 14,
+            },
+          ]}
+        >
+          <Image
+            source={{ uri }}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
 
-        {loadingDescription && (
-          <FullScreenLoader style={styles.loader} />
-        )}
-      </ImageBackground>
-
-      <View
-        style={[
-          styles.bottomBlock,
-          getFlexDirection(),
-          { backgroundColor: cardBg },
-        ]}
-      >
         <View style={styles.infoWrapper}>
           <TypographyText
+            textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+            size={16}
+            font={LUSAIL_REGULAR}
             title={name}
-            size={15}
-            font={BALOO_SEMIBOLD}
-            textColor={titleColor}
             numberOfLines={2}
             style={styles.name}
           />
-        </View>
-        <View
-          style={[
-            styles.descriptionBlock,
-            { alignItems: isRtl ? "flex-end" : "flex-start" },
-          ]}
-        >
+
+          {loadingDescription && (
+            <FullScreenLoader
+              style={{ alignSelf: 'flex-start', marginTop: 4 }}
+            />
+          )}
+
           {!!description && !loadingDescription && (
             <TypographyText
+              textColor={isDark ? colors.white : colors.darkBlue}
+              size={14}
+              font={LUSAIL_REGULAR}
               title={description}
-              size={12}
-              font={BALOO_REGULAR}
-              textColor={descriptionColor}
-              style={styles.description}
-              numberOfLines={2}
-            />
-          )}
-          {!!date && date !== "..." && !loadingDescription && (
-            <TypographyText
-              title={`${t("PremiumPartner.validTill")} ${date}`}
-              size={11}
-              font={BALOO_REGULAR}
-              textColor={expiryTextColor}
-              style={styles.endDate}
               numberOfLines={1}
+              style={[
+                styles.description,
+                {
+                  alignSelf: isRtl ? 'flex-end' : 'flex-start',
+                },
+              ]}
             />
           )}
+        </View>
+
+        <View
+          style={[
+            styles.rightBlock,
+            {
+              alignItems: isRtl ? 'flex-start' : 'flex-end',
+              justifyContent:
+                (endDate || distance) && !loadingDescription
+                  ? 'space-between'
+                  : 'center',
+              paddingLeft: isRtl ? 0 : 10,
+              paddingRight: isRtl ? 10 : 0,
+            },
+          ]}
+        >
+          {!isGuest && (
+            <TouchableOpacity
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              activeOpacity={0.7}
+              style={[
+                styles.favoriteButton,
+                {
+                  alignSelf: isRtl ? 'flex-start' : 'flex-end',
+                },
+              ]}
+              onPress={onPressFavourite}
+            >
+              <StarIconSmall
+                color={starColor}
+                fill={isSaved ? starColor : 'transparent'}
+              />
+            </TouchableOpacity>
+          )}
+
+          <View style={{ alignItems: isRtl ? 'flex-start' : 'flex-end' }}>
+            {!!distance && (
+              <TypographyText
+                textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+                size={11}
+                font={LUSAIL_REGULAR}
+                title={distance}
+                numberOfLines={1}
+                style={{ fontWeight: '700', marginBottom: 2 }}
+              />
+            )}
+            {!!endDate && !loadingDescription && (
+              <View
+                style={[
+                  styles.endDateBlock,
+                  { alignItems: isRtl ? 'flex-start' : 'flex-end' },
+                ]}
+              >
+                <TypographyText
+                  textColor={
+                    isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)'
+                  }
+                  size={11}
+                  font={LUSAIL_REGULAR}
+                  title={`${t('PremiumPartner.validTill')} ${endDate}`}
+                  numberOfLines={1}
+                  style={[
+                    styles.endDate,
+                    { textAlign: isRtl ? 'left' : 'right' },
+                  ]}
+                />
+              </View>
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -131,82 +177,53 @@ const CardWithNesetedItems = ({ parentProps }) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginHorizontal: 5,
-    marginVertical: 16,
-    borderRadius: 14,
-    overflow: "hidden",
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 4.59,
-    elevation: 5,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
   },
-
-  wrapperLightBorder: {
-    borderWidth: 1,
-    borderColor: colors.lightGrey,
+  row: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: IMAGE_SIZE,
   },
-
+  imageWrapper: {
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    borderRadius: 8,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 3,
+  },
   image: {
-    width: "100%",
-    aspectRatio: 16 / 9,
+    width: '100%',
+    height: '100%',
   },
-
-  imageBorder: {
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
-  },
-
-  bottomBlock: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
-    paddingVertical: 10,
-  },
-
   infoWrapper: {
     flex: 1,
-    marginHorizontal: 10,
+    justifyContent: 'center',
+    alignSelf: 'stretch',
   },
-
   name: {
-    fontWeight: "600",
+    fontWeight: '700',
+    lineHeight: 22,
   },
-
   description: {
-    alignSelf: isRTL() ? "flex-end" : "flex-start",
-    marginTop: 5,
+    marginTop: 4,
+    fontWeight: '400',
   },
-
-  endDate: {
-    alignSelf: isRTL() ? "flex-end" : "flex-start",
-    marginTop: 3,
-    fontWeight: "600",
+  rightBlock: {
+    justifyContent: 'space-between',
+    minHeight: IMAGE_SIZE,
+    alignSelf: 'stretch',
   },
-
   favoriteButton: {
-    position: "absolute",
-    top: 10,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    padding: 5,
-    borderRadius: 16,
-    zIndex: 10,
+    padding: 2,
   },
-
-  loader: {
-    alignSelf: "flex-start",
-    margin: 16,
+  endDateBlock: {
+    justifyContent: 'flex-end',
   },
-
-  descriptionBlock: {
-    marginHorizontal: 10,
+  endDate: {
+    fontWeight: '400',
   },
 });
 

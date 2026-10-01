@@ -189,7 +189,8 @@
       "b1g1Type": "B1G1",
       "promocodeType": "كود خاص ",
       "discountType": "تخفيض",
-      "giftcardType": "بطاقة الهدية"
+      "giftcardType": "بطاقة الهدية",
+      "allTags": "الكل"
     },
     "Product": {
       "points": "نقاط",

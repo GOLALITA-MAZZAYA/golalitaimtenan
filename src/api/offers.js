@@ -14,6 +14,19 @@ export const getNewOffers = async (reqParams) => {
   return res.data.result;
 };
 
+export const getProductCategoryTypes = async () => {
+  try {
+    const token = await getAuthToken();
+    const res = await instance.post("/product/category_type/list", {
+      params: { token },
+    });
+    return Array.isArray(res?.data?.result) ? res.data.result : [];
+  } catch (e) {
+    console.log("getProductCategoryTypes error:", e);
+    return [];
+  }
+};
+
 export const getB1G1Offers = async ({ params = {} }) => {
   const token = await getAuthToken();
 
