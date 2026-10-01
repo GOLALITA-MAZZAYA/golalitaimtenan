@@ -36,7 +36,7 @@ import { isRTL } from "../../../../utils";
 import { getHeaderBtnString } from "./helpers";
 import { getMergedSubCategoriesForCategory } from "../../../api/categories";
 import { TypographyText } from "../../../components/Typography";
-import { BALOO_REGULAR } from "../../../redux/types";
+import { BALOO_2 } from "../../../redux/types";
 
 const ITEM_HEIGHT = 200;
 
@@ -345,11 +345,13 @@ const MerchantsPage = ({
             : isSelected
               ? colors.white
               : colors.darkBlue;
-          const textColor = isDark
-            ? colors.white
-            : isSelected
-              ? colors.darkBlue
-              : "#000";
+          const titleColor = isSelected
+            ? isDark
+              ? colors.mainDarkMode
+              : colors.darkBlue
+            : isDark
+              ? "#D1D5DB"
+              : "#374151";
 
           return (
             <TouchableOpacity
@@ -386,8 +388,8 @@ const MerchantsPage = ({
                   />
                 ) : (
                   <TypographyText
-                    font={BALOO_REGULAR}
-                    size={18}
+                    font={BALOO_2}
+                    size={22}
                     textColor={placeholderColor}
                     title={label ? label.charAt(0).toUpperCase() : ""}
                   />
@@ -395,15 +397,17 @@ const MerchantsPage = ({
               </View>
 
               <TypographyText
-                font={BALOO_REGULAR}
-                textColor={textColor}
+                font={BALOO_2}
+                textColor={titleColor}
                 title={label}
                 size={12}
                 style={[
                   styles.subCategoryText,
                   isSelected && styles.activeSubCategoryText,
                 ]}
-                numberOfLines={1}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
               />
             </TouchableOpacity>
           );
@@ -497,7 +501,7 @@ const styles = StyleSheet.create({
   subCategoryTabs: {
     flexGrow: 0,
     marginTop: 2,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   subCategoryScrollContent: {
     paddingVertical: 4,
@@ -507,26 +511,27 @@ const styles = StyleSheet.create({
   subCategoryItem: {
     alignItems: "center",
     justifyContent: "flex-start",
-    width: 68,
+    width: 80,
   },
   subCategoryImageWrapper: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
-    padding: 6,
+    padding: 2,
   },
   subCategoryImage: {
     width: "100%",
     height: "100%",
   },
   subCategoryText: {
-    marginTop: 5,
+    marginTop: 6,
     fontWeight: "500",
     textAlign: "center",
-    maxWidth: 68,
+    width: "100%",
+    lineHeight: 16,
   },
   activeSubCategoryText: {
     fontWeight: "700",
