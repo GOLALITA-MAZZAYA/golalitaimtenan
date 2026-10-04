@@ -56,6 +56,11 @@
       "loading": "Loading...",
       "massNear": "You are near our partner"
     },
+    "OfferInfo": {
+      "gallery": "Gallery",
+      "info": "Info",
+      "otherOffers": "Other Offers"
+    },
     "Login": {
       "signIn": "Let’s sign you in",
       "signInShort": "Sign in",
@@ -1328,6 +1333,50 @@
         "If there is no data, toggle Airplane Mode off and on.",
         "Confirm the eSIM is selected for data in Cellular."
       ]
+    },
+    "MerchantFeedback": {
+      "title": "Rate Merchant",
+      "ratingsAndReviews": "Ratings & Reviews",
+      "rate": "Rate",
+      "rateNow": "Rate Now",
+      "beFirstToReview": "Be the first to review!",
+      "shareExperience": "Share your experience with others",
+      "commentPlaceholder": "Share your experience (optional)",
+      "submit": "Submit Rating",
+      "submitError": "Failed to submit rating. Please try again.",
+      "submittedSuccess": "Thank You for Your Feedback",
+      "submittedDescription": "Your rating has been submitted successfully.",
+      "review": "review",
+      "reviews": "reviews",
+      "noReviews": "No reviews yet",
+      "today": "Today",
+      "openNow": "Open",
+      "closed": "Closed",
+      "closedToday": "Closed today",
+      "upcomingHolidays": "Upcoming holidays",
+      "openNowStatus": "Open now",
+      "closedNowStatus": "Closed",
+      "opensAt": "Opens {{time}}",
+      "closesAt": "Closes {{time}}",
+      "open24Hours": "Open 24 hours",
+      "editTitle": "Edit Your Rating",
+      "update": "Update Rating",
+      "yourRating": "Your rating",
+      "deleteMyReview": "Delete my review",
+      "deleteConfirmTitle": "Delete review?",
+      "deleteConfirmMessage": "Your rating and comment for this merchant will be removed.",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleteError": "Failed to delete review. Please try again.",
+      "updatedSuccess": "Rating Updated",
+      "updatedDescription": "Your rating has been updated successfully.",
+      "deletedSuccess": "Review Deleted",
+      "deletedDescription": "Your review has been removed.",
+      "rating1": "Terrible",
+      "rating2": "Poor",
+      "rating3": "Average",
+      "rating4": "Very Good",
+      "rating5": "Excellent!"
     }
   }
 }

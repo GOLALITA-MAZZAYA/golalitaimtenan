@@ -5,7 +5,7 @@ import { useTheme } from "../../../../../components/ThemeProvider";
 import { TypographyText } from "../../../../../components/Typography";
 import { CONSTANTS } from "../..";
 
-const getTabs = (isBusinessHotel) => {
+const getTabs = (isBusinessHotel, hasOffers) => {
   const tabs = [
     {
       key: CONSTANTS.INFO,
@@ -17,12 +17,12 @@ const getTabs = (isBusinessHotel) => {
     },
   ];
 
-  // if(!isBusinessHotel){
-  //   tabs.push({
-  //     key: CONSTANTS.OFFERS,
-  //     label: i18next.t('Merchants.offers'),
-  //   })
-  // }
+  if (hasOffers && !isBusinessHotel) {
+    tabs.push({
+      key: CONSTANTS.OFFERS,
+      label: i18next.t('Merchants.offers', 'Offers'),
+    });
+  }
 
   // if (isBusinessHotel) {
   //   tabs.push({
@@ -36,9 +36,9 @@ const getTabs = (isBusinessHotel) => {
 };
 
 
-const HeaderTabs = ({ setActiveTab, activeTab, isBusinessHotel }) => {
+const HeaderTabs = ({ setActiveTab, activeTab, isBusinessHotel, hasOffers }) => {
   const { isDark } = useTheme();
-  const tabs = getTabs(isBusinessHotel);
+  const tabs = getTabs(isBusinessHotel, hasOffers);
 
   return (
     <View style={{
@@ -59,6 +59,7 @@ const HeaderTabs = ({ setActiveTab, activeTab, isBusinessHotel }) => {
 
           return (
             <TouchableOpacity
+              key={item.key}
               style={[
                 styles.tab,
                 {

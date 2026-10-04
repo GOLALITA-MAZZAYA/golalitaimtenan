@@ -49,6 +49,11 @@
       "loading": "جاري التحميل...",
       "massNear": "أنت بالقرب من شريكنا"
     },
+    "OfferInfo": {
+      "gallery": "معرض الصور",
+      "info": "معلومات",
+      "otherOffers": "عروض أخرى"
+    },
     "Login": {
       "signIn": "دعنا نسجل دخولك",
       "welcomeBack": "مرحبا بعودتك",
@@ -1283,6 +1288,50 @@
         "إذا لم تتوفر بيانات، أوقف وضع الطيران ثم شغّله.",
         "تأكد من اختيار eSIM للبيانات في الخلوي."
       ]
+    },
+    "MerchantFeedback": {
+      "title": "قيّم التاجر",
+      "ratingsAndReviews": "التقييمات والملاحظات",
+      "rate": "تقييم",
+      "rateNow": "قيّم الآن",
+      "beFirstToReview": "كن أول من يقيّم هذا التاجر!",
+      "shareExperience": "شارك تجربتك مع العملاء الآخرين",
+      "commentPlaceholder": "شارك تجربتك (اختياري)",
+      "submit": "إرسال التقييم",
+      "submitError": "تعذّر إرسال التقييم. يرجى المحاولة مرة أخرى.",
+      "submittedSuccess": "شكراً لملاحظاتك",
+      "submittedDescription": "تم إرسال تقييمك بنجاح.",
+      "review": "تقييم",
+      "reviews": "تقييمات",
+      "noReviews": "لا توجد تقييمات بعد",
+      "today": "اليوم",
+      "openNow": "مفتوح",
+      "closed": "مغلق",
+      "closedToday": "مغلق اليوم",
+      "upcomingHolidays": "العطلات القادمة",
+      "openNowStatus": "مفتوح الآن",
+      "closedNowStatus": "مغلق",
+      "opensAt": "يفتح {{time}}",
+      "closesAt": "يغلق {{time}}",
+      "open24Hours": "مفتوح 24 ساعة",
+      "editTitle": "تعديل تقييمك",
+      "update": "تحديث التقييم",
+      "yourRating": "تقييمك",
+      "deleteMyReview": "حذف تقييمي",
+      "deleteConfirmTitle": "حذف التقييم؟",
+      "deleteConfirmMessage": "سيتم حذف تقييمك وتعليقك لهذا التاجر.",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "deleteError": "تعذّر حذف التقييم. يرجى المحاولة مرة أخرى.",
+      "updatedSuccess": "تم تحديث التقييم",
+      "updatedDescription": "تم تحديث تقييمك بنجاح.",
+      "deletedSuccess": "تم حذف التقييم",
+      "deletedDescription": "تمت إزالة تقييمك.",
+      "rating1": "سيء جداً",
+      "rating2": "ضعيف",
+      "rating3": "متوسط",
+      "rating4": "جيد جداً",
+      "rating5": "ممتاز!"
     }
   }
 }

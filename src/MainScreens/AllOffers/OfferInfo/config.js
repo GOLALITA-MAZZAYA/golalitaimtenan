@@ -10,8 +10,9 @@ import { navigateNested, openScreen } from '../../../Navigation/RootNavigation';
 
 export const OFFER_TAB_CONSTANTS = {
   OFFERS: "OFFERS",
-  INFO: "INFO"
-}
+  INFO: "INFO",
+  GALLERY: "GALLERY",
+};
 
 export const getInfoBtnsConfig = (offer, isDark) => {
   const btnColor = isDark ? colors.mainDarkMode : colors.darkBlue;
@@ -29,7 +30,6 @@ export const getInfoBtnsConfig = (offer, isDark) => {
         const phone = offer?.merchant_mobile || offer?.merchant_phone;
         Linking.openURL(`tel:${phone}`);
       },
-      //Linking.openURL(`tel:${offer.merchant_mobile}`),
     },
     {
       visible: offer?.offer_detail_url,
@@ -63,27 +63,11 @@ export const getInfoBlocksConfig = (offer, bookNow) => {
       value: isRTL() ? offer.arabic_name : offer.name,
       valueType: 'string',
     },
-    // {
-    //   title: i18next.t("ProductPage.price"),
-    //   value: `${offer.price} QAR`,
-    //   valueType: "string",
-    // },
-    // {
-    //   title: i18next.t("ProductPage.disReceivable"),
-    //   value: `${offer.discount}%`,
-    //   valueType: "string",
-    // },
     {
       title: i18next.t('ProductPage.description'),
       value: isRTL() ? offer.description_arabic : offer.description_sale,
       valueType: 'string',
     },
-    // {
-    //   title: i18next.t("ProductPage.phone"),
-    //   value: offer.merchant_phone,
-    //   valueType: "string",
-    //   onPress: () => Linking.openURL(`tel:${offer.marchant_mobile}`),
-    // },
     {
       title: i18next.t('ProductPage.email'),
       value: offer.merchant_email,

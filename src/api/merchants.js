@@ -384,7 +384,78 @@ export const trackMerchantOpensCount = async (merchant_id) => {
   return res.data.result?.merchants;
 }
 
+export const submitMerchantFeedback = async ({ merchant_id, rating, comment }) => {
+  const token = await getAuthToken();
 
+  const res = await instance.post('/feedback/submit', {
+    params: {
+      token,
+      merchant_id,
+      rating,
+      ...(comment ? { comment } : {}),
+    },
+  });
 
+  const result = res.data?.result;
 
+  if (!result?.success) {
+    throw new Error(result?.error || 'Failed to submit feedback');
+  }
 
+  return result;
+};
+
+export const deleteMerchantFeedback = async merchant_id => {
+  const token = await getAuthToken();
+
+  const res = await instance.post('/feedback/delete', {
+    params: { token, merchant_id },
+  });
+
+  const result = res.data?.result;
+
+  if (result?.status !== 'success') {
+    const error = new Error(result?.message || 'Failed to delete review');
+    error.notFound = /no review found/i.test(result?.message || '');
+    throw error;
+  }
+
+  return result;
+};
+
+export const getMerchantFeedbackSummary = async merchant_id => {
+  const token = await getAuthToken();
+
+  const res = await instance.post('/merchant/feedback/summary', {
+    params: { token, merchant_id },
+  });
+
+  const result = res.data?.result;
+
+  if (result?.status !== 'success' || !result?.data) {
+    throw new Error(result?.message || 'Failed to load feedback summary');
+  }
+
+  return result.data;
+};
+
+export const getMerchantWeeklyTimetable = async merchant_id => {
+  const token = await getAuthToken();
+
+  const res = await instance.post('/merchant/weekly/timetable', {
+    params: { token: token || '', merchant_id },
+  });
+
+  const result = res.data?.result;
+
+  if (!result || result.error || !Array.isArray(result.timetable)) {
+    const message =
+      result?.error ||
+      res.data?.error?.data?.message ||
+      res.data?.error?.message ||
+      'Failed to load timetable';
+    throw new Error(message);
+  }
+
+  return result;
+};

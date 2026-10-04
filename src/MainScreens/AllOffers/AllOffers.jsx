@@ -126,6 +126,36 @@ const AllOffers = ({
     saveOffer(item.id, t);
   };
 
+  const merchantOfferCounts = useMemo(() => {
+    const map = {};
+    if (Array.isArray(offers)) {
+      offers.forEach(o => {
+        const mId = o?.merchant_id || o?.go_merchant_id;
+        if (mId) {
+          map[mId] = (map[mId] || 0) + 1;
+        }
+      });
+    }
+    return map;
+  }, [offers]);
+
+  const getOfferCountLabel = item => {
+    const rawCount = Number(item?.offer_count ?? item?.offers_count ?? 0);
+    const mId = item?.merchant_id || item?.go_merchant_id;
+    const localCount =
+      mId && merchantOfferCounts[mId] ? merchantOfferCounts[mId] : 0;
+    const count = rawCount > 0 ? rawCount : localCount;
+
+    if (count > 0) {
+      if (isArabic) {
+        return `${count} عروض`;
+      }
+      return `${count} ${count === 1 ? 'Offer' : 'Offers'}`;
+    }
+
+    return isArabic ? 'عروض' : 'Offers';
+  };
+
   const renderItem = ({ item }) => {
     const isFavorite = favoriteOffers?.some(offer => offer.id === item.id);
     const hasValidDistance =
@@ -146,6 +176,7 @@ const AllOffers = ({
             : null,
           isSaved: isFavorite,
           distance: hasValidDistance ? item.distance_display : null,
+          offersLabel: getOfferCountLabel(item),
         }}
       />
     );

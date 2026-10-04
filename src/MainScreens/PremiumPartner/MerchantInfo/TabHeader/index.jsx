@@ -8,6 +8,9 @@ import MerchantCard from "./MerchantCard";
 import ShareIcon from "./ShareIcon";
 import NotificationIcon from "./NotificationIcon";
 import { colors } from "../../../../components/colors";
+import { TypographyText } from "../../../../components/Typography";
+import { BALOO_SEMIBOLD } from "../../../../redux/types";
+import StarFilledSvg from "../../../../assets/star-filled.svg";
 
 import CommonButton from "../../../../components/CommonButton/CommonButton";
 import useIsGuest from "../../../../hooks/useIsGuest";
@@ -30,7 +33,7 @@ const getOnlineStoreText = (merchantDetails, t) => {
     : `${t('ProductPage.openOnlineStore')} ${displayName} ${t('TabBar.onlineStore')}`;
 };
 
-const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare, ribbonText, title }) => {
+const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare, ribbonText, title, bannerRating }) => {
 
   const { isDark } = useTheme();
   const isGuest = useIsGuest();
@@ -49,19 +52,42 @@ const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare
         <View
           style={styles.bannerSwiper}
         >
-          <BannerSwiper
-            banners={merchantDetails?.banners}
-            singleBannerUrl={merchantDetails.map_banner}
-            onBannerPress={() => setIsModalVisible(true)}
-            isDark={isDark}
-            aspectRatio={1.93}
-            autoplay={true}
-            autoplayTimeout={5}
-            loop={true}
-            containerPadding={0}
-            imageStyle={{ borderRadius: 8 }}
-            style={{ borderRadius: 16, overflow: 'hidden' }}
-          />
+          <View>
+            <BannerSwiper
+              banners={merchantDetails?.banners}
+              singleBannerUrl={merchantDetails.map_banner}
+              onBannerPress={() => setIsModalVisible(true)}
+              isDark={isDark}
+              aspectRatio={1.93}
+              autoplay={true}
+              autoplayTimeout={5}
+              loop={true}
+              containerPadding={0}
+              imageStyle={{ borderRadius: 8 }}
+              style={{ borderRadius: 16, overflow: 'hidden' }}
+            />
+            {!!bannerRating && (
+              <View
+                style={[
+                  styles.ratingBlock,
+                  {
+                    flexDirection: isArabic ? 'row-reverse' : 'row',
+                    left: isArabic ? 14 : undefined,
+                    right: isArabic ? undefined : 14,
+                  },
+                ]}
+              >
+                <StarFilledSvg color="#FFB800" width={14} height={14} />
+                <TypographyText
+                  title={`${bannerRating}`}
+                  font={BALOO_SEMIBOLD}
+                  size={13}
+                  style={{ marginHorizontal: 4, fontWeight: '700' }}
+                  textColor={colors.white}
+                />
+              </View>
+            )}
+          </View>
         </View>
       </View>
 
@@ -101,6 +127,18 @@ const TabHeader = ({ setIsModalVisible, isModalVisible, merchantDetails, onShare
 };
 
 const styles = StyleSheet.create({
+  ratingBlock: {
+    position: 'absolute',
+    top: 12,
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    zIndex: 2,
+  },
   bannerSwiper: {
     marginTop: 14,
     paddingHorizontal: 20

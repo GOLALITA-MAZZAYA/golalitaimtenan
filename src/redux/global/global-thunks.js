@@ -34,27 +34,51 @@ export const getUserLocationThunk = () => async (dispatch) => {
   }
 };
 
+const getActivePopups = (response) =>
+  (Array.isArray(response?.data) ? response.data : []).filter(
+    (item) => item && item.active !== false,
+  );
+
+const HOME_COUNTRY_CODE = 'QA';
+
+const targetsCountry = (item, code) =>
+  (item.country_codes || []).some((c) => String(c).toUpperCase() === code);
+
 export const getMarketingPopupThunk = () => async (dispatch, getState) => {
   const { hasShownMarketingPopup } = getState().globalReducer;
-  
+
   if (hasShownMarketingPopup) {
     return;
   }
 
   try {
-    const response = await getMarketingPopup();
-    
-    // Set flag to true so we don't try to fetch and show it again this session
-    dispatch(setHasShownMarketingPopup(true));
-    
-    const popupData = response && response.data ? response.data : response;
-    
-    if (popupData && popupData.active) {
-      dispatch(setMarketingPopup(popupData));
+    const response = await getMarketingPopup({ country: HOME_COUNTRY_CODE });
+    const popups = getActivePopups(response).filter(
+      (item) =>
+        !(item.country_codes || []).length ||
+        targetsCountry(item, HOME_COUNTRY_CODE),
+    );
+
+    if (popups.length > 0) {
+      dispatch(setMarketingPopup(popups));
     }
   } catch (e) {
     console.log("get marketing popup error:", e);
-    // Setting it to true ensures the app doesn't get stuck in splash/loading screen on error
+  } finally {
     dispatch(setHasShownMarketingPopup(true));
+  }
+};
+
+export const getCountryMarketingPopups = (countryCode) => async () => {
+  try {
+    const code = String(countryCode).toUpperCase();
+    const response = await getMarketingPopup({ country: code });
+
+    return getActivePopups(response).filter((item) =>
+      targetsCountry(item, code),
+    );
+  } catch (e) {
+    console.log("get country marketing popup error:", e);
+    return [];
   }
 };

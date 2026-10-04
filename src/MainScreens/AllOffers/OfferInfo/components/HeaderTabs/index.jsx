@@ -1,84 +1,135 @@
 import i18next from "i18next";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { colors } from "../../../../../components/colors";
-import { useTheme } from "../../../../../components/ThemeProvider";
 import { TypographyText } from "../../../../../components/Typography";
+import { isRTL } from "../../../../../../utils";
+import React, { useEffect } from "react";
 import { OFFER_TAB_CONSTANTS } from "../../config";
+import InfoSvg from "../../../../../assets/info.svg";
+import DiscountSvg from "../../../../../assets/discountLabel.svg";
+import { BALOO_2 } from "../../../../../redux/types";
+import { useTheme } from "../../../../../components/ThemeProvider";
 
+const getTabs = (hasOtherOffers) => {
+  if (!hasOtherOffers) {
+    return [];
+  }
 
-const getTabs = () => {
-  const tabs = [
-    // {
-    //   key: OFFER_TAB_CONSTANTS.OFFERS,
-    //   label: i18next.t('Offer.offers'),
-    // },
-    // {
-    //   key: OFFER_TAB_CONSTANTS.INFO,
-    //   label: i18next.t('Offer.info'),
-    // },
+  return [
+    {
+      key: OFFER_TAB_CONSTANTS.INFO,
+      label: i18next.t("OfferInfo.info", "Info"),
+      icon: <InfoSvg />,
+    },
+    {
+      key: OFFER_TAB_CONSTANTS.OFFERS,
+      label: i18next.t("OfferInfo.otherOffers", "Other Offers"),
+      icon: <DiscountSvg />,
+    },
   ];
-
-
-  return tabs
-
 };
 
-
-const HeaderTabs = ({ setActiveTab, activeTab }) => {
+const HeaderTabs = ({ setActiveTab, activeTab, hasOtherOffers }) => {
+  const tabs = getTabs(hasOtherOffers);
+  const isRtl = isRTL();
   const { isDark } = useTheme();
-  const tabs = getTabs();
+
+  useEffect(() => {
+    if (!activeTab || !tabs.some((t) => t.key === activeTab)) {
+      if (tabs[0]) {
+        setActiveTab(tabs[0].key);
+      }
+    }
+  }, [tabs]);
+
+  if (tabs.length <= 1) {
+    return null;
+  }
+
+  const screenBg = isDark ? colors.darkBlue : colors.white;
+  const activeBg = isDark ? colors.mainDarkMode : colors.darkBlue;
+  const activeText = isDark ? colors.mainDarkModeText : colors.white;
+  const inactiveText = isDark ? colors.mainDarkMode : colors.darkBlue;
 
   return (
-    <View style={{
-      flex: 1,
-      backgroundColor: isDark ? colors.navyBlue : '#fff',
-      paddingHorizontal: 20,
-      paddingBottom: 10,
-      marginTop: 15
-    }}>
-      <ScrollView
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        bounces={false}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: screenBg,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.capsule,
+          {
+            backgroundColor: screenBg,
+            borderColor: isDark ? colors.mainDarkMode : colors.darkBlue,
+          },
+        ]}
       >
-        {tabs.map(item => {
-          const color = isDark ? colors.mainDarkMode : colors.darkBlue;
-          const activeBorder = isDark ? colors.mainDarkMode : colors.darkBlue;
-          const passiveBorder = isDark ? colors.borderGrey : colors.lightGrey;
+        {tabs.map((item) => {
+          const isActive = item.key === activeTab;
+          const currentTextColor = isActive ? activeText : inactiveText;
 
           return (
             <TouchableOpacity
+              key={item.key}
+              activeOpacity={0.8}
               style={[
                 styles.tab,
                 {
-                  borderColor:
-                    item.key === activeTab ? activeBorder : passiveBorder,
+                  flexDirection: isRtl ? "row-reverse" : "row",
+                  backgroundColor: isActive ? activeBg : "transparent",
                 },
               ]}
               onPress={() => setActiveTab(item.key)}
             >
+              {item.icon &&
+                React.cloneElement(item.icon, {
+                  color: currentTextColor,
+                  width: 18,
+                  height: 18,
+                })}
               <TypographyText
-                textColor={color}
+                textColor={currentTextColor}
                 size={15}
-                style={{ fontWeight: '700' }}
+                style={{
+                  fontWeight: "700",
+                  marginLeft: isRtl ? 0 : 6,
+                  marginRight: isRtl ? 6 : 0,
+                }}
                 title={item.label}
+                font={BALOO_2}
               />
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
-  )
+  );
 };
 
 const styles = StyleSheet.create({
-  tab: {
+  container: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    paddingTop: 14,
+  },
+  capsule: {
+    flexDirection: "row",
     alignItems: "center",
+    padding: 4,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 20,
-    borderRadius: 6,
+  },
+  tab: {
+    height: 42,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
   },
 });
 

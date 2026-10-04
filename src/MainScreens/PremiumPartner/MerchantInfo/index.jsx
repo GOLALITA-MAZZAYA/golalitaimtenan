@@ -1,5 +1,4 @@
-import React, {
-  useEffect,
+import React, {useEffect,
   useRef,
   useState,
 } from 'react';
@@ -15,7 +14,8 @@ import { connect } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Tabs } from 'react-native-collapsible-tab-view';
 import ViewShot from 'react-native-view-shot';
-import { getContracts } from '../../../api/merchants';
+import { getContracts, getAllOffersByMeerchantId } from '../../../api/merchants';
+import useMerchantFeedbackSummary from '../../../hooks/useMerchantFeedbackSummary';
 import InfoTab from './InfoTab';
 import MapTab from './MapTab';
 import OfferTab from './OffersTab';
@@ -49,6 +49,102 @@ const MerchantInfo = ({
   const { isDark } = useTheme();
   const viewRef = useRef();
   const params = route?.params;
+
+  const merchantId = getMerchantId(merchantDetails);
+  const { summary, status: summaryStatus } =
+    useMerchantFeedbackSummary(merchantId);
+  const feedbackCount = Number(summary?.total_feedback_count) || 0;
+  const bannerRating =
+    summaryStatus === 'error'
+      ? merchantDetails?.rating
+      : feedbackCount > 0
+        ? (Number(summary.average_rating) || 0).toFixed(1)
+        : null;
+
+  const initialInlineOffers = [
+    ...(Array.isArray(merchantDetails?.offer_products)
+      ? merchantDetails.offer_products
+      : []),
+    ...(Array.isArray(merchantDetails?.products)
+      ? merchantDetails.products
+      : []),
+  ];
+
+  const initialOfferCount = Number(
+    merchantDetails?.offer_count ??
+      merchantDetails?.offers_count ??
+      params?.offer_count ??
+      initialInlineOffers.length ??
+      0,
+  );
+
+  const [merchantOffers, setMerchantOffers] = useState(
+    initialInlineOffers.map(item => ({
+      ...item,
+      uri: item.image_url || item.uri,
+      value: item.list_price ?? item.value,
+    })),
+  );
+  const [hasOffers, setHasOffers] = useState(
+    Boolean(
+      initialInlineOffers.length > 0 ||
+        initialOfferCount > 0 ||
+        merchantDetails?.x_have_offers,
+    ),
+  );
+
+  useEffect(() => {
+    let isCancelled = false;
+    const mId = merchantDetails?.merchant_id || merchantDetails?.id;
+    const isHotelMerchant =
+      merchantDetails?.is_hotel;
+
+    if (!mId || isHotelMerchant) {
+      return;
+    }
+
+    const inline = [
+      ...(Array.isArray(merchantDetails?.offer_products)
+        ? merchantDetails.offer_products
+        : []),
+      ...(Array.isArray(merchantDetails?.products)
+        ? merchantDetails.products
+        : []),
+    ];
+
+    if (inline.length > 0) {
+      setMerchantOffers(
+        inline.map(item => ({
+          ...item,
+          uri: item.image_url || item.uri,
+          value: item.list_price ?? item.value,
+        })),
+      );
+      setHasOffers(true);
+      return;
+    }
+
+    getAllOffersByMeerchantId(mId)
+      .then(res => {
+        if (isCancelled) return;
+        const list = Array.isArray(res) ? res : [];
+        if (list.length > 0) {
+          setMerchantOffers(list);
+          setHasOffers(true);
+        } else {
+          setHasOffers(false);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setHasOffers(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [merchantDetails?.merchant_id, merchantDetails?.id]);
   const mountedMerchantIdRef = useRef(getMerchantId(merchantDetails));
 
   useEffect(() => {
@@ -130,9 +226,10 @@ const MerchantInfo = ({
                     : params?.isOrganization
                       ? t('PremiumPartner.organization')
                       : merchantDetails?.category}
+                  bannerRating={bannerRating}
                 />
               )}
-              renderTabBar={() => <HeaderTabs setActiveTab={setActiveTab} activeTab={activeTab} isBusinessHotel={isHotel} />}
+              renderTabBar={() => <HeaderTabs setActiveTab={setActiveTab} activeTab={activeTab} isBusinessHotel={isHotel} hasOffers={hasOffers && !isHotel} />}
             >
               <Tabs.Tab name="a">
                 <Tabs.ScrollView
@@ -150,9 +247,10 @@ const MerchantInfo = ({
                     {activeTab === CONSTANTS.LOCATION && (
                       <MapTab merchantDetails={merchantDetails} />
                     )}
-                    {activeTab === CONSTANTS.OFFERS && !isHotel && (
+                    {activeTab === CONSTANTS.OFFERS && !isHotel && hasOffers && (
                       <OfferTab
                         merchant={merchantDetails}
+                        initialOffers={merchantOffers}
                         isHotel={isHotel}
                       />
                     )}

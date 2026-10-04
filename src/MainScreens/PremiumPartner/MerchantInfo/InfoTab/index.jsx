@@ -15,8 +15,12 @@ import TermsAndConditions from './TermsAndConditions';
 import ContractBtn from './ContractBtn';
 import ComplaintModal from '../../../ComplaintForm/ComplaintModal';
 import ComplaintBtn from './ComplaintBtn';
+import RateBtn from './RateBtn';
+import RatingSummary from './RatingSummary';
+import WeeklyHours from './WeeklyHours';
 import useIsGuest from '../../../../hooks/useIsGuest';
 import trackActivity from '../../../../api/activityTracker';
+import { BALOO_SEMIBOLD } from '../../../../redux/types';
 
 const InfoTab = ({ merchantDetails }) => {
   const { t, i18n } = useTranslation();
@@ -27,6 +31,9 @@ const InfoTab = ({ merchantDetails }) => {
   const [complaintData, setComplaintData] = useState({});
   const isArabic = i18n.language === 'ar';
   const merchantId = merchantDetails?.id ?? merchantDetails?.merchant_id;
+  const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
+  const [isRateModalVisible, setIsRateModalVisible] = useState(false);
+  const [hasTimetable, setHasTimetable] = useState(null);
 
   const backgroundColor = isDark ? colors.navyBlue : '#fff';
   const btnColor = isDark ? colors.mainDarkMode : colors.darkBlue;
@@ -140,6 +147,14 @@ const InfoTab = ({ merchantDetails }) => {
           },
         ]}
       >
+        <RateBtn
+          merchantDetails={merchantDetails}
+          visible={isRateModalVisible}
+          onOpen={() => setIsRateModalVisible(true)}
+          onClose={() => setIsRateModalVisible(false)}
+          onSubmitted={() => setSummaryRefreshKey(key => key + 1)}
+        />
+
         <CommonButton
           disabled={!merchantDetails?.phone}
           text={t('Merchants.phone')}
@@ -164,6 +179,7 @@ const InfoTab = ({ merchantDetails }) => {
           wrapperStyle={{
             borderColor: btnColor,
             paddingHorizontal: 10,
+            marginLeft: 16,
           }}
         />
 
@@ -171,7 +187,13 @@ const InfoTab = ({ merchantDetails }) => {
 
         {isGuest ? null : <ComplaintBtn merchantDetails={merchantDetails} />}
       </View>
-      {!!merchantDetails.open_from &&
+      <WeeklyHours
+        merchantId={merchantId}
+        onLoaded={setHasTimetable}
+      />
+
+      {hasTimetable === false &&
+        !!merchantDetails.open_from &&
         !!merchantDetails.open_till &&
         renderInfo(
           t('ProductPage.workingHours'),
@@ -222,6 +244,26 @@ const InfoTab = ({ merchantDetails }) => {
         });
         Linking.openURL(merchantDetails.website);
       })}
+
+      <View style={styles.reviewsSection}>
+        <TypographyText
+          title={t('MerchantFeedback.ratingsAndReviews')}
+          textColor={isDark ? colors.white : colors.darkBlue}
+          font={BALOO_SEMIBOLD}
+          size={16}
+          style={[
+            styles.sectionTitle,
+            { textAlign: isArabic ? 'right' : 'left' },
+          ]}
+        />
+        <RatingSummary
+          merchantId={merchantId}
+          refreshKey={summaryRefreshKey}
+          fallbackRating={merchantDetails?.rating}
+          onRatePress={() => setIsRateModalVisible(true)}
+        />
+      </View>
+
       <ComplaintModal
         visible={isComplaintModalVisible}
         onClose={() => setIsComplaintModalVisible(false)}
@@ -248,6 +290,13 @@ const styles = StyleSheet.create({
   },
   infoItemTitle: {
     borderRadius: 10,
+  },
+  reviewsSection: {
+    marginTop: 28,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    marginBottom: 4,
   },
   infoItemValue: {
     marginTop: 3,

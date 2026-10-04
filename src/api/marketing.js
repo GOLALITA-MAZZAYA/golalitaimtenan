@@ -1,18 +1,20 @@
-import instance from "../redux/instance";
 import { getAuthToken } from '../utils/tokenStorage';
+import instance from "../redux/instance";
 
-export const getMarketingPopup = async () => {
+export const MARKETING_POPUP_PLACEMENT = "Hotels_home";
+
+export const getMarketingPopup = async ({ country } = {}) => {
   const token = await getAuthToken();
-
-  const res = await instance.post("/marketing/get_popup", {
+  const res = await instance.post("/v5/marketing/get_popup", {
     params: {
       token,
-      "placement_code": "Hotels_home"
+      placement_code: MARKETING_POPUP_PLACEMENT,
+      ...(country ? { country } : {}),
     },
   });
-  console.log(JSON.stringify(res.data.result), 'res getMarketingPopup')
-  if (!res.data?.result) {
-    throw new Error();
+
+  if (!res.data?.result || res.data.result.success === false) {
+    throw new Error(res.data?.result?.error);
   }
 
   return res.data.result;

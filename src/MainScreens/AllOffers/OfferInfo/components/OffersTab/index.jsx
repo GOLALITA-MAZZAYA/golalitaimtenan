@@ -1,127 +1,261 @@
-import { FlatList, View } from "react-native";
-import { StyleSheet } from "react-native";
-import {
-  getOffersForNestedItemsCard,
-  handleOfferCardPress,
-} from "../../../helpres";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../../../../../components/ThemeProvider";
 import { BALOO_SEMIBOLD } from "../../../../../redux/types";
 import { colors } from "../../../../../components/colors";
 import { TypographyText } from "../../../../../components/Typography";
-import FullScreenLoader from "../../../../../components/Loaders/FullScreenLoader";
+import CardWithNesetedItems from "../../../../../components/CardWithNestedItems";
 import { saveOffer } from "../../../../../redux/merchant/merchant-thunks";
-import RoomRatesListItem from "../../../../PremiumPartner/MerchantInfo/RoomRatesTab/RoomRatesListItem";
+import {
+  getAllOffersByMeerchantId,
+  getOffers,
+} from "../../../../../api/merchants";
+import {
+  getOffersForNestedItemsCard,
+  navigateTopProductPage,
+} from "../../../helpres";
+import { getCacheBustedUri, getStringDate, isRTL } from "../../../../../../utils";
 
-
-const OffersTab = ({ merchantId, offerId, type }) => {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]);
+const OffersTab = ({
+  offers: propOffers,
+  loading: propLoading,
+  merchantId,
+  offerId,
+  merchant,
+  offer,
+}) => {
+  const isControlled = Array.isArray(propOffers);
+  const [internalLoading, setInternalLoading] = useState(!isControlled);
+  const [internalData, setInternalData] = useState([]);
   const { isDark } = useTheme();
-  const { t, i18n } = useTranslation();
-  const language = i18n.language;
+  const { t } = useTranslation();
+  const isArabic = isRTL();
   const dispatch = useDispatch();
+  const navigation = useNavigation();
+
+  const loading = isControlled ? propLoading : internalLoading;
+  const data = isControlled ? propOffers : internalData;
 
   const favoriteOffers = useSelector(
     (state) => state.merchantReducer.favoriteOffers
   );
 
-  const getOffers = async () => {
+  const fetchMerchantOffers = async () => {
+    if (isControlled) return;
+
     try {
-      setLoading(true);
+      setInternalLoading(true);
+      const mId =
+        merchantId || merchant?.merchant_id || merchant?.id || offer?.merchant_id;
 
-      console.log(offerId,'offerId');
-      console.log(type,'offer type')
+      if (!mId) {
+        setInternalData([]);
+        return;
+      }
 
-      const data = await getOffersForNestedItemsCard(
-        {merchant_id: merchantId, type }
-      );
+      const filterOffers = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.filter(
+          (item) =>
+            String(item.id) !== String(offerId) &&
+            String(item.product_id) !== String(offerId)
+        );
+      };
 
-      const filteredData = data.filter(item => +item.id !== +offerId);
+      const inlineOffers = [
+        ...(Array.isArray(merchant?.offer_products)
+          ? merchant.offer_products
+          : []),
+        ...(Array.isArray(merchant?.products) ? merchant.products : []),
+      ];
 
-      setData(filteredData);
+      if (inlineOffers.length > 0) {
+        const filtered = filterOffers(
+          inlineOffers.map((item) => ({
+            ...item,
+            uri: item.image_url || item.uri,
+            value: item.list_price ?? item.value,
+          }))
+        );
+        setInternalData(filtered);
+        return;
+      }
+
+      try {
+        const res = await getAllOffersByMeerchantId(mId);
+        const filtered = filterOffers(res);
+        if (filtered.length > 0) {
+          setInternalData(filtered);
+          return;
+        }
+      } catch (e) {
+        console.log("[OffersTab] getAllOffersByMeerchantId error:", e);
+      }
+
+      try {
+        const res2 = await getOffers(mId);
+        if (Array.isArray(res2) && res2.length > 0) {
+          const mapped = res2.map((item) => ({
+            ...item,
+            uri: item.image_url || item.uri,
+            value: item.list_price ?? item.value,
+          }));
+          const filtered = filterOffers(mapped);
+          setInternalData(filtered);
+          return;
+        }
+      } catch (e) {
+        console.log("[OffersTab] getOffers error:", e);
+      }
+
+      if (merchant?.is_hotel || merchant?.is_business_hotel) {
+        try {
+          const hotelOffers = await getOffersForNestedItemsCard(merchant, "all");
+          const filtered = filterOffers(hotelOffers);
+          setInternalData(filtered);
+          return;
+        } catch (e) {
+          console.log("[OffersTab] hotel offers error:", e);
+        }
+      }
+
+      setInternalData([]);
     } catch (err) {
-      console.log(err.message, "get offers error");
+      console.log("[OffersTab] fetchMerchantOffers error:", err);
+      setInternalData([]);
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
   useEffect(() => {
-    getOffers();
-  }, [merchantId, type]);
+    if (!isControlled) {
+      fetchMerchantOffers();
+    }
+  }, [
+    isControlled,
+    merchantId,
+    offerId,
+    merchant?.merchant_id,
+    merchant?.id,
+    offer?.merchant_id,
+  ]);
 
+  const handleFavouritePress = (item) => {
+    dispatch(saveOffer(item.id, t));
+  };
 
+  const handleCardPress = (item) => {
+    const merchantDetails =
+      merchant && (merchant.id || merchant.merchant_id)
+        ? merchant
+        : {
+            id: offer?.merchant_id,
+            merchant_id: offer?.merchant_id,
+            name: offer?.merchant_name,
+            merchant_name: offer?.merchant_name,
+            merchant_name_arabic: offer?.merchant_name_arabic,
+            merchant_logo: offer?.merchant_logo,
+            merchant_phone: offer?.merchant_phone,
+            merchant_email: offer?.merchant_email,
+          };
 
-    return  (
-    <FlatList 
-        style={styles.flatList}
-        contentContainerStyle={styles.contentContainerStyle}
-        data={loading ? [] : data}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-        renderItem={({item}) => {
+    if (navigation?.push) {
+      navigation.push("offer-info", {
+        productId: item.id,
+        title: isArabic ? item.x_arabic_name || item.name : item.name,
+        merchant: merchantDetails,
+        bookNow:
+          merchantDetails?.is_business_hotel || merchantDetails?.is_hotel
+            ? "true"
+            : "false",
+      });
+    } else {
+      navigateTopProductPage(item, merchantDetails);
+    }
+  };
 
-       const isLiked =
-        favoriteOffers?.find?.((o) => o?.id === item?.id) !== undefined;
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator
+          size="large"
+          color={isDark ? colors.mainDarkMode : colors.darkBlue}
+        />
+      </View>
+    );
+  }
 
-       const discRibbon =
-        language === "ar" ? item.x_label_arabic : item.offer_label;
-       const name = language === "ar" ? item.x_arabic_name : item.name;
+  if (!data?.length) {
+    return (
+      <View style={styles.noData}>
+        <TypographyText
+          textColor={isDark ? colors.white : colors.darkBlue}
+          size={14}
+          font={BALOO_SEMIBOLD}
+          title={t("AllOffers.noOffersFound", "No Offers found")}
+          style={styles.noDataText}
+          numberOfLines={1}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.list}>
+      {data.map((item, index) => {
+        const isFavorite = favoriteOffers?.some((o) => o?.id === item.id);
+        const ribbonText = isArabic
+          ? item.x_label_arabic || item.disc_ribbon || item.offer_label || ""
+          : item.offer_label || item.disc_ribbon || item.x_label_arabic || "";
 
         return (
-         <RoomRatesListItem
-          isDark={isDark}
-          uri={item.image_url}
-          isLiked={isLiked}
-          title={name}
-          description={discRibbon}
-          onPress={() => handleOfferCardPress(item, true)}
-          onSavePress={() => dispatch(saveOffer(item.id, t))}
-        />
-        )
-        }}
-        ListEmptyComponent={() => {
-          if(loading){
-            return  <FullScreenLoader style={styles.loader} />
-          }
-         
-
-          return (
-          <View style={styles.noData}>
-             <TypographyText
-                textColor={isDark ? colors.white : colors.darkBlue}
-                size={12}
-                font={BALOO_SEMIBOLD}
-                title={t("General.noData")}
-                style={styles.noDataText}
-                numberOfLines={1}
-             />
-           </View>
-          )
-        }}
-      />
-    )
+          <CardWithNesetedItems
+            key={item.id ? `offer-${item.id}` : `offer-idx-${index}`}
+            parentProps={{
+              onPress: () => handleCardPress(item),
+              onPressFavourite: () => handleFavouritePress(item),
+              uri: getCacheBustedUri(
+                item.uri ||
+                  item.image_url ||
+                  merchant?.merchant_logo ||
+                  offer?.merchant_logo
+              ),
+              name: isArabic ? item.x_arabic_name || item.name : item.name,
+              description: ribbonText,
+              endDate: item.end_date
+                ? getStringDate(item.end_date.split(" ")[0])
+                : null,
+              isSaved: isFavorite,
+            }}
+          />
+        );
+      })}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-  loader: {
-    marginTop: 30,
-    justifyContent: "flex-start",
+  loaderContainer: {
+    marginTop: 40,
     alignItems: "center",
+    justifyContent: "center",
   },
   noData: {
-    flexDirection: "row",
-    marginTop: 30,
+    marginTop: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
   },
-  flatList: {
-    marginTop: 20
+  noDataText: {
+    textAlign: "center",
   },
-  contentContainerStyle: {
-    flexGrow: 1,
-  }
+  list: {
+    marginTop: 10,
+  },
 });
 
 export default OffersTab;

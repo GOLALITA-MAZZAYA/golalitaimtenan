@@ -20,13 +20,34 @@ export const getToggleBtns = (merchant, isB1G1) => {
 
   const btnsConfig = [];
 
-  if (merchant.x_have_offers) {
+  const offerCount = Number(
+    merchant?.offer_count ?? merchant?.offers_count ?? 0
+  );
+  const hasOffers = Boolean(merchant?.x_have_offers || offerCount > 0);
+
+  if (hasOffers) {
+    const isArabic = i18next.language === "ar";
+    let offersLabel = "";
+
+    if (offerCount > 0) {
+      if (isArabic) {
+        offersLabel = `${offerCount} عروض`;
+      } else {
+        offersLabel = `${offerCount} ${offerCount === 1 ? "Offer" : "Offers"}`;
+      }
+    } else {
+      offersLabel = isArabic ? "عروض" : "Offers";
+    }
+
     btnsConfig.push({
-      hideText: i18next.t("AllOffers.hideAllOffers"),
-      showText: i18next.t("AllOffers.showAllOffers"),
+      hideText: offersLabel,
+      showText: offersLabel,
       type: "offers",
+      count: offerCount,
+      isBookNow: false,
     });
   }
+
 
   if (merchant.x_have_branch) {
     btnsConfig.push({

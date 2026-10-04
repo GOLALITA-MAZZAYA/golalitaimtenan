@@ -175,6 +175,13 @@ export const getStringDate = (dateString) => {
     .padStart(2, "0")}.${year}`;
 };
 
+export const getCacheBustedUri = (uri, bucketMinutes = 60) => {
+  if (!uri) return uri;
+  const bucket = Math.floor(Date.now() / (bucketMinutes * 60 * 1000));
+  const separator = uri.includes("?") ? "&" : "?";
+  return `${uri}${separator}_cb=${bucket}`;
+};
+
 export const onBannerPress = async (
   path,
   getMerchantDetails,

@@ -6,14 +6,16 @@ import { mainStyles } from "../../../../../styles/mainStyles";
 const OfferTypeInfoButtons = ({ data }) => {
   const { isDark } = useTheme();
 
-  return data.map((item) => {
+  return data.map((item, index) => {
     if (!item.visible) {
       return null;
     }
 
     return (
       <CommonButton
+        key={item.label ?? index}
         label={item.label}
+        loading={item.loading}
         style={{
           ...mainStyles.borderButton,
           ...mainStyles.mb20,
@@ -23,7 +25,6 @@ const OfferTypeInfoButtons = ({ data }) => {
         }}
         textColor={isDark ? colors.mainDarkModeText : colors.darkBlue}
         onPress={item.onPress}
-        loading={item.loading}
       />
     );
   });

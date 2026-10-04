@@ -6,7 +6,7 @@ import {
   Image,
 } from 'react-native';
 import { TypographyText } from '../Typography';
-import { LUSAIL_REGULAR } from '../../redux/types';
+import { LUSAIL_REGULAR, BALOO_BOLD} from '../../redux/types';
 import StartIcon from '../../assets/star.svg';
 import { sized } from '../../Svg';
 import FullScreenLoader from '../Loaders/FullScreenLoader';
@@ -29,12 +29,33 @@ const CardWithNesetedItems = ({ parentProps }) => {
     onPress,
     onPressFavourite,
     distance,
+    offerCount,
+    offersLabel,
   } = parentProps;
 
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const isGuest = useIsGuest();
   const isRtl = isRTL();
+
+  const displayOffersLabel = useMemo(() => {
+    if (
+      offersLabel !== undefined &&
+      offersLabel !== null &&
+      offersLabel !== ''
+    ) {
+      return offersLabel;
+    }
+    if (offerCount === undefined || offerCount === null) {
+      return null;
+    }
+    const num = Number(offerCount);
+    if (num > 0) {
+      if (isRtl) return `${num} عروض`;
+      return `${num} ${num === 1 ? 'Offer' : 'Offers'}`;
+    }
+    return isRtl ? 'عروض' : 'Offers';
+  }, [offersLabel, offerCount, isRtl]);
 
   const StarIconSmall = useMemo(() => sized(StartIcon, 20, 20), []);
   const starColor = isDark ? colors.mainDarkMode : colors.darkBlue;
@@ -99,6 +120,25 @@ const CardWithNesetedItems = ({ parentProps }) => {
                 },
               ]}
             />
+          )}
+
+          {!!displayOffersLabel && (
+            <View
+              style={[
+                styles.offersLinkToggle,
+                {
+                  alignSelf: isRtl ? 'flex-end' : 'flex-start',
+                },
+              ]}
+            >
+              <TypographyText
+                textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+                size={13}
+                font={BALOO_BOLD}
+                title={displayOffersLabel}
+                style={styles.offersLinkText}
+              />
+            </View>
           )}
         </View>
 
@@ -215,6 +255,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: IMAGE_SIZE,
     alignSelf: 'stretch',
+  },
+  offersLinkToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  offersLinkText: {
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   favoriteButton: {
     padding: 2,

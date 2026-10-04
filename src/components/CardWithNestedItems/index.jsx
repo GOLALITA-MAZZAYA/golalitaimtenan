@@ -52,6 +52,29 @@ const CardWithNesetedItems = props => {
 
   const renderToggleBtn = (item, index) => {
     const isActive = item.type === openedIndex;
+    const isOffersLink = item.type === "offers" && !item.isBookNow;
+
+    if (isOffersLink) {
+      return (
+        <View
+          key={item.type}
+          style={[
+            styles.offersLinkToggle,
+            {
+              flexDirection: isRTL() ? "row-reverse" : "row",
+            },
+          ]}
+        >
+          <TypographyText
+            textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+            size={13}
+            font={BALOO_BOLD}
+            title={item.showText}
+            style={styles.offersLinkText}
+          />
+        </View>
+      );
+    }
 
     return (
       <TouchableOpacity
@@ -355,6 +378,16 @@ const styles = StyleSheet.create({
     height: IMAGE_SIZE,
     borderRadius: 4,
     padding: 4,
+  },
+  offersLinkToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  offersLinkText: {
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
   toggleBtn: {
     flexDirection: 'row',
