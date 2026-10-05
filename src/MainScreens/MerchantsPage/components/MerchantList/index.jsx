@@ -9,6 +9,7 @@ import useMerchantDiscount from "../../../../hooks/useMerchantDiscount";
 import useRoadDistance from "../../../../hooks/useRoadDistance";
 import {userLocationSelector} from "../../../../redux/global/global-selectors";
 import {useSelector} from "react-redux";
+import { rewriteAssetUrl } from "../../../../utils/rewriteAssetUrl";
 
 const MerchantsList = ({
   merchant,
@@ -41,7 +42,7 @@ const MerchantsList = ({
       parentProps={{
         onPress: () => handleMerchantCardPress(merchant),
         onPressFavourite: () => onPressFavourite(),
-        uri: merchant.merchant_logo,
+        uri: rewriteAssetUrl(merchant.merchant_logo),
         name: getLocalizedValue(merchant?.x_arabic_name, merchant?.merchant_name),
         description:
           language === "ar"

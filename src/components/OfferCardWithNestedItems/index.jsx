@@ -15,6 +15,7 @@ import { colors } from '../colors';
 import { useTheme } from '../ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import useIsGuest from '../../hooks/useIsGuest';
+import { rewriteAssetUrl } from '../../utils/rewriteAssetUrl';
 
 const IMAGE_SIZE = 64;
 
@@ -84,7 +85,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
           ]}
         >
           <Image
-            source={{ uri }}
+            source={{ uri: rewriteAssetUrl(uri) }}
             style={styles.image}
             resizeMode="contain"
           />

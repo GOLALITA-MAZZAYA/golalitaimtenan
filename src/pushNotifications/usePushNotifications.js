@@ -8,6 +8,10 @@ import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import store from '../redux/store';
 import { setClickedNotificationData } from '../redux/notifications/notifications-actions';
 import { handleNotificationClick } from './notificationClickHandler';
+import {
+  consumePendingNotification,
+  startInitialNotificationCapture,
+} from './pendingPushNotification';
 
 export async function requestNotificationPermissions() {
   try {
@@ -63,8 +67,22 @@ export async function getFcmToken() {
   }
 }
 
+const hydrateColdStartNotification = async () => {
+  startInitialNotificationCapture();
+  const pending = await consumePendingNotification();
+  if (pending?.data) {
+    store.dispatch(setClickedNotificationData(pending));
+    handleNotificationClick({
+      data: pending.data,
+      messageId: pending.messageId,
+      id: pending.id,
+    });
+  }
+};
+
 const usePushNotifications = () => {
-  // 🔹 Настройка FCM, разрешений и сохранение токена
+  // Must live at App/Root level, not Login: Login unmounts when isAuthorized
+  // flips true, which would tear down every push listener for the session.
   useEffect(() => {
     async function setupFCM() {
       await requestNotificationPermissions();
@@ -77,9 +95,10 @@ const usePushNotifications = () => {
     }
 
     setupFCM();
+    hydrateColdStartNotification();
   }, []);
 
-  // 🔹 Foreground-пуши: показываем уведомление сами
+  // Foreground pushes: display via Notifee (system does not show them)
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       try {
@@ -100,7 +119,6 @@ const usePushNotifications = () => {
           data.body ||
           'You are near one of our partners';
 
-        // показываем локальное уведомление через Notifee
         await notifee.displayNotification({
           title,
           body,
@@ -122,7 +140,7 @@ const usePushNotifications = () => {
     };
   }, []);
 
-  // 🔹 Обработка кликов по notifee-уведомлениям (foreground + initial)
+  // Notifee click handling (foreground)
   useEffect(() => {
     const unsubscribeForeground = notifee.onForegroundEvent(
       ({ type, detail }) => {
@@ -137,45 +155,11 @@ const usePushNotifications = () => {
       },
     );
 
-    async function handleInitialNotifeeNotification() {
-      try {
-        const initialNotification = await notifee.getInitialNotification();
-
-        if (initialNotification?.notification) {
-          console.log(
-            'notifee.getInitialNotification',
-            initialNotification.notification.data,
-          );
-          handleNotificationClick(initialNotification.notification);
-        }
-      } catch (e) {
-        console.log('Error in getInitialNotification (notifee)', e);
-      }
-    }
-
-    handleInitialNotifeeNotification();
-
     return unsubscribeForeground;
   }, []);
 
-  // 🔹 FCM: если система сама показала уведомление (background/killed)
+  // FCM: background open (app was collapsed, not killed)
   useEffect(() => {
-    async function getInitialNotification() {
-      try {
-        const message = await messaging().getInitialNotification();
-
-        if (message) {
-          console.log('messaging.getInitialNotification', message.data);
-          store.dispatch(setClickedNotificationData(message));
-          handleNotificationClick({ data: message.data });
-        }
-      } catch (e) {
-        console.log('Error in messaging.getInitialNotification', e);
-      }
-    }
-
-    getInitialNotification();
-
     const unsubscribe = messaging().onNotificationOpenedApp(remoteMessage => {
       console.log(
         'messaging.onNotificationOpenedApp',

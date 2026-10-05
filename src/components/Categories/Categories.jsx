@@ -13,6 +13,7 @@ import { getParentCategories } from '../../../../redux/merchant/merchant-thunks'
 import ListNoData from '../../../../components/ListNoData';
 import { setCategoriesType } from '../../../../redux/merchant/merchant-actions';
 import useUpdateEffect from '../../../../hooks/useUpdateEffect';
+import { pickCategoryImage } from '../../utils/rewriteAssetUrl';
 
 const IMAGE_SIZE = 70;
 
@@ -139,7 +140,7 @@ const Categories = () => {
             item.id === 'vouchers'
               ? require('../../assets/vouchers.png')
               : {
-                  uri: item.image3 || undefined,
+                  uri: pickCategoryImage(item),
                 };
 
           return (

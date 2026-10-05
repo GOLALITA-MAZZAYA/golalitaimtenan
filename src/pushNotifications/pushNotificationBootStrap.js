@@ -47,3 +47,13 @@ messaging().onMessage(async remoteMessage => {
     console.log('[Push] Error displaying notification with notifee', e);
   }
 });
+
+// Required by index.js AppRegistry.registerHeadlessTask('RNFirebaseBackgroundMessage').
+// Android invokes this for messages while backgrounded/killed.
+export const firebaseBackgroundMessage = async remoteMessage => {
+  // No-op handler so the headless task does not crash on undefined.
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log('[Push] Background/killed message handled:', remoteMessage?.data);
+  }
+};

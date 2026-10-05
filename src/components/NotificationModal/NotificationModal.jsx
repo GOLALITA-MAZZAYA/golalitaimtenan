@@ -88,7 +88,7 @@ const NotificationModal = ({
   return (
     <Portal name="home-notifications-modal">
       <BottomSheetModalProvider key="home-notifications-modal">
-        <View style={styles.container}>
+        <View style={styles.container} pointerEvents="box-none">
           <BottomSheetModal
             key="home-notifications-modal"
             ref={bottomSheetModalRef}

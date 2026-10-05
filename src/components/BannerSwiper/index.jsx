@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions } from "react-native";
 import { colors } from "../colors";
 import { SCREEN_WIDTH } from "../../styles/mainStyles";
+import { rewriteAssetUrl } from "../../utils/rewriteAssetUrl";
 
 const BannerSwiper = ({
   banners = [],
@@ -26,13 +27,17 @@ const BannerSwiper = ({
   const autoplayTimerRef = useRef(null);
 
   // Support both banners array and direct images array
-  const imageList = images
-    ? images
-    : banners?.length
-    ? banners.map(b => (typeof b === 'string' ? b : b.banner_image))
-    : singleBannerUrl
-    ? [singleBannerUrl]
-    : [];
+  const imageList = (
+    images
+      ? images
+      : banners?.length
+        ? banners.map((b) => (typeof b === "string" ? b : b.banner_image))
+        : singleBannerUrl
+          ? [singleBannerUrl]
+          : []
+  )
+    .map(rewriteAssetUrl)
+    .filter(Boolean);
 
   if (!imageList.length) {
     return null;

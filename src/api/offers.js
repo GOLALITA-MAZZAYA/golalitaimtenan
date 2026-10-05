@@ -27,20 +27,6 @@ export const getProductCategoryTypes = async () => {
   }
 };
 
-export const getB1G1Offers = async ({ params = {} }) => {
-  const token = await getAuthToken();
-
-  const res = await instance.post("/user/offers/v3", {
-    params: {
-      token,
-      x_offer_type: "b1g1",
-      ...params
-    },
-  });
-
-  return res.data.result;
-};
-
 export const getOfferById = async (product_id) => {
   const token = await getAuthToken();
 
@@ -48,6 +34,19 @@ export const getOfferById = async (product_id) => {
     params: {
       token,
       product_id,
+    },
+  });
+
+  return res.data.result;
+};
+
+export const getFilteredOffers = async (params = {}) => {
+  const token = await getAuthToken();
+
+  const res = await instance.post("/user/offers/v3", {
+    params: {
+      token,
+      ...params,
     },
   });
 

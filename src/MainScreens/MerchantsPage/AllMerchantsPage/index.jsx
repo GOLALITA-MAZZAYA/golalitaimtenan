@@ -37,27 +37,33 @@ import { getHeaderBtnString } from "./helpers";
 import { getMergedSubCategoriesForCategory } from "../../../api/categories";
 import { TypographyText } from "../../../components/Typography";
 import { BALOO_2 } from "../../../redux/types";
+import { rewriteAssetUrl } from "../../../utils/rewriteAssetUrl";
 
 const ITEM_HEIGHT = 200;
 
+// Match Golalita / Masrif field order. Do not invent partner.category
+// fallbacks — cuisine rows from /sub/category/v2 use image_icon, and a fake
+// /go/api/image/{id}/... URI leaves an empty circle (truthy uri, broken load).
 const getSubCategoryUri = (item) => {
   if (!item) return null;
-  return (
-    item.image_icon ||
-    item.x_image_url_2 ||
-    item.image_url ||
-    item.image3 ||
-    item.x_gif_image ||
-    item.x_image_url_3 ||
-    item.x_image_url_4 ||
-    item.image ||
-    item.image_128 ||
-    item.image_medium ||
-    item.icon ||
-    item.banner_image ||
-    item.x_image_url ||
-    null
-  );
+
+  const candidates = [
+    item.image_icon,
+    item.x_image_url_2,
+    item.image_url,
+    typeof item.image3 === "string" ? item.image3 : null,
+    item.x_gif_image,
+    item.x_image_url_3,
+    item.x_image_url_4,
+    item.image,
+    item.image_128,
+    item.image_medium,
+    item.icon,
+    item.banner_image,
+    item.x_image_url,
+  ].filter((value) => typeof value === "string" && value.trim());
+
+  return candidates[0] ? rewriteAssetUrl(candidates[0]) : null;
 };
 
 const resolveCategoryId = (...candidates) => {

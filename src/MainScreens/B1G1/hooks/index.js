@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from "react-query";
-import { getB1G1Offers } from "../../../api/offers";
+import { getFilteredOffers } from "../../../api/offers";
+import { B1G1 } from "../../../redux/types";
 
 const PAGE_SIZE = 10;
 
@@ -9,11 +10,10 @@ const useB1G1Offers = () => {
     async ({ pageParam = 1 }) => {
       const offset = (pageParam - 1) * PAGE_SIZE;
 
-      const offers = await getB1G1Offers({
-        params: {
-          offset,
-          limit: PAGE_SIZE,
-        },
+      const offers = await getFilteredOffers({
+        x_offer_type: B1G1,
+        offset,
+        limit: PAGE_SIZE,
       });
 
       return {
@@ -22,15 +22,13 @@ const useB1G1Offers = () => {
       };
     },
     {
-
       getNextPageParam: (lastPage) => {
         if (lastPage.offers.length < PAGE_SIZE) {
-          return undefined; 
+          return undefined;
         }
         return lastPage.page + 1;
       },
 
- 
       select: (data) => {
         const seen = new Set();
         const pages = [];

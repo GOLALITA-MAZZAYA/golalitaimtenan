@@ -26,6 +26,10 @@ import {
   resolveEsimDestinationForCategory,
   isEsimCategory,
 } from '../../ESim/esimUtils';
+import {
+  pickCategoryImage,
+  withRewrittenCategoryImages,
+} from '../../../utils/rewriteAssetUrl';
 
 // rowItem: paddingVertical 14*2 + iconWrapper height 60 + borderBottomWidth 1
 const ITEM_HEIGHT = 89;
@@ -99,7 +103,9 @@ const ChildCategories = ({ navigation }) => {
         ? preloadedChildren
         : await getChildCategoriesById(parentCategoryId, categoriesType);
 
-      const list = Array.isArray(data) ? data : [];
+      const list = withRewrittenCategoryImages(
+        Array.isArray(data) ? data : [],
+      );
       const filteredChildCategories = list.filter(item => {
         if (item.parent_id?.[0] === 47 && (item.id === 156 || item.id === 160)) {
           return false;
@@ -207,7 +213,7 @@ const ChildCategories = ({ navigation }) => {
     try {
       const children = await getChildCategoriesById(category.id, categoriesType);
       if (Array.isArray(children) && children.length > 0) {
-        pushChildLevel(category, children);
+        pushChildLevel(category, withRewrittenCategoryImages(children));
         return;
       }
     } catch (err) {
@@ -330,7 +336,9 @@ const ChildCategories = ({ navigation }) => {
 
   const renderItemIcon = (item, { size, localImageSize, esimSize }) => {
     const uri =
-      item.isEventsAndTickets || item.isEsimEntry ? null : item.image3;
+      item.isEventsAndTickets || item.isEsimEntry
+        ? null
+        : pickCategoryImage(item);
     const isSvg =
       typeof uri === 'string' && uri.toLowerCase().endsWith('.svg');
 

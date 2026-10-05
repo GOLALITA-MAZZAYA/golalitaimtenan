@@ -12,17 +12,18 @@ const LocationPicker = (props) => {
 
   useEffect(() => {
     getAllLocations()
-      .then((res) => setLocation(res.data))
-      .catch((err) => {
-        console.log(err, "getAllLocations error");
-      });
+      .then((res) => setLocation(Array.isArray(res) ? res : res?.data || []))
+      .catch(() => {});
   }, []);
 
   const transformCounntries = (items) => {
     return items?.map((option) => {
       return {
         value: option.id,
-        label: language === "ar" ? option.arabic_name : option.name,
+        label:
+          language === "ar"
+            ? option.arabic_name || option.x_arabic_name || option.name
+            : option.name,
         short_names: option.short_names,
       };
     });

@@ -42,6 +42,11 @@ import { getFavouriteMerchantsList } from '../favouriteMerchants/favourite-merch
 import { ORG_ID, ORG_CODE } from '../../constants';
 import { getAuthToken } from '../../utils/tokenStorage';
 import { isEsimCategory } from '../../MainScreens/ESim/esimUtils';
+import {
+  rewriteAssetUrl,
+  withRewrittenCategoryImages,
+} from '../../utils/rewriteAssetUrl';
+import { getFilteredOffers } from '../../api/offers';
 
 export const getCategories = () => async (dispatch, getState) => {
   const { workStatus } = getState().authReducer;
@@ -163,7 +168,9 @@ export const getParentCategories = type => async (dispatch, getState) => {
       params,
     });
 
-    const list = Array.isArray(res.data?.result) ? res.data.result : [];
+    const list = withRewrittenCategoryImages(
+      Array.isArray(res.data?.result) ? res.data.result : [],
+    );
     const responseHasEsim = list.some(isEsimCategory);
 
     // Keep eSIM on the home grid whenever the API returns it (Local and Global).
@@ -219,9 +226,13 @@ export const getPremiumBanners =
 
       const banners = userRes.data.result;
 
-      const sortedBanners = banners.sort((a, b) =>
-        a.x_sequence > b.x_sequence ? 1 : -1,
-      );
+      const sortedBanners = (banners || [])
+        .map(b => ({
+          ...b,
+          banner_image: rewriteAssetUrl(b.banner_image),
+          image_url: rewriteAssetUrl(b.image_url),
+        }))
+        .sort((a, b) => (a.x_sequence > b.x_sequence ? 1 : -1));
 
       dispatch(setPremiumBanners({ data: sortedBanners, concat, page: pageVal }));
     };
@@ -262,9 +273,16 @@ export const getMerchantList =
           params,
         });
 
-        const merchantsData = Array.isArray(merchantsRes.data?.result)
-          ? merchantsRes.data.result
-          : [];
+        const merchantsData = (
+          Array.isArray(merchantsRes.data?.result)
+            ? merchantsRes.data.result
+            : []
+        ).map(m => ({
+          ...m,
+          merchant_logo: rewriteAssetUrl(m.merchant_logo),
+          image_url: rewriteAssetUrl(m.image_url),
+          banner_image: rewriteAssetUrl(m.banner_image),
+        }));
 
         onGetData?.(merchantsData.length, params.limit);
 
@@ -563,6 +581,7 @@ export const getOffers =
     merchant_category_id,
     page,
     params: additionalRequestParams = {},
+    useFiltersApi = false,
     onGetData,
   }) =>
     async (dispatch, getState) => {
@@ -577,8 +596,6 @@ export const getOffers =
           }),
         );
       }
-
-
 
       const { workStatus } = getState().authReducer;
       const { token } = getState().authReducer;
@@ -606,19 +623,24 @@ export const getOffers =
 
       const params = Object.assign(reqParams, offsetAndLimit);
 
-      const res = await merchantApi.getNewOffers({
-        params,
-      });
+      let data;
+      if (params.x_offer_type || useFiltersApi) {
+        data = await getFilteredOffers(params);
+      } else {
+        const res = await merchantApi.getNewOffers({
+          params,
+        });
+        data = res.data.result;
+      }
 
       if (merchant_id)
         dispatch(
           setMerchantOffers(
-            workStatus === CONTENT_DISABLED ? [] : res.data.result,
+            workStatus === CONTENT_DISABLED ? [] : data,
           ),
         );
       else {
         const concat = !page || pageVal === 1 ? false : true;
-        const data = res.data.result;
 
         onGetData?.(data?.length, params.limit);
 
@@ -851,7 +873,12 @@ const filterAdvertSlot = items =>
         !item.is_sjc &&
         (Platform.OS === 'android' ? item.x_android : item.x_ios),
     )
-    .sort((a, b) => a.sequence - b.sequence);
+    .sort((a, b) => a.sequence - b.sequence)
+    .map(item => ({
+      ...item,
+      banner_image: rewriteAssetUrl(item.banner_image),
+      image_url: rewriteAssetUrl(item.image_url),
+    }));
 
 // Home screen banners are Qatar-only; Global country screens fetch their own
 // via getCountryBanners below.
@@ -870,7 +897,10 @@ export const getAdvert = () => async (dispatch, getState) => {
       }),
     );
   } catch (e) {
-    console.log(e);
+    console.log(e, 'getAdvert error');
+    // Home gates on !!advert — set empty slots so a banner failure
+    // does not leave the screen on an infinite loader.
+    dispatch(setAdvert({ ad_1: [], ad_2: [], ad_3: [] }));
   }
 };
 

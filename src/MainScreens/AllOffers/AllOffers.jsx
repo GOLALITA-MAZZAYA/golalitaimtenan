@@ -41,6 +41,7 @@ const AllOffers = ({
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [selectedCategoryType, setSelectedCategoryType] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [sortBy, setSortBy] = useState('nearby'); // "nearby" | "alphabetical"
   const [categoryTypes, setCategoryTypes] = useState([]);
   const canGetMoreDataRef = useRef(true);
   const language = i18n.language;
@@ -126,34 +127,18 @@ const AllOffers = ({
     saveOffer(item.id, t);
   };
 
-  const merchantOfferCounts = useMemo(() => {
-    const map = {};
-    if (Array.isArray(offers)) {
-      offers.forEach(o => {
-        const mId = o?.merchant_id || o?.go_merchant_id;
-        if (mId) {
-          map[mId] = (map[mId] || 0) + 1;
-        }
-      });
-    }
-    return map;
-  }, [offers]);
-
+  // Only the server's offer_count; no label when it is 0 or missing.
   const getOfferCountLabel = item => {
-    const rawCount = Number(item?.offer_count ?? item?.offers_count ?? 0);
-    const mId = item?.merchant_id || item?.go_merchant_id;
-    const localCount =
-      mId && merchantOfferCounts[mId] ? merchantOfferCounts[mId] : 0;
-    const count = rawCount > 0 ? rawCount : localCount;
+    const count = Number(item?.offer_count) || 0;
 
-    if (count > 0) {
-      if (isArabic) {
-        return `${count} عروض`;
-      }
-      return `${count} ${count === 1 ? 'Offer' : 'Offers'}`;
+    if (count <= 0) {
+      return '';
     }
 
-    return isArabic ? 'عروض' : 'Offers';
+    if (isArabic) {
+      return `${count} عروض`;
+    }
+    return `${count} ${count === 1 ? 'Offer' : 'Offers'}`;
   };
 
   const renderItem = ({ item }) => {
@@ -190,27 +175,30 @@ const AllOffers = ({
     ...(selectedCategoryType
       ? { category_type_id: selectedCategoryType }
       : {}),
+    ...(sortBy === 'alphabetical' ? { sort_by: 'alphabetical' } : {}),
   });
+
+  const getLocationParams = () =>
+    sortBy === 'nearby' && userLocation
+      ? {
+          user_lat: userLocation.user_lat,
+          user_long: userLocation.user_long,
+        }
+      : {};
 
   const fetchMoreData = () => {
     if (!isReady || isOffersLoading || !canGetMoreDataRef.current) {
       return;
     }
 
-    const filterParams = getFilterParams();
-    const locationParams = userLocation
-      ? {
-          user_lat: userLocation.user_lat,
-          user_long: userLocation.user_long,
-        }
-      : {};
-    const params = { ...filterParams, ...locationParams };
+    const params = { ...getFilterParams(), ...getLocationParams() };
 
     getOffers({
       merchant_id: null,
       merchant_category_id: null,
       page: 'next',
       params,
+      useFiltersApi: true,
       onGetData: (dataLength, limit) => {
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
@@ -220,14 +208,7 @@ const AllOffers = ({
   };
 
   useEffect(() => {
-    const filterParams = getFilterParams();
-    const locationParams = userLocation
-      ? {
-          user_lat: userLocation.user_lat,
-          user_long: userLocation.user_long,
-        }
-      : {};
-    const params = { ...filterParams, ...locationParams };
+    const params = { ...getFilterParams(), ...getLocationParams() };
 
     canGetMoreDataRef.current = true;
     setIsReady(false);
@@ -237,6 +218,7 @@ const AllOffers = ({
       merchant_category_id: null,
       page: 1,
       params,
+      useFiltersApi: true,
       onGetData: (dataLength, limit) => {
         setIsReady(true);
 
@@ -247,7 +229,7 @@ const AllOffers = ({
     }).catch(() => {
       setIsReady(true);
     });
-  }, [selectedFilter, selectedCategoryType, userLocation]);
+  }, [selectedFilter, selectedCategoryType, userLocation, sortBy]);
 
   const loaderColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const screenBg = isDark ? colors.darkBlue : colors.white;
@@ -375,6 +357,92 @@ const AllOffers = ({
           </View>
         )}
 
+        <View
+          style={[
+            styles.sortBar,
+            {
+              flexDirection: isRTL() ? 'row-reverse' : 'row',
+            },
+          ]}
+        >
+          <TypographyText
+            size={13}
+            font={LUSAIL_REGULAR}
+            title={
+              offers?.length
+                ? isRTL()
+                  ? `${offers.length} عروض`
+                  : `${offers.length} Offers`
+                : ''
+            }
+            textColor={isDark ? 'rgba(255, 255, 255, 0.6)' : '#71717A'}
+            style={{ fontWeight: '600' }}
+          />
+
+          <View
+            style={[
+              styles.sortCapsule,
+              {
+                backgroundColor: isDark ? colors.navyBlue : '#F4F4F5',
+                borderColor: isDark
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : 'rgba(0, 0, 0, 0.05)',
+                flexDirection: isRTL() ? 'row-reverse' : 'row',
+              },
+            ]}
+          >
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setSortBy('nearby')}
+              style={[
+                styles.sortSegment,
+                sortBy === 'nearby' && {
+                  backgroundColor: colors.darkBlue,
+                },
+              ]}
+            >
+              <TypographyText
+                size={11}
+                font={LUSAIL_REGULAR}
+                title={t('AllOffers.nearby')}
+                style={{ fontWeight: '700' }}
+                textColor={
+                  sortBy === 'nearby'
+                    ? colors.white
+                    : isDark
+                      ? '#A1A1AA'
+                      : '#71717A'
+                }
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setSortBy('alphabetical')}
+              style={[
+                styles.sortSegment,
+                sortBy === 'alphabetical' && {
+                  backgroundColor: colors.darkBlue,
+                },
+              ]}
+            >
+              <TypographyText
+                size={11}
+                font={LUSAIL_REGULAR}
+                title={t('AllOffers.alphabetical')}
+                style={{ fontWeight: '700' }}
+                textColor={
+                  sortBy === 'alphabetical'
+                    ? colors.white
+                    : isDark
+                      ? '#A1A1AA'
+                      : '#71717A'
+                }
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <FlatList
           data={offers}
           renderItem={renderItem}
@@ -449,6 +517,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sortBar: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sortCapsule: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  sortSegment: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -16,6 +16,7 @@ import useUpdateEffect from '../../../../hooks/useUpdateEffect';
 import { isEsimCategory } from '../../../ESim/esimUtils';
 import { sized } from '../../../../Svg';
 import EsimSvg from '../../../../assets/esim.svg';
+import { pickCategoryImage } from '../../../../utils/rewriteAssetUrl';
 
 const IMAGE_SIZE = 70;
 
@@ -54,7 +55,7 @@ const CategoryGridItem = memo(function CategoryGridItem({
   newLabel,
 }) {
   const source = {
-    uri: item.image3 || undefined,
+    uri: pickCategoryImage(item),
   };
   const esim = isEsimCategory(item);
   const tint = isDark ? colors.mainDarkMode : colors.darkBlue;

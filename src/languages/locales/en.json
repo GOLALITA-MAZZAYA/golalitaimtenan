@@ -208,7 +208,9 @@
       "promocodeType": "PROMOCODE",
       "discountType": "DISCOUNT",
       "giftcardType": "GIFTCARD",
-      "allTags": "All"
+      "allTags": "All",
+      "nearby": "Nearby",
+      "alphabetical": "A - Z"
     },
     "Product": {
       "points": "Points",

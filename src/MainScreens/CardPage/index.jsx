@@ -26,20 +26,23 @@ const CardPage = () => {
   const familyMembers = useSelector(
     state => state.transactionsReducer.familyMembers,
   );
-  const [data, setData] = useState([user]);
+  const [data, setData] = useState(user ? [user] : []);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFullScreenVisible, setIsFullScreenVisible] = useState(false);
   const [isBarcodeFullScreenVisible, setIsBarcodeFullScreenVisible] = useState(false);
-  console.log('datadatadatadata', data);
   const expiryDate = transformDisplayedExpiryDate(user?.x_user_expiry);
   const mainnBackgroundColor = isDark ? colors.darkModeBackground : '#fff';
   const barcodeLineColor = isDark ? '#fff' : 'black';
 
   useEffect(() => {
+    if (!user) return;
+
     if (familyMembers?.length && isMainUser) {
       setData([user, ...familyMembers]);
+    } else {
+      setData([user]);
     }
-  }, [familyMembers?.length]);
+  }, [user, familyMembers?.length, isMainUser]);
 
   useEffect(() => {
     if (isMainUser) {
@@ -48,6 +51,13 @@ const CardPage = () => {
   }, []);
 
   const selectedCardItem = data[selectedIndex];
+  // Odoo often returns false/null for empty barcode; barcode-expo crashes on Android
+  // if value is not a non-empty string (especially boolean false).
+  const rawBarcode = selectedCardItem?.barcode;
+  const barcodeValue =
+    rawBarcode && typeof rawBarcode !== 'boolean'
+      ? String(rawBarcode).trim()
+      : '';
 
   return (
     <SafeAreaView
@@ -105,21 +115,22 @@ const CardPage = () => {
           }}
         >
           <TouchableOpacity activeOpacity={0.8} onPress={() => setIsBarcodeFullScreenVisible(true)} style={{ alignItems: 'center' }}>
-            {selectedCardItem?.barcode ? (
+            {barcodeValue ? (
               <Barcode
-                value={selectedCardItem?.barcode}
+                value={barcodeValue}
                 format="CODE128"
                 width={2}
                 height={70}
                 lineColor="black"
                 background="white"
+                onError={err => console.log('Barcode error:', err)}
               />
             ) : null}
 
             <TypographyText
               textColor={barcodeLineColor}
               size={22}
-              title={selectedCardItem?.barcode}
+              title={barcodeValue}
               style={{ fontWeight: '600' }}
             />
             
@@ -129,7 +140,9 @@ const CardPage = () => {
           </TouchableOpacity>
         </View>
 
-        <AddToWalletBtn selectedCardItem={selectedCardItem} />
+        {selectedCardItem ? (
+          <AddToWalletBtn selectedCardItem={selectedCardItem} />
+        ) : null}
       </View>
 
       <Modal
@@ -146,15 +159,17 @@ const CardPage = () => {
              <TypographyText title="✕" size={30} textColor="#FFFFFF" />
           </TouchableOpacity>
 
-          <View style={{ height: 220, transform: [{ rotate: '90deg' }, { scale: 1.6 }] }}>
-            <Card
-              name={selectedCardItem?.name}
-              lname={selectedCardItem?.x_moi_last_name}
-              barcode={selectedCardItem?.barcode}
-              expiryDate={expiryDate}
-              availablePoints={selectedCardItem?.available_points || selectedCardItem?.points}
-            />
-          </View>
+          {selectedCardItem ? (
+            <View style={{ height: 220, transform: [{ rotate: '90deg' }, { scale: 1.6 }] }}>
+              <Card
+                name={selectedCardItem?.name}
+                lname={selectedCardItem?.x_moi_last_name}
+                barcode={selectedCardItem?.barcode}
+                expiryDate={expiryDate}
+                availablePoints={selectedCardItem?.available_points || selectedCardItem?.points}
+              />
+            </View>
+          ) : null}
         </View>
       </Modal>
 
@@ -173,20 +188,21 @@ const CardPage = () => {
           </TouchableOpacity>
 
           <View style={{ transform: [{ rotate: '90deg' }, { scale: 1.5 }], alignItems: 'center' }}>
-            {selectedCardItem?.barcode ? (
+            {barcodeValue ? (
               <Barcode
-                value={selectedCardItem?.barcode}
+                value={barcodeValue}
                 format="CODE128"
                 width={3}
                 height={100}
                 lineColor="black"
                 background="white"
+                onError={err => console.log('Barcode error:', err)}
               />
             ) : null}
             <TypographyText
               textColor="black"
               size={30}
-              title={selectedCardItem?.barcode}
+              title={barcodeValue}
               style={{ fontWeight: '600', marginTop: 10 }}
             />
           </View>

@@ -9,6 +9,7 @@ import FastImage from "react-native-fast-image";
 import { TypographyText } from "../../../components/Typography";
 import { LUSAIL_REGULAR } from "../../../redux/types";
 import { useSelector } from "react-redux";
+import { pickCategoryImage } from "../../../utils/rewriteAssetUrl";
 
 const IMAGE_SIZE = 80;
 
@@ -77,9 +78,7 @@ const Categories = ({ navigation }) => {
                 <FastImage
                   style={styles.categoryImage}
                   source={{
-                    uri:
-                      (isDark ? item.x_image_url_4 : item.x_image_url_3) ||
-                      undefined,
+                    uri: pickCategoryImage(item),
                   }}
                 />
               </View>

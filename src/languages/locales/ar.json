@@ -195,7 +195,9 @@
       "promocodeType": "كود خاص ",
       "discountType": "تخفيض",
       "giftcardType": "بطاقة الهدية",
-      "allTags": "الكل"
+      "allTags": "الكل",
+      "nearby": "الأقرب",
+      "alphabetical": "أ - ي"
     },
     "Product": {
       "points": "نقاط",

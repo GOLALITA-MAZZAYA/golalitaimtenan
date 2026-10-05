@@ -21,6 +21,7 @@ import { useSelector } from 'react-redux';
 import { userLocationSelector } from '../../redux/global/global-selectors';
 import { getRoadDistance } from '../../api/user';
 import useIsGuest from '../../hooks/useIsGuest';
+import { rewriteAssetUrl } from '../../utils/rewriteAssetUrl';
 
 const IMAGE_SIZE = 66;
 
@@ -178,7 +179,10 @@ const CardWithNesetedItems = props => {
             },
           ]}
         >
-          <Image source={{ uri: parentProps.uri }} style={styles.image} />
+          <Image
+            source={{ uri: rewriteAssetUrl(parentProps.uri) }}
+            style={styles.image}
+          />
         </View>
 
         <View style={styles.infoWrapper}>
@@ -271,16 +275,33 @@ const CardWithNesetedItems = props => {
     >
       {renderParent}
 
-      <View
-        style={[
-          styles.toggleBtn,
-          {
-            justifyContent: toggleBtns?.length > 1 ? 'space-between' : 'center',
-          },
-        ]}
-      >
-        {toggleBtns?.map(renderToggleBtn)}
-      </View>
+      {toggleBtns && toggleBtns.length > 0 && (
+        <View
+          style={[
+            styles.toggleBtn,
+            {
+              justifyContent:
+                toggleBtns.length > 1
+                  ? 'space-between'
+                  : isRtl
+                    ? 'flex-end'
+                    : 'flex-start',
+              paddingLeft: isRtl
+                ? 0
+                : toggleBtns.some(b => b.type === 'offers' && !b.isBookNow)
+                  ? 76
+                  : 0,
+              paddingRight: isRtl
+                ? toggleBtns.some(b => b.type === 'offers' && !b.isBookNow)
+                  ? 76
+                  : 0
+                : 0,
+            },
+          ]}
+        >
+          {toggleBtns.map(renderToggleBtn)}
+        </View>
+      )}
 
       <ScrollView
         showsHorizontalScrollIndicator={false}
