@@ -12,7 +12,7 @@ import {
   navigateTopProductPage,
 } from "../../../AllOffers/helpres";
 import { saveOffer } from "../../../../redux/merchant/merchant-thunks";
-import { getAllOffersByMeerchantId, getOffers } from "../../../../api/merchants";
+import { getAllOffersByMeerchantId } from "../../../../api/merchants";
 import { getStringDate, isRTL } from "../../../../../utils";
 
 const OfferTab = ({ merchant, initialOffers }) => {
@@ -36,50 +36,12 @@ const OfferTab = ({ merchant, initialOffers }) => {
       setLoading(true);
       const merchantId = merchant?.merchant_id || merchant?.id;
 
-      // 1. Check inline offer_products or products from merchant details first
-      const inlineOffers = [
-        ...(Array.isArray(merchant?.offer_products) ? merchant.offer_products : []),
-        ...(Array.isArray(merchant?.products) ? merchant.products : []),
-      ];
-
-      if (inlineOffers.length > 0) {
-        setData(
-          inlineOffers.map((item) => ({
-            ...item,
-            uri: item.image_url || item.uri,
-            value: item.list_price ?? item.value,
-          }))
-        );
-        return;
-      }
-
-      // 2. Fetch from getAllOffersByMeerchantId
+      // Offers are sourced only from /user/offers/v3
       if (merchantId) {
-        try {
-          const res = await getAllOffersByMeerchantId(merchantId);
-          if (Array.isArray(res) && res.length > 0) {
-            setData(res);
-            return;
-          }
-        } catch (e) {
-          console.log("[OfferTab] getAllOffersByMeerchantId error:", e);
-        }
-
-        // 3. Fallback to getOffers
-        try {
-          const res2 = await getOffers(merchantId);
-          if (Array.isArray(res2) && res2.length > 0) {
-            setData(
-              res2.map((item) => ({
-                ...item,
-                uri: item.image_url || item.uri,
-                value: item.list_price ?? item.value,
-              }))
-            );
-            return;
-          }
-        } catch (e) {
-          console.log("[OfferTab] getOffers error:", e);
+        const res = await getAllOffersByMeerchantId(merchantId);
+        if (Array.isArray(res) && res.length > 0) {
+          setData(res);
+          return;
         }
       }
 

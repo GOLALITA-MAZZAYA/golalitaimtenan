@@ -78,13 +78,8 @@ const MerchantInfo = ({
       0,
   );
 
-  const [merchantOffers, setMerchantOffers] = useState(
-    initialInlineOffers.map(item => ({
-      ...item,
-      uri: item.image_url || item.uri,
-      value: item.list_price ?? item.value,
-    })),
-  );
+  // Offers list is sourced only from /user/offers/v3
+  const [merchantOffers, setMerchantOffers] = useState([]);
   const [hasOffers, setHasOffers] = useState(
     Boolean(
       initialInlineOffers.length > 0 ||
@@ -103,40 +98,16 @@ const MerchantInfo = ({
       return;
     }
 
-    const inline = [
-      ...(Array.isArray(merchantDetails?.offer_products)
-        ? merchantDetails.offer_products
-        : []),
-      ...(Array.isArray(merchantDetails?.products)
-        ? merchantDetails.products
-        : []),
-    ];
-
-    if (inline.length > 0) {
-      setMerchantOffers(
-        inline.map(item => ({
-          ...item,
-          uri: item.image_url || item.uri,
-          value: item.list_price ?? item.value,
-        })),
-      );
-      setHasOffers(true);
-      return;
-    }
-
     getAllOffersByMeerchantId(mId)
       .then(res => {
         if (isCancelled) return;
         const list = Array.isArray(res) ? res : [];
-        if (list.length > 0) {
-          setMerchantOffers(list);
-          setHasOffers(true);
-        } else {
-          setHasOffers(false);
-        }
+        setMerchantOffers(list);
+        setHasOffers(list.length > 0);
       })
       .catch(() => {
         if (!isCancelled) {
+          setMerchantOffers([]);
           setHasOffers(false);
         }
       });
