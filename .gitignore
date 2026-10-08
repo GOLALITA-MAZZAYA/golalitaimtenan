@@ -29,6 +29,7 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+*.jks
 android/keystore.properties
 
 # Node
