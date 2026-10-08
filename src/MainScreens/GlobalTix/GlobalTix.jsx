@@ -203,7 +203,7 @@ const GlobalTix = ({ navigation, route }) => {
       if (productsResponse.success) {
         dispatch(setProducts(productsResponse.data));
         dispatch(setTotalProducts(productsResponse.size));
-        dispatch(setHasMore(productsResponse.data.length === 16));
+        dispatch(setHasMore((productsResponse.rawCount ?? productsResponse.data.length) === 16));
         dispatch(setCurrentPage(1));
         
         // Convert prices to QAR
@@ -366,11 +366,11 @@ const GlobalTix = ({ navigation, route }) => {
         lang: 'en'
       });
       
-      if (productsResponse.success && productsResponse.data.length > 0) {
+      if (productsResponse.success && (productsResponse.rawCount ?? productsResponse.data.length) > 0) {
         // Append new products to existing ones
         const updatedProducts = [...products, ...productsResponse.data];
         dispatch(setProducts(updatedProducts));
-        dispatch(setHasMore(productsResponse.data.length === 16));
+        dispatch(setHasMore((productsResponse.rawCount ?? productsResponse.data.length) === 16));
         dispatch(setCurrentPage(nextPage));
         
         // Convert prices for new products

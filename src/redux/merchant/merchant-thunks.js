@@ -237,9 +237,21 @@ export const getPremiumBanners =
       dispatch(setPremiumBanners({ data: sortedBanners, concat, page: pageVal }));
     };
 
+// Every fresh list load (anything but a "next" page) starts a new generation.
+// A response from an older generation is dropped: without this, a next-page
+// request still in flight when the filters change gets appended to the new
+// list, mixing merchants from two different filter sets.
+let merchantListGeneration = 0;
+
 export const getMerchantList =
   ({ page, transform, filters = {}, onGetData }) =>
     async (dispatch, getState) => {
+      if (page !== 'next') {
+        merchantListGeneration += 1;
+      }
+      const generation = merchantListGeneration;
+      const isStale = () => generation !== merchantListGeneration;
+
       dispatch(setIsMerchantsLoading(true));
 
       try {
@@ -267,11 +279,13 @@ export const getMerchantList =
           x_org_linked: ORG_CODE,
         };
 
-        console.log(params, 'params');
-
         const merchantsRes = await merchantApi.getAllMerchant({
           params,
         });
+
+        if (isStale()) {
+          return;
+        }
 
         const merchantsData = (
           Array.isArray(merchantsRes.data?.result)
@@ -294,11 +308,13 @@ export const getMerchantList =
         dispatch(setMerchants({ data: nextData, concat, page: pageVal }));
       } catch (err) {
         console.log(err, 'getMerchantList error');
-        if (page === 1) {
+        if (page === 1 && !isStale()) {
           dispatch(setMerchants({ data: [] }));
         }
       } finally {
-        dispatch(setIsMerchantsLoading(false));
+        if (!isStale()) {
+          dispatch(setIsMerchantsLoading(false));
+        }
       }
     };
 

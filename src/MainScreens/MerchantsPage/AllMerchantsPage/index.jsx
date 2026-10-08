@@ -33,11 +33,13 @@ import MerchantsList from "../components/MerchantList";
 import ListNoData from "../../../components/ListNoData";
 import { getUserLocationThunk } from "../../../redux/global/global-thunks";
 import { isRTL } from "../../../../utils";
-import { getHeaderBtnString } from "./helpers";
+import { getHeaderBtnString, getOfferFilters } from "./helpers";
+import OfferFilterBar from "./OfferFilterBar";
 import { getMergedSubCategoriesForCategory } from "../../../api/categories";
 import { TypographyText } from "../../../components/Typography";
 import { BALOO_2 } from "../../../redux/types";
 import { rewriteAssetUrl } from "../../../utils/rewriteAssetUrl";
+import { showMessage } from "react-native-flash-message";
 
 const ITEM_HEIGHT = 200;
 
@@ -102,6 +104,7 @@ const MerchantsPage = ({
   toggleFavourites,
   getFavouriteMerchantsList,
   getUserLocationThunk,
+  userLocation,
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -156,6 +159,12 @@ const MerchantsPage = ({
   const [selectedSubCategoryIds, setSelectedSubCategoryIds] = useState(
     () => filterSubCategoryIds,
   );
+  const [sortOrder, setSortOrder] = useState(null);
+  const [selectedOfferTypes, setSelectedOfferTypes] = useState([]);
+  const [discountRange, setDiscountRange] = useState(null);
+  // Coordinates captured when Nearest was turned on, or null when off.
+  // Captured once so GPS updates don't keep reloading the list.
+  const [nearestLocation, setNearestLocation] = useState(null);
 
   const isHotel = merchants?.[0]?.category_id === 185;
 
@@ -213,14 +222,29 @@ const MerchantsPage = ({
     };
   }, [categoryId, categoriesType]);
 
-  const activeFilters = useMemo(
-    () => ({
+  const activeFilters = useMemo(() => {
+    const offerFilters = getOfferFilters({
+      offerTypes: selectedOfferTypes,
+      discountRange,
+      sortOrder,
+      nearestLocation,
+    });
+
+    return {
       ...filters,
       sub_category_id: selectedSubCategoryIds,
       ...(categoryId != null ? { category_id: categoryId } : {}),
-    }),
-    [filters, selectedSubCategoryIds, categoryId],
-  );
+      ...offerFilters,
+    };
+  }, [
+    filters,
+    selectedSubCategoryIds,
+    categoryId,
+    selectedOfferTypes,
+    discountRange,
+    sortOrder,
+    nearestLocation,
+  ]);
 
   const subCategoryOptions = useMemo(
     () =>
@@ -241,6 +265,38 @@ const MerchantsPage = ({
         : [...prev, normalizedId]
     );
   }, []);
+
+  const applyOfferFilters = useCallback(({ offerTypes, discountRange: nextRange }) => {
+    setSelectedOfferTypes(offerTypes);
+    setDiscountRange(nextRange);
+  }, []);
+
+  const applySort = useCallback(
+    ({ sortOrder: nextSortOrder, isNearest }) => {
+      setSortOrder(nextSortOrder);
+
+      if (!isNearest) {
+        setNearestLocation(null);
+        return;
+      }
+
+      if (!userLocation?.latitude || !userLocation?.longitude) {
+        getUserLocationThunk();
+        showMessage({
+          message: t("Merchants.locationRequired"),
+          type: "warning",
+        });
+        setNearestLocation(null);
+        return;
+      }
+
+      setNearestLocation({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+    },
+    [userLocation, getUserLocationThunk, t],
+  );
 
   useEffect(() => {
     canGetMoreDataRef.current = true;
@@ -451,12 +507,24 @@ const MerchantsPage = ({
         backgroundColor: isDark ? colors.darkBlue : colors.white,
       }}
     >
+      {renderCategoryChips()}
+
+      {!isHotel && (
+        <OfferFilterBar
+          offerTypes={selectedOfferTypes}
+          discountRange={discountRange}
+          sortOrder={sortOrder}
+          isNearest={!!nearestLocation}
+          onApplyFilters={applyOfferFilters}
+          onApplySort={applySort}
+        />
+      )}
+
       <FlatList
         ref={listRef}
         data={data}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={renderCategoryChips}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainerStyle}
         onEndReached={fetchMoreData}
@@ -550,6 +618,7 @@ const mapStateToProps = (state) => ({
   organizations: state.merchantReducer.organizations,
   favoriteOffers: state.merchantReducer.favoriteOffers,
   favouriteMerchants: state.favouriteMerchantsReducer.favouriteMerchants,
+  userLocation: state.globalReducer.userLocation,
 });
 
 export default connect(mapStateToProps, {

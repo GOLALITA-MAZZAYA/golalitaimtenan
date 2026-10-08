@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { View, TouchableOpacity, StyleSheet, Image, Linking, Dimensions, FlatList } from "react-native";
 import Modal from "react-native-modal";
 import { connect } from "react-redux";
@@ -28,9 +28,16 @@ const MarketingPopupModal = ({
   setIsNotificationModal,
   onClose,
   pageName = 'home',
+  autoplay = true,
+  autoplayTimeout = 2.5,
 }) => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n?.dir?.() === 'rtl' || i18n?.language === 'ar';
+
+  const flatListRef = useRef(null);
+  const autoplayTimerRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const currentIndexRef = useRef(0);
 
   const [isImagesReady, setIsImagesReady] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -44,10 +51,38 @@ const MarketingPopupModal = ({
     return [marketingPopup];
   }, [marketingPopup]);
 
+  const stopAutoplay = useCallback(() => {
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+      autoplayTimerRef.current = null;
+    }
+  }, []);
+
+  const startAutoplay = useCallback(() => {
+    stopAutoplay();
+    if (!autoplay || popups.length <= 1 || !isVisible || !isImagesReady) {
+      return;
+    }
+
+    autoplayTimerRef.current = setInterval(() => {
+      if (isDraggingRef.current) return;
+
+      const nextIndex = (currentIndexRef.current + 1) % popups.length;
+      flatListRef.current?.scrollToOffset({
+        offset: nextIndex * MODAL_WIDTH,
+        animated: true,
+      });
+      currentIndexRef.current = nextIndex;
+      setCurrentIndex(nextIndex);
+    }, autoplayTimeout * 1000);
+  }, [autoplay, popups.length, isVisible, isImagesReady, autoplayTimeout, stopAutoplay]);
+
   useEffect(() => {
+    stopAutoplay();
     setIsImagesReady(false);
     setIsVisible(false);
     setCurrentIndex(0);
+    currentIndexRef.current = 0;
 
     if (!popups.length) return;
 
@@ -64,8 +99,21 @@ const MarketingPopupModal = ({
 
     return () => {
       cancelled = true;
+      stopAutoplay();
     };
-  }, [popups]);
+  }, [popups, stopAutoplay]);
+
+  useEffect(() => {
+    if (isVisible && isImagesReady && popups.length > 1 && autoplay) {
+      startAutoplay();
+    } else {
+      stopAutoplay();
+    }
+
+    return () => {
+      stopAutoplay();
+    };
+  }, [isVisible, isImagesReady, popups.length, autoplay, startAutoplay, stopAutoplay]);
 
   if (!popups.length) return null;
   if (!isImagesReady) return null;
@@ -75,6 +123,7 @@ const MarketingPopupModal = ({
   const closePopups = () => (onClose ? onClose() : setMarketingPopup(null));
 
   const handleClose = () => {
+    stopAutoplay();
     setIsVisible(false);
   };
 
@@ -117,7 +166,9 @@ const MarketingPopupModal = ({
 
   const handleScrollEnd = (e) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / MODAL_WIDTH);
-    setCurrentIndex(Math.max(0, Math.min(index, popups.length - 1)));
+    const nextIndex = Math.max(0, Math.min(index, popups.length - 1));
+    currentIndexRef.current = nextIndex;
+    setCurrentIndex(nextIndex);
   };
 
   const renderSlide = ({ item }) => (
@@ -177,6 +228,7 @@ const MarketingPopupModal = ({
         <View style={styles.container}>
           <View style={styles.content}>
             <FlatList
+              ref={flatListRef}
               data={popups}
               keyExtractor={(item, index) => String(item.id ?? index)}
               renderItem={renderSlide}
@@ -185,7 +237,17 @@ const MarketingPopupModal = ({
               bounces={false}
               scrollEnabled={popups.length > 1}
               showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={handleScrollEnd}
+              onScrollBeginDrag={() => {
+                isDraggingRef.current = true;
+                stopAutoplay();
+              }}
+              onMomentumScrollEnd={(e) => {
+                isDraggingRef.current = false;
+                handleScrollEnd(e);
+                if (autoplay && popups.length > 1) {
+                  startAutoplay();
+                }
+              }}
               getItemLayout={(data, index) => ({
                 length: MODAL_WIDTH,
                 offset: MODAL_WIDTH * index,

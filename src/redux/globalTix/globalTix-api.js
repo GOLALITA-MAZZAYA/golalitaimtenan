@@ -388,6 +388,39 @@ export const testGlobalTixTokenRefresh = async () => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// eSIM / SIM exclusion
+//
+// The app has a dedicated eSIM section, so connectivity products must not show
+// up under GlobalTix. GlobalTix has no "exclude category" param, so we filter
+// client-side. Most of these products sit in category 3 ("WiFi & SIM Card"),
+// but some eSIMs are filed under "Others"/"Transportation" — hence the name check.
+// ─────────────────────────────────────────────────────────────────────────────
+const SIM_CATEGORY_ID = 3;
+const SIM_CATEGORY_NAME = 'wifi & sim card';
+const SIM_NAME_PATTERN = /\be[\s-]?sims?\b|\bsim[\s-]?cards?\b/i;
+
+export const isSimProduct = (product) =>
+  (product?.category || '').trim().toLowerCase() === SIM_CATEGORY_NAME ||
+  SIM_NAME_PATTERN.test(product?.name || '');
+
+// Returns a copy so cached (unfiltered) responses are never mutated.
+// `rawCount` keeps the pre-filter page length for pagination checks.
+const withoutSimProducts = (result) => {
+  if (!result?.success || !Array.isArray(result.data)) return result;
+  return {
+    ...result,
+    data: result.data.filter(product => !isSimProduct(product)),
+    rawCount: result.data.length,
+  };
+};
+
+const withoutSimCategory = (categories) =>
+  (categories || []).filter(category =>
+    (category.id || category.categoryId) !== SIM_CATEGORY_ID &&
+    (category.name || category.categoryName || '').trim().toLowerCase() !== SIM_CATEGORY_NAME
+  );
+
 // API Functions
 export const globalTixAPI = {
   // Fetch products
@@ -430,7 +463,7 @@ export const globalTixAPI = {
           }
           
         console.log('GlobalTix API response:', result);
-        return result;
+        return withoutSimProducts(result);
     } catch (error) {
         console.error('Error fetching products:', error);
       throw new Error(error.message);
@@ -584,6 +617,9 @@ export const globalTixAPI = {
         }
 
         console.log('GlobalTix Categories API response:', result);
+        if (result.success && result.data) {
+          return { ...result, data: withoutSimCategory(result.data) };
+        }
         return result;
       } catch (error) {
         console.error('Error fetching categories:', error);
