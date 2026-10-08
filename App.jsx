@@ -1,13 +1,15 @@
 // App.jsx
 import React, { useEffect, useState } from 'react';
-import { BackHandler, I18nManager, Platform } from 'react-native';
+import { Alert, BackHandler, I18nManager, Platform } from 'react-native';
 import { Provider, connect, useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import FlashMessage from 'react-native-flash-message';
 import Geocoder from 'react-native-geocoding';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { BASE_DOMAIN } from './src/constants';
+import RNExitApp from 'react-native-exit-app';
+import { BASE_DOMAIN, IS_PRODUCTION } from './src/constants';
+import logger from './src/utils/logger';
 
 import store from './src/redux/store';
 import { ThemeProvider, useTheme } from './src/components/ThemeProvider';
@@ -134,20 +136,25 @@ let App = ({
     requestLocationPermissions();
   }, []);
 
-  // SSL pinning / startup. Pinning is off in this build — explicitly disable
-  // so a leftover TrustKit config from a previous session cannot block API calls.
   async function runStartupTasks() {
     try {
-      const { disableSslPinning, isSslPinningAvailable } = await import(
-        'react-native-ssl-public-key-pinning'
-      );
-      if (isSslPinningAvailable()) {
-        await disableSslPinning();
-      }
       await initializeAppSslPinning();
+      setIsReady(true);
     } catch (err) {
-      console.log(err, 'ssl startup error');
-    } finally {
+      logger.error('SSL pinning initialization failed');
+
+      // Fail closed on release builds — do not continue without pinning.
+      if (IS_PRODUCTION) {
+        Alert.alert(
+          'Security Error',
+          'Unable to establish a secure connection. Please reinstall the app or try again later.',
+          [{ text: 'Exit', onPress: () => RNExitApp.exitApp() }],
+          { cancelable: false },
+        );
+        return;
+      }
+
+      // Metro / debug builds may continue so local development is not blocked.
       setIsReady(true);
     }
   }

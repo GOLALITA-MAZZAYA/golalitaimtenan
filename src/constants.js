@@ -41,7 +41,7 @@ export const SIGN_IN_CERTIFICATE_HASHES = [
   "+sYXRdwJA3hvue3mKpYrOZ9zSPC7b4mbgzJmdZEDO5w=",
 ];
 
-export const ENFORCE_CODE_OBFUSCATION = !__DEV__;
+export const ENFORCE_CODE_OBFUSCATION = true;
 
 export const FREERASP_MALWARE_CONFIG = {
   blacklistedPackageNames: [

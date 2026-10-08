@@ -15,10 +15,22 @@
   <!-- Foreground service -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-  <!-- Остальные разрешения, как у тебя было -->
-  <uses-permission android:name="android.permission.MEDIA_LIBRARY" />
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <!-- Storage / media: remove unused (and merged) access; Photo Picker covers gallery picks on minSdk 31+ -->
+  <uses-permission
+    android:name="android.permission.READ_EXTERNAL_STORAGE"
+    tools:node="remove" />
+  <uses-permission
+    android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    tools:node="remove" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_IMAGES"
+    tools:node="remove" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_VIDEO"
+    tools:node="remove" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_AUDIO"
+    tools:node="remove" />
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <uses-permission android:name="android.permission.CAMERA" />
   <uses-feature
@@ -37,6 +49,14 @@
 
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
   <uses-permission android:name="android.permission.DETECT_SCREEN_CAPTURE" />
+
+  <!-- Rewards apps are not eligible for USE_EXACT_ALARM (Play policy). -->
+  <uses-permission
+    android:name="android.permission.USE_EXACT_ALARM"
+    tools:node="remove" />
+  <uses-permission
+    android:name="android.permission.SCHEDULE_EXACT_ALARM"
+    tools:node="remove" />
 
   <!-- Remove Advertising ID permission to resolve Play Console warning if not using ads -->
   <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />

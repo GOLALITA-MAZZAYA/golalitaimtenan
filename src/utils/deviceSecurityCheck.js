@@ -40,6 +40,7 @@ const securityMessages = {
   privilegedAccess: 'Root or elevated privileges were detected.',
   debug: 'Debugging tools are enabled.',
   simulator: 'The app is running on an emulator or simulator.',
+  appIntegrity: 'App integrity check failed.',
   unofficialStore: 'The app was installed from an unrecognized source.',
   hooks: 'Security hooking was detected.',
   deviceBinding: 'Device binding mismatch was detected.',
@@ -65,6 +66,7 @@ const hardThreatMessages = new Set([
   securityMessages.privilegedAccess,
   securityMessages.debug,
   securityMessages.simulator,
+  securityMessages.appIntegrity,
   securityMessages.unofficialStore,
   securityMessages.hooks,
   securityMessages.deviceBinding,
@@ -283,27 +285,25 @@ export const useSecurityCheck = () => {
   const actions = {
     privilegedAccess: handleThreat(securityMessages.privilegedAccess),
     debug: handleThreat(securityMessages.debug),
-    // simulator: handleThreat(securityMessages.simulator),
-    // freeRASP still fires this callback; ignore so signing/Play Integrity
-    // mismatches never alert or block (common on sideloads / local builds).
-    // appIntegrity: () => logger.warn('App integrity check failed (ignored)'),
-    // unofficialStore: handleThreat(securityMessages.unofficialStore),
+    simulator: handleThreat(securityMessages.simulator),
+    appIntegrity: handleThreat(securityMessages.appIntegrity),
+    unofficialStore: handleThreat(securityMessages.unofficialStore),
     hooks: handleThreat(securityMessages.hooks),
     deviceBinding: handleThreat(securityMessages.deviceBinding),
-    // secureHardwareNotAvailable: handleThreat(
-    //   securityMessages.secureHardwareNotAvailable,
-    // ),
+    secureHardwareNotAvailable: handleThreat(
+      securityMessages.secureHardwareNotAvailable,
+    ),
     systemVPN: handleThreat(securityMessages.systemVPN),
-    // passcode: handleThreat(securityMessages.passcode),
+    passcode: handleThreat(securityMessages.passcode),
     // Screenshots are the user capturing their own screen — FLAG_SECURE
     // (useScreenSecurity) already blocks them where it matters, so just log.
     screenshot: () => logger.warn('Screenshot detected'),
     screenRecording: handleThreat(securityMessages.screenRecording),
-    // obfuscationIssues: handleObfuscationIssue,
-    // devMode: handleThreat(securityMessages.devMode),
+    obfuscationIssues: handleObfuscationIssue,
+    devMode: handleThreat(securityMessages.devMode),
     adbEnabled: handleThreat(securityMessages.adbEnabled),
-    // malware: handleMalware,
-    // multiInstance: handleThreat(securityMessages.multiInstance),
+    malware: handleMalware,
+    multiInstance: handleThreat(securityMessages.multiInstance),
   };
 
   if (Platform.OS === 'ios') {

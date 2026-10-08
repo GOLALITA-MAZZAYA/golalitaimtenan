@@ -5,10 +5,9 @@ import logger from './logger';
 const AUTH_TOKEN_SERVICE = 'com.golalitaimtenanrewards.authToken';
 const LEGACY_TOKEN_KEY = 'token';
 
-// AFTER_FIRST_UNLOCK is more reliable on iOS Simulator than WHEN_UNLOCKED_*.
 const keychainOptions = {
   service: AUTH_TOKEN_SERVICE,
-  accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
+  accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };
 
 // Keychain reads go through the Android Keystore and are slow, and the axios
