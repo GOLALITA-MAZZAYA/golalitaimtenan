@@ -180,7 +180,7 @@
       "hideAllOffers": "إخفاء كافة العروض",
       "noOffersFound": "لم يتم العثور على أي عروض",
       "b1g1Free": "اشترِ 1 واحصل على 1 مجانًا",
-      "discount": "تخفيض",
+      "discount": "حصري",
       "promocode": "رمز ترويجي",
       "giftcard": "كرت هدية",
       "listNoData": "لم يتم العثور على أي عروض",
@@ -943,6 +943,7 @@
         },
         "ui": {
           "highlights": "النقاط البارزة",
+          "dynamicPrice": "سعر متغير (اختر التاريخ)",
           "noImageAvailable": "لا توجد صورة متاحة",
           "noTicketsFound": "عذراً! لم يتم العثور على تذاكر لهذا المعرض :(",
           "trySearchingElse": "يرجى البحث عن شيء آخر.",

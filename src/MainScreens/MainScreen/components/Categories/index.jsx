@@ -17,6 +17,7 @@ import { isEsimCategory } from '../../../ESim/esimUtils';
 import { sized } from '../../../../Svg';
 import EsimSvg from '../../../../assets/esim.svg';
 import { pickCategoryImage } from '../../../../utils/rewriteAssetUrl';
+import { isEventsTicketsCategory } from '../../../../config/globalTix';
 
 const IMAGE_SIZE = 70;
 
@@ -214,7 +215,11 @@ const Categories = () => {
     dispatch(setCategoriesType(type));
   };
 
-  const data = Array.isArray(parentCategories) ? parentCategories : [];
+  // "Events & Tickets" is only a backend switch for the per-country entry
+  // (see ChildCategories); it is not shown as a home tile.
+  const data = (Array.isArray(parentCategories) ? parentCategories : []).filter(
+    category => !isEventsTicketsCategory(category),
+  );
   const showInitialLoader = loading && data.length === 0;
   const newLabel = t('MainScreen.new');
 

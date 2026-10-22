@@ -23,6 +23,70 @@ let currentAccessToken = null;
 let isRefreshing = false;
 let refreshPromise = null;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Client-side cache (AsyncStorage + in-memory L1)
+//
+// Why: countries/categories never change; products change slowly. Caching
+// these avoids redundant proxy calls on every screen focus / back-nav.
+//
+// TTLs:
+//   countries   — 24 h  (list of 240 countries, essentially static)
+//   categories  — 1 h   (per country)
+//   products    — 5 min (per country+filters+page, may change frequently)
+// ─────────────────────────────────────────────────────────────────────────────
+const CACHE_TTL = {
+  countries: 24 * 60 * 60 * 1000,
+  categories: 1 * 60 * 60 * 1000,
+  products: 5 * 60 * 1000,
+};
+
+// L1: in-memory cache — survives the session without AsyncStorage overhead
+const memCache = {};
+
+async function getCached(key) {
+  // Check memory first (fastest)
+  if (memCache[key] && Date.now() < memCache[key].expiresAt) {
+    return memCache[key].data;
+  }
+  // Fall back to AsyncStorage (survives app restarts)
+  try {
+    const raw = await AsyncStorage.getItem(`gtix_c_${key}`);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (Date.now() > entry.expiresAt) {
+      AsyncStorage.removeItem(`gtix_c_${key}`);
+      return null;
+    }
+    memCache[key] = entry; // promote to L1
+    return entry.data;
+  } catch {
+    return null;
+  }
+}
+
+async function setCached(key, data, ttlMs) {
+  const entry = { data, expiresAt: Date.now() + ttlMs };
+  memCache[key] = entry;
+  try {
+    await AsyncStorage.setItem(`gtix_c_${key}`, JSON.stringify(entry));
+  } catch { }
+}
+
+// Call this when the user manually pulls-to-refresh so stale data is cleared
+export const clearGlobalTixCache = async (scope = 'all') => {
+  const keys = Object.keys(memCache).filter(k =>
+    scope === 'all' || k.startsWith(scope)
+  );
+  keys.forEach(k => delete memCache[k]);
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const gtixKeys = allKeys.filter(k =>
+      k.startsWith('gtix_c_') && (scope === 'all' || k.includes(scope))
+    );
+    if (gtixKeys.length) await AsyncStorage.multiRemove(gtixKeys);
+  } catch { }
+};
+
 // Helper function to get stored token
 const getStoredToken = async () => {
   try {
@@ -423,19 +487,31 @@ const withoutSimCategory = (categories) =>
 
 // API Functions
 export const globalTixAPI = {
-  // Fetch products
-  fetchProducts: async ({ countryCode, page = 1, categoryIds = '', cityIds = '', searchText = '', lang = 'en' }) => {
+  // Fetch products — cached 5 min per unique query (country + filters + page)
+  fetchProducts: async ({ countryCode, page = 0, categoryIds = '', cityIds = '', searchText = '', lang = 'en', keyword = '' }) => {
+    // Convert arrays to comma-separated strings for API
+    const categoryIdsString = Array.isArray(categoryIds) ? categoryIds.join(',') : (categoryIds || '');
+    const cityIdsString = Array.isArray(cityIds) ? cityIds.join(',') : (cityIds || '');
+
+    // Don't cache search queries — results need to feel live
+    const isSearch = !!(searchText || keyword);
+    const CACHE_KEY = `products_${countryCode}_${categoryIdsString}_${cityIdsString}_p${page}`;
+    if (!isSearch) {
+      const cached = await getCached(CACHE_KEY);
+      if (cached) {
+        console.log(`fetchProducts: cache hit (${countryCode} p${page})`);
+        return withoutSimProducts(cached);
+      }
+    }
+
     const makeRequest = async (isRetry = false) => {
     try {
-      // Convert arrays to comma-separated strings for API
-      const categoryIdsString = Array.isArray(categoryIds) ? categoryIds.join(',') : (categoryIds || '');
-      const cityIdsString = Array.isArray(cityIds) ? cityIds.join(',') : (cityIds || '');
-      
         const queryParams = {
         page: page.toString(),
         categoryIds: categoryIdsString,
         cityIds: cityIdsString,
         searchText,
+        keyword: keyword || searchText,
         lang,
         };
       
@@ -444,7 +520,7 @@ export const globalTixAPI = {
           queryParams.countryCode = countryCode;
       }
 
-      console.log('GlobalTix API params:', { countryCode, page, categoryIds: categoryIdsString, cityIds: cityIdsString, searchText, lang });
+      console.log('GlobalTix API params:', { countryCode, page, categoryIds: categoryIdsString, cityIds: cityIdsString, searchText, keyword, lang });
 
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
@@ -463,6 +539,11 @@ export const globalTixAPI = {
           }
           
         console.log('GlobalTix API response:', result);
+
+        if (!isSearch && result.success && result.data) {
+          await setCached(CACHE_KEY, result, CACHE_TTL.products);
+        }
+
         return withoutSimProducts(result);
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -542,8 +623,15 @@ export const globalTixAPI = {
     return makeRequest();
   },
 
-  // Fetch countries
+  // Fetch countries — cached 24 h (list never changes)
   fetchCountries: async () => {
+    const CACHE_KEY = 'countries';
+    const cached = await getCached(CACHE_KEY);
+    if (cached) {
+      console.log('fetchCountries: cache hit');
+      return { success: true, data: cached };
+    }
+
     const makeRequest = async (isRetry = false) => {
     try {
         const authHeaders = await getAuthHeaders();
@@ -571,6 +659,8 @@ export const globalTixAPI = {
             cities: country.cities || [],
           }));
 
+          await setCached(CACHE_KEY, transformedData, CACHE_TTL.countries);
+
           return {
             ...result,
             data: transformedData,
@@ -587,8 +677,15 @@ export const globalTixAPI = {
     return makeRequest();
   },
 
-  // Fetch categories
+  // Fetch categories — cached 1 h per country
   fetchCategories: async ({ countryCode, lang = 'en' } = {}) => {
+    const CACHE_KEY = `categories_${countryCode || 'all'}`;
+    const cached = await getCached(CACHE_KEY);
+    if (cached) {
+      console.log(`fetchCategories: cache hit (${countryCode})`);
+      return { success: true, data: withoutSimCategory(cached) };
+    }
+
     const makeRequest = async (isRetry = false) => {
       try {
         const queryParams = { lang };
@@ -618,6 +715,7 @@ export const globalTixAPI = {
 
         console.log('GlobalTix Categories API response:', result);
         if (result.success && result.data) {
+          await setCached(CACHE_KEY, result.data, CACHE_TTL.categories);
           return { ...result, data: withoutSimCategory(result.data) };
         }
         return result;
@@ -631,19 +729,22 @@ export const globalTixAPI = {
   },
 
 
-  // Fetch cities for a specific country
-  // Note: Cities are included in the country response, so this function extracts them
-  fetchCities: async ({ countryCode, lang = 'en' } = {}) => {
+  // Fetch cities for a specific country.
+  // Pass `countriesData` (already-fetched array) to avoid a redundant API call.
+  // If omitted it will fetch countries itself (fallback, costs 1 extra proxy call).
+  fetchCities: async ({ countryCode, lang = 'en', countriesData = null } = {}) => {
     try {
-      // First, get all countries (which includes cities)
-      const countriesResponse = await globalTixAPI.fetchCountries();
-      
-      if (!countriesResponse.success || !countriesResponse.data) {
-        throw new Error('Failed to fetch countries');
+      let countries = countriesData;
+      if (!countries) {
+        const countriesResponse = await globalTixAPI.fetchCountries();
+        if (!countriesResponse.success || !countriesResponse.data) {
+          throw new Error('Failed to fetch countries');
+        }
+        countries = countriesResponse.data;
       }
       
       // Find the specific country and extract its cities
-      const country = countriesResponse.data.find(c => c.code === countryCode);
+      const country = countries.find(c => c.code === countryCode);
       
       if (!country || !country.cities) {
         console.log(`No cities found for country: ${countryCode}`);
@@ -944,6 +1045,39 @@ export const globalTixAPI = {
       }
     };
 
+    return makeRequest();
+  },
+
+  // Cancel GlobalTix Booking (used by My Bookings)
+  cancelBooking: async ({ transactionRef, remarks = 'Customer cancellation' } = {}) => {
+    const makeRequest = async (isRetry = false) => {
+      try {
+        if (!transactionRef) throw new Error('transactionRef is required');
+
+        console.log('[GlobalTix API][cancelBooking] POST /api/transaction/cancel body:', { transactionRef, remarks });
+
+        const authHeaders = await getAuthHeaders();
+        const result = await makeProxyRequest({
+          method: 'POST',
+          endpoint: '/api/transaction/cancel',
+          headers: authHeaders,
+          body: { transactionRef, remarks },
+        });
+
+        console.log('[GlobalTix API][cancelBooking] response:', JSON.stringify(result, null, 2));
+
+        if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
+          console.log('[GlobalTix API][cancelBooking] token expired, refreshing and retrying...');
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
+
+        return result;
+      } catch (error) {
+        console.error('[GlobalTix API][cancelBooking] error:', error.message);
+        return { success: false, data: null, error: error.message };
+      }
+    };
     return makeRequest();
   },
 

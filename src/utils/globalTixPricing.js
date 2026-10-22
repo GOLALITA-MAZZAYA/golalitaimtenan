@@ -74,12 +74,16 @@ export const calculateSellingPrice = (
  * Get selling price for a ticket type
  * @param {Object} ticketType - Ticket type object from GlobalTix API
  * @param {number} markupPercentage - Optional custom markup percentage
+ * @param {Object} dynamicPricingData - Optional dynamic pricing data from Check Availability API
  * @returns {Object} Pricing breakdown
  */
-export const getTicketSellingPrice = (ticketType, markupPercentage = DEFAULT_MARKUP_PERCENTAGE) => {
-  const nettPrice = ticketType.nettPrice || ticketType.net_price || 0;
-  const msp = ticketType.minimumMerchantSellingPrice || ticketType.min_selling_price || null;
-  const originalPrice = ticketType.originalMerchantPrice || ticketType.original_price || null;
+export const getTicketSellingPrice = (ticketType, markupPercentage = DEFAULT_MARKUP_PERCENTAGE, dynamicPricingData = null) => {
+  // If dynamic pricing data is provided, use it instead of static ticket properties
+  const nettPrice = dynamicPricingData?.nettPrice ?? (ticketType.nettPrice || ticketType.net_price || 0);
+  const msp = dynamicPricingData?.msp ?? (ticketType.minimumMerchantSellingPrice || ticketType.min_selling_price || null);
+
+  // Use original price from ticketType or rsp from dynamicPricingData as reference
+  const originalPrice = dynamicPricingData?.rsp ?? (ticketType.originalMerchantPrice || ticketType.original_price || null);
 
   return calculateSellingPrice(nettPrice, markupPercentage, msp, originalPrice);
 };

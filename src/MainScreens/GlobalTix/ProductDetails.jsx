@@ -204,8 +204,13 @@ const ProductDetails = ({ route, navigation }) => {
           // Calculate selling price with markup (based on nettPrice)
           const pricing = getTicketSellingPrice(ticket, markupPercentage);
           
-          // Convert selling price to QAR (this is what customers see)
-          if (pricing.sellingPrice > 0) {
+          if (option.isDynamicPrice || ticket.isDynamicPrice) {
+            // Dynamic pricing products don't have a static price — the real
+            // price only comes back from checkEventAvailability once a date
+            // is selected (see checkAllTicketsAvailability below).
+            priceMap[`${ticketKey}_selling`] = t("GlobalTix.productDetails.ui.dynamicPrice");
+          } else if (pricing.sellingPrice > 0) {
+            // Convert selling price to QAR (this is what customers see)
             try {
               console.log(`Converting selling price: ${pricing.sellingPrice} from ${optionCurrency} to QAR`);
               const convertedSellingPrice = await convertToQAR(pricing.sellingPrice, optionCurrency);
@@ -375,15 +380,16 @@ const ProductDetails = ({ route, navigation }) => {
     setIsDatePickerVisible(true);
   };
 
-  const proceedWithAddToCart = async (optionId, ticketTypeId, option, ticketType, confirmedDate = null) => {
+  const proceedWithAddToCart = async (optionId, ticketTypeId, option, ticketType, confirmedDate = null, slotData = null) => {
     // Calculate selling price with markup and convert to QAR before adding to cart
     let convertedPrice = 0;
     try {
       const optionCurrency = option.currency;
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
       
-      // Calculate selling price with markup (this is what customers pay)
-      const pricing = getTicketSellingPrice(ticketType, markupPercentage);
+      // Calculate selling price with markup (this is what customers pay),
+      // using live slot pricing (from checkEventAvailability) when available
+      const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
       const sellingPrice = pricing.sellingPrice;
       
       if (sellingPrice > 0) {
@@ -397,7 +403,7 @@ const ProductDetails = ({ route, navigation }) => {
       console.error('Error converting price for cart:', error);
       // Fallback: calculate selling price without conversion
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-      const pricing = getTicketSellingPrice(ticketType, markupPercentage);
+      const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
       convertedPrice = pricing.sellingPrice || 0;
     }
 
@@ -414,6 +420,10 @@ const ProductDetails = ({ route, navigation }) => {
       quantity: 1,
       convertedPrice: convertedPrice, // Add converted price to payload
       visitDate: dateToUse ? dateToUse.toISOString().split('T')[0] : null, // Add visiting date
+      // Live pricing captured from checkEventAvailability (dynamic pricing products)
+      ceaNettPrice: slotData?.nettPrice ?? null,
+      ceaMsp: slotData?.minimumSellingPrice ?? slotData?.msp ?? null,
+      ceaRsp: slotData?.recommendedSellingPrice ?? slotData?.rsp ?? null,
     };
     
     console.log('=== Adding to Cart Debug ===');
@@ -555,11 +565,14 @@ const ProductDetails = ({ route, navigation }) => {
           
           console.log(`🎫 ✅ Ticket ${ticketTypeId} is available on ${dateFrom} - ${selectedDateSlots.length} slots with ${selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0)} total tickets`);
           
+          // Pass the matched slot through so dynamic-pricing products get live pricing
+          const matchedSlotData = selectedDateSlots[0] || null;
+
           // Execute the cart action with the confirmed date only if available
           if (pendingCartAction.type === 'quantityChange') {
-            await executeQuantityChange(optionId, ticketTypeId, pendingCartAction.change, date);
+            await executeQuantityChange(optionId, ticketTypeId, pendingCartAction.change, date, matchedSlotData);
           } else if (pendingCartAction.type === 'addToCart') {
-            await executeAddToCart(optionId, ticketTypeId, date);
+            await executeAddToCart(optionId, ticketTypeId, date, matchedSlotData);
           }
         } else {
           // Handle error case - no availability or API error
@@ -730,7 +743,7 @@ const ProductDetails = ({ route, navigation }) => {
   };
 
   // Helper function to execute quantity change
-  const executeQuantityChange = async (optionId, ticketTypeId, change, confirmedDate = null) => {
+  const executeQuantityChange = async (optionId, ticketTypeId, change, confirmedDate = null, slotData = null) => {
     const option = options.find(opt => opt.id === optionId);
     const ticketType = option?.ticketType?.find(ticket => ticket.id === ticketTypeId);
     
@@ -755,8 +768,9 @@ const ProductDetails = ({ route, navigation }) => {
       const optionCurrency = option.currency;
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
       
-      // Calculate selling price with markup (this is what customers pay)
-      const pricing = getTicketSellingPrice(ticketType, markupPercentage);
+      // Calculate selling price with markup (this is what customers pay),
+      // injecting live slot pricing (from checkEventAvailability) if available
+      const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
       const sellingPrice = pricing.sellingPrice;
       
       if (sellingPrice > 0) {
@@ -768,7 +782,7 @@ const ProductDetails = ({ route, navigation }) => {
       console.error('Error converting price for quantity update:', error);
       // Fallback: calculate selling price without conversion
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-      const pricing = getTicketSellingPrice(ticketType, markupPercentage);
+      const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
       convertedPrice = pricing.sellingPrice || 0;
     }
 
@@ -785,11 +799,14 @@ const ProductDetails = ({ route, navigation }) => {
       quantity: newQuantity,
       convertedPrice: convertedPrice,
       visitDate: dateToUse ? dateToUse.toISOString().split('T')[0] : null,
+      ceaNettPrice: slotData?.nettPrice ?? null,
+      ceaMsp: slotData?.minimumSellingPrice ?? slotData?.msp ?? null,
+      ceaRsp: slotData?.recommendedSellingPrice ?? slotData?.rsp ?? null,
     }));
   };
 
   // Helper function to execute add to cart
-  const executeAddToCart = async (optionId, ticketTypeId, confirmedDate = null) => {
+  const executeAddToCart = async (optionId, ticketTypeId, confirmedDate = null, slotData = null) => {
     const option = options.find(opt => opt.id === optionId);
     const ticketType = option?.ticketType?.find(ticket => ticket.id === ticketTypeId);
     
@@ -851,8 +868,10 @@ const ProductDetails = ({ route, navigation }) => {
         }
         
         console.log(`🎫 ✅ Ticket is available, proceeding to add to cart`);
-        // Proceed with adding to cart only if available
-        await proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate);
+        // Proceed with adding to cart only if available — pass the matched
+        // slot through so dynamic-pricing products get live pricing
+        const matchedSlotData = slotData || selectedDateSlots[0] || null;
+        await proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate, matchedSlotData);
       } else {
         // Handle error case - no availability or API error
         const errorMessage = availabilityResponse.error 
@@ -1106,6 +1125,12 @@ const ProductDetails = ({ route, navigation }) => {
                   return slotDate === dateFrom;
                 });
                 const selectedDateAvailable = selectedDateSlots.some(slot => slot.available > 0);
+
+                // Capture real-time price from the CEA slot — used for dynamic pricing products
+                const priceSlot = selectedDateSlots.find(s => s.available > 0) || availableSlots[0] || null;
+                const priceFromCEA = priceSlot
+                  ? { nettPrice: priceSlot.nettPrice ?? null, rsp: priceSlot.rsp ?? null, msp: priceSlot.msp ?? null }
+                  : null;
                 
                 newAvailabilityStatus[cartKey] = {
                   status: selectedDateAvailable ? 'available' : 'not_available',
@@ -1115,6 +1140,7 @@ const ProductDetails = ({ route, navigation }) => {
                   selectedDateSlots: selectedDateSlots,
                   allSlots: availabilityResponse.data,
                   lastChecked: new Date(),
+                  priceFromCEA,
                   message: selectedDateAvailable 
                     ? `${selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0)} tickets available on ${dateFrom}` 
                     : `No tickets available on ${dateFrom}`,
@@ -1122,6 +1148,22 @@ const ProductDetails = ({ route, navigation }) => {
                 };
                 
                 console.log(`🎫 Ticket ${ticket.id}: ${selectedDateAvailable ? '✅ Available' : '❌ Not Available'} on ${dateFrom}`);
+
+                // For dynamic pricing products: refresh the displayed price from live CEA data
+                if ((option.isDynamicPrice || ticket.isDynamicPrice) && priceFromCEA) {
+                  try {
+                    const ceaPrice = priceFromCEA.rsp || priceFromCEA.nettPrice;
+                    if (ceaPrice) {
+                      const dynamicPricing = getTicketSellingPrice(ticket, GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE, priceFromCEA);
+                      if (dynamicPricing.sellingPrice > 0) {
+                        const converted = await convertToQAR(dynamicPricing.sellingPrice, option.currency);
+                        setConvertedPrices(prev => ({ ...prev, [`${cartKey}_selling`]: converted }));
+                      }
+                    }
+                  } catch (_) {
+                    // Non-fatal — displayed price just stays at its static value
+                  }
+                }
               } else {
                 // Handle error case
                 const errorMessage = availabilityResponse.error 
@@ -1689,6 +1731,9 @@ const ProductDetails = ({ route, navigation }) => {
                   />
                   <TypographyText
                     title={convertedPrices[`${option.id}_${ticket.id}_selling`] || (() => {
+                      if (option.isDynamicPrice || ticket.isDynamicPrice) {
+                        return t("GlobalTix.productDetails.ui.dynamicPrice");
+                      }
                       // Fallback: calculate selling price on the fly
                       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
                       const pricing = getTicketSellingPrice(ticket, markupPercentage);

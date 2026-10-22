@@ -74,7 +74,9 @@ export const getOfferFilters = ({
     ...(sortOrder === "desc" || sortOrder === "asc"
       ? { sort_by: "discount", sort_order: sortOrder }
       : {}),
-    ...(sortOrder === SORT_ALPHABETICAL ? { sort_by: "alphabetical" } : {}),
+    ...(sortOrder === SORT_ALPHABETICAL
+      ? { sort_by: "merchant_name" }
+      : {}),
     ...(nearestLocation
       ? {
           user_lat: nearestLocation.latitude,

@@ -46,8 +46,6 @@ import {
   rewriteAssetUrl,
   withRewrittenCategoryImages,
 } from '../../utils/rewriteAssetUrl';
-import { getFilteredOffers } from '../../api/offers';
-
 export const getCategories = () => async (dispatch, getState) => {
   const { workStatus } = getState().authReducer;
   const token = await getAuthToken();
@@ -591,6 +589,50 @@ export const getGroupedByMerchantOffers =
 
 
 
+/** Normalize offers API result when show_total_count wraps the list. */
+const normalizeOffersResponse = (raw, responseData) => {
+  if (Array.isArray(raw)) {
+    const totalFromRoot = Number(
+      responseData?.total_count ?? responseData?.totalCount,
+    );
+    return {
+      offers: raw,
+      totalCount: Number.isFinite(totalFromRoot) ? totalFromRoot : raw.length,
+    };
+  }
+
+  if (raw && typeof raw === 'object') {
+    const offers = Array.isArray(raw.offers)
+      ? raw.offers
+      : Array.isArray(raw.data)
+        ? raw.data
+        : Array.isArray(raw.records)
+          ? raw.records
+          : Array.isArray(raw.items)
+            ? raw.items
+            : Array.isArray(raw.result)
+              ? raw.result
+              : [];
+
+    const totalCount = Number(
+      raw.total_count ??
+        raw.totalCount ??
+        raw.total ??
+        raw.count ??
+        responseData?.total_count ??
+        responseData?.totalCount ??
+        offers.length,
+    );
+
+    return {
+      offers,
+      totalCount: Number.isFinite(totalCount) ? totalCount : offers.length,
+    };
+  }
+
+  return { offers: [], totalCount: 0 };
+};
+
 export const getOffers =
   ({
     merchant_id = null,
@@ -603,73 +645,88 @@ export const getOffers =
     async (dispatch, getState) => {
       dispatch(setIsOffersLoading(true));
 
-      if (page === 1) {
-        dispatch(
-          setOffers({
-            data: [],
-            page: 1,
-            concat: false,
-          }),
-        );
-      }
-
-      const { workStatus } = getState().authReducer;
-      const { token } = getState().authReducer;
-
-      const reqParams = merchant_id
-        ? { token, merchant_id, ...additionalRequestParams }
-        : merchant_category_id
-          ? { token, merchant_category_id, ...additionalRequestParams }
-          : { token, ...additionalRequestParams };
-
-      let pageVal;
-
-      let offsetAndLimit = {};
-      if (page) {
-        const { offersPage } = getState().merchantReducer;
-
-        if (page === 'next') {
-          pageVal = offersPage + 1;
-          offsetAndLimit = getOffsetAndLimit(pageVal);
-        } else if (typeof page === 'number') {
-          pageVal = page;
-          offsetAndLimit = getOffsetAndLimit(page);
+      try {
+        if (page === 1) {
+          dispatch(
+            setOffers({
+              data: [],
+              page: 1,
+              concat: false,
+              totalCount: 0,
+            }),
+          );
         }
-      }
 
-      const params = Object.assign(reqParams, offsetAndLimit);
+        const { workStatus } = getState().authReducer;
+        const { token } = getState().authReducer;
 
-      let data;
-      if (params.x_offer_type || useFiltersApi) {
-        data = await getFilteredOffers(params);
-      } else {
-        const res = await merchantApi.getNewOffers({
-          params,
+        const reqParams = merchant_id
+          ? { token, merchant_id, ...additionalRequestParams }
+          : merchant_category_id
+            ? { token, merchant_category_id, ...additionalRequestParams }
+            : { token, ...additionalRequestParams };
+
+        let pageVal;
+
+        let offsetAndLimit = {};
+        if (page) {
+          const { offersPage } = getState().merchantReducer;
+
+          if (page === 'next') {
+            pageVal = offersPage + 1;
+            offsetAndLimit = getOffsetAndLimit(pageVal);
+          } else if (typeof page === 'number') {
+            pageVal = page;
+            offsetAndLimit = getOffsetAndLimit(page);
+          }
+        }
+
+        // Always ask the offers list API for the full total (QLM / Golalita).
+        const params = Object.assign(reqParams, offsetAndLimit, {
+          show_total_count: true,
         });
-        data = res.data.result;
-      }
 
-      if (merchant_id)
-        dispatch(
-          setMerchantOffers(
-            workStatus === CONTENT_DISABLED ? [] : data,
-          ),
+        // Keep the full axios response — total_count may sit on result OR
+        // on data next to result. The api/offers helper only returns result
+        // and was dropping the total.
+        const apiCall =
+          params.x_offer_type || useFiltersApi
+            ? merchantApi.getFilteredOffers
+            : merchantApi.getNewOffers;
+
+        const res = await apiCall({ params });
+        const { offers: offersList, totalCount } = normalizeOffersResponse(
+          res?.data?.result,
+          res?.data,
         );
-      else {
-        const concat = !page || pageVal === 1 ? false : true;
 
-        onGetData?.(data?.length, params.limit);
+        if (merchant_id)
+          dispatch(
+            setMerchantOffers(
+              workStatus === CONTENT_DISABLED ? [] : offersList,
+            ),
+          );
+        else {
+          const concat = !page || pageVal === 1 ? false : true;
+          const safeTotal =
+            workStatus === CONTENT_DISABLED ? 0 : totalCount;
 
-        dispatch(
-          setOffers({
-            data: workStatus === CONTENT_DISABLED ? [] : data,
-            page: pageVal,
-            concat,
-          }),
-        );
+          onGetData?.(offersList.length, params.limit, safeTotal);
+
+          dispatch(
+            setOffers({
+              data: workStatus === CONTENT_DISABLED ? [] : offersList,
+              page: pageVal,
+              concat,
+              totalCount: safeTotal,
+            }),
+          );
+        }
+      } catch (err) {
+        console.log(err, 'getOffers error');
+      } finally {
+        dispatch(setIsOffersLoading(false));
       }
-
-      dispatch(setIsOffersLoading(false));
     };
 
 export const getOfferById = product_id => async (dispatch, getState) => {

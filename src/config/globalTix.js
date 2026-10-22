@@ -7,6 +7,7 @@ import {
   GLOBALTIX_PROD_AGENT,
   GLOBALTIX_PROD_API_KEY,
   BASE_URL,
+  IS_PRODUCTION,
 } from '../constants';
 
 export const GLOBALTIX_CONFIG = {
@@ -26,7 +27,7 @@ export const GLOBALTIX_CONFIG = {
     API_KEY: GLOBALTIX_PROD_API_KEY,
   },
 
-  // Current environment (change to 'PRODUCTION' when ready) else 'STAGING'
+  // Switch to 'PRODUCTION' to go live, 'STAGING' for testing
   CURRENT_ENV: 'PRODUCTION',
 
   // API Version
@@ -43,6 +44,15 @@ export const GLOBALTIX_CONFIG = {
   // This can be adjusted based on market conditions and competition
   DEFAULT_MARKUP_PERCENTAGE: 15, // 15% markup by default
 };
+
+// Backend category that switches GlobalTix ("Events & Tickets") on. It is never
+// rendered as a Global home tile; when it is present in the Global parent
+// categories, each country screen shows its own "Events & Tickets" entry.
+// The id differs per backend: 734 on live (www), 711 on dev (gcptest).
+export const EVENTS_TICKETS_CATEGORY_ID = IS_PRODUCTION ? 734 : 711;
+
+export const isEventsTicketsCategory = category =>
+  Number(category?.id) === EVENTS_TICKETS_CATEGORY_ID;
 
 // Helper function to get current config
 export const getCurrentConfig = () => {

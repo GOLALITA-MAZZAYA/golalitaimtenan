@@ -7,7 +7,7 @@ import { useTheme } from "../../../../../components/ThemeProvider";
 import { BALOO_SEMIBOLD } from "../../../../../redux/types";
 import { colors } from "../../../../../components/colors";
 import { TypographyText } from "../../../../../components/Typography";
-import CardWithNesetedItems from "../../../../../components/CardWithNestedItems";
+import CardWithNesetedItems from "../../../../../components/OfferCardWithNestedItems";
 import { saveOffer } from "../../../../../redux/merchant/merchant-thunks";
 import {
   getAllOffersByMeerchantId,

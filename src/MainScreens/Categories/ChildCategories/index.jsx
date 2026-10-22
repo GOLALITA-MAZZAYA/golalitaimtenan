@@ -30,6 +30,7 @@ import {
   pickCategoryImage,
   withRewrittenCategoryImages,
 } from '../../../utils/rewriteAssetUrl';
+import { isEventsTicketsCategory } from '../../../config/globalTix';
 
 // rowItem: paddingVertical 14*2 + iconWrapper height 60 + borderBottomWidth 1
 const ITEM_HEIGHT = 89;
@@ -68,6 +69,12 @@ const ChildCategories = ({ navigation }) => {
       isEsimCategory,
     ) || !!hasEsimCategory;
   const showCountryEsim = categoriesType === 'global' && homeShowsEsim;
+
+  const globalHasEventsTicketsCategory =
+    categoriesType === 'global' &&
+    (Array.isArray(parentCategories) ? parentCategories : []).some(
+      isEventsTicketsCategory,
+    );
 
   const [childCategories, setChildCategories] = useState([]);
   const [esimDestination, setEsimDestination] = useState(null);
@@ -294,7 +301,10 @@ const ChildCategories = ({ navigation }) => {
   // deeper levels keep the original row list.
   const isGrid = Boolean(countryCode);
 
-  const shouldShowEventsTickets = parentCategoryData?.x_country_code;
+  // Only show Events & Tickets when the backend switch category (734/711)
+  // exists on Global home — same as Golalita.
+  const shouldShowEventsTickets =
+    globalHasEventsTicketsCategory && parentCategoryData?.x_country_code;
 
   let categoriesWithEventsTickets = childCategories;
 

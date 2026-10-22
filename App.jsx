@@ -33,6 +33,7 @@ import './src/languages/index';
 import { resetImageCacheDate } from './src/api/asyncStorage';
 import { checkIfTokenIsValid } from './src/api/auth';
 import { initializeAppSslPinning } from './src/api/ssl';
+import { initializeGlobalTixToken } from './src/redux/globalTix/globalTix-api';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
 import { useSecurityCheck, isDeviceBlocked } from './src/utils/deviceSecurityCheck';
@@ -198,6 +199,11 @@ let App = ({
     if (!isReady) return;
 
     let cancelled = false;
+
+    // GlobalTix token init is independent of the main auth flow below — fire
+    // it in the background (fire-and-forget) so a slow/failed GlobalTix login
+    // never blocks or delays app auth resolution.
+    initializeGlobalTixToken().catch(() => { });
 
     (async () => {
       try {

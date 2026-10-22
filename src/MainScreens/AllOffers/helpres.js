@@ -79,11 +79,20 @@ export const getInfoText = (offer, merchant) => {
 };
 
 export const getDescription = (offer) => {
-  if (offer.x_offer_type === B1G1) {
-    return i18n.t("Drawer.B1G1");
+  // Prefer API label (e.g. "Buy 1 Get 1 Free"). Fall back for b1g1 only
+  // when the backend leaves offer_label empty — never show "B1G1".
+  const label =
+    i18next.language === "ar" ? offer.x_label_arabic : offer.offer_label;
+
+  if (label) {
+    return label;
   }
 
-  return i18next.language === "ar" ? offer.x_label_arabic : offer.offer_label;
+  if (offer.x_offer_type === B1G1) {
+    return i18n.t("Merchants.b1g1Free");
+  }
+
+  return "";
 };
 
 export const handleInfoTextPress = (offer, merchant) => {

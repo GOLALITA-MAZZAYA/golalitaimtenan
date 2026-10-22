@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef, memo } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,11 +7,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
-import { 
+import {
   setProducts,
   setCountries,
   setCategories,
@@ -20,15 +21,13 @@ import {
   setLoading,
   setLoadingMore,
   setError,
-  addToFavorites,
-  removeFromFavorites,
   clearError,
   setTotalProducts,
   setHasMore,
   setCurrentPage,
   setGlobalTixPaymentData,
 } from '../../redux/globalTix/globalTix-actions';
-import { globalTixAPI } from '../../redux/globalTix/globalTix-api';
+import { globalTixAPI, clearGlobalTixCache } from '../../redux/globalTix/globalTix-api';
 import { checkGlobalTixPaymentStatus } from '../../api/giftCard';
 import { showMessage } from 'react-native-flash-message';
 import store from '../../redux/store';
@@ -38,7 +37,7 @@ import Header from '../../components/Header';
 import { TypographyText } from '../../components/Typography';
 import { BALOO_SEMIBOLD, LUSAIL_REGULAR } from '../../redux/types';
 import { colors } from '../../components/colors';
-import { mainStyles,SCREEN_HEIGHT } from '../../styles/mainStyles';
+import { mainStyles, SCREEN_HEIGHT } from '../../styles/mainStyles';
 import { useTheme } from '../../components/ThemeProvider';
 import ListNoData from '../../components/ListNoData';
 import FullScreenLoader from '../../components/Loaders/FullScreenLoader';
@@ -51,36 +50,38 @@ const GlobalTix = ({ navigation, route }) => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const { isDark } = useTheme();
-  
+
   // Redux state
   const { products, loading, loadingMore, error, filters, favorites, hasMore } = useSelector(state => state.globalTix);
-  
+
   // Current language
   const currentLanguage = i18n.language;
-  
+
   // Local state for refresh and currency conversion
   const [refreshing, setRefreshing] = useState(false);
   const [convertedPrices, setConvertedPrices] = useState({});
   const [translatedProducts, setTranslatedProducts] = useState([]);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const searchDebounce = useRef(null);
 
   useEffect(() => {
     // Check for initial filters from navigation params
     const initialFilters = route?.params?.initialFilters;
     console.log("GlobalTix: Initial filters from navigation:", initialFilters);
-    
+
     if (initialFilters) {
       // Clear existing products immediately to prevent showing old results
       dispatch(setProducts([]));
       dispatch(setTotalProducts(0));
       dispatch(setHasMore(true));
-      dispatch(setCurrentPage(1));
+      dispatch(setCurrentPage(0));
       dispatch(setLoading(true)); // Show loading state immediately
-      
+
       // Apply initial filters
       dispatch(setFilters(initialFilters));
       console.log("GlobalTix: Applied initial filters to Redux state");
-      
+
       // Load products with new filters immediately
       loadProducts(initialFilters);
     } else {
@@ -88,7 +89,7 @@ const GlobalTix = ({ navigation, route }) => {
       const timer = setTimeout(() => {
         loadProducts();
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [route?.params?.initialFilters]);
@@ -136,17 +137,17 @@ const GlobalTix = ({ navigation, route }) => {
       const initialFilters = route?.params?.initialFilters;
       if (initialFilters) {
         console.log("GlobalTix: Screen focused with new filters:", initialFilters);
-        
+
         // Clear existing products immediately
         dispatch(setProducts([]));
         dispatch(setTotalProducts(0));
         dispatch(setHasMore(true));
-        dispatch(setCurrentPage(1));
+        dispatch(setCurrentPage(0));
         dispatch(setLoading(true)); // Show loading state immediately
-        
+
         // Apply new filters
         dispatch(setFilters(initialFilters));
-        
+
         // Load products with new filters
         loadProducts(initialFilters);
       }
@@ -159,56 +160,58 @@ const GlobalTix = ({ navigation, route }) => {
       // Use provided filters or fall back to Redux state
       const currentFilters = filterParams || filters;
       console.log("GlobalTix: Loading products with filters:", currentFilters);
-      
+
       // Only set loading if not already loading (to avoid race conditions)
       if (!loading) {
         dispatch(setLoading(true));
       }
-      
-      // Load countries first
+
+      // Load countries first, then reuse the data for cities (avoids a duplicate proxy call)
       const countriesResponse = await globalTixAPI.fetchCountries();
-      if (countriesResponse.success) {
-        dispatch(setCountries(countriesResponse.data));
+      const countriesData = countriesResponse.success ? countriesResponse.data : null;
+      if (countriesData) {
+        dispatch(setCountries(countriesData));
       }
-      
-      // Load categories and cities for the selected country
+
+      // Load categories and cities in parallel — pass countriesData so fetchCities
+      // doesn't make a second /api/country/getAllCountries call
       const [categoriesResponse, citiesResponse] = await Promise.all([
         globalTixAPI.fetchCategories({ countryCode: currentFilters.countryCode }),
-        globalTixAPI.fetchCities({ countryCode: currentFilters.countryCode })
+        globalTixAPI.fetchCities({ countryCode: currentFilters.countryCode, countriesData })
       ]);
-      
+
       if (categoriesResponse.success) {
         dispatch(setCategories(categoriesResponse.data || []));
       } else {
         dispatch(setCategories([]));
       }
-      
+
       if (citiesResponse.success) {
         dispatch(setCities(citiesResponse.data || []));
       } else {
         dispatch(setCities([]));
       }
-      
+
       // Load products with the current filters
       const productsResponse = await globalTixAPI.fetchProducts({
         countryCode: currentFilters.countryCode,
-        page: 1,
+        page: 0,
         categoryIds: currentFilters.categoryIds,
         cityIds: currentFilters.cityIds,
         searchText: currentFilters.searchText,
         lang: 'en'
       });
-      
-      
+
+
       if (productsResponse.success) {
         dispatch(setProducts(productsResponse.data));
         dispatch(setTotalProducts(productsResponse.size));
         dispatch(setHasMore((productsResponse.rawCount ?? productsResponse.data.length) === 16));
-        dispatch(setCurrentPage(1));
-        
+        dispatch(setCurrentPage(0));
+
         // Convert prices to QAR
         convertProductPrices(productsResponse.data);
-        
+
         // Translate products if Arabic is selected
         if (currentLanguage === 'ar') {
           translateProducts(productsResponse.data);
@@ -220,10 +223,10 @@ const GlobalTix = ({ navigation, route }) => {
         dispatch(setProducts([]));
         dispatch(setTotalProducts(0));
         dispatch(setHasMore(false));
-        dispatch(setCurrentPage(1));
+        dispatch(setCurrentPage(0));
         setTranslatedProducts([]);
       }
-      
+
       dispatch(setLoading(false));
     } catch (error) {
       dispatch(setError(error.message));
@@ -241,21 +244,21 @@ const GlobalTix = ({ navigation, route }) => {
     try {
       setIsTranslating(true);
       console.log(`[GlobalTix] Starting translation of ${productsList.length} products to ${currentLanguage}`);
-      
+
       // Translate products in smaller batches to avoid rate limits
       // Process 2 products at a time with delay between batches
       const batchSize = 2;
       const translated = [];
-      
+
       for (let i = 0; i < productsList.length; i += batchSize) {
         const batch = productsList.slice(i, i + batchSize);
-        console.log(`[GlobalTix] Translating batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(productsList.length/batchSize)}`);
-        
+        console.log(`[GlobalTix] Translating batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(productsList.length / batchSize)}`);
+
         // Use Promise.allSettled for better error handling
         const batchResults = await Promise.allSettled(
           batch.map(product => translateProduct(product, currentLanguage))
         );
-        
+
         const batchTranslations = batchResults.map((result, index) => {
           if (result.status === 'fulfilled') {
             const translated = result.value;
@@ -266,18 +269,18 @@ const GlobalTix = ({ navigation, route }) => {
             return batch[index]; // Return original on error
           }
         });
-        
+
         translated.push(...batchTranslations);
-        
+
         // Update UI progressively
         setTranslatedProducts([...translated]);
-        
+
         // Add delay between batches to avoid rate limits (except for last batch)
         if (i + batchSize < productsList.length) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
-      
+
       console.log(`[GlobalTix] Translation complete. Translated ${translated.length} products`);
       setTranslatedProducts(translated);
     } catch (error) {
@@ -302,7 +305,7 @@ const GlobalTix = ({ navigation, route }) => {
 
   const convertProductPrices = async (productsList) => {
     const priceMap = {};
-    
+
     // Test currency conversion first
     console.log('Testing currency conversion...');
     try {
@@ -311,7 +314,7 @@ const GlobalTix = ({ navigation, route }) => {
     } catch (error) {
       console.error('Currency conversion test failed:', error);
     }
-    
+
     for (const product of productsList) {
       console.log(`Converting price for product ${product.id} (${product.name}):`, {
         originalPrice: product.originalPrice,
@@ -319,11 +322,11 @@ const GlobalTix = ({ navigation, route }) => {
         currency: product.currency,
         category: product.category
       });
-      
+
       if (product.originalPrice || product.fromPrice) {
         try {
           const convertedPrice = await convertToQAR(
-            product.originalPrice || product.fromPrice, 
+            product.originalPrice || product.fromPrice,
             product.currency || 'SGD'
           );
           console.log(`Successfully converted price for product ${product.id}:`, convertedPrice);
@@ -338,24 +341,45 @@ const GlobalTix = ({ navigation, route }) => {
         priceMap[product.id] = 'Free';
       }
     }
-    
+
     console.log('Final price map:', priceMap);
     setConvertedPrices(priceMap);
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await clearGlobalTixCache(); // bust cache so user gets fresh data
     await loadProducts();
     setRefreshing(false);
   };
 
+  const handleSearch = (text) => {
+    setSearchText(text);
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(() => {
+      dispatch(setProducts([]));
+      dispatch(setCurrentPage(0));
+      dispatch(setHasMore(true));
+      loadProducts({ ...filters, searchText: text });
+    }, 500);
+  };
+
+  const handleClearSearch = () => {
+    setSearchText('');
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    dispatch(setProducts([]));
+    dispatch(setCurrentPage(0));
+    dispatch(setHasMore(true));
+    loadProducts({ ...filters, searchText: '' });
+  };
+
   const loadMoreProducts = async () => {
     if (!hasMore || loading || loadingMore) return;
-    
+
     try {
       dispatch(setLoadingMore(true));
-      const nextPage = Math.ceil(products.length / 16) + 1;
-      
+      const nextPage = Math.ceil(products.length / 16);
+
       // Load next page of products
       const productsResponse = await globalTixAPI.fetchProducts({
         countryCode: filters.countryCode,
@@ -365,17 +389,17 @@ const GlobalTix = ({ navigation, route }) => {
         searchText: filters.searchText,
         lang: 'en'
       });
-      
+
       if (productsResponse.success && (productsResponse.rawCount ?? productsResponse.data.length) > 0) {
         // Append new products to existing ones
         const updatedProducts = [...products, ...productsResponse.data];
         dispatch(setProducts(updatedProducts));
         dispatch(setHasMore((productsResponse.rawCount ?? productsResponse.data.length) === 16));
         dispatch(setCurrentPage(nextPage));
-        
+
         // Convert prices for new products
         convertProductPrices(updatedProducts);
-        
+
         // Translate new products if Arabic is selected
         if (currentLanguage === 'ar') {
           translateProducts(updatedProducts);
@@ -397,100 +421,19 @@ const GlobalTix = ({ navigation, route }) => {
     // Clear existing products before loading new ones
     dispatch(setProducts([]));
     dispatch(setTotalProducts(0));
-    dispatch(setCurrentPage(1));
+    dispatch(setCurrentPage(0));
     dispatch(setHasMore(true));
     loadProducts(newFilters); // Re-fetch products with new filters
   };
 
-  const renderProductItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => {
-        // Navigate with just productId - ProductDetails will fetch the data
-        navigation.navigate('ProductDetails', { 
-          productId: item.id
-        });
-      }}
-    >
-      <SmartImage 
-        imagePath={item.image}
-        style={styles.productImage}
-        placeholderText={`${item.name}\nNo Image Available`}
-        onLoad={() => {}}
-        onError={(error) => {}}
-      />
-      <View style={[styles.productInfo,isDark ? {backgroundColor:colors.borderGrey} : {backgroundColor:colors.white}]}>
-        <TypographyText
-          title={item.name}
-          size={18}
-          font={BALOO_SEMIBOLD}
-          textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-          style={styles.productName}
-          numberOfLines={2}
-        />
-        <View style={styles.productMeta}>
-          <TypographyText
-            title={`${item.city}, ${item.country}`}
-            size={14}
-            textColor={isDark ? colors.lightGrey : colors.darkGrey}
-            style={styles.productLocation}
-          />
-          {/* <TypographyText
-            title={convertedPrices[item.id] || 'Loading...'}
-            size={14}
-            font={BALOO_SEMIBOLD}
-            textColor={colors.white}
-            style={styles.productPrice}
-          /> */}
-        </View>
-        <TypographyText
-          title={item.category}
-          size={14}
-          font={BALOO_SEMIBOLD}
-          textColor={colors.mainDarkMode}
-          style={styles.productCategory}
-        />
-        <View style={styles.productFeatures}>
-          {item.isGTRecommend && (
-            <View style={styles.featureBadgeWrapper}>
-              <View style={styles.recommendedBadge}>
-                <TypographyText
-                  title={t("GlobalTix.recommended")}
-                  size={12}
-                  font={BALOO_SEMIBOLD}
-                  textColor={colors.black}
-                />
-              </View>
-            </View>
-          )}
-          {item.isInstantConfirmation && (
-            <View style={styles.featureBadgeWrapper}>
-              <View style={styles.instantBadge}>
-                <TypographyText
-                  title={t("GlobalTix.instant")}
-                  size={12}
-                  font={BALOO_SEMIBOLD}
-                  textColor={colors.white}
-                />
-              </View>
-            </View>
-          )}
-          {item.isCancellable && (
-            <View style={styles.featureBadgeWrapper}>
-              <View style={styles.cancellableBadge}>
-                <TypographyText
-                  title={t("GlobalTix.cancellable")}
-                  size={12}
-                  font={BALOO_SEMIBOLD}
-                  textColor={colors.white}
-                />
-              </View>
-            </View>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  const handleProductPress = useCallback((productId) => {
+    // Navigate with just productId - ProductDetails will fetch the data
+    navigation.navigate('ProductDetails', { productId });
+  }, [navigation]);
+
+  const renderProductItem = useCallback(({ item }) => (
+    <ProductCard item={item} isDark={isDark} t={t} onPress={handleProductPress} />
+  ), [isDark, t, handleProductPress]);
 
   const renderFooter = () => {
     if (!loadingMore) return null;
@@ -514,7 +457,6 @@ const GlobalTix = ({ navigation, route }) => {
     ]);
   }
 
- 
 
   // Get header label from route params or fallback to "GlobalTix"
   const getHeaderLabel = () => {
@@ -528,12 +470,15 @@ const GlobalTix = ({ navigation, route }) => {
 
   return (
     <MainLayout
-    outsideScroll={true}
+      outsideScroll={true}
       headerChildren={
-        <Header 
-          label={getHeaderLabel()} 
-          btns={["back","notifications"]}
+        <Header
+          label={getHeaderLabel()}
+          btns={["back", "notifications"]}
           additionalBtnsProps={{
+            myBookings: {
+              onPress: () => navigation.navigate('GlobalTixMyBookings'),
+            },
             cart: {
               onPress: () => navigation.navigate('GlobalTixCartScreen')
             }
@@ -541,14 +486,29 @@ const GlobalTix = ({ navigation, route }) => {
         />
       }
       headerHeight={50}
-      contentStyle={{ 
-        height: SCREEN_HEIGHT - 120,paddingHorizontal: 20 }}
+      contentStyle={{
+        height: SCREEN_HEIGHT - 120, paddingHorizontal: 20
+      }}
     >
-      
-      {/* Inline Filters */}
-      {/* <GlobalTixInlineFilters onFiltersChange={handleFiltersApply} /> */}
-      
-      
+
+      {/* Search Bar */}
+      <View style={[styles.searchContainer, { backgroundColor: isDark ? colors.navyBlue : colors.lightGrey }]}>
+        <TextInput
+          style={[styles.searchInput, { color: isDark ? colors.white : colors.black }]}
+          placeholder="Search experiences..."
+          placeholderTextColor={isDark ? colors.lightGrey : colors.darkGrey}
+          value={searchText}
+          onChangeText={handleSearch}
+          returnKeyType="search"
+          autoCorrect={false}
+        />
+        {searchText.length > 0 && (
+          <TouchableOpacity onPress={handleClearSearch} style={styles.clearBtn}>
+            <TypographyText title="✕" size={14} textColor={isDark ? colors.lightGrey : colors.darkGrey} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {loading || isTranslating ? (
         <FullScreenLoader />
       ) : (translatedProducts.length > 0 ? translatedProducts : products).length === 0 ? (
@@ -558,12 +518,14 @@ const GlobalTix = ({ navigation, route }) => {
           data={translatedProducts.length > 0 ? translatedProducts : products}
           renderItem={renderProductItem}
           keyExtractor={(item) => item.id.toString()}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          removeClippedSubviews={true}
           contentContainerStyle={styles.listContainer}
-          maxToRenderPerBatch={5}
-          windowSize={SCREEN_HEIGHT}
           refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
+            <RefreshControl
+              refreshing={refreshing}
               onRefresh={onRefresh}
               colors={[isDark ? colors.mainDarkMode : colors.darkBlue]}
               tintColor={isDark ? colors.mainDarkMode : colors.darkBlue}
@@ -581,7 +543,114 @@ const GlobalTix = ({ navigation, route }) => {
   );
 };
 
+const ProductCard = memo(({ item, isDark, t, onPress }) => (
+  <TouchableOpacity
+    style={styles.productCard}
+    onPress={() => onPress(item.id)}
+  >
+    <SmartImage
+      imagePath={item.image}
+      style={styles.productImage}
+      placeholderText={`${item.name}\nNo Image Available`}
+      onLoad={() => { }}
+      onError={(error) => { }}
+    />
+    <View style={[styles.productInfo, isDark ? { backgroundColor: colors.borderGrey } : { backgroundColor: colors.white }]}>
+      <TypographyText
+        title={item.name}
+        size={18}
+        font={BALOO_SEMIBOLD}
+        textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+        style={styles.productName}
+        numberOfLines={2}
+      />
+      <View style={styles.productMeta}>
+        <TypographyText
+          title={`${item.city}, ${item.country}`}
+          size={14}
+          textColor={isDark ? colors.lightGrey : colors.darkGrey}
+          style={styles.productLocation}
+        />
+      </View>
+      <TypographyText
+        title={item.category}
+        size={14}
+        font={BALOO_SEMIBOLD}
+        textColor={colors.mainDarkMode}
+        style={styles.productCategory}
+      />
+      <View style={styles.productFeatures}>
+        {item.isGTRecommend && (
+          <View style={styles.featureBadgeWrapper}>
+            <View style={styles.recommendedBadge}>
+              <TypographyText
+                title={t("GlobalTix.recommended")}
+                size={12}
+                font={BALOO_SEMIBOLD}
+                textColor={colors.black}
+              />
+            </View>
+          </View>
+        )}
+        {item.isInstantConfirmation && (
+          <View style={styles.featureBadgeWrapper}>
+            <View style={styles.instantBadge}>
+              <TypographyText
+                title={t("GlobalTix.instant")}
+                size={12}
+                font={BALOO_SEMIBOLD}
+                textColor={colors.white}
+              />
+            </View>
+          </View>
+        )}
+        {item.isCancellable && (
+          <View style={styles.featureBadgeWrapper}>
+            <View style={styles.cancellableBadge}>
+              <TypographyText
+                title={t("GlobalTix.cancellable")}
+                size={12}
+                font={BALOO_SEMIBOLD}
+                textColor={colors.white}
+              />
+            </View>
+          </View>
+        )}
+        {item.isDynamicPrice && (
+          <View style={styles.featureBadgeWrapper}>
+            <View style={styles.dynamicBadge}>
+              <TypographyText
+                title="Dynamic Price"
+                size={12}
+                font={BALOO_SEMIBOLD}
+                textColor={colors.white}
+              />
+            </View>
+          </View>
+        )}
+      </View>
+    </View>
+  </TouchableOpacity>
+));
+
 const styles = StyleSheet.create({
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    height: 44,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    paddingVertical: 0,
+  },
+  clearBtn: {
+    paddingLeft: 8,
+    paddingVertical: 4,
+  },
   listContainer: {
     paddingBottom: 60,
   },
@@ -599,7 +668,7 @@ const styles = StyleSheet.create({
   },
   productInfo: {
     padding: 16,
-    backgroundColor:colors.borderGrey
+    backgroundColor: colors.borderGrey
   },
   productName: {
     marginBottom: 8,
@@ -657,6 +726,15 @@ const styles = StyleSheet.create({
   },
   cancellableBadge: {
     backgroundColor: colors.orange,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  dynamicBadge: {
+    backgroundColor: colors.darkBlue,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,

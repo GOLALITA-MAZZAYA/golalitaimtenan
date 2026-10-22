@@ -29,6 +29,7 @@ const initialState = {
   premiumMerchants: [],
 
   offers: [],
+  offersTotalCount: 0,
   currentOffer: [],
   currentOfferLoading: false,
   offersPage: 1,
@@ -86,13 +87,17 @@ export const merchantReducer = (state = initialState, action) => {
         data: offfers = [],
         concat: offersConcat = false,
         page: offersPage = 1,
+        totalCount: offersTotalCount,
       } = action.offers;
 
       return {
         ...state,
         offers: offersConcat ? state.offers.concat(offfers) : offfers,
         offersPage,
-        merchantIdsToGroup: action.offers.merchantIdsToGroup
+        merchantIdsToGroup: action.offers.merchantIdsToGroup,
+        ...(offersTotalCount !== undefined
+          ? { offersTotalCount: Number(offersTotalCount) || 0 }
+          : {}),
       };
     case SET_MERCHANT_OFFERS:
       return { ...state, merchantOffers: action.merchantOffers };

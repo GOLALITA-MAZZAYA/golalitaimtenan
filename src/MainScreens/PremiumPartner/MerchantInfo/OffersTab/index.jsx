@@ -6,14 +6,15 @@ import { useTheme } from "../../../../components/ThemeProvider";
 import { TypographyText } from "../../../../components/Typography";
 import { BALOO_SEMIBOLD } from "../../../../redux/types";
 import { colors } from "../../../../components/colors";
-import CardWithNesetedItems from "../../../../components/CardWithNestedItems";
+import CardWithNesetedItems from "../../../../components/OfferCardWithNestedItems";
 import {
   handleOfferCardPress,
   navigateTopProductPage,
 } from "../../../AllOffers/helpres";
 import { saveOffer } from "../../../../redux/merchant/merchant-thunks";
 import { getAllOffersByMeerchantId } from "../../../../api/merchants";
-import { getStringDate, isRTL } from "../../../../../utils";
+import { getCacheBustedUri, getStringDate, isRTL } from "../../../../../utils";
+import { rewriteAssetUrl } from "../../../../utils/rewriteAssetUrl";
 
 const OfferTab = ({ merchant, initialOffers }) => {
   const filteredInitial = Array.isArray(initialOffers) ? initialOffers : [];
@@ -117,7 +118,11 @@ const OfferTab = ({ merchant, initialOffers }) => {
             parentProps={{
               onPress: () => handleCardPress(item),
               onPressFavourite: () => handleFavouritePress(item),
-              uri: item.uri || item.image_url || merchant?.merchant_logo,
+              uri: getCacheBustedUri(
+                rewriteAssetUrl(
+                  item.uri || item.image_url || merchant?.merchant_logo,
+                ),
+              ),
               name: isArabic ? item.x_arabic_name || item.name : item.name,
               description: ribbonText,
               endDate: item.end_date

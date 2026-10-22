@@ -8,14 +8,22 @@ import { useTheme } from '../ThemeProvider';
 import BackBtn from './components/BackBtn';
 import FilterBtn from './components/FilterBtn';
 import CartBtn from "./components/CartBtn";
+import MyBookingsBtn from "./components/MyBookingsBtn";
 
 const Header = ({
   btns = ['back', 'notifications'],
   label,
   style,
   additionalBtnsProps,
+  rightChildren,
 }) => {
   const { isDark } = useTheme();
+  const hasMultipleRightBtns =
+    (rightChildren ? 1 : 0) +
+    (additionalBtnsProps?.cart ? 1 : 0) +
+    (additionalBtnsProps?.myBookings ? 1 : 0) +
+    (btns.includes('filter') ? 1 : 0) +
+    (btns.includes('notifications') ? 1 : 0) > 1;
 
   return (
     <View style={[styles.wrapper, style]}>
@@ -28,16 +36,17 @@ const Header = ({
           textColor={isDark ? colors.white : '#202226'}
           size={18}
           font={LUSAIL_REGULAR}
-          //numberOfLines={1}
-          style={{ flex: 1,textAlign:"center" }}
+          style={{ flex: 1, textAlign: "center" }}
           title={label}
         />
       </View>
-      <View style={styles.rightBtns}>
+      <View style={[styles.rightBtns, hasMultipleRightBtns && styles.rightBtnsWide]}>
+        {rightChildren}
+        {additionalBtnsProps?.myBookings && (
+          <MyBookingsBtn {...additionalBtnsProps.myBookings} />
+        )}
         {additionalBtnsProps?.cart && (
-          <CartBtn 
-            {...additionalBtnsProps?.cart}
-          />
+          <CartBtn {...additionalBtnsProps.cart} />
         )}
         {btns.includes("filter") && (
           <FilterBtn {...additionalBtnsProps?.filter} />
@@ -59,7 +68,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   leftBtns: {
-    width: 45,
+    width: 44,
+    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
@@ -67,8 +77,13 @@ const styles = StyleSheet.create({
   rightBtns: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: 45,
     justifyContent: 'flex-end',
+    width: 44,
+    height: 44,
+    overflow: 'visible',
+  },
+  rightBtnsWide: {
+    width: 90,
   },
   titleWrapper: {
     flex: 1,

@@ -35,9 +35,10 @@ export const IOS_TEAM_ID = "V83QSUA898";
 export const SUPPORTMAIL = SUPPORT_EMAIL;
 
 // freeRASP appIntegrity: Base64 of SHA-256 certificate bytes (not of the hex string).
-// Play App signing + upload keystore.jks share the same cert fingerprint.
 export const SIGN_IN_CERTIFICATE_HASHES = [
-  // Play Store / upload keystore (96:9A:FE:93:...:1B:CE)
+  // Play Console → App signing key (49:9F:34:2E:...:03:66) — Internal testing / Play installs
+  "SZ80LhJ+7l3L1tzEnW+ZYwr1u3/YK/ee68+BRsuCA2Y=",
+  // Upload keystore.jks (96:9A:FE:93:...:1B:CE) — local release AABs signed for upload
   "lpr+k9mCvVp15BLg4aV8wWxE2hagiadP8HqoGEDsG84=",
   // Local debug.keystore
   "+sYXRdwJA3hvue3mKpYrOZ9zSPC7b4mbgzJmdZEDO5w=",

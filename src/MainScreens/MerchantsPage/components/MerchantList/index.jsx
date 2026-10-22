@@ -3,7 +3,7 @@ import CardWithNesetedItems from "../../../../components/CardWithNestedItems";
 import { getLocalizedValue } from "../../../../../utils";
 import BranchItem from "../BranchItem";
 import OfferItem from "../OfferItem";
-import { getToggleBtns } from "./helpers";
+import { getOffersCountLabel, getToggleBtns } from "./helpers";
 import { handleMerchantCardPress } from "../../helpers";
 import useMerchantDiscount from "../../../../hooks/useMerchantDiscount";
 import useRoadDistance from "../../../../hooks/useRoadDistance";
@@ -30,7 +30,15 @@ const MerchantsList = ({
   const isBranchesVisible = !isOrganization && !isBusinessHotel;
 
   const {loading, discount} = useMerchantDiscount(merchant.merchant_id);
-  const {distance, distaceLoading} = useRoadDistance(userLocation?.longitude, userLocation?.latitude,merchant.partner_longitude, merchant.partner_latitude)
+  // useRoadDistance(userLat, userLong, merchantLat, merchantLong) — same
+  // order as HotelsListCard / getRoadDistance API.
+  const {distance, distaceLoading} = useRoadDistance(
+    userLocation?.latitude,
+    userLocation?.longitude,
+    merchant?.partner_latitude,
+    merchant?.partner_longitude,
+    !merchant.distance_display,
+  );
 
   if (!merchant) {
     return null;
@@ -49,12 +57,13 @@ const MerchantsList = ({
             ? discount?.x_ribbon_text_arabic || ""
             : discount?.ribbon_text || "",
         loadingDescription: loading,
-        distance,
+        distance: merchant.distance_display || distance,
         distaceLoading,
         latitude: merchant.partner_latitude,
         longitude: merchant.partner_longitude,
         acceptGoLoyaltyPoint: merchant.accept_go_loyalty_point,
         isSaved: isSaved ? isSaved : isFavorite,
+        offersLabel: getOffersCountLabel(merchant),
       }}
     >
       {isOffersVisible && (

@@ -17,20 +17,25 @@ export const getCountries = () => async (dispatch) => {
   }
 };
 
-export const getUserLocationThunk = () => async (dispatch) => {
+export const getUserLocationThunk = () => async (dispatch, getState) => {
+  // Keep a cached fix so Nearest can apply immediately, and so a failed
+  // re-fetch does not wipe a good location with null.
+  if (getState().globalReducer.userLocation) {
+    return;
+  }
+
   try {
+    dispatch(setUserLocationLoading(true));
 
-      dispatch(setUserLocationLoading(true));
+    const data = await getUserLocation();
 
-      const data = await getUserLocation();
-
-
-      dispatch(setUserLocation(data?.location));
-
+    if (data?.location) {
+      dispatch(setUserLocation(data.location));
+    }
   } catch (e) {
     console.log('get user location thunk error', e)
-  }finally {
-      dispatch(setUserLocationLoading(false));
+  } finally {
+    dispatch(setUserLocationLoading(false));
   }
 };
 

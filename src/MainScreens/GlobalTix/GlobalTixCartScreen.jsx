@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Text, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSelector, useDispatch } from 'react-redux';
 import { TypographyText } from '../../components/Typography';
 import { BALOO_SEMIBOLD, BALOO_REGULAR } from '../../redux/types';
@@ -657,6 +658,82 @@ const GlobalTixCartScreen = ({ navigation }) => {
     }
   }, [cartItemsArray, i18n.language]);
 
+  // Confirms a GlobalTix booking after payment success: confirms with GlobalTix,
+  // records it locally for "My Bookings", clears the cart, and navigates back.
+  const finalizeGlobalTixBooking = async (referenceNumber) => {
+    console.log('[GlobalTix][finalizeBooking] START — referenceNumber:', referenceNumber);
+    try {
+      const confirmResult = await globalTixAPI.confirmBooking({
+        referenceNumber,
+        remarks: customerInfo.remarks || '',
+      });
+
+      console.log('[GlobalTix][finalizeBooking] confirmBooking response:', JSON.stringify(confirmResult, null, 2));
+
+      if (confirmResult.success) {
+        showMessage({
+          message: t("GlobalTix.cart.messages.bookingConfirmed"),
+          type: "success",
+          duration: 4000,
+        });
+
+        try {
+          const firstItem = cartItemsArray[0];
+          const existingRaw = await AsyncStorage.getItem('globaltix_my_bookings');
+          const existing = existingRaw ? JSON.parse(existingRaw) : [];
+          if (!existing.some(b => b.referenceNumber === referenceNumber)) {
+            const bookingRecord = {
+              referenceNumber,
+              productName: firstItem?.product?.name || firstItem?.productName || firstItem?.name || 'GlobalTix Booking',
+              ticketType: firstItem?.ticketType?.name || (typeof firstItem?.ticketTypeName === 'string' ? firstItem.ticketTypeName : null),
+              visitDate: firstItem?.visitDate || firstItem?.date || null,
+              isCancellable: firstItem?.option?.isCancellable ?? firstItem?.isCancellable ?? false,
+              status: 'CONFIRMED',
+              timestamp: new Date().toISOString(),
+              // The actual amount charged, in QAR — GlobalTix's own booking
+              // details API only reports its settlement currency (e.g. THB),
+              // so this is saved here for My Bookings to display correctly.
+              amount: finalAmount,
+              currency: 'QAR',
+            };
+            console.log('[GlobalTix][finalizeBooking] saving new My Bookings entry:', bookingRecord);
+            existing.unshift(bookingRecord);
+            await AsyncStorage.setItem('globaltix_my_bookings', JSON.stringify(existing));
+          } else {
+            console.log('[GlobalTix][finalizeBooking] referenceNumber already saved, skipping duplicate write');
+          }
+        } catch (storageErr) {
+          console.error('[GlobalTix][finalizeBooking] Failed to save booking to My Bookings:', storageErr);
+        }
+      } else {
+        console.warn('[GlobalTix][finalizeBooking] confirmBooking returned success=false:', confirmResult.error);
+        showMessage({
+          message: t("GlobalTix.cart.messages.bookingConfirmationFailed"),
+          type: "warning",
+          duration: 4000,
+        });
+      }
+    } catch (confirmError) {
+      console.error('[GlobalTix][finalizeBooking] confirmBooking threw an error:', confirmError);
+      showMessage({
+        message: t("GlobalTix.cart.messages.bookingConfirmationFailed"),
+        type: "warning",
+        duration: 4000,
+      });
+    }
+
+    // Clear cart after successful payment (regardless of confirmation result)
+    dispatch(clearGlobalTixCartThunk());
+
+    // Clear payment data from Redux
+    dispatch(setGlobalTixPaymentData(null));
+
+    // Navigate back or to a success screen
+    setTimeout(() => {
+      navigation.goBack();
+    }, 2000);
+  };
+
   // Check payment status when returning from payment gateway (similar to Cardmola)
   useFocusEffect(
     useCallback(() => {
@@ -674,44 +751,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             );
 
             if (data.payment_status === "Paid" || data.status === "CONFIRMED") {
-              // Call confirmBooking API to finalize the booking
-              try {
-                const confirmResult = await globalTixAPI.confirmBooking({
-                  referenceNumber: currentPaymentData.referenceNumber,
-                  // Add any other required confirmation parameters based on GlobalTix API documentation
-                });
-
-                if (confirmResult.success) {
-                  showMessage({
-                    message: t("GlobalTix.cart.messages.bookingConfirmed"),
-                    type: "success",
-                    duration: 4000,
-                  });
-                } else {
-                  showMessage({
-                    message: t("GlobalTix.cart.messages.bookingConfirmationFailed"),
-                    type: "warning",
-                    duration: 4000,
-                  });
-                }
-              } catch (confirmError) {
-                showMessage({
-                  message: t("GlobalTix.cart.messages.bookingConfirmationFailed"),
-                  type: "warning",
-                  duration: 4000,
-                });
-              }
-
-              // Clear cart after successful payment (regardless of confirmation result)
-              dispatch(clearGlobalTixCartThunk());
-
-              // Clear payment data from Redux
-              dispatch(setGlobalTixPaymentData(null));
-
-              // Navigate back or to a success screen
-              setTimeout(() => {
-                navigation.goBack();
-              }, 2000);
+              await finalizeGlobalTixBooking(currentPaymentData.referenceNumber);
             } else if (data.payment_status === "Failed" || data.payment_status === "fail" || data.status === "FAILED") {
               // Release the booking when payment fails to free up the slots
               try {

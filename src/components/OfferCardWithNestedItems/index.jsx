@@ -30,15 +30,21 @@ const CardWithNesetedItems = ({ parentProps }) => {
     onPress,
     onPressFavourite,
     distance,
+    expiryDate,
     offerCount,
     offersLabel,
+    imageAspectRatio,
   } = parentProps;
+
+  const date = endDate || expiryDate;
 
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const isGuest = useIsGuest();
   const isRtl = isRTL();
 
+  // Prefer an explicit offersLabel from the list API (offer_count). Never invent
+  // a bare "Offers" label when the count is missing or zero.
   const displayOffersLabel = useMemo(() => {
     if (
       offersLabel !== undefined &&
@@ -51,11 +57,11 @@ const CardWithNesetedItems = ({ parentProps }) => {
       return null;
     }
     const num = Number(offerCount);
-    if (num > 0) {
-      if (isRtl) return `${num} عروض`;
-      return `${num} ${num === 1 ? 'Offer' : 'Offers'}`;
+    if (num <= 0) {
+      return null;
     }
-    return isRtl ? 'عروض' : 'Offers';
+    if (isRtl) return `${num} عروض`;
+    return `${num} ${num === 1 ? 'Offer' : 'Offers'}`;
   }, [offersLabel, offerCount, isRtl]);
 
   const StarIconSmall = useMemo(() => sized(StartIcon, 20, 20), []);
@@ -77,8 +83,15 @@ const CardWithNesetedItems = ({ parentProps }) => {
         <View
           style={[
             styles.imageWrapper,
+            imageAspectRatio
+              ? {
+                  width: 112,
+                  height: undefined,
+                  aspectRatio: imageAspectRatio,
+                }
+              : null,
             {
-              backgroundColor: isDark ? colors.white : colors.highlatedGrey,
+              backgroundColor: isDark ? colors.white : '#F5F5F5',
               marginLeft: isRtl ? 14 : 0,
               marginRight: isRtl ? 0 : 14,
             },
@@ -87,7 +100,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
           <Image
             source={{ uri: rewriteAssetUrl(uri) }}
             style={styles.image}
-            resizeMode="contain"
+            resizeMode={imageAspectRatio ? 'cover' : 'contain'}
           />
         </View>
 
@@ -133,7 +146,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
               ]}
             >
               <TypographyText
-                textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+                textColor="#E32251"
                 size={13}
                 font={BALOO_BOLD}
                 title={displayOffersLabel}
@@ -149,7 +162,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
             {
               alignItems: isRtl ? 'flex-start' : 'flex-end',
               justifyContent:
-                (endDate || distance) && !loadingDescription
+                (date || distance) && !loadingDescription
                   ? 'space-between'
                   : 'center',
               paddingLeft: isRtl ? 0 : 10,
@@ -187,7 +200,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
                 style={{ fontWeight: '700', marginBottom: 2 }}
               />
             )}
-            {!!endDate && !loadingDescription && (
+            {!!date && date !== '...' && !loadingDescription && (
               <View
                 style={[
                   styles.endDateBlock,
@@ -200,7 +213,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
                   }
                   size={11}
                   font={LUSAIL_REGULAR}
-                  title={`${t('PremiumPartner.validTill')} ${endDate}`}
+                  title={`${t('PremiumPartner.validTill')} ${date}`}
                   numberOfLines={1}
                   style={[
                     styles.endDate,

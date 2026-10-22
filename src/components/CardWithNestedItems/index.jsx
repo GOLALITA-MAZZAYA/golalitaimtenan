@@ -51,36 +51,20 @@ const CardWithNesetedItems = props => {
     isDark ? colors.mainDarkModeText : colors.darkBlue,
   );
 
-  const renderToggleBtn = (item, index) => {
+  const renderToggleBtn = item => {
     const isActive = item.type === openedIndex;
-    const isOffersLink = item.type === "offers" && !item.isBookNow;
-
-    if (isOffersLink) {
-      return (
-        <View
-          key={item.type}
-          style={[
-            styles.offersLinkToggle,
-            {
-              flexDirection: isRTL() ? "row-reverse" : "row",
-            },
-          ]}
-        >
-          <TypographyText
-            textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-            size={13}
-            font={BALOO_BOLD}
-            title={item.showText}
-            style={styles.offersLinkText}
-          />
-        </View>
-      );
-    }
 
     return (
       <TouchableOpacity
+        key={item.type}
+        activeOpacity={0.7}
         onPress={() => setOpenedIndex(isActive ? null : item.type)}
-        style={styles.toggle}
+        style={[
+          styles.toggle,
+          {
+            flexDirection: isRTL() ? 'row-reverse' : 'row',
+          },
+        ]}
       >
         <View
           style={{ transform: [{ rotate: isActive ? '270deg' : '90deg' }] }}
@@ -220,6 +204,19 @@ const CardWithNesetedItems = props => {
               />
             )}
           </View>
+
+          {!!parentProps.offersLabel && (
+            <TypographyText
+              textColor="#E32251"
+              size={13}
+              font={BALOO_BOLD}
+              title={parentProps.offersLabel}
+              style={[
+                styles.offersCountText,
+                { alignSelf: isRtl ? 'flex-end' : 'flex-start' },
+              ]}
+            />
+          )}
         </View>
         <View style={styles.rightBlock}>
           {isGuest ? <View /> : <TouchableOpacity
@@ -275,31 +272,16 @@ const CardWithNesetedItems = props => {
     >
       {renderParent}
 
-      {toggleBtns && toggleBtns.length > 0 && (
+      {toggleBtns?.length > 0 && (
         <View
           style={[
             styles.toggleBtn,
             {
-              justifyContent:
-                toggleBtns.length > 1
-                  ? 'space-between'
-                  : isRtl
-                    ? 'flex-end'
-                    : 'flex-start',
-              paddingLeft: isRtl
-                ? 0
-                : toggleBtns.some(b => b.type === 'offers' && !b.isBookNow)
-                  ? 76
-                  : 0,
-              paddingRight: isRtl
-                ? toggleBtns.some(b => b.type === 'offers' && !b.isBookNow)
-                  ? 76
-                  : 0
-                : 0,
+              flexDirection: isRtl ? 'row-reverse' : 'row',
             },
           ]}
         >
-          {toggleBtns.map(renderToggleBtn)}
+          {(toggleBtns || []).map(renderToggleBtn)}
         </View>
       )}
 
@@ -342,8 +324,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    marginTop: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 4,
   },
   name: {
     flex: 1,
@@ -400,19 +384,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 4,
   },
-  offersLinkToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 2,
-    marginTop: 2,
-  },
-  offersLinkText: {
-    fontWeight: "700",
-    textDecorationLine: "underline",
-  },
   toggleBtn: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  offersCountText: {
+    fontWeight: '700',
+    marginTop: 2,
   },
   contentContainerStyle: {
     flexGrow: 1,

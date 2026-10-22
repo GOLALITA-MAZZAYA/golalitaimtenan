@@ -42,6 +42,7 @@ import GlobalTix from '../MainScreens/GlobalTix';
 import ProductDetails from '../MainScreens/GlobalTix/ProductDetails';
 import CardPage from '../MainScreens/CardPage';
 import GlobalTixCartScreen from '../MainScreens/GlobalTix/GlobalTixCartScreen';
+import GlobalTixMyBookings from '../MainScreens/GlobalTix/GlobalTixMyBookings';
 import ARMapNavigator from '../MainScreens/ARMap';
 import LoyaltyPointsNavigator from '../MainScreens/LoyaltyPoints';
 import MyVouchersNavigator from '../MainScreens/MyVouchers';
@@ -156,6 +157,10 @@ export const MainStackScreen = () => {
           <MainStack.Screen
             name="GlobalTixCartScreen"
             component={GlobalTixCartScreen}
+          />
+          <MainStack.Screen
+            name="GlobalTixMyBookings"
+            component={GlobalTixMyBookings}
           />
           <MainStack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
           <MainStack.Screen name="delivery" component={DeliveryNavigator} />

@@ -30,6 +30,7 @@ import { getProductCategoryTypes } from '../../api/offers';
 
 const AllOffers = ({
   offers,
+  offersTotalCount,
   isOffersLoading,
   getOffers,
   saveOffer,
@@ -41,12 +42,24 @@ const AllOffers = ({
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [selectedCategoryType, setSelectedCategoryType] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  // True once GPS succeeded, failed, or permission was denied — so Nearby
+  // does not fire an unsorted request that can race past the sorted one.
+  const [locationReady, setLocationReady] = useState(false);
   const [sortBy, setSortBy] = useState('nearby'); // "nearby" | "alphabetical"
   const [categoryTypes, setCategoryTypes] = useState([]);
+  // Local total from onGetData — same as Golalita; also mirrored in redux.
+  const [totalCount, setTotalCount] = useState(null);
   const canGetMoreDataRef = useRef(true);
   const language = i18n.language;
   const isArabic = language === 'ar';
   const [isReady, setIsReady] = useState(false);
+
+  const displayTotalCount =
+    Number(totalCount) > 0
+      ? Number(totalCount)
+      : Number(offersTotalCount) > 0
+        ? Number(offersTotalCount)
+        : 0;
 
   const categories = [
     { id: null, name: t('AllOffers.allOffers') },
@@ -108,13 +121,24 @@ const AllOffers = ({
                   user_long: pos.coords.longitude,
                 });
               }
+              if (isMounted) {
+                setLocationReady(true);
+              }
             },
-            () => {},
+            () => {
+              if (isMounted) {
+                setLocationReady(true);
+              }
+            },
             { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
           );
+        } else if (isMounted) {
+          setLocationReady(true);
         }
       } catch (e) {
-        // silent fallback if permission denied or error
+        if (isMounted) {
+          setLocationReady(true);
+        }
       }
     })();
 
@@ -127,9 +151,11 @@ const AllOffers = ({
     saveOffer(item.id, t);
   };
 
-  // Only the server's offer_count; no label when it is 0 or missing.
+  // Only the server's per-merchant offer_count from the offers list API.
   const getOfferCountLabel = item => {
-    const count = Number(item?.offer_count) || 0;
+    const count = Number(
+      item?.offer_count ?? item?.offers_count ?? item?.x_offer_count ?? 0,
+    );
 
     if (count <= 0) {
       return '';
@@ -175,7 +201,7 @@ const AllOffers = ({
     ...(selectedCategoryType
       ? { category_type_id: selectedCategoryType }
       : {}),
-    ...(sortBy === 'alphabetical' ? { sort_by: 'alphabetical' } : {}),
+    ...(sortBy === 'alphabetical' ? { sort_by: 'name' } : {}),
   });
 
   const getLocationParams = () =>
@@ -191,7 +217,11 @@ const AllOffers = ({
       return;
     }
 
-    const params = { ...getFilterParams(), ...getLocationParams() };
+    const params = {
+      ...getFilterParams(),
+      ...getLocationParams(),
+      show_total_count: true,
+    };
 
     getOffers({
       merchant_id: null,
@@ -199,7 +229,10 @@ const AllOffers = ({
       page: 'next',
       params,
       useFiltersApi: true,
-      onGetData: (dataLength, limit) => {
+      onGetData: (dataLength, limit, total) => {
+        if (Number.isFinite(Number(total))) {
+          setTotalCount(Number(total));
+        }
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
         }
@@ -208,10 +241,20 @@ const AllOffers = ({
   };
 
   useEffect(() => {
-    const params = { ...getFilterParams(), ...getLocationParams() };
+    // Wait for GPS resolution before Nearby so the first response is sorted.
+    if (sortBy === 'nearby' && !locationReady) {
+      return;
+    }
+
+    const params = {
+      ...getFilterParams(),
+      ...getLocationParams(),
+      show_total_count: true,
+    };
 
     canGetMoreDataRef.current = true;
     setIsReady(false);
+    setTotalCount(null);
 
     getOffers({
       merchant_id: null,
@@ -219,8 +262,11 @@ const AllOffers = ({
       page: 1,
       params,
       useFiltersApi: true,
-      onGetData: (dataLength, limit) => {
+      onGetData: (dataLength, limit, total) => {
         setIsReady(true);
+        setTotalCount(
+          Number.isFinite(Number(total)) ? Number(total) : null,
+        );
 
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
@@ -229,7 +275,7 @@ const AllOffers = ({
     }).catch(() => {
       setIsReady(true);
     });
-  }, [selectedFilter, selectedCategoryType, userLocation, sortBy]);
+  }, [selectedFilter, selectedCategoryType, userLocation, sortBy, locationReady]);
 
   const loaderColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const screenBg = isDark ? colors.darkBlue : colors.white;
@@ -369,10 +415,12 @@ const AllOffers = ({
             size={13}
             font={LUSAIL_REGULAR}
             title={
-              offers?.length
+              displayTotalCount > 0
                 ? isRTL()
-                  ? `${offers.length} عروض`
-                  : `${offers.length} Offers`
+                  ? `${displayTotalCount} عروض`
+                  : `${displayTotalCount} ${
+                      displayTotalCount === 1 ? 'Offer' : 'Offers'
+                    }`
                 : ''
             }
             textColor={isDark ? 'rgba(255, 255, 255, 0.6)' : '#71717A'}
@@ -544,6 +592,7 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => ({
   offers: state.merchantReducer.offers,
+  offersTotalCount: state.merchantReducer.offersTotalCount,
   isOffersLoading: state.loadersReducer.isOffersLoading,
   favoriteOffers: state.merchantReducer.favoriteOffers,
 });

@@ -13,6 +13,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Text,
 } from "react-native";
 
 import { colors } from "../../../components/colors";
@@ -37,7 +38,7 @@ import { getHeaderBtnString, getOfferFilters } from "./helpers";
 import OfferFilterBar from "./OfferFilterBar";
 import { getMergedSubCategoriesForCategory } from "../../../api/categories";
 import { TypographyText } from "../../../components/Typography";
-import { BALOO_2 } from "../../../redux/types";
+import { BALOO_SEMIBOLD } from "../../../redux/types";
 import { rewriteAssetUrl } from "../../../utils/rewriteAssetUrl";
 import { showMessage } from "react-native-flash-message";
 
@@ -230,9 +231,20 @@ const MerchantsPage = ({
       nearestLocation,
     });
 
+    // Match Golalita: omit empty sub_category_id so Nearby (user_lat/user_long)
+    // is not sent alongside an empty array that can break backend sorting.
+    if (!selectedSubCategoryIds.length && !Object.keys(offerFilters).length) {
+      return {
+        ...filters,
+        ...(categoryId != null ? { category_id: categoryId } : {}),
+      };
+    }
+
     return {
       ...filters,
-      sub_category_id: selectedSubCategoryIds,
+      ...(selectedSubCategoryIds.length
+        ? { sub_category_id: selectedSubCategoryIds }
+        : {}),
       ...(categoryId != null ? { category_id: categoryId } : {}),
       ...offerFilters,
     };
@@ -248,12 +260,23 @@ const MerchantsPage = ({
 
   const subCategoryOptions = useMemo(
     () =>
-      subCategories.map((item) => ({
-        value: item.id,
-        label: item.name,
-        label_arabic: item.x_name_arabic || item.name,
-        uri: getSubCategoryUri(item),
-      })),
+      subCategories.map((item) => {
+        // Odoo Char fields are often `false` when empty — never pass that to Text.
+        const name =
+          (typeof item?.name === "string" && item.name) ||
+          (typeof item?.display_name === "string" && item.display_name) ||
+          "";
+        const nameAr =
+          (typeof item?.x_name_arabic === "string" && item.x_name_arabic) ||
+          name;
+
+        return {
+          value: item.id,
+          label: name,
+          label_arabic: nameAr,
+          uri: getSubCategoryUri(item),
+        };
+      }),
     [subCategories]
   );
 
@@ -271,16 +294,20 @@ const MerchantsPage = ({
     setDiscountRange(nextRange);
   }, []);
 
+  const pendingNearestRef = useRef(false);
+
   const applySort = useCallback(
     ({ sortOrder: nextSortOrder, isNearest }) => {
       setSortOrder(nextSortOrder);
 
       if (!isNearest) {
+        pendingNearestRef.current = false;
         setNearestLocation(null);
         return;
       }
 
       if (!userLocation?.latitude || !userLocation?.longitude) {
+        pendingNearestRef.current = true;
         getUserLocationThunk();
         showMessage({
           message: t("Merchants.locationRequired"),
@@ -290,6 +317,7 @@ const MerchantsPage = ({
         return;
       }
 
+      pendingNearestRef.current = false;
       setNearestLocation({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
@@ -297,6 +325,23 @@ const MerchantsPage = ({
     },
     [userLocation, getUserLocationThunk, t],
   );
+
+  // If the user chose Nearest before GPS was ready, apply it once location lands.
+  useEffect(() => {
+    if (
+      !pendingNearestRef.current ||
+      !userLocation?.latitude ||
+      !userLocation?.longitude
+    ) {
+      return;
+    }
+
+    pendingNearestRef.current = false;
+    setNearestLocation({
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+    });
+  }, [userLocation]);
 
   useEffect(() => {
     canGetMoreDataRef.current = true;
@@ -386,11 +431,13 @@ const MerchantsPage = ({
           const isSelected = selectedSubCategoryIds.some(
             id => String(id) === String(option.value),
           );
-          const label = isRtl
-            ? option.label_arabic
-            : typeof option.label === "string" && option.label
-              ? option.label.charAt(0).toUpperCase() + option.label.slice(1)
-              : option.label;
+          const rawLabel = isRtl ? option.label_arabic : option.label;
+          const label =
+            typeof rawLabel === "string" && rawLabel
+              ? isRtl
+                ? rawLabel
+                : rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1)
+              : "";
           const isSvg =
             typeof option.uri === "string" &&
             option.uri.toLowerCase().endsWith(".svg");
@@ -450,7 +497,7 @@ const MerchantsPage = ({
                   />
                 ) : (
                   <TypographyText
-                    font={BALOO_2}
+                    font={BALOO_SEMIBOLD}
                     size={22}
                     textColor={placeholderColor}
                     title={label ? label.charAt(0).toUpperCase() : ""}
@@ -458,19 +505,20 @@ const MerchantsPage = ({
                 )}
               </View>
 
-              <TypographyText
-                font={BALOO_2}
-                textColor={titleColor}
-                title={label}
-                size={12}
+              {/* Plain Text: TypographyText + fontWeight on custom fonts can
+                  render blank on iOS; horizontal ScrollView also needs enough
+                  height for the label (see subCategoryTabs.minHeight). */}
+              <Text
                 style={[
                   styles.subCategoryText,
-                  isSelected && styles.activeSubCategoryText,
+                  { color: titleColor, fontFamily: BALOO_SEMIBOLD },
                 ]}
                 numberOfLines={2}
                 adjustsFontSizeToFit
                 minimumFontScale={0.85}
-              />
+              >
+                {label}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -572,20 +620,25 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     paddingLeft: 20,
   },
+  // Horizontal ScrollView often measures height from the image only and
+  // clips the title underneath — reserve space for icon + 2-line label.
   subCategoryTabs: {
     flexGrow: 0,
     marginTop: 2,
     marginBottom: 12,
+    minHeight: 118,
   },
   subCategoryScrollContent: {
     paddingVertical: 4,
     paddingHorizontal: 2,
     alignItems: "flex-start",
+    minHeight: 114,
   },
   subCategoryItem: {
     alignItems: "center",
     justifyContent: "flex-start",
     width: 80,
+    minHeight: 110,
   },
   subCategoryImageWrapper: {
     width: 72,
@@ -602,13 +655,11 @@ const styles = StyleSheet.create({
   },
   subCategoryText: {
     marginTop: 6,
-    fontWeight: "500",
     textAlign: "center",
     width: "100%",
+    fontSize: 12,
     lineHeight: 16,
-  },
-  activeSubCategoryText: {
-    fontWeight: "700",
+    // Do not set fontWeight with a custom fontFamily on iOS — text disappears.
   },
 });
 

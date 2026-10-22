@@ -12,6 +12,7 @@ export const merchantApi = {
   getMerchantDetails: (body) => instance.post("/user/merchant/details", body),
   getOffers: (body) => instance.post("/user/offers/v2", body),
   getNewOffers: (body) => instance.post("/user/offers/v3", body),
+  getFilteredOffers: (body) => instance.post("/user/offers/v3", body),
   getVouchers: () => instance.post("/user/voucher/list"),
   getProducts: (body) => instance.post("/product.template/search", body),
   getProductById: (body) => instance.post("user/offers/product/v2", body),

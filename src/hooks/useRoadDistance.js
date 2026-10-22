@@ -5,7 +5,8 @@ const useRoadDistance = (
   userLatitude,
   userLongitude,
   merchantLatitude,
-  merchantLongitude
+  merchantLongitude,
+  enabled = true,
 ) => {
   const { data: distance, isLoading: distanceLoading } = useQuery({
     queryKey: [
@@ -25,6 +26,7 @@ const useRoadDistance = (
       ),
 
     enabled:
+      enabled &&
       !!userLatitude &&
       !!userLongitude &&
       !!merchantLatitude &&
