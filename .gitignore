@@ -122,3 +122,6 @@ src/config/groq.js
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# pnpm
+.pnpm-store/

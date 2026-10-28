@@ -3,6 +3,8 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   yarn: true
+nodeLinker: hoisted
 
 overrides:
   react-native-svg: "15.12.0"
+

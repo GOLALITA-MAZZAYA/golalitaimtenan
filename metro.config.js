@@ -30,8 +30,25 @@ const config = {
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
+    blockList: [
+      defaultConfig.resolver.blockList,
+      /node_modules\/.*\/node_modules\/react-native-svg\/.*/,
+    ].filter(Boolean),
     extraNodeModules: {
       'react-native-svg': path.resolve(__dirname, 'node_modules/react-native-svg'),
+    },
+    resolveRequest: (context, moduleName, platform) => {
+      if (moduleName === 'react-native-svg') {
+        return context.resolveRequest(
+          {
+            ...context,
+            originModulePath: path.resolve(__dirname, 'index.js'),
+          },
+          moduleName,
+          platform,
+        );
+      }
+      return context.resolveRequest(context, moduleName, platform);
     },
   },
 };
