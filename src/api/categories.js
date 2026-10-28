@@ -105,3 +105,101 @@ export const getAllCategories = async type => {
 
   return normalizeCategoryList(res.data?.result ?? res.data);
 };
+
+/**
+ * Offer filters configured for a partner category (parent or child).
+ * Parent responses nest filters under child_categories; child responses
+ * expose available_filters on the root result.
+ */
+export const getCategoryAvailableFilters = async category_id => {
+  if (category_id == null || category_id === '') {
+    return null;
+  }
+
+  const token = await getAuthToken();
+  const res = await merchantApi.getCategoryAvailableFilters({
+    params: {
+      token,
+      category_id,
+    },
+  });
+
+  console.log(res.data.result,'available filters')
+
+  const result = res.data?.result ?? res.data;
+
+  if (!result || result.status === 'error' || result.error) {
+    throw new Error(
+      typeof result?.error === 'string'
+        ? result.error
+        : result?.error?.message || 'Failed to load offer filters',
+    );
+  }
+
+  return result;
+};
+
+const collectFilterRows = (filters = []) =>
+  (Array.isArray(filters) ? filters : []).filter(item => item?.id != null);
+
+/**
+ * Flatten + de-dupe filters for the filter sheet.
+ * When childCategoryIds is set, only those children's filters are included
+ * (falls back to all children if none of the ids match).
+ */
+export const flattenAvailableFilters = (
+  result,
+  { childCategoryIds } = {},
+) => {
+  if (!result) {
+    return [];
+  }
+
+  let rows = [];
+
+  if (result.is_parent && Array.isArray(result.child_categories)) {
+    const children = result.child_categories;
+    const selected = Array.isArray(childCategoryIds)
+      ? childCategoryIds.map(id => String(id))
+      : [];
+    const matched = selected.length
+      ? children.filter(child =>
+          selected.includes(String(child.child_category_id)),
+        )
+      : [];
+    const source = matched.length ? matched : children;
+
+    for (const child of source) {
+      rows.push(...collectFilterRows(child.available_filters));
+    }
+  } else {
+    rows = collectFilterRows(result.available_filters);
+  }
+
+  const byId = new Map();
+  for (const row of rows) {
+    if (!byId.has(row.id)) {
+      byId.set(row.id, row);
+    }
+  }
+
+  return Array.from(byId.values()).sort(
+    (a, b) => (a.sequence ?? 0) - (b.sequence ?? 0),
+  );
+};
+
+export const getAvailableFilterLabel = (filter, useArabic) => {
+  if (!filter) {
+    return '';
+  }
+
+  if (useArabic) {
+    const arabic =
+      typeof filter.name_arabic === 'string' ? filter.name_arabic.trim() : '';
+    if (arabic) {
+      return arabic;
+    }
+  }
+
+  return typeof filter.name === 'string' ? filter.name : '';
+};

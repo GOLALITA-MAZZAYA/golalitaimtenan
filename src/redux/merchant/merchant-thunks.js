@@ -589,15 +589,32 @@ export const getGroupedByMerchantOffers =
 
 
 
-/** Normalize offers API result when show_total_count wraps the list. */
+/**
+ * Normalize offers API result when show_total_count wraps the list.
+ * total_count may sit on result OR on data next to result (Golalita/QLM).
+ * Never treat the current page length as the list total.
+ */
 const normalizeOffersResponse = (raw, responseData) => {
+  const pickTotal = (...candidates) => {
+    for (const value of candidates) {
+      if (value === undefined || value === null || value === '') {
+        continue;
+      }
+      const n = Number(value);
+      if (Number.isFinite(n) && n >= 0) {
+        return n;
+      }
+    }
+    return 0;
+  };
+
   if (Array.isArray(raw)) {
-    const totalFromRoot = Number(
-      responseData?.total_count ?? responseData?.totalCount,
-    );
     return {
       offers: raw,
-      totalCount: Number.isFinite(totalFromRoot) ? totalFromRoot : raw.length,
+      totalCount: pickTotal(
+        responseData?.total_count,
+        responseData?.totalCount,
+      ),
     };
   }
 
@@ -614,19 +631,16 @@ const normalizeOffersResponse = (raw, responseData) => {
               ? raw.result
               : [];
 
-    const totalCount = Number(
-      raw.total_count ??
-        raw.totalCount ??
-        raw.total ??
-        raw.count ??
-        responseData?.total_count ??
-        responseData?.totalCount ??
-        offers.length,
-    );
-
     return {
       offers,
-      totalCount: Number.isFinite(totalCount) ? totalCount : offers.length,
+      totalCount: pickTotal(
+        raw.total_count,
+        raw.totalCount,
+        raw.total,
+        raw.count,
+        responseData?.total_count,
+        responseData?.totalCount,
+      ),
     };
   }
 

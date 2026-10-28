@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Modal from "react-native-modal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -8,20 +13,16 @@ import { useTheme } from "../../../../components/ThemeProvider";
 import { TypographyText } from "../../../../components/Typography";
 import { BALOO_2 } from "../../../../redux/types";
 import { isRTL } from "../../../../../utils";
-import {
-  DISCOUNT_RANGES,
-  OFFER_TYPES,
-  SORT_NEAREST,
-  SORT_OPTIONS,
-  getDiscountRangeLabel,
-} from "../helpers";
+import { getAvailableFilterLabel } from "../../../../api/categories";
+import { SORT_NEAREST, SORT_OPTIONS } from "../helpers";
 
 const FILTER = "filter";
 const SORT = "sort";
 
 const OfferFilterBar = ({
-  offerTypes,
-  discountRange,
+  filterIds = [],
+  availableFilters = [],
+  filtersLoading = false,
   sortOrder,
   isNearest,
   onApplyFilters,
@@ -35,8 +36,7 @@ const OfferFilterBar = ({
   const [openSheet, setOpenSheet] = useState(null);
   // Selections are drafted in the sheet and only sent on Apply, so tapping
   // several chips doesn't fire a merchant list request per tap.
-  const [draftOfferTypes, setDraftOfferTypes] = useState([]);
-  const [draftDiscountRange, setDraftDiscountRange] = useState(null);
+  const [draftFilterIds, setDraftFilterIds] = useState([]);
   const [draftSort, setDraftSort] = useState(null);
 
   const activeColor = isDark ? colors.mainDarkMode : colors.darkBlue;
@@ -50,37 +50,34 @@ const OfferFilterBar = ({
   const rowDirection = { flexDirection: isRtl ? "row-reverse" : "row" };
   const textAlign = { textAlign: isRtl ? "right" : "left" };
 
-  const filtersCount = offerTypes.length + (discountRange ? 1 : 0);
+  const filtersCount = filterIds.length;
   const selectedSort = isNearest ? SORT_NEAREST : sortOrder;
   const sortLabel = t(
     SORT_OPTIONS.find((option) => option.value === selectedSort).labelKey
   );
 
   const openFilters = () => {
-    setDraftOfferTypes(offerTypes);
-    setDraftDiscountRange(discountRange);
+    setDraftFilterIds(filterIds);
     setOpenSheet(FILTER);
   };
 
   const closeSheet = () => setOpenSheet(null);
 
-  const toggleDraftOfferType = (type) => {
-    setDraftOfferTypes((prev) =>
-      prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]
+  const toggleDraftFilter = (id) => {
+    setDraftFilterIds((prev) =>
+      prev.some((item) => String(item) === String(id))
+        ? prev.filter((item) => String(item) !== String(id))
+        : [...prev, id]
     );
   };
 
   const applyFilters = () => {
-    onApplyFilters({
-      offerTypes: draftOfferTypes,
-      discountRange: draftDiscountRange,
-    });
+    onApplyFilters({ filterIds: draftFilterIds });
     closeSheet();
   };
 
   const clearFilters = () => {
-    setDraftOfferTypes([]);
-    setDraftDiscountRange(null);
+    setDraftFilterIds([]);
   };
 
   const openSort = () => {
@@ -290,32 +287,37 @@ const OfferFilterBar = ({
                 style={textAlign}
               />
 
-              {renderSectionTitle(t("Merchants.discount"))}
-              <View style={[styles.chips, rowDirection]}>
-                {DISCOUNT_RANGES.map((range) =>
-                  renderChip(
-                    range.key,
-                    getDiscountRangeLabel(range, t),
-                    draftDiscountRange === range.key,
-                    () =>
-                      setDraftDiscountRange((prev) =>
-                        prev === range.key ? null : range.key
-                      )
-                  )
-                )}
-              </View>
-
               {renderSectionTitle(t("Merchants.offerTypeLabel"))}
-              <View style={[styles.chips, rowDirection]}>
-                {OFFER_TYPES.map((type) =>
-                  renderChip(
-                    type.value,
-                    t(type.labelKey),
-                    draftOfferTypes.includes(type.value),
-                    () => toggleDraftOfferType(type.value)
-                  )
-                )}
-              </View>
+
+              {filtersLoading ? (
+                <View style={styles.loaderRow}>
+                  <ActivityIndicator
+                    size="small"
+                    color={isDark ? colors.mainDarkMode : colors.darkBlue}
+                  />
+                </View>
+              ) : availableFilters.length === 0 ? (
+                <TypographyText
+                  size={13}
+                  font={BALOO_2}
+                  title={t("Merchants.listNoData")}
+                  textColor={mutedTextColor}
+                  style={[styles.emptyFilters, textAlign]}
+                />
+              ) : (
+                <View style={[styles.chips, rowDirection]}>
+                  {availableFilters.map((filter) =>
+                    renderChip(
+                      String(filter.id),
+                      getAvailableFilterLabel(filter, isRtl),
+                      draftFilterIds.some(
+                        (id) => String(id) === String(filter.id)
+                      ),
+                      () => toggleDraftFilter(filter.id)
+                    )
+                  )}
+                </View>
+              )}
 
               {renderApplyButton(applyFilters)}
             </>
@@ -392,6 +394,15 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontWeight: "700",
+  },
+  emptyFilters: {
+    marginBottom: 8,
+  },
+  loaderRow: {
+    minHeight: 40,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    marginBottom: 8,
   },
   sortRow: {
     alignItems: "center",

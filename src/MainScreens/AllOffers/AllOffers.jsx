@@ -47,19 +47,10 @@ const AllOffers = ({
   const [locationReady, setLocationReady] = useState(false);
   const [sortBy, setSortBy] = useState('nearby'); // "nearby" | "alphabetical"
   const [categoryTypes, setCategoryTypes] = useState([]);
-  // Local total from onGetData — same as Golalita; also mirrored in redux.
-  const [totalCount, setTotalCount] = useState(null);
   const canGetMoreDataRef = useRef(true);
   const language = i18n.language;
   const isArabic = language === 'ar';
   const [isReady, setIsReady] = useState(false);
-
-  const displayTotalCount =
-    Number(totalCount) > 0
-      ? Number(totalCount)
-      : Number(offersTotalCount) > 0
-        ? Number(offersTotalCount)
-        : 0;
 
   const categories = [
     { id: null, name: t('AllOffers.allOffers') },
@@ -151,11 +142,9 @@ const AllOffers = ({
     saveOffer(item.id, t);
   };
 
-  // Only the server's per-merchant offer_count from the offers list API.
+  // Only the server's offer_count; no label when it is 0 or missing (QLM).
   const getOfferCountLabel = item => {
-    const count = Number(
-      item?.offer_count ?? item?.offers_count ?? item?.x_offer_count ?? 0,
-    );
+    const count = Number(item?.offer_count) || 0;
 
     if (count <= 0) {
       return '';
@@ -217,11 +206,7 @@ const AllOffers = ({
       return;
     }
 
-    const params = {
-      ...getFilterParams(),
-      ...getLocationParams(),
-      show_total_count: true,
-    };
+    const params = { ...getFilterParams(), ...getLocationParams() };
 
     getOffers({
       merchant_id: null,
@@ -229,10 +214,7 @@ const AllOffers = ({
       page: 'next',
       params,
       useFiltersApi: true,
-      onGetData: (dataLength, limit, total) => {
-        if (Number.isFinite(Number(total))) {
-          setTotalCount(Number(total));
-        }
+      onGetData: (dataLength, limit) => {
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
         }
@@ -246,15 +228,10 @@ const AllOffers = ({
       return;
     }
 
-    const params = {
-      ...getFilterParams(),
-      ...getLocationParams(),
-      show_total_count: true,
-    };
+    const params = { ...getFilterParams(), ...getLocationParams() };
 
     canGetMoreDataRef.current = true;
     setIsReady(false);
-    setTotalCount(null);
 
     getOffers({
       merchant_id: null,
@@ -262,11 +239,8 @@ const AllOffers = ({
       page: 1,
       params,
       useFiltersApi: true,
-      onGetData: (dataLength, limit, total) => {
+      onGetData: (dataLength, limit) => {
         setIsReady(true);
-        setTotalCount(
-          Number.isFinite(Number(total)) ? Number(total) : null,
-        );
 
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
@@ -415,11 +389,11 @@ const AllOffers = ({
             size={13}
             font={LUSAIL_REGULAR}
             title={
-              displayTotalCount > 0
+              offersTotalCount > 0
                 ? isRTL()
-                  ? `${displayTotalCount} عروض`
-                  : `${displayTotalCount} ${
-                      displayTotalCount === 1 ? 'Offer' : 'Offers'
+                  ? `${offersTotalCount} عروض`
+                  : `${offersTotalCount} ${
+                      offersTotalCount === 1 ? 'Offer' : 'Offers'
                     }`
                 : ''
             }

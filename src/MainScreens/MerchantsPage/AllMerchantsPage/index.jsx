@@ -36,7 +36,11 @@ import { getUserLocationThunk } from "../../../redux/global/global-thunks";
 import { isRTL } from "../../../../utils";
 import { getHeaderBtnString, getOfferFilters } from "./helpers";
 import OfferFilterBar from "./OfferFilterBar";
-import { getMergedSubCategoriesForCategory } from "../../../api/categories";
+import {
+  flattenAvailableFilters,
+  getCategoryAvailableFilters,
+  getMergedSubCategoriesForCategory,
+} from "../../../api/categories";
 import { TypographyText } from "../../../components/Typography";
 import { BALOO_SEMIBOLD } from "../../../redux/types";
 import { rewriteAssetUrl } from "../../../utils/rewriteAssetUrl";
@@ -161,8 +165,9 @@ const MerchantsPage = ({
     () => filterSubCategoryIds,
   );
   const [sortOrder, setSortOrder] = useState(null);
-  const [selectedOfferTypes, setSelectedOfferTypes] = useState([]);
-  const [discountRange, setDiscountRange] = useState(null);
+  const [selectedFilterIds, setSelectedFilterIds] = useState([]);
+  const [availableFiltersPayload, setAvailableFiltersPayload] = useState(null);
+  const [availableFiltersLoading, setAvailableFiltersLoading] = useState(false);
   // Coordinates captured when Nearest was turned on, or null when off.
   // Captured once so GPS updates don't keep reloading the list.
   const [nearestLocation, setNearestLocation] = useState(null);
@@ -223,10 +228,65 @@ const MerchantsPage = ({
     };
   }, [categoryId, categoriesType]);
 
+  // Load category offer filters once per category; chip list is narrowed
+  // client-side when subcategory chips are selected.
+  useEffect(() => {
+
+
+    if (!categoryId) {
+      setAvailableFiltersPayload(null);
+      setAvailableFiltersLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setAvailableFiltersPayload(null);
+    setAvailableFiltersLoading(true);
+
+    getCategoryAvailableFilters(categoryId)
+      .then((result) => {
+        if (!isCancelled) {
+          setAvailableFiltersPayload(result);
+        }
+      })
+      .catch((err) => {
+        console.log(err,'get available categories error')
+        if (!isCancelled) {
+          setAvailableFiltersPayload(null);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setAvailableFiltersLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [categoryId]);
+
+  const availableFilters = useMemo(
+    () =>
+      flattenAvailableFilters(availableFiltersPayload, {
+        childCategoryIds: selectedSubCategoryIds,
+      }),
+    [availableFiltersPayload, selectedSubCategoryIds],
+  );
+
+  // Drop selections that are no longer in the visible chip set (e.g. after
+  // changing subcategory chips or switching category).
+  useEffect(() => {
+    const validIds = new Set(availableFilters.map((item) => String(item.id)));
+    setSelectedFilterIds((prev) => {
+      const next = prev.filter((id) => validIds.has(String(id)));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [availableFilters]);
+
   const activeFilters = useMemo(() => {
     const offerFilters = getOfferFilters({
-      offerTypes: selectedOfferTypes,
-      discountRange,
+      filterIds: selectedFilterIds,
       sortOrder,
       nearestLocation,
     });
@@ -252,8 +312,7 @@ const MerchantsPage = ({
     filters,
     selectedSubCategoryIds,
     categoryId,
-    selectedOfferTypes,
-    discountRange,
+    selectedFilterIds,
     sortOrder,
     nearestLocation,
   ]);
@@ -289,9 +348,8 @@ const MerchantsPage = ({
     );
   }, []);
 
-  const applyOfferFilters = useCallback(({ offerTypes, discountRange: nextRange }) => {
-    setSelectedOfferTypes(offerTypes);
-    setDiscountRange(nextRange);
+  const applyOfferFilters = useCallback(({ filterIds }) => {
+    setSelectedFilterIds(Array.isArray(filterIds) ? filterIds : []);
   }, []);
 
   const pendingNearestRef = useRef(false);
@@ -559,8 +617,9 @@ const MerchantsPage = ({
 
       {!isHotel && (
         <OfferFilterBar
-          offerTypes={selectedOfferTypes}
-          discountRange={discountRange}
+          filterIds={selectedFilterIds}
+          availableFilters={availableFilters}
+          filtersLoading={availableFiltersLoading}
           sortOrder={sortOrder}
           isNearest={!!nearestLocation}
           onApplyFilters={applyOfferFilters}

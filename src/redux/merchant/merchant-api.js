@@ -4,6 +4,8 @@ export const merchantApi = {
   getCategories: (body) => instance.post("/partner.category/search", body),
   getParentCategories: (body) => instance.post("/parent/category/v2", body),
   getParentCategoriesById: (body) => instance.post("/child/category/v2", body),
+  getCategoryAvailableFilters: (body) =>
+    instance.post("/category/available_filters", body),
   getMerchant: (body) => instance.post("/res.partner/search", body),
   getAllMerchant: (body) =>
     instance.post("/user/category/merchant/lists", body),
