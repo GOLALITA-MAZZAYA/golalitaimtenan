@@ -5,10 +5,10 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
-  Image,
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import Image from "../../components/AppImage";
 import { useDispatch, useSelector } from 'react-redux';
 
 import MainLayout from '../../components/MainLayout';
@@ -20,7 +20,6 @@ import { useTheme } from '../../components/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import { globalTixAPI } from '../../redux/globalTix/globalTix-api';
 import { addToGlobalTixCartThunk, removeFromGlobalTixCartThunk } from '../../redux/globalTix/globalTix-cart-thunks';
-import { getGlobalTixCartItemQuantity } from '../../redux/globalTix/globalTix-cart-selectors';
 import GlobalTixCart from '../../components/GlobalTixCart/GlobalTixCart';
 import FullScreenLoader from '../../components/Loaders/FullScreenLoader';
 import { convertToQAR } from '../../utils/currencyConverter';
@@ -29,7 +28,7 @@ import { getTicketSellingPrice } from '../../utils/globalTixPricing';
 import { GLOBALTIX_CONFIG } from '../../config/globalTix';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../styles/mainStyles";
 import { sized } from "../../Svg";
-import Swiper from "react-native-swiper";
+import Carousel from "react-native-reanimated-carousel";
 import ImageViewer from "react-native-image-zoom-viewer";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import CloseSvg from "../../assets/close_white.svg";
@@ -70,6 +69,7 @@ const ProductDetails = ({ route, navigation }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(CONSTANTS.TICKETS);
   const [isFullImage, setIsFullImage] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [selectedTickets, setSelectedTickets] = useState({});
   const [failedImages, setFailedImages] = useState({});
   const [expandedTickets, setExpandedTickets] = useState({});
@@ -84,6 +84,11 @@ const ProductDetails = ({ route, navigation }) => {
   const [ticketAvailabilityStatus, setTicketAvailabilityStatus] = useState({});
   const [isAddingToCart, setIsAddingToCart] = useState({});
   const [convertedPrices, setConvertedPrices] = useState({});
+  
+  // Timeslot state
+  const [isTimeslotModalVisible, setIsTimeslotModalVisible] = useState(false);
+  const [availableTimeslots, setAvailableTimeslots] = useState([]);
+  const [currentTimeslotAction, setCurrentTimeslotAction] = useState(null);
   
   // Translation state
   const currentLanguage = i18n.language;
@@ -205,10 +210,7 @@ const ProductDetails = ({ route, navigation }) => {
           const pricing = getTicketSellingPrice(ticket, markupPercentage);
           
           if (option.isDynamicPrice || ticket.isDynamicPrice) {
-            // Dynamic pricing products don't have a static price — the real
-            // price only comes back from checkEventAvailability once a date
-            // is selected (see checkAllTicketsAvailability below).
-            priceMap[`${ticketKey}_selling`] = t("GlobalTix.productDetails.ui.dynamicPrice");
+            priceMap[`${ticketKey}_selling`] = t("GlobalTix.productDetails.ui.dynamicPrice") || "Dynamic Price (Select Date)";
           } else if (pricing.sellingPrice > 0) {
             // Convert selling price to QAR (this is what customers see)
             try {
@@ -331,22 +333,26 @@ const ProductDetails = ({ route, navigation }) => {
     try {
       const optionCurrency = option.currency;
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-      
+
       // Calculate selling price with markup (this is what customers pay)
       const pricing = getTicketSellingPrice(ticketType, markupPercentage);
       const sellingPrice = pricing.sellingPrice;
-      
+
       if (sellingPrice > 0) {
         const convertedPriceString = await convertToQAR(sellingPrice, optionCurrency, false);
         convertedPrice = parseFloat(convertedPriceString.replace(/[^\d.]/g, ''));
         console.log(`Converted selling price for quantity update: ${sellingPrice} ${optionCurrency} -> ${convertedPrice} QAR`);
       }
     } catch (error) {
-      console.error('Error converting price for quantity update:', error);
-      // Fallback: calculate selling price without conversion
-      const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-      const pricing = getTicketSellingPrice(ticketType, markupPercentage);
-      convertedPrice = pricing.sellingPrice || 0;
+      // Do NOT fall back to the raw, unconverted price here — that would
+      // silently charge e.g. QAR 5000 for a JPY 5000 item. Block the update
+      // instead; the previously stored (correctly-converted) price stays.
+      console.error('Error converting price for quantity update — blocking update:', error);
+      Alert.alert(
+        t('General.error'),
+        t('GlobalTix.productDetails.alerts.priceUnavailable') || 'Price unavailable for this currency right now. Please try again later.'
+      );
+      return;
     }
 
     const cartPayload = {
@@ -380,18 +386,17 @@ const ProductDetails = ({ route, navigation }) => {
     setIsDatePickerVisible(true);
   };
 
-  const proceedWithAddToCart = async (optionId, ticketTypeId, option, ticketType, confirmedDate = null, slotData = null) => {
+  const proceedWithAddToCart = async (optionId, ticketTypeId, option, ticketType, confirmedDate = null, eventId = null, timeSlot = null, slotData = null) => {
     // Calculate selling price with markup and convert to QAR before adding to cart
     let convertedPrice = 0;
     try {
       const optionCurrency = option.currency;
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-      
-      // Calculate selling price with markup (this is what customers pay),
-      // using live slot pricing (from checkEventAvailability) when available
+
+      // Calculate selling price with markup (this is what customers pay)
       const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
       const sellingPrice = pricing.sellingPrice;
-      
+
       if (sellingPrice > 0) {
         const convertedPriceString = await convertToQAR(sellingPrice, optionCurrency, false);
         // Extract numeric value from converted price (remove "QR " prefix)
@@ -400,11 +405,15 @@ const ProductDetails = ({ route, navigation }) => {
         console.log(`Pricing breakdown: nettPrice=${pricing.nettPrice}, markup=${pricing.markupPercentage}%, sellingPrice=${pricing.sellingPrice}, MSP=${pricing.mspPrice || 'N/A'}`);
       }
     } catch (error) {
-      console.error('Error converting price for cart:', error);
-      // Fallback: calculate selling price without conversion
-      const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
-      const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
-      convertedPrice = pricing.sellingPrice || 0;
+      // Do NOT fall back to the raw, unconverted price here — that would
+      // silently charge e.g. QAR 5000 for a JPY 5000 item. Block adding
+      // to cart instead of adding it with a wrong price.
+      console.error('Error converting price for cart — blocking add to cart:', error);
+      Alert.alert(
+        t('General.error'),
+        t('GlobalTix.productDetails.alerts.priceUnavailable') || 'Price unavailable for this currency right now. Please try again later.'
+      );
+      return;
     }
 
     // Use the confirmed date if provided, otherwise fall back to selectedDate
@@ -418,12 +427,14 @@ const ProductDetails = ({ route, navigation }) => {
       option: option,
       ticketType: ticketType,
       quantity: 1,
-      convertedPrice: convertedPrice, // Add converted price to payload
-      visitDate: dateToUse ? dateToUse.toISOString().split('T')[0] : null, // Add visiting date
-      // Live pricing captured from checkEventAvailability (dynamic pricing products)
-      ceaNettPrice: slotData?.nettPrice ?? null,
-      ceaMsp: slotData?.minimumSellingPrice ?? slotData?.msp ?? null,
-      ceaRsp: slotData?.recommendedSellingPrice ?? slotData?.rsp ?? null,
+      convertedPrice: convertedPrice,
+      visitDate: dateToUse ? dateToUse.toISOString().split('T')[0] : null,
+      eventId: eventId,
+      timeSlot: timeSlot,
+      isDynamicPrice: !!(option.isDynamicPrice || ticketType.isDynamicPrice),
+      ceaNettPrice: slotData?.nettPrice || null,
+      ceaMsp: slotData?.minimumSellingPrice || null,
+      ceaRsp: slotData?.recommendedSellingPrice || null,
     };
     
     console.log('=== Adding to Cart Debug ===');
@@ -528,68 +539,91 @@ const ProductDetails = ({ route, navigation }) => {
           dateTo: dateTo
         });
         
-        if (availabilityResponse.success && availabilityResponse.data) {
-          // Check if the selected date has available slots
-          const selectedDateSlots = availabilityResponse.data.filter(slot => {
-            const slotDate = slot.time ? slot.time.split('T')[0] : null;
-            return slotDate === dateFrom && slot.available > 0;
-          });
-          
-          if (selectedDateSlots.length === 0) {
-            // Find next available date
-            const availableSlots = availabilityResponse.data.filter(slot => slot.available > 0);
-            const nextAvailableDate = availableSlots.length > 0 
-              ? new Date(availableSlots[0].time).toLocaleDateString() 
-              : 'Not found';
-            
-            Alert.alert(
-              t("GlobalTix.productDetails.alerts.ticketUnavailable"),
-              `No tickets available on ${date.toLocaleDateString()}.\n${availableSlots.length > 0 ? `Next available: ${nextAvailableDate}` : 'No available dates in the next 30 days.'}`,
-              [
-                { 
-                  text: t("GlobalTix.productDetails.buttons.pickDifferentDate"), 
-                  onPress: () => {
-                    setSelectedDate(null);
-                    setIsDatePickerVisible(true);
-                  }
-                },
-                { text: t("GlobalTix.productDetails.buttons.ok") }
-              ]
-            );
-            // Reset selectedDate so user can pick a different date next time
-            setSelectedDate(null);
-            setPendingCartAction(null);
-            setIsCheckingAvailability(false);
-            return;
-          }
-          
-          console.log(`🎫 ✅ Ticket ${ticketTypeId} is available on ${dateFrom} - ${selectedDateSlots.length} slots with ${selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0)} total tickets`);
-          
-          // Pass the matched slot through so dynamic-pricing products get live pricing
-          const matchedSlotData = selectedDateSlots[0] || null;
+        if (availabilityResponse.success && Array.isArray(availabilityResponse.data)) {
+          if (availabilityResponse.data.length === 0) {
+            // Empty array = open schedule (date-only tickets with no slot capacity restrictions).
+            // The customer can pick any date freely — proceed directly without slot check.
+            console.log(`🎫 ✅ Ticket ${ticketTypeId} has open schedule — proceeding without slot restriction`);
+            if (pendingCartAction.type === 'quantityChange') {
+              await executeQuantityChange(optionId, ticketTypeId, pendingCartAction.change, date, null, null, null);
+            } else if (pendingCartAction.type === 'addToCart') {
+              await executeAddToCart(optionId, ticketTypeId, date, null, null, null);
+            }
+          } else {
+            // Has slot data — check date-specific availability
+            const selectedDateSlots = availabilityResponse.data.filter(slot => {
+              const slotDate = slot.time ? slot.time.split('T')[0] : null;
+              return slotDate === dateFrom && slot.available > 0;
+            });
 
-          // Execute the cart action with the confirmed date only if available
-          if (pendingCartAction.type === 'quantityChange') {
-            await executeQuantityChange(optionId, ticketTypeId, pendingCartAction.change, date, matchedSlotData);
-          } else if (pendingCartAction.type === 'addToCart') {
-            await executeAddToCart(optionId, ticketTypeId, date, matchedSlotData);
+            if (selectedDateSlots.length === 0) {
+              const availableSlots = availabilityResponse.data.filter(slot => slot.available > 0);
+              const nextAvailableDate = availableSlots.length > 0
+                ? new Date(availableSlots[0].time).toLocaleDateString()
+                : 'Not found';
+
+              Alert.alert(
+                t("GlobalTix.productDetails.alerts.ticketUnavailable"),
+                `No tickets available on ${date.toLocaleDateString()}.\n${availableSlots.length > 0 ? `Next available: ${nextAvailableDate}` : 'No available dates in the next 30 days.'}`,
+                [
+                  {
+                    text: t("GlobalTix.productDetails.buttons.pickDifferentDate"),
+                    onPress: () => {
+                      setSelectedDate(null);
+                      setIsDatePickerVisible(true);
+                    }
+                  },
+                  { text: t("GlobalTix.productDetails.buttons.ok") }
+                ]
+              );
+              setSelectedDate(null);
+              setPendingCartAction(null);
+              setIsCheckingAvailability(false);
+              return;
+            }
+
+            console.log(`🎫 ✅ Ticket ${ticketTypeId} is available on ${dateFrom} - ${selectedDateSlots.length} slots`);
+
+            // Detect timeslot tickets by specific time (not midnight) — eventId may be null in staging
+            const hasTimeslots = selectedDateSlots.some(slot => {
+              if (!slot.time || !slot.time.includes('T')) return false;
+              const timePart = slot.time.split('T')[1];
+              return timePart && timePart !== '00:00:00';
+            });
+
+            if (hasTimeslots) {
+              setAvailableTimeslots(selectedDateSlots);
+              setCurrentTimeslotAction({ ...pendingCartAction, optionId, ticketTypeId, date });
+              setIsTimeslotModalVisible(true);
+              setIsCheckingAvailability(false);
+              return;
+            }
+
+            // No timeslot — pass slot data for dynamic pricing
+            const fallbackSlotData = selectedDateSlots[0] || null;
+            const fallbackTimeSlot = fallbackSlotData?.time || null;
+
+            if (pendingCartAction.type === 'quantityChange') {
+              await executeQuantityChange(optionId, ticketTypeId, pendingCartAction.change, date, fallbackSlotData?.eventId || null, fallbackTimeSlot, fallbackSlotData);
+            } else if (pendingCartAction.type === 'addToCart') {
+              await executeAddToCart(optionId, ticketTypeId, date, fallbackSlotData?.eventId || null, fallbackTimeSlot, fallbackSlotData);
+            }
           }
         } else {
-          // Handle error case - no availability or API error
-          const errorMessage = availabilityResponse.error 
-            ? (typeof availabilityResponse.error === 'object' 
-                ? availabilityResponse.error.message || availabilityResponse.error.code || 'No available events'
-                : availabilityResponse.error)
-            : 'No available events';
-          
-          console.warn('🎫 ⚠️ Could not verify availability:', availabilityResponse.error);
-          
+          // data is null — proxy unwrapping lost the inner error object
+          const rawErr = availabilityResponse.error;
+          const errorMessage = rawErr
+            ? (typeof rawErr === 'object' ? rawErr.message || rawErr.code || 'No events available' : rawErr)
+            : 'Unable to verify availability for this ticket';
+
+          console.warn('🎫 ⚠️ Could not verify availability:', errorMessage);
+
           Alert.alert(
             t("GlobalTix.productDetails.alerts.ticketUnavailable"),
             errorMessage,
             [
-              { 
-                text: t("GlobalTix.productDetails.buttons.pickDifferentDate"), 
+              {
+                text: t("GlobalTix.productDetails.buttons.pickDifferentDate"),
                 onPress: () => {
                   setSelectedDate(null);
                   setIsDatePickerVisible(true);
@@ -598,7 +632,6 @@ const ProductDetails = ({ route, navigation }) => {
               { text: t("GlobalTix.productDetails.buttons.ok") }
             ]
           );
-          // Don't execute cart action if there's no availability
           setSelectedDate(null);
           setPendingCartAction(null);
           setIsCheckingAvailability(false);
@@ -648,49 +681,58 @@ const ProductDetails = ({ route, navigation }) => {
           
           const cartKey = `${optionId}_${ticketTypeId}`;
           
-          if (availabilityResponse.success && availabilityResponse.data) {
-            // Check if the selected date has available slots
-            const selectedDateSlots = availabilityResponse.data.filter(slot => {
-              const slotDate = slot.time ? slot.time.split('T')[0] : null;
-              return slotDate === dateFrom && slot.available > 0;
-            });
-            
-            const isAvailable = selectedDateSlots.length > 0;
-            
-            if (isAvailable) {
+          if (availabilityResponse.success && Array.isArray(availabilityResponse.data)) {
+            if (availabilityResponse.data.length === 0) {
+              // Empty array = open schedule — always available, pick any date
               availableCount++;
+              newAvailabilityStatus[cartKey] = {
+                status: 'available',
+                hasAvailability: true,
+                openSchedule: true,
+                lastChecked: new Date(),
+                message: 'Pick any date — no slot restrictions',
+                meta: availabilityResponse.meta,
+              };
+              console.log(`🎫 Ticket ${ticketTypeId}: ✅ Open schedule`);
             } else {
-              unavailableCount++;
+              const selectedDateSlots = availabilityResponse.data.filter(slot => {
+                const slotDate = slot.time ? slot.time.split('T')[0] : null;
+                return slotDate === dateFrom && slot.available > 0;
+              });
+
+              const isAvailable = selectedDateSlots.length > 0;
+              if (isAvailable) {
+                availableCount++;
+              } else {
+                unavailableCount++;
+              }
+
+              const totalAvailable = selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0);
+              newAvailabilityStatus[cartKey] = {
+                status: isAvailable ? 'available' : 'not_available',
+                hasAvailability: isAvailable,
+                selectedDateSlots,
+                lastChecked: new Date(),
+                message: isAvailable
+                  ? `${totalAvailable} tickets available on ${dateFrom}`
+                  : `No tickets available on ${dateFrom}`,
+                meta: availabilityResponse.meta,
+              };
+              console.log(`🎫 Ticket ${ticketTypeId}: ${isAvailable ? '✅ Available' : '❌ Not Available'}`);
             }
-            
-            const totalAvailable = selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0);
-            
-            newAvailabilityStatus[cartKey] = {
-              status: isAvailable ? 'available' : 'not_available',
-              hasAvailability: isAvailable,
-              selectedDateSlots: selectedDateSlots,
-              lastChecked: new Date(),
-              message: isAvailable 
-                ? `${totalAvailable} tickets available on ${dateFrom}` 
-                : `No tickets available on ${dateFrom}`,
-              meta: availabilityResponse.meta
-            };
-            
-            console.log(`🎫 Ticket ${ticketTypeId}: ${isAvailable ? '✅ Available' : '❌ Not Available'}`);
           } else {
             unavailableCount++;
-            const errorMessage = availabilityResponse.error 
-              ? (typeof availabilityResponse.error === 'object' 
-                  ? availabilityResponse.error.message || availabilityResponse.error.code || 'Unable to check availability'
-                  : availabilityResponse.error)
-              : 'Unable to check availability';
-            
+            const rawErr = availabilityResponse.error;
+            const errorMessage = rawErr
+              ? (typeof rawErr === 'object' ? rawErr.message || rawErr.code || 'Unable to check availability' : rawErr)
+              : (availabilityResponse.data === null ? 'No events available for this ticket type' : 'Unable to check availability');
+
             newAvailabilityStatus[cartKey] = {
               status: 'error',
               hasAvailability: false,
               lastChecked: new Date(),
               message: errorMessage,
-              error: availabilityResponse.error
+              error: errorMessage,
             };
           }
         } catch (error) {
@@ -743,7 +785,7 @@ const ProductDetails = ({ route, navigation }) => {
   };
 
   // Helper function to execute quantity change
-  const executeQuantityChange = async (optionId, ticketTypeId, change, confirmedDate = null, slotData = null) => {
+  const executeQuantityChange = async (optionId, ticketTypeId, change, confirmedDate = null, eventId = null, timeSlot = null, slotData = null) => {
     const option = options.find(opt => opt.id === optionId);
     const ticketType = option?.ticketType?.find(ticket => ticket.id === ticketTypeId);
     
@@ -768,8 +810,7 @@ const ProductDetails = ({ route, navigation }) => {
       const optionCurrency = option.currency;
       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
       
-      // Calculate selling price with markup (this is what customers pay),
-      // injecting live slot pricing (from checkEventAvailability) if available
+      // Calculate selling price with markup (this is what customers pay), injecting dynamic pricing if available
       const pricing = getTicketSellingPrice(ticketType, markupPercentage, slotData);
       const sellingPrice = pricing.sellingPrice;
       
@@ -799,14 +840,31 @@ const ProductDetails = ({ route, navigation }) => {
       quantity: newQuantity,
       convertedPrice: convertedPrice,
       visitDate: dateToUse ? dateToUse.toISOString().split('T')[0] : null,
-      ceaNettPrice: slotData?.nettPrice ?? null,
-      ceaMsp: slotData?.minimumSellingPrice ?? slotData?.msp ?? null,
-      ceaRsp: slotData?.recommendedSellingPrice ?? slotData?.rsp ?? null,
+      eventId: eventId,
+      timeSlot: timeSlot
     }));
   };
 
+  // Handle timeslot selection
+  const handleTimeslotSelect = async (slot) => {
+    setIsTimeslotModalVisible(false);
+    
+    if (!currentTimeslotAction) return;
+    
+    const { optionId, ticketTypeId, type, change, date, option, ticketType } = currentTimeslotAction;
+    
+    if (type === 'quantityChange') {
+      await executeQuantityChange(optionId, ticketTypeId, change, date, slot.eventId, slot.time, slot);
+    } else if (type === 'addToCart') {
+      // For addToCart, we pass eventId and timeSlot and dynamic slot data
+      await proceedWithAddToCart(optionId, ticketTypeId, option || options.find(o => o.id === optionId), ticketType || options.find(o => o.id === optionId)?.ticketType?.find(t => t.id === ticketTypeId), date, slot.eventId, slot.time, slot);
+    }
+    
+    setCurrentTimeslotAction(null);
+  };
+
   // Helper function to execute add to cart
-  const executeAddToCart = async (optionId, ticketTypeId, confirmedDate = null, slotData = null) => {
+  const executeAddToCart = async (optionId, ticketTypeId, confirmedDate = null, eventId = null, timeSlot = null, slotData = null) => {
     const option = options.find(opt => opt.id === optionId);
     const ticketType = option?.ticketType?.find(ticket => ticket.id === ticketTypeId);
     
@@ -840,48 +898,73 @@ const ProductDetails = ({ route, navigation }) => {
         dateTo: dateTo
       });
       
-      if (availabilityResponse.success && availabilityResponse.data) {
-        // Check if the selected date has available slots
-        const selectedDateSlots = availabilityResponse.data.filter(slot => {
-          const slotDate = slot.time ? slot.time.split('T')[0] : null;
-          return slotDate === dateFrom && slot.available > 0;
-        });
-        
-        if (selectedDateSlots.length === 0) {
-          // Find next available date
-          const availableSlots = availabilityResponse.data.filter(slot => slot.available > 0);
-          const nextAvailableDate = availableSlots.length > 0 
-            ? new Date(availableSlots[0].time).toLocaleDateString() 
-            : 'Not found';
-          
-          Alert.alert(
-            t("GlobalTix.productDetails.alerts.ticketUnavailable"), 
-            `This ticket is not available on ${dateToCheck.toLocaleDateString()}.\n${availableSlots.length > 0 ? `Next available: ${nextAvailableDate}` : 'No available dates in the next 30 days.'}`,
-            [
-              { text: t("GlobalTix.productDetails.buttons.checkAvailability"), onPress: () => handleCheckAvailability() },
-              { text: t("GlobalTix.productDetails.buttons.ok") }
-            ]
-          );
-          // Reset selectedDate so user can pick a different date next time
-          setSelectedDate(null);
-          return;
+      if (availabilityResponse.success && Array.isArray(availabilityResponse.data)) {
+        if (availabilityResponse.data.length === 0) {
+          // Empty array = open schedule (date-only tickets, no slot capacity restrictions).
+          // Proceed directly — no slot check, no timeslot picker needed.
+          console.log(`🎫 ✅ Ticket ${ticketTypeId} has open schedule — adding to cart directly`);
+          await proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate, eventId, timeSlot, null);
+        } else {
+          // Has slot data — check date-specific availability
+          const selectedDateSlots = availabilityResponse.data.filter(slot => {
+            const slotDate = slot.time ? slot.time.split('T')[0] : null;
+            return slotDate === dateFrom && slot.available > 0;
+          });
+
+          if (selectedDateSlots.length === 0) {
+            const availableSlots = availabilityResponse.data.filter(slot => slot.available > 0);
+            const nextAvailableDate = availableSlots.length > 0
+              ? new Date(availableSlots[0].time).toLocaleDateString()
+              : 'Not found';
+
+            Alert.alert(
+              t("GlobalTix.productDetails.alerts.ticketUnavailable"),
+              `This ticket is not available on ${dateToCheck.toLocaleDateString()}.\n${availableSlots.length > 0 ? `Next available: ${nextAvailableDate}` : 'No available dates in the next 30 days.'}`,
+              [
+                { text: t("GlobalTix.productDetails.buttons.checkAvailability"), onPress: () => handleCheckAvailability() },
+                { text: t("GlobalTix.productDetails.buttons.ok") }
+              ]
+            );
+            setSelectedDate(null);
+            return;
+          }
+
+          console.log(`🎫 ✅ Ticket is available, proceeding to add to cart`);
+
+          // Detect timeslot tickets by specific time (not midnight) — eventId may be null in staging
+          const hasTimeslots = selectedDateSlots.some(slot => {
+            if (!slot.time || !slot.time.includes('T')) return false;
+            const timePart = slot.time.split('T')[1];
+            return timePart && timePart !== '00:00:00';
+          });
+
+          if (hasTimeslots && !eventId) {
+            setIsAddingToCart(prev => ({ ...prev, [cartKey]: false }));
+            setAvailableTimeslots(selectedDateSlots);
+            setCurrentTimeslotAction({
+              type: 'addToCart',
+              optionId,
+              ticketTypeId,
+              date: dateToCheck,
+              option,
+              ticketType
+            });
+            setIsTimeslotModalVisible(true);
+            return;
+          }
+
+          const dynamicSlotData = slotData || selectedDateSlots[0] || null;
+          await proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate, eventId, timeSlot, dynamicSlotData);
         }
-        
-        console.log(`🎫 ✅ Ticket is available, proceeding to add to cart`);
-        // Proceed with adding to cart only if available — pass the matched
-        // slot through so dynamic-pricing products get live pricing
-        const matchedSlotData = slotData || selectedDateSlots[0] || null;
-        await proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate, matchedSlotData);
       } else {
-        // Handle error case - no availability or API error
-        const errorMessage = availabilityResponse.error 
-          ? (typeof availabilityResponse.error === 'object' 
-              ? availabilityResponse.error.message || availabilityResponse.error.code || 'No available events'
-              : availabilityResponse.error)
-          : 'No available events';
-        
-        console.warn('🎫 ⚠️ Could not verify availability:', availabilityResponse.error);
-        
+        // data is null — proxy unwrapping lost the inner error object
+        const rawErr = availabilityResponse.error;
+        const errorMessage = rawErr
+          ? (typeof rawErr === 'object' ? rawErr.message || rawErr.code || 'No events available' : rawErr)
+          : 'Unable to verify availability for this ticket';
+
+        console.warn('🎫 ⚠️ Could not verify availability:', errorMessage);
+
         Alert.alert(
           t("GlobalTix.productDetails.alerts.ticketUnavailable"),
           errorMessage,
@@ -890,7 +973,6 @@ const ProductDetails = ({ route, navigation }) => {
             { text: t("GlobalTix.productDetails.buttons.ok") }
           ]
         );
-        // Don't add to cart if there's no availability
         return;
       }
       
@@ -901,7 +983,7 @@ const ProductDetails = ({ route, navigation }) => {
         t("GlobalTix.productDetails.alerts.availabilityCheckError"), 
         t("GlobalTix.productDetails.alerts.availabilityCheckErrorMessage"),
         [
-          { text: t("GlobalTix.productDetails.buttons.addAnyway"), onPress: () => proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate) },
+          { text: t("GlobalTix.productDetails.buttons.addAnyway"), onPress: () => proceedWithAddToCart(optionId, ticketTypeId, option, ticketType, confirmedDate, eventId, timeSlot, slotData) },
           { text: t("GlobalTix.productDetails.buttons.cancel") }
         ]
       );
@@ -1103,7 +1185,21 @@ const ProductDetails = ({ route, navigation }) => {
           for (const ticket of option.ticketType) {
             try {
               console.log(`🎫 Checking availability for ticket ID: ${ticket.id} (${ticket.name})`);
-              
+
+              // Open-dated tickets have no event-based schedule — CEA returns [] which is correct
+              // but must not be treated as "unavailable". Skip CEA and mark as available directly.
+              if (option.visitDate?.isOpenDated === true || option.visitDate?.required === false) {
+                const cartKey = `${option.id}_${ticket.id}`;
+                newAvailabilityStatus[cartKey] = {
+                  status: 'available',
+                  hasAvailability: true,
+                  lastChecked: new Date(),
+                  message: 'Open-dated ticket — no date restriction',
+                };
+                console.log(`🎫 Ticket ${ticket.id}: ✅ Open-dated (CEA skipped)`);
+                continue;
+              }
+
               // Call the correct API endpoint for each ticket
               const availabilityResponse = await globalTixAPI.checkEventAvailability({
                 ticketTypeID: ticket.id,
@@ -1112,74 +1208,85 @@ const ProductDetails = ({ route, navigation }) => {
               });
               
               const cartKey = `${option.id}_${ticket.id}`;
-              
-              if (availabilityResponse.success && availabilityResponse.data) {
-                // Check if there are any available slots in the response
-                const availableSlots = availabilityResponse.data.filter(slot => slot.available > 0);
-                const hasAvailability = availableSlots.length > 0;
-                const totalAvailableTickets = availableSlots.reduce((sum, slot) => sum + slot.available, 0);
-                
-                // Find slots for the exact selected date
-                const selectedDateSlots = availabilityResponse.data.filter(slot => {
-                  const slotDate = slot.time ? slot.time.split('T')[0] : null;
-                  return slotDate === dateFrom;
-                });
-                const selectedDateAvailable = selectedDateSlots.some(slot => slot.available > 0);
 
-                // Capture real-time price from the CEA slot — used for dynamic pricing products
-                const priceSlot = selectedDateSlots.find(s => s.available > 0) || availableSlots[0] || null;
-                const priceFromCEA = priceSlot
-                  ? { nettPrice: priceSlot.nettPrice ?? null, rsp: priceSlot.rsp ?? null, msp: priceSlot.msp ?? null }
-                  : null;
-                
-                newAvailabilityStatus[cartKey] = {
-                  status: selectedDateAvailable ? 'available' : 'not_available',
-                  hasAvailability: hasAvailability,
-                  totalAvailableTickets: totalAvailableTickets,
-                  availableSlots: availableSlots,
-                  selectedDateSlots: selectedDateSlots,
-                  allSlots: availabilityResponse.data,
-                  lastChecked: new Date(),
-                  priceFromCEA,
-                  message: selectedDateAvailable 
-                    ? `${selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0)} tickets available on ${dateFrom}` 
-                    : `No tickets available on ${dateFrom}`,
-                  meta: availabilityResponse.meta
-                };
-                
-                console.log(`🎫 Ticket ${ticket.id}: ${selectedDateAvailable ? '✅ Available' : '❌ Not Available'} on ${dateFrom}`);
+              if (availabilityResponse.success && Array.isArray(availabilityResponse.data)) {
+                if (availabilityResponse.data.length === 0) {
+                  // Empty array = no event-based slot schedule (date-only tickets, open schedule).
+                  // This is NOT "unavailable" — customer can pick any date freely.
+                  newAvailabilityStatus[cartKey] = {
+                    status: 'available',
+                    hasAvailability: true,
+                    openSchedule: true,
+                    lastChecked: new Date(),
+                    message: 'Pick any date — no slot restrictions',
+                  };
+                  console.log(`🎫 Ticket ${ticket.id}: ✅ Open schedule (no slot restrictions)`);
+                } else {
+                  // Has slots — check date-specific availability
+                  const availableSlots = availabilityResponse.data.filter(slot => slot.available > 0);
+                  const totalAvailableTickets = availableSlots.reduce((sum, slot) => sum + slot.available, 0);
 
-                // For dynamic pricing products: refresh the displayed price from live CEA data
-                if ((option.isDynamicPrice || ticket.isDynamicPrice) && priceFromCEA) {
-                  try {
-                    const ceaPrice = priceFromCEA.rsp || priceFromCEA.nettPrice;
-                    if (ceaPrice) {
-                      const dynamicPricing = getTicketSellingPrice(ticket, GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE, priceFromCEA);
-                      if (dynamicPricing.sellingPrice > 0) {
-                        const converted = await convertToQAR(dynamicPricing.sellingPrice, option.currency);
-                        setConvertedPrices(prev => ({ ...prev, [`${cartKey}_selling`]: converted }));
+                  const selectedDateSlots = availabilityResponse.data.filter(slot => {
+                    const slotDate = slot.time ? slot.time.split('T')[0] : null;
+                    return slotDate === dateFrom;
+                  });
+                  const selectedDateAvailable = selectedDateSlots.some(slot => slot.available > 0);
+
+                  // Capture real-time price from CEA slot for dynamic pricing products
+                  const priceSlot = selectedDateSlots.find(s => s.available > 0) || availableSlots[0] || null;
+                  const priceFromCEA = priceSlot
+                    ? { nettPrice: priceSlot.nettPrice ?? null, rsp: priceSlot.rsp ?? null, msp: priceSlot.msp ?? null }
+                    : null;
+
+                  newAvailabilityStatus[cartKey] = {
+                    status: selectedDateAvailable ? 'available' : 'not_available',
+                    hasAvailability: availableSlots.length > 0,
+                    totalAvailableTickets,
+                    availableSlots,
+                    selectedDateSlots,
+                    allSlots: availabilityResponse.data,
+                    lastChecked: new Date(),
+                    priceFromCEA,
+                    message: selectedDateAvailable
+                      ? `${selectedDateSlots.reduce((sum, slot) => sum + slot.available, 0)} tickets available on ${dateFrom}`
+                      : `No tickets available on ${dateFrom}`,
+                    meta: availabilityResponse.meta,
+                  };
+
+                  console.log(`🎫 Ticket ${ticket.id}: ${selectedDateAvailable ? '✅ Available' : '❌ Not Available'} on ${dateFrom}`);
+
+                  // For dynamic pricing: update the displayed price from CEA data immediately
+                  if ((option.isDynamicPrice || ticket.isDynamicPrice) && priceFromCEA) {
+                    try {
+                      const ceaPrice = priceFromCEA.rsp || priceFromCEA.nettPrice;
+                      if (ceaPrice) {
+                        const pricing = getTicketSellingPrice(ticket, GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE, priceFromCEA);
+                        if (pricing.sellingPrice > 0) {
+                          const converted = await convertToQAR(pricing.sellingPrice, option.currency);
+                          setConvertedPrices(prev => ({ ...prev, [`${cartKey}_selling`]: converted }));
+                        }
                       }
+                    } catch (_) {
+                      // Non-fatal — price display falls back to "Select date for price"
                     }
-                  } catch (_) {
-                    // Non-fatal — displayed price just stays at its static value
                   }
                 }
               } else {
-                // Handle error case
-                const errorMessage = availabilityResponse.error 
-                  ? (typeof availabilityResponse.error === 'object' 
-                      ? availabilityResponse.error.message || availabilityResponse.error.code || 'Unable to check availability'
-                      : availabilityResponse.error)
-                  : 'Unable to check availability';
-                
+                // data is null or not an array — proxy unwrapping lost the inner error object.
+                // Log a real message instead of undefined.
+                const rawErr = availabilityResponse.error;
+                const errorMessage = rawErr
+                  ? (typeof rawErr === 'object' ? rawErr.message || rawErr.code || 'No events available' : rawErr)
+                  : (availabilityResponse.data === null ? 'No events available for this ticket type' : 'Unable to check availability');
+
                 newAvailabilityStatus[cartKey] = {
                   status: 'error',
                   hasAvailability: false,
                   lastChecked: new Date(),
                   message: errorMessage,
-                  error: availabilityResponse.error
+                  error: errorMessage,
                 };
-                console.error(`🎫 Error checking ticket ${ticket.id}:`, availabilityResponse.error);
+                console.log(`🎫 Ticket ${ticket.id}: ⚠️ No event data — ${errorMessage}`);
               }
             } catch (error) {
               console.error(`🎫 Exception checking ticket ${ticket.id}:`, error);
@@ -1232,118 +1339,52 @@ const ProductDetails = ({ route, navigation }) => {
       // For primary, try live environment first
       return `${baseUrl}/live-gtImage/${path}`;
     };
-    
-    
-    // Test image URL generation
-    if (product.media?.length) {
-      product.media.forEach((media, index) => {
-        const primaryUrl = generateImageUrl(media.path);
-        const fallbackUrl = generateImageUrl(media.path, true);
-        console.log(`Media ${index} - Primary URL:`, primaryUrl);
-        console.log(`Media ${index} - Fallback URL:`, fallbackUrl);
-      });
-    }
-    
-    if (product.image) {
-      const primaryUrl = generateImageUrl(product.image);
-      const fallbackUrl = generateImageUrl(product.image, true);
-      console.log('Product image - Primary URL:', primaryUrl);
-      console.log('Product image - Fallback URL:', fallbackUrl);
-    }
-    
-    // Test network connectivity for image URLs
-    const testImageUrl = async (url) => {
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        console.log(`Image URL test: ${url} - Status: ${response.status}`);
-        return response.ok;
-      } catch (error) {
-        console.log(`Image URL test failed: ${url} - Error:`, error.message);
-        return false;
-      }
-    };
-    
-    // Test a few image URLs if they exist
-    if (product.media?.length > 0) {
-      const testUrl = generateImageUrl(product.media[0].path);
-      if (testUrl) {
-        testImageUrl(testUrl);
-      }
-    } else if (product.image) {
-      const testUrl = generateImageUrl(product.image);
-      if (testUrl) {
-        testImageUrl(testUrl);
-      }
-    }
 
 
-    const banner = product.media?.length ? (
-      product.media?.map((media, index) => {
-        // Use SmartImage as fallback if regular Image failed
-        if (failedImages[media.path]) {
+    const isMediaArray = !!product.media?.length;
+    const mediaItems = isMediaArray
+      ? product.media
+      : product.image
+      ? [{ path: product.image }]
+      : [];
+
+    const renderBannerItem = ({item: media, index}) => {
+      // Use SmartImage as fallback if regular Image failed
+      if (failedImages[media.path]) {
         return (
-            <TouchableOpacity onPress={() => setIsFullImage(true)} key={`${index}-smartimage`}>
-              <SmartImage
-                imagePath={media.path}
-                style={styles.swiperImg}
-                placeholderText="No Image"
-                onLoad={() => console.log('SmartImage loaded successfully:', media.path)}
-                onError={() => console.log('SmartImage failed to load:', media.path)}
-              />
-            </TouchableOpacity>
-          );
-        }
-        
-        const imageUrl = generateImageUrl(media.path);
-        return (
-          <TouchableOpacity onPress={() => setIsFullImage(true)} key={`${index}-primary`}>
-            <Image
+          <TouchableOpacity onPress={() => setIsFullImage(true)} key={`${index}-smartimage`}>
+            <SmartImage
+              imagePath={media.path}
               style={styles.swiperImg}
-              source={{ uri: imageUrl }}
-              resizeMode="stretch"
-              onError={(error) => {
-                console.log('Media image failed to load:', media.path, error);
-                if (!failedImages[media.path]) {
-                  setFailedImages(prev => ({ ...prev, [media.path]: true }));
-                }
-              }}
-              onLoad={() => {
-                console.log('Media image loaded successfully:', media.path);
-              }}
+              placeholderText="No Image"
+              onLoad={() => console.log('SmartImage loaded successfully:', media.path)}
+              onError={() => console.log('SmartImage failed to load:', media.path)}
             />
           </TouchableOpacity>
         );
-      })
-    ) : product.image ? (
-      // Use SmartImage as fallback if regular Image failed
-      failedImages[product.image] ? (
-        <TouchableOpacity onPress={() => setIsFullImage(true)}>
-          <SmartImage
-            imagePath={product.image}
+      }
+
+      const imageUrl = generateImageUrl(media.path);
+
+      return (
+        <TouchableOpacity onPress={() => setIsFullImage(true)} key={`${index}-primary`}>
+          <Image
             style={styles.swiperImg}
-            placeholderText="No Image"
-            onLoad={() => console.log('SmartImage loaded successfully:', product.image)}
-            onError={() => console.log('SmartImage failed to load:', product.image)}
+            source={{ uri: imageUrl }}
+            contentFit={isMediaArray ? "fill" : undefined}
+            onError={(error) => {
+              console.log('Media image failed to load:', media.path, error);
+              if (!failedImages[media.path]) {
+                setFailedImages(prev => ({ ...prev, [media.path]: true }));
+              }
+            }}
+            onLoad={() => {
+              console.log('Media image loaded successfully:', media.path);
+            }}
           />
         </TouchableOpacity>
-      ) : (
-      <TouchableOpacity onPress={() => setIsFullImage(true)}>
-        <Image
-          style={styles.swiperImg}
-            source={{ uri: generateImageUrl(product.image) }}
-          onError={(error) => {
-              console.log('Image failed to load:', product.image, error);
-            if (!failedImages[product.image]) {
-              setFailedImages(prev => ({ ...prev, [product.image]: true }));
-            }
-          }}
-            onLoad={() => {
-              console.log('Image loaded successfully:', product.image);
-            }}
-        />
-      </TouchableOpacity>
-      )
-    ) : null;
+      );
+    };
 
     const imageViewerImages = product?.media?.length
       ? product?.media.map((media) => ({
@@ -1362,15 +1403,30 @@ const ProductDetails = ({ route, navigation }) => {
         {/* Product Image */}
         <View style={styles.imageSection}>
           {(product.media?.length || product.image) ? (
-            <Swiper
-              autoplay
-              style={styles.swiper}
-              dot={<View style={styles.dot} />}
-              activeDot={<View style={[styles.dot, { backgroundColor: isDark ? colors.green : colors.darkBlue }]} />}
-              removeClippedSubviews={false}
-            >
-              {banner}
-            </Swiper>
+            <View style={styles.swiper}>
+              <Carousel
+                width={SCREEN_WIDTH - 40}
+                height={232}
+                data={mediaItems}
+                loop={mediaItems.length > 1}
+                autoPlay
+                autoPlayInterval={2500}
+                onSnapToItem={setActiveMediaIndex}
+                renderItem={renderBannerItem}
+              />
+
+              <View style={styles.paginationRow} pointerEvents="none">
+                {mediaItems.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.dot,
+                      index === activeMediaIndex && { backgroundColor: isDark ? colors.green : colors.darkBlue },
+                    ]}
+                  />
+                ))}
+              </View>
+            </View>
           ) : (
             <View style={styles.placeholderImage}>
               <TypographyText
@@ -1496,7 +1552,7 @@ const ProductDetails = ({ route, navigation }) => {
                 <Image
                   source={{ uri: source.uri }}
                   style={[styles.fullImage, style]}
-                  resizeMode="contain"
+                  contentFit="contain"
                 />
               </View>
             )}
@@ -1732,7 +1788,7 @@ const ProductDetails = ({ route, navigation }) => {
                   <TypographyText
                     title={convertedPrices[`${option.id}_${ticket.id}_selling`] || (() => {
                       if (option.isDynamicPrice || ticket.isDynamicPrice) {
-                        return t("GlobalTix.productDetails.ui.dynamicPrice");
+                        return t("GlobalTix.productDetails.ui.dynamicPrice") || "Dynamic Price (Select Date)";
                       }
                       // Fallback: calculate selling price on the fly
                       const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
@@ -2049,7 +2105,7 @@ const ProductDetails = ({ route, navigation }) => {
     };
 
     return (
-      <ScrollView style={styles.ticketsContainer} showsVerticalScrollIndicator={false}>
+      <View style={styles.ticketsContainer}>
         {/* Date Selection Display */}
         {/* {selectedDate ? (
           <View style={styles.dateSelectionContainer}>
@@ -2129,7 +2185,7 @@ const ProductDetails = ({ route, navigation }) => {
             </View>
           </View>
         ))}
-      </ScrollView>
+      </View>
     );
   };
 
@@ -2319,7 +2375,7 @@ const ProductDetails = ({ route, navigation }) => {
             additionalBtnsProps={{
               cart: {
                 onPress: () => {
-                  navigation.navigate('GlobalTixCart');
+                  navigation.navigate('GlobalTixCartScreen');
                 }
               }
             }}
@@ -2350,7 +2406,7 @@ const ProductDetails = ({ route, navigation }) => {
             additionalBtnsProps={{
               cart: {
                 onPress: () => {
-                  navigation.navigate('GlobalTixCart');
+                  navigation.navigate('GlobalTixCartScreen');
                 }
               }
             }}
@@ -2373,7 +2429,7 @@ const ProductDetails = ({ route, navigation }) => {
             additionalBtnsProps={{
               cart: {
                 onPress: () => {
-                  navigation.navigate('GlobalTixCart');
+                  navigation.navigate('GlobalTixCartScreen');
                 }
               }
             }}
@@ -2404,7 +2460,7 @@ const ProductDetails = ({ route, navigation }) => {
             additionalBtnsProps={{
               cart: {
                 onPress: () => {
-                  navigation.navigate('GlobalTixCart');
+                  navigation.navigate('GlobalTixCartScreen');
                 }
               }
             }}
@@ -2457,10 +2513,74 @@ const ProductDetails = ({ route, navigation }) => {
         minimumDate={new Date()}
       />
       
-      {/* GlobalTix Cart 
-      <GlobalTixCart onPress={() => {
-        navigation.navigate('GlobalTixCart');
-      }} />*/}
+      {/* Timeslot Picker Modal */}
+      <Modal
+        visible={isTimeslotModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          setIsTimeslotModalVisible(false);
+          setCurrentTimeslotAction(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? colors.navyBlue : colors.white }]}>
+            <View style={styles.modalHeader}>
+              <TypographyText
+                title={t("GlobalTix.productDetails.selectTimeslot", "Select Timeslot")}
+                size={18}
+                font={BALOO_SEMIBOLD}
+                textColor={isDark ? colors.white : colors.darkBlue}
+              />
+              <TouchableOpacity onPress={() => {
+                setIsTimeslotModalVisible(false);
+                setCurrentTimeslotAction(null);
+              }}>
+                <TypographyText title="✕" size={20} textColor={isDark ? colors.lightGrey : colors.grey} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.timeslotList}>
+              {availableTimeslots.map((slot, index) => {
+                const timeString = slot.time && slot.time.includes('T') 
+                  ? new Date(slot.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : slot.time || 'Select';
+                  
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.timeslotOption,
+                      {
+                        backgroundColor: isDark ? colors.darkGrey : colors.lightGrey,
+                        borderColor: isDark ? colors.grey : colors.lightGrey,
+                        opacity: slot.available > 0 ? 1 : 0.5
+                      }
+                    ]}
+                    disabled={slot.available <= 0}
+                    onPress={() => handleTimeslotSelect(slot)}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                      <TypographyText
+                        title={timeString}
+                        size={16}
+                        font={BALOO_SEMIBOLD}
+                        textColor={isDark ? colors.white : colors.darkBlue}
+                      />
+                      <TypographyText
+                        title={`${slot.available} available`}
+                        size={14}
+                        textColor={isDark ? colors.lightGrey : colors.grey}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+      
     </MainLayout>
   );
 };
@@ -2484,6 +2604,16 @@ const styles = StyleSheet.create({
   },
   swiper: {
     height: 232,
+    position: 'relative',
+  },
+  paginationRow: {
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   swiperImg: {
     width: '100%',
@@ -2675,7 +2805,6 @@ const styles = StyleSheet.create({
   fullImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
     marginTop: (SCREEN_HEIGHT / 100) * 22,
   },
   imageViewerHeader: {
@@ -2735,6 +2864,38 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 6,
     marginTop: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  timeslotList: {
+    maxHeight: 400,
+  },
+  timeslotOption: {
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  headerContainer: {
+    paddingHorizontal: 20,
   },
   ticketsContainer: {
     paddingHorizontal: 20,

@@ -6,8 +6,8 @@ import React, {
 
 import MainLayout from '../../../components/MainLayout';
 import { SCREEN_HEIGHT } from '../../../styles/mainStyles';
-import { ActivityIndicator, FlatList, View } from 'react-native';
-import { connect, useDispatch } from 'react-redux';
+import { FlatList, View } from 'react-native';
+import { connect } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../components/ThemeProvider';
 import { colors } from '../../../components/colors';
@@ -19,14 +19,7 @@ import { StyleSheet } from 'react-native';
 import { BALOO_MEDIUM } from '../../../redux/types';
 import { TypographyText } from '../../../components/Typography';
 import GiftCard from './GiftCard';
-import { useFocusEffect } from '@react-navigation/native';
-import store from '../../../redux/store';
-import { checkCardmolaPaymentById } from '../../../api/giftCard';
-import { showMessage } from 'react-native-flash-message';
-import { setPaymentDataGlobal } from '../../../redux/giftCards/giftcards-actions';
 import CateogiresSelect from './CategoriesSelect';
-import CountriesSelect from './CountriesSelect';
-import {isRTL} from '../../../../utils';
 import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
 
 const DEFAULT_COUNTRY = 'QA';
@@ -40,54 +33,25 @@ const LoyaltyGiftCardsList = ({
   const { i18n, t } = useTranslation();
   const { isDark } = useTheme();
 
-  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
+  const [selectedCountry, setSelectedCountry] = useState(undefined);
   const [categoryId, setCategoryId] =
     useState(undefined);
-  const dispatch = useDispatch();
-
+  // The mandatory first pick is only ever pending once. Clearing the
+  // filters later sets selectedCountry back to undefined too, but that
+  // must still fetch the unfiltered list rather than being mistaken for
+  // "the gate hasn't been satisfied yet".
+  const [hasAppliedFiltersOnce, setHasAppliedFiltersOnce] = useState(false);
   const title = t('LoyaltyGiftCards.title');
-  const isRtl = isRTL();
-
-  useFocusEffect(
-    useCallback(() => {
-      const { paymentDataGlobal } = store.getState().giftcardsReducer;
-
-      async function checkPaymentStatus() {
-        if (paymentDataGlobal) {
-          try {
-            const data = await checkCardmolaPaymentById(
-              paymentDataGlobal.reference_id,
-            );
-
-            if (data.payment_status === 'Paid') {
-              showMessage({
-                message: t('Vouchers.giftCardPaymentSuccess'),
-                type: 'success',
-              });
-            } else {
-              showMessage({
-                message: t('Vouchers.giftCardPaymentFailure'),
-                type: 'danger',
-              });
-            }
-
-            dispatch(setPaymentDataGlobal(null));
-          } catch (err) {
-            console.log(err.message, 'dsadaerr');
-          }
-        }
-      }
-
-      checkPaymentStatus();
-    }, []),
-  );
 
 
   useEffect(() => {
-  
-      getGiftCards(categoryId, selectedCountry);
-    
-  }, [selectedCountry, categoryId]);
+    if (!hasAppliedFiltersOnce) {
+      return;
+    }
+
+    getGiftCards(categoryId, selectedCountry);
+
+  }, [selectedCountry, categoryId, hasAppliedFiltersOnce]);
 
 
   const handleGiftCardPress = giftCard => {
@@ -120,61 +84,77 @@ const LoyaltyGiftCardsList = ({
   );
 
 
-  const handleCounntryPress = country => {
-    setSelectedCountry(country || DEFAULT_COUNTRY);
+  const handleFiltersSubmit = ({ categoryId, country }) => {
+    // The very first pick is mandatory -- dismissing or clearing without
+    // choosing a country still falls back to a default. Once that gate is
+    // satisfied, clearing is allowed to go all the way back to "no country
+    // filter".
+    const nextCountry = hasAppliedFiltersOnce ? country : (country || DEFAULT_COUNTRY);
+
+    setCategoryId(categoryId);
+    setSelectedCountry(nextCountry);
+    setHasAppliedFiltersOnce(true);
   };
 
-
-  const handleUGotGiftCategoryPress = (categoryId) => {
-     if(categoryId){
-      setCategoryId(categoryId);
-     }
+  const handleFiltersDismiss = () => {
+    if (!hasAppliedFiltersOnce) {
+      handleFiltersSubmit({ categoryId: undefined, country: undefined });
+    }
   };
-  
+
 
   return (
     <MainLayout
       outsideScroll={true}
-      headerChildren={<Header label={title} style={styles.header} btns={['back']}/>}
+      headerChildren={
+        <Header
+          label={title}
+          style={styles.header}
+          btns={['back']}
+          rightChildren={
+            <CateogiresSelect
+              onSubmit={handleFiltersSubmit}
+              autoOpen={!hasAppliedFiltersOnce}
+              onDismiss={handleFiltersDismiss}
+              defaultCountry={selectedCountry}
+            />
+          }
+        />
+      }
       headerHeight={50}
       contentStyle={{
         height: SCREEN_HEIGHT - 80,
       }}
       style={{ backgroundColor: isDark ? colors.darkBlue : colors.white }}
     >
-        <View  style={styles.listWrapper}>
-          <FlatList
-            ListHeaderComponent={
-            <View
-              style={[styles.filters, {flexDirection: isRtl ? 'row-reverse' : 'row'}]}
-            >
-              <CountriesSelect onSubmit={handleCounntryPress}/>
-
-              <CateogiresSelect onSubmit={handleUGotGiftCategoryPress} />
+      <View style={styles.listWrapper}>
+        <FlatList
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          data={giftCardsLoading ? [] : giftCards}
+          keyExtractor={(item) => String(item.id)}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          removeClippedSubviews={true}
+          style={styles.list}
+          ListEmptyComponent={
+            <View style={styles.loaderWrapper}>
+              {!hasAppliedFiltersOnce ? null : !giftCardsLoading ? (
+                <TypographyText
+                  title={t('Vouchers.noCards')}
+                  textColor={isDark ? colors.white : colors.darkBlue}
+                  size={18}
+                  font={BALOO_MEDIUM}
+                />
+              ) : (
+                <FullScreenLoader />
+              )}
             </View>
-            }
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-            data={giftCardsLoading ? [] : giftCards}
-            maxToRenderPerBatch={5}
-            style={styles.list}
-            ListEmptyComponent={
-              <View style={styles.loaderWrapper}>
-                {!giftCardsLoading ? (
-                  <TypographyText
-                    title={t('Vouchers.noCards')}
-                    textColor={isDark ? colors.white : colors.darkBlue}
-                    size={18}
-                    font={BALOO_MEDIUM}
-                  />
-                ) : (
-                  <FullScreenLoader />
-                )}
-              </View>
-            }
-            renderItem={renderGifts}
-          />
-        </View>
+          }
+          renderItem={renderGifts}
+        />
+      </View>
 
 
     </MainLayout>
@@ -205,14 +185,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   filtersWrapper: {
-     width: '100%',
-  },
-  filters: {
-    flexDirection: 'row',
-    marginBottom: 25
+    width: '100%',
   },
   list: {
-     marginTop: 20
+    marginTop: 20
   },
   banners: {
     alignSelf: 'center'

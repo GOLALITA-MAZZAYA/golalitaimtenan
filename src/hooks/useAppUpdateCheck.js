@@ -1,96 +1,65 @@
 import { useEffect, useState } from 'react';
-import { fetchLatestAppVersion } from '../api/appVersions';
+import { useDispatch } from 'react-redux';
+
+import { getVersion } from '../redux/auth/auth-thunks';
 import { VERSION } from '../redux/types';
 
-const parseVersionParts = version =>
-  String(version || '')
-    .split('.')
-    .map(part => Number.parseInt(part, 10) || 0);
-
-/**
- * Compares store version vs installed VERSION and returns update mode:
- * - 'hard' for major/minor bumps (or large patch gaps)
- * - 'easy' for small patch bumps (< 5)
- * - null when up to date / unavailable
- */
-export const getUpdateModalType = (latestVersion, currentVersion = VERSION) => {
-  if (!latestVersion || !currentVersion) {
-    return null;
-  }
-
-  const [latestMajor, latestMinor, latestPatch] =
-    parseVersionParts(latestVersion);
-  const [currentMajor, currentMinor, currentPatch] =
-    parseVersionParts(currentVersion);
-
-  if (latestMajor > currentMajor) {
-    return 'hard';
-  }
-
-  if (latestMajor === currentMajor) {
-    if (latestMinor > currentMinor) {
-      return 'hard';
-    }
-
-    if (latestMinor === currentMinor && latestPatch > currentPatch) {
-      return latestPatch - currentPatch < 5 ? 'easy' : 'hard';
-    }
-  }
-
-  return null;
-};
-
-/**
- * Loads the latest store version from the public app-versions API and
- * decides whether UpdateModal should show.
- * Mount UpdateModal only when the app is ready (`{isReady && <UpdateModal />}`)
- * so this fetch does not run too early.
- */
-export const useAppUpdateCheck = () => {
+// Fetches the latest published version once the app is ready, compares it
+// against the running build, and decides whether to show the update modal
+// ('easy' for a small patch bump, 'hard' otherwise).
+export const useAppUpdateCheck = ({ isReady, version }) => {
+  const dispatch = useDispatch();
   const [updateModal, setUpdateModal] = useState(null);
-  const [latestVersion, setLatestVersion] = useState(null);
-  const [storePlatform, setStorePlatform] = useState(null);
 
   useEffect(() => {
-    let mounted = true;
+    if (isReady) {
+      dispatch(getVersion());
+    }
+  }, [isReady, dispatch]);
 
-    (async () => {
-      try {
-        const info = await fetchLatestAppVersion();
-        if (!mounted || !info?.version) {
-          return;
+  useEffect(() => {
+    if (!version || !isReady || typeof version !== 'string' || !/^\d+(\.\d+)+$/.test(version.trim())) return;
+
+    // Split versions into arrays of numbers [major, minor, patch]
+    const latestParts = version.trim().split('.').map(Number);
+    const currentParts = VERSION.split('.').map(Number);
+
+    const latestMajor = latestParts[0] || 0;
+    const latestMinor = latestParts[1] || 0;
+    const latestPatch = latestParts[2] || 0;
+
+    const currentMajor = currentParts[0] || 0;
+    const currentMinor = currentParts[1] || 0;
+    const currentPatch = currentParts[2] || 0;
+
+    let isNewer = false;
+    let updateType = null; // 'hard' | 'easy'
+
+    if (latestMajor > currentMajor) {
+      // Major version change (e.g. 2.0.0 vs 1.0.9)
+      isNewer = true;
+      updateType = 'hard';
+    } else if (latestMajor === currentMajor) {
+      if (latestMinor > currentMinor) {
+        // Minor version change (e.g. 1.1.0 vs 1.0.9)
+        isNewer = true;
+        updateType = 'hard';
+      } else if (latestMinor === currentMinor) {
+        if (latestPatch > currentPatch) {
+          // Patch version change (e.g. 1.0.14 vs 1.0.9)
+          isNewer = true;
+          // Easy update if patch difference is less than 5, else hard update
+          updateType = latestPatch - currentPatch < 5 ? 'easy' : 'hard';
         }
-
-        setLatestVersion(info.version);
-        setStorePlatform(info.platform || null);
-
-        const updateType = getUpdateModalType(info.version, VERSION);
-        if (updateType) {
-          setUpdateModal(updateType);
-        }
-
-        console.log(
-          'latestVersion',
-          info.version,
-          info.platform,
-          VERSION === info.version,
-        );
-      } catch (error) {
-        console.log('useAppUpdateCheck error:', error);
       }
-    })();
+    }
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    if (isNewer && updateType) {
+      setUpdateModal(updateType);
+    }
 
-  return {
-    updateModal,
-    setUpdateModal,
-    latestVersion,
-    storePlatform,
-  };
+    console.log('latestVersion', version, VERSION === version);
+  }, [version, isReady]);
+
+  return { updateModal, setUpdateModal };
 };
-
-export default useAppUpdateCheck;

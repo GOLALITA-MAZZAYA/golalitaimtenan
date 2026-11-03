@@ -15,11 +15,11 @@ return [
         icon: isDark ? require('../../../../assets/loyaltyPoints/categories/transactions.png'): require('../../../../assets/loyaltyPoints/categories/transactions_light.png'),
         onPress: () => navigate('loyaltyPoints-transactions')       
     },
-    {
-        title: i18next.t('LoyaltyMain.shop'),
-        description: i18next.t('LoyaltyMain.shop'),
-        icon: isDark ? require('../../../../assets/loyaltyPoints/categories/shops.png'): require('../../../../assets/loyaltyPoints/categories/shops_light.png'),
-        onPress: () => navigate('loyaltyPoints-transactions') 
-    },
+    // {
+    //     title: i18next.t('LoyaltyMain.shop'),
+    //     description: i18next.t('LoyaltyMain.shop'),
+    //     icon: isDark ? require('../../../../assets/loyaltyPoints/categories/shops.png'): require('../../../../assets/loyaltyPoints/categories/shops_light.png'),
+    //     onPress: () => navigate('loyaltyPoints-transactions') 
+    // },
 ]
 }

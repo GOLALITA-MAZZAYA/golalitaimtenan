@@ -29,7 +29,6 @@ import BackBtn from "../../components/Btns/BackBtn";
 import { updateProfile, validate_code } from "../../redux/auth/auth-thunks";
 import { setProfileLoading } from "../../redux/auth/auth-actions";
 import Header from "../../components/Header";
-import { ORG_ID } from "../../constants";
 
 const CodeConfirmation = ({
   route,
@@ -75,17 +74,18 @@ const CodeConfirmation = ({
       }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAwareScrollView>
+        <Header btns={["back"]} />
+
+        <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <TouchableOpacity
             activeOpacity={1}
             onPress={Keyboard.dismiss}
-            style={{ flex: 1 }}
+            style={{ flex: 1, justifyContent: "center" }}
           >
-            <Header btns={["back"]} />
             <View
               style={[
                 mainStyles.centeredRow,
-                { marginTop: getPixel(10), flexDirection: "column" },
+                { flexDirection: "column" },
               ]}
             >
               <Image
@@ -110,19 +110,23 @@ const CodeConfirmation = ({
                 }}
                 onSubmit={async (values, { setFieldError }) => {
                   console.log("valuesvaluesvalues:", values);
-                  const DEFAULT_ORGANIZATION_CODE = ORG_ID.toString();
                   const RANDOM_CODE = await AsyncStorage.getItem("randomCode");
                   try {
                     let res;
                     res = values.code == RANDOM_CODE;
                     console.log("ressssss verifyRegisterCode:", res);
+
                     if (res && params.params.isProfile) {
                       updateProfile(params.updatedValues, "isProfile");
+
                     } else if (res) {
+
                       navigation.navigate("Register", {
                         email: params.params.email,
+                        code: params.params.code,
                       });
                     } else {
+                      
                       setFieldError("code", t("Login.wrongCode"));
                     }
                   } catch (e) {

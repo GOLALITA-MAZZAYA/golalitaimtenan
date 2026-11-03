@@ -13,15 +13,14 @@ import OffersTab from "./components/OffersTab";
 import InfoTab from "./components/InfoTab";
 import { Tabs } from "react-native-collapsible-tab-view";
 import TabHeader from "./components/TabHeader";
-import GalleryTab from "./components/GalleryTab";
+import GalleryTab from "../../PremiumPartner/MerchantInfo/GalleryTab";
 import { getCacheBustedUri } from "../../../../utils";
-import { getAllOffersByMeerchantId, getOffers } from "../../../api/merchants";
-import { getOffersForNestedItemsCard } from "../helpres";
+import { getAllOffersByMeerchantId } from "../../../api/merchants";
 import { useTheme } from "../../../components/ThemeProvider";
 import { colors } from "../../../components/colors";
 
 const OfferInfo = ({ route }) => {
-  const { productId, title, bookNow = "fasle", merchant = {} } = route.params;
+  const { productId, title, bookNow = "false", merchant = {} } = route.params;
   const { offer, loading, error } = useOffer(productId);
   const { isDark } = useTheme();
   const screenBg = isDark ? colors.darkBlue : colors.white;
@@ -82,98 +81,23 @@ const OfferInfo = ({ route }) => {
       );
     };
 
-    const fetchOther = async () => {
-      try {
-        const inline = [
-          ...(Array.isArray(merchant?.offer_products)
-            ? merchant.offer_products
-            : []),
-          ...(Array.isArray(merchant?.products) ? merchant.products : []),
-        ];
-        if (inline.length > 0) {
-          const filtered = filterOffers(
-            inline.map((item) => ({
-              ...item,
-              uri: item.image_url || item.uri,
-              value: item.list_price ?? item.value,
-            }))
-          );
-          if (!isCancelled) {
-            setOtherOffers(filtered);
-            setHasOtherOffers(filtered.length > 0);
-            setLoadingOtherOffers(false);
-          }
-          return;
-        }
-
-        try {
-          const res = await getAllOffersByMeerchantId(mId);
-          const filtered = filterOffers(res);
-          if (filtered.length > 0) {
-            if (!isCancelled) {
-              setOtherOffers(filtered);
-              setHasOtherOffers(true);
-              setLoadingOtherOffers(false);
-            }
-            return;
-          }
-        } catch (e) {
-          console.log("[OfferInfo] getAllOffersByMeerchantId error:", e);
-        }
-
-        try {
-          const res2 = await getOffers(mId);
-          if (Array.isArray(res2) && res2.length > 0) {
-            const mapped = res2.map((item) => ({
-              ...item,
-              uri: item.image_url || item.uri,
-              value: item.list_price ?? item.value,
-            }));
-            const filtered2 = filterOffers(mapped);
-            if (!isCancelled) {
-              setOtherOffers(filtered2);
-              setHasOtherOffers(filtered2.length > 0);
-              setLoadingOtherOffers(false);
-            }
-            return;
-          }
-        } catch (e) {
-          console.log("[OfferInfo] getOffers error:", e);
-        }
-
-        if (merchant?.is_hotel || merchant?.is_business_hotel) {
-          try {
-            const hotelOffers = await getOffersForNestedItemsCard(
-              merchant,
-              "all"
-            );
-            const filtered3 = filterOffers(hotelOffers);
-            if (!isCancelled) {
-              setOtherOffers(filtered3);
-              setHasOtherOffers(filtered3.length > 0);
-              setLoadingOtherOffers(false);
-            }
-            return;
-          } catch (e) {
-            console.log("[OfferInfo] hotel offers error:", e);
-          }
-        }
-
+    // Other offers are sourced only from /user/offers/v3
+    getAllOffersByMeerchantId(mId)
+      .then((res) => {
+        if (isCancelled) return;
+        const filtered = filterOffers(res);
+        setOtherOffers(filtered);
+        setHasOtherOffers(filtered.length > 0);
+        setLoadingOtherOffers(false);
+      })
+      .catch((e) => {
+        console.log("[OfferInfo] getAllOffersByMeerchantId error:", e);
         if (!isCancelled) {
           setOtherOffers([]);
           setHasOtherOffers(false);
           setLoadingOtherOffers(false);
         }
-      } catch (err) {
-        if (!isCancelled) {
-          setOtherOffers([]);
-          setHasOtherOffers(false);
-          setLoadingOtherOffers(false);
-        }
-      }
-    };
-
-    fetchOther();
+      });
 
     return () => {
       isCancelled = true;

@@ -1,43 +1,42 @@
 import { StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import {useTheme} from "../../../../components/ThemeProvider";
-import {TypographyText} from "../../../../components/Typography";
-import {BALOO_BOLD} from "../../../../redux/types";
-import {colors} from "../../../../components/colors";
+import { TypographyText } from "../../../../components/Typography";
+import { BALOO_2 } from "../../../../redux/types";
+import { colors } from "../../../../components/colors";
 
-const PointsTotal = ({priceInPoints, availablePoints = 0, style}) => {
-  const { isDark } = useTheme();
+const PointsTotal = ({ priceInPoints, availablePoints = 0, style }) => {
   const { t } = useTranslation();
 
-  const titleColor = isDark ? colors.mainDarkMode : colors.darkBlue;
-  const textColor = isDark ? colors.white : colors.darkBlue;
-
   return (
-    <View style={style}>
-      <View style={styles.itemWrapper} >
+    <View style={[style, { backgroundColor: colors.loyaltyCardBackground, padding: 20, borderRadius: 40, borderWidth: 1, borderColor: colors.loyaltyMainBorder }]}>
+      <View style={[styles.itemWrapper, { borderBottomWidth: 1, paddingBottom: 10, borderBottomColor: colors.loyaltyTextSecondary }]} >
         <TypographyText
           title={t("Vouchers.availablePoints")}
-          textColor={titleColor}
+          textColor={colors.loyaltyTextSecondary}
           size={16}
+          font={BALOO_2}
         />
         <TypographyText
-          title={`${availablePoints} ${t("Vouchers.points")}`}
-          textColor={textColor}
+          title={`${"availablePoints"} ${t("Vouchers.points")}`}
+          textColor={colors.loyaltyTextMainTitle}
           size={16}
+          font={BALOO_2}
         />
       </View>
-      <View style={styles.itemWrapper} >
+      <View style={[styles.itemWrapper, { marginTop: 10 }]} >
         <TypographyText
           title={t("Vouchers.orderTotal")}
-          textColor={titleColor}
+          textColor={colors.loyaltyTextMainTitle}
           size={16}
-          font={BALOO_BOLD}
+          font={BALOO_2}
+          style={styles.totalText}
         />
         <TypographyText
           title={`${priceInPoints} ${t("Vouchers.points")}`}
-          textColor={textColor}
+          textColor={colors.loyaltyTextMainTitle}
           size={16}
-          font={BALOO_BOLD}
+          font={BALOO_2}
+          style={styles.totalText}
         />
       </View>
     </View>
@@ -55,6 +54,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 2,
   },
+  totalText: {
+    fontWeight: '700'
+  }
 });
 
 export default PointsTotal;

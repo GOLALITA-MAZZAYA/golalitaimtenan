@@ -1,4 +1,5 @@
-import React, {useEffect,
+import React, {
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -11,103 +12,83 @@ import { colors } from '../../../components/colors';
 import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
 import { useTheme } from '../../../components/ThemeProvider';
 import { connect } from 'react-redux';
-import { useTranslation } from 'react-i18next';
 import { Tabs } from 'react-native-collapsible-tab-view';
 import ViewShot from 'react-native-view-shot';
-import { getContracts, getAllOffersByMeerchantId } from '../../../api/merchants';
-import useMerchantFeedbackSummary from '../../../hooks/useMerchantFeedbackSummary';
 import InfoTab from './InfoTab';
-import MapTab from './MapTab';
-import OfferTab from './OffersTab';
 import RoomRatesTab from './RoomRatesTab';
+import OfferTab from './OfferTab';
 import TabHeader from './TabHeader';
 import Share from 'react-native-share';
-import { setMerchantDetails } from '../../../redux/merchant/merchant-actions';
 import HeaderTabs from './TabHeader/HeaderTabs';
-import store from '../../../redux/store';
+import { isRTL } from '../../../../utils';
+import { getAllOffersByMeerchantId } from '../../../api/merchants';
 
 export const CONSTANTS = {
   INFO: 'INFO',
   LOCATION: 'LOCATION',
   OFFERS: 'OFFERS',
-  ROOM_RATES: "ROOM_RATES"
+  ROOM_RATES: "ROOM_RATES",
 };
 
-const getMerchantId = merchant =>
-  merchant?.id ?? merchant?.merchant_id ?? merchant?.partner_id?.[0] ?? null;
 
 const MerchantInfo = ({
-  route,
   merchantDetails,
   title,
   loading,
-  setMerchantDetails
+  route
 }) => {
-  const [isFullImage, setIsFullImage] = useState(false);
-  const [activeTab, setActiveTab] = useState(CONSTANTS.INFO);
-  const { i18n, t } = useTranslation();
+  const isHotel = merchantDetails?.is_hotel;
+
+  const [activeTab, setActiveTab] = useState(
+    route.params?.initialTab || (isHotel ? CONSTANTS.ROOM_RATES : CONSTANTS.INFO)
+  );
   const { isDark } = useTheme();
   const viewRef = useRef();
-  const params = route?.params;
-
-  const merchantId = getMerchantId(merchantDetails);
-  const { summary, status: summaryStatus } =
-    useMerchantFeedbackSummary(merchantId);
-  const feedbackCount = Number(summary?.total_feedback_count) || 0;
-  const bannerRating =
-    summaryStatus === 'error'
-      ? merchantDetails?.rating
-      : feedbackCount > 0
-        ? (Number(summary.average_rating) || 0).toFixed(1)
-        : null;
+  const isArabic = isRTL();
+  const restaurantId = route.params?.restaurantId;
 
   const initialInlineOffers = [
-    ...(Array.isArray(merchantDetails?.offer_products)
-      ? merchantDetails.offer_products
-      : []),
-    ...(Array.isArray(merchantDetails?.products)
-      ? merchantDetails.products
-      : []),
+    ...(Array.isArray(merchantDetails?.offer_products) ? merchantDetails.offer_products : []),
+    ...(Array.isArray(merchantDetails?.products) ? merchantDetails.products : []),
   ];
 
   const initialOfferCount = Number(
     merchantDetails?.offer_count ??
-      merchantDetails?.offers_count ??
-      params?.offer_count ??
-      initialInlineOffers.length ??
-      0,
+    merchantDetails?.offers_count ??
+    route.params?.offer_count ??
+    initialInlineOffers.length ??
+    0
   );
 
   // Offers list is sourced only from /user/offers/v3
-  const [merchantOffers, setMerchantOffers] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [hasOffers, setHasOffers] = useState(
     Boolean(
       initialInlineOffers.length > 0 ||
-        initialOfferCount > 0 ||
-        merchantDetails?.x_have_offers,
-    ),
+      initialOfferCount > 0 ||
+      merchantDetails?.x_have_offers
+    )
   );
 
   useEffect(() => {
     let isCancelled = false;
     const mId = merchantDetails?.merchant_id || merchantDetails?.id;
-    const isHotelMerchant =
-      merchantDetails?.is_hotel;
 
-    if (!mId || isHotelMerchant) {
+    if (!mId || isHotel) {
       return;
     }
 
     getAllOffersByMeerchantId(mId)
-      .then(res => {
-        if (isCancelled) return;
-        const list = Array.isArray(res) ? res : [];
-        setMerchantOffers(list);
-        setHasOffers(list.length > 0);
+      .then((res) => {
+        if (!isCancelled) {
+          const list = Array.isArray(res) ? res : [];
+          setOffers(list);
+          setHasOffers(list.length > 0);
+        }
       })
       .catch(() => {
         if (!isCancelled) {
-          setMerchantOffers([]);
+          setOffers([]);
           setHasOffers(false);
         }
       });
@@ -115,38 +96,7 @@ const MerchantInfo = ({
     return () => {
       isCancelled = true;
     };
-  }, [merchantDetails?.merchant_id, merchantDetails?.id]);
-  const mountedMerchantIdRef = useRef(getMerchantId(merchantDetails));
-
-  useEffect(() => {
-    const id = getMerchantId(merchantDetails);
-    if (id != null) {
-      mountedMerchantIdRef.current = id;
-    }
-  }, [merchantDetails]);
-
-  // Clear shared Redux details only when this screen's merchant is still the
-  // one in the store. Avoid wiping a newly loaded merchant when push/replace
-  // remounts MerchantInfo (Home → reopen, notification while merchant open).
-  useEffect(() => {
-    return () => {
-      const state = store.getState().merchantReducer;
-      if (state.merchantDetailsLoading) {
-        return;
-      }
-
-      const currentId = getMerchantId(state.merchantDetails);
-      const mountedId = mountedMerchantIdRef.current;
-
-      if (currentId == null || currentId === mountedId) {
-        setMerchantDetails(null);
-      }
-    };
-  }, [setMerchantDetails]);
-
-  useEffect(() => {
-    getContracts();
-  }, []);
+  }, [merchantDetails?.merchant_id, merchantDetails?.id, isHotel]);
 
   const handleSharePress = async () => {
     try {
@@ -164,70 +114,60 @@ const MerchantInfo = ({
     }
   };
 
-
-
   if (loading || !merchantDetails) return <FullScreenLoader />;
-
-  const isHotel = merchantDetails.is_hotel;
 
   return (
     <View
       style={{
         flex: 1,
-        backgroundColor: isDark ? colors.darkBlue : colors.white,
+        backgroundColor: isDark ? colors.darkModeBackground : colors.white,
       }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <ViewShot ref={viewRef} style={[styles.shot, { backgroundColor: isDark ? colors.darkBlue : colors.white }]}>
-          <View
-            style={{ flex: 1, backgroundColor: isDark ? colors.darkBlue : colors.white }}
-          >
+        <ViewShot ref={viewRef} style={styles.shot}>
+          <View style={{ flex: 1 }}>
             <Tabs.Container
               renderHeader={() => (
                 <TabHeader
-                  setIsModalVisible={setIsFullImage}
-                  isModalVisible={isFullImage}
                   merchantDetails={merchantDetails}
                   onShare={handleSharePress}
-                  ribbonText={i18n.language === 'ar'
-                    ? merchantDetails?.ribbon_text?.x_ribbon_text_arabic
-                    : merchantDetails?.ribbon_text?.ribbon_text}
-                  title={title
-                    ? title
-                    : params?.isOrganization
-                      ? t('PremiumPartner.organization')
-                      : merchantDetails?.category}
-                  bannerRating={bannerRating}
+                  ribbonText={
+                    isArabic
+                      ? merchantDetails?.ribbon_text?.x_ribbon_text_arabic
+                      : merchantDetails?.ribbon_text?.ribbon_text
+                  }
+                  title={title || merchantDetails?.category}
                 />
               )}
-              renderTabBar={() => <HeaderTabs setActiveTab={setActiveTab} activeTab={activeTab} isBusinessHotel={isHotel} hasOffers={hasOffers && !isHotel} />}
+              renderTabBar={() => (
+                <HeaderTabs
+                  setActiveTab={setActiveTab}
+                  activeTab={activeTab}
+                  isBusinessHotel={isHotel}
+                  hasOffers={hasOffers}
+                />
+              )}
             >
               <Tabs.Tab name="a">
                 <Tabs.ScrollView
                   contentContainerStyle={{
                     paddingBottom: 30,
-                    paddingHorizontal: 20
+                    paddingHorizontal: 20,
                   }}
                   showsVerticalScrollIndicator={false}
                   bounces={false}
                 >
                   <>
+                    {activeTab === CONSTANTS.ROOM_RATES && isHotel && (
+                      <RoomRatesTab merchant={merchantDetails} />
+                    )}
                     {activeTab === CONSTANTS.INFO && (
                       <InfoTab merchantDetails={merchantDetails} />
                     )}
-                    {activeTab === CONSTANTS.LOCATION && (
-                      <MapTab merchantDetails={merchantDetails} />
-                    )}
-                    {activeTab === CONSTANTS.OFFERS && !isHotel && hasOffers && (
+                    {activeTab === CONSTANTS.OFFERS && hasOffers && (
                       <OfferTab
                         merchant={merchantDetails}
-                        initialOffers={merchantOffers}
-                        isHotel={isHotel}
-                      />
-                    )}
-                    {activeTab === CONSTANTS.ROOM_RATES && isHotel && (
-                      <RoomRatesTab
-                        merchant={merchantDetails}
+                        initialOffers={offers}
                       />
                     )}
                   </>
@@ -250,10 +190,9 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => ({
   merchantDetails: state.merchantReducer.merchantDetails,
-  favoriteOffers: state.merchantReducer.favoriteOffers,
   loading: state.merchantReducer.merchantDetailsLoading,
 });
 
-export default connect(mapStateToProps, { setMerchantDetails })(
+export default connect(mapStateToProps)(
   React.memo(MerchantInfo),
 );

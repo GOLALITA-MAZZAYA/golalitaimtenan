@@ -19,6 +19,8 @@ const LoayltyProductRedeem = ({route}) => {
 
         const res = await redeemLoyaltyProduct(id);
 
+        console.log(res,'redeem res')
+
         if(res.error){
           showMessage({
             message: res.error,
@@ -28,19 +30,15 @@ const LoayltyProductRedeem = ({route}) => {
           return
         }
 
-        console.log(res,'res');
+        await trackProduct(id, 'loyalty-offer');
 
-        const trackRes = await trackProduct(id, 'loyalty-offer');
+        await sendProductEmail(id, 'loyalty-offer');
 
-        console.log(trackRes,'trackRes')
+        navigate('loyaltyPoints-products-list');
 
-        const sendEmailRes = await sendProductEmail(id, 'loyalty-offer');
-
-        console.log(sendEmailRes,'sendEmailRes')
-
-        navigate('loyaltyPoints-products-redeem-success',{
-            name: title,
-            description: subTitle
+        showMessage({
+            message: `${t('LoyaltyMain.successRedemption')} ${t('LoyaltyMain.successRedemptionDescription')}`,
+            type: 'success'
         })
 
 
@@ -60,7 +58,7 @@ const LoayltyProductRedeem = ({route}) => {
       <MainLayout
         outsideScroll={true}
         headerChildren={
-          <Header label={t('LoyaltyMain.redeem')} btns={['back']} />
+          <Header btns={['back']} />
         }
         headerHeight={50}
         contentStyle={styles.contentStyle}

@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSelector } from 'react-redux';
 
+// The feedback APIs don't return the user's own review, so we remember it on
+// the device after submit to pre-fill the edit form and show "Your rating".
+// The backend upserts on submit, so a missing local copy (reinstall, other
+// device) still edits the existing review rather than duplicating it.
 const storageKey = (userId, merchantId) =>
   `merchant_review:${userId}:${merchantId}`;
 

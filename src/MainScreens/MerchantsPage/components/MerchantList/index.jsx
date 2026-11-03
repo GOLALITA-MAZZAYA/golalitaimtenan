@@ -1,15 +1,15 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import CardWithNesetedItems from "../../../../components/CardWithNestedItems";
-import { getLocalizedValue } from "../../../../../utils";
 import BranchItem from "../BranchItem";
 import OfferItem from "../OfferItem";
-import { getOffersCountLabel, getToggleBtns } from "./helpers";
+import { getToggleBtns } from "./helpers";
 import { handleMerchantCardPress } from "../../helpers";
 import useMerchantDiscount from "../../../../hooks/useMerchantDiscount";
 import useRoadDistance from "../../../../hooks/useRoadDistance";
 import {userLocationSelector} from "../../../../redux/global/global-selectors";
 import {useSelector} from "react-redux";
-import { rewriteAssetUrl } from "../../../../utils/rewriteAssetUrl";
+import ComplaintBtn from "../../../PremiumPartner/MerchantInfo/InfoTab/ComplaintBtn";
 
 const MerchantsList = ({
   merchant,
@@ -22,14 +22,7 @@ const MerchantsList = ({
   const userLocation = useSelector(userLocationSelector);
   const language = i18n.language;
 
-  const isOrganization = merchant.org_name;
-  const isBusinessHotel = merchant.is_business_hotel;
-
-  const toggleBtns = getToggleBtns(merchant, isB1G1);
-  const isOffersVisible = !isOrganization;
-  const isBranchesVisible = !isOrganization && !isBusinessHotel;
-
-  const {loading, discount} = useMerchantDiscount(merchant.merchant_id);
+  const {loading, discount} = useMerchantDiscount(merchant?.merchant_id);
   // useRoadDistance(userLat, userLong, merchantLat, merchantLong) — same
   // order as HotelsListCard / getRoadDistance API.
   const {distance, distaceLoading} = useRoadDistance(
@@ -42,16 +35,40 @@ const MerchantsList = ({
 
   if (!merchant) {
     return null;
-  }  
+  }
+
+  const isOrganization = merchant.org_name;
+  const isBusinessHotel = merchant.is_business_hotel;
+
+  const toggleBtns = getToggleBtns(merchant, isB1G1);
+  const isOffersVisible = !isOrganization;
+  const isBranchesVisible = !isOrganization && !isBusinessHotel;
+
+  const isTruthy = (val) => Boolean(val && val !== "false" && val !== "0");
+  const isStampEnabled = isTruthy(merchant.is_stamp_enabled);
+  const isProvidingCoupon = isTruthy(merchant.is_providing_coupon);
 
   return (
     <CardWithNesetedItems
       toggleBtns={toggleBtns}
+      footerAction={
+        !isOrganization && (
+          <ComplaintBtn
+            compact
+            merchantDetails={{
+              merchant_id: merchant.merchant_id,
+              merchant_name: merchant.merchant_name,
+              merchant_name_arabic: merchant.x_arabic_name,
+            }}
+          />
+        )
+      }
       parentProps={{
         onPress: () => handleMerchantCardPress(merchant),
-        onPressFavourite: () => onPressFavourite(),
-        uri: rewriteAssetUrl(merchant.merchant_logo),
-        name: getLocalizedValue(merchant?.x_arabic_name, merchant?.merchant_name),
+        onPressFavourite: () => onPressFavourite?.(merchant.merchant_id),
+        uri: merchant.merchant_logo,
+        name:
+          language === "ar" ? merchant?.x_arabic_name : merchant.merchant_name,
         description:
           language === "ar"
             ? discount?.x_ribbon_text_arabic || ""
@@ -59,11 +76,15 @@ const MerchantsList = ({
         loadingDescription: loading,
         distance: merchant.distance_display || distance,
         distaceLoading,
-        latitude: merchant.partner_latitude,
-        longitude: merchant.partner_longitude,
         acceptGoLoyaltyPoint: merchant.accept_go_loyalty_point,
+        goPoints: merchant.gpoint,
+        stamp: isStampEnabled,
+        coupon: isProvidingCoupon,
+        isStampEnabled,
+        isProvidingCoupon,
+        is_stamp_enabled: isStampEnabled,
+        is_providing_coupon: isProvidingCoupon,
         isSaved: isSaved ? isSaved : isFavorite,
-        offersLabel: getOffersCountLabel(merchant),
       }}
     >
       {isOffersVisible && (
@@ -76,4 +97,4 @@ const MerchantsList = ({
   );
 };
 
-export default MerchantsList;
+export default memo(MerchantsList);

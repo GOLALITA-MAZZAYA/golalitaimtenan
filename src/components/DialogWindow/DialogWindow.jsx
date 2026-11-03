@@ -16,9 +16,9 @@ export const DialogWindow = (props) => {
       animationType={'slide'}
       transparent={true}
       visible={props.isVisible}>
-      {!props.isClicked && <View style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.modalWrapper}>
-          <View style={[styles.buttons, isDark && {backgroundColor: '#252621'}]}>
+          {!props.isClicked && <View style={[styles.buttons, isDark && {backgroundColor: '#252621'}]}>
             {props.items.map((item, index) => {
               return <TouchableOpacity key={index} onPress={item.func}
                                        style={[styles.buttons__item,
@@ -33,7 +33,11 @@ export const DialogWindow = (props) => {
                 />
               </TouchableOpacity>
             })}
-          </View>
+          </View>}
+          {/* Kept outside the isClicked gate so there's always an escape
+              hatch — a stuck isClicked (e.g. an unhandled picker rejection
+              upstream) must never leave the user behind an untappable
+              backdrop with no way to dismiss it. */}
           <TouchableOpacity onPress={props.onCancel} activeOpacity={0.3} style={[styles.cancel, isDark && {backgroundColor: '#252621'}]}>
             <TypographyText
               title={t('Drawer.cancel')}
@@ -43,7 +47,7 @@ export const DialogWindow = (props) => {
             />
           </TouchableOpacity>
         </View>
-      </View>}
+      </View>
     </Modal>
   </View>
 }

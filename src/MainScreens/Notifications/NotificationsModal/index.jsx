@@ -1,20 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Image,
+  Image as RNImage,
   View,
   TouchableOpacity,
   ScrollView,
   Linking,
   Modal,
   ActivityIndicator,
-  StyleSheet,
 } from "react-native";
+import Image from "../../../components/AppImage";
 
 import { sized } from "../../../Svg";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { SCREEN_HEIGHT, mainStyles } from "../../../styles/mainStyles";
 import { colors } from "../../../components/colors";
+import { useTheme } from "../../../components/ThemeProvider";
 import CommonButton from "../../../components/CommonButton/CommonButton";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { connect } from "react-redux";
@@ -34,19 +35,39 @@ const NotificationsModal = ({
 }) => {
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const { isDark } = useTheme();
   const [fullImage, setFullImage] = useState(false);
+  const [imageAspectRatio, setImageAspectRatio] = useState(16 / 9);
 
   const { descriptionHtml } = getNotificationDescription(notification);
 
+  useEffect(() => {
+    if (!notification.offer_image) return;
+
+    RNImage.getSize(
+      notification.offer_image,
+      (width, height) => setImageAspectRatio(width / height),
+      () => {}
+    );
+  }, [notification.offer_image]);
+
   return (
-    <View style={mainStyles.notificationModal}>
+    <View
+      style={[
+        mainStyles.notificationModal,
+        { backgroundColor: isDark ? colors.borderGrey : colors.white },
+      ]}
+    >
       <TouchableOpacity
         onPress={() => {
           setPressedNotification(null);
         }}
-        style={mainStyles.notificationModal__close}
+        style={[
+          mainStyles.notificationModal__close,
+          { backgroundColor: isDark ? colors.navyBlue : colors.white },
+        ]}
       >
-        <CloseIcon color={colors.darkBlue} />
+        <CloseIcon color={isDark ? colors.white : colors.darkBlue} />
       </TouchableOpacity>
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
         <View activeOpacity={1} style={{ flex: 1 }}>
@@ -61,14 +82,17 @@ const NotificationsModal = ({
           >
             <Image
               source={{ uri: notification.offer_image }}
-              style={styles.image}
-              resizeMode="cover"
+              style={[
+                mainStyles.notificationModal__image,
+                { aspectRatio: imageAspectRatio },
+              ]}
+              contentFit="contain"
             />
           </TouchableOpacity>
           <HTMLRenderer
-            style={{ paddingHorizontal: 16, marginTop: 15 }}
+            style={{ paddingHorizontal: 16, marginTop: 16 }}
             value={descriptionHtml}
-            color={"black"}
+            color={isDark ? colors.white : "black"}
           />
 
           <View
@@ -134,12 +158,12 @@ const NotificationsModal = ({
                     {
                       width: "100%",
                       height: "100%",
-                      resizeMode: "contain",
                       marginTop: (SCREEN_HEIGHT / 100) * 22,
                     },
                     style,
                   ]} // your custom style object
-                  // any supported props by Image
+                  contentFit="contain"
+                // any supported props by Image
                 />
               </View>
             );
@@ -181,15 +205,6 @@ const NotificationsModal = ({
   );
 };
 
-const styles = StyleSheet.create({
-  image: {
-    width: "100%",
-    borderRadius: 8,
-    aspectRatio: 135 / 76,
-    marginBottom: 10,
-  },
-});
-
-export default connect(() => {}, {
+export default connect(null, {
   getMerchantDetails,
 })(NotificationsModal);

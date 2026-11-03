@@ -1,4 +1,5 @@
-import { Image, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Image from "../../../components/AppImage";
 import MainLayout from '../../../components/MainLayout';
 import Header from '../../../components/Header';
 import { SCREEN_HEIGHT } from '../../../styles/mainStyles';
@@ -11,8 +12,6 @@ import CommonButton from '../../../components/CommonButton/CommonButton';
 import QRCode from 'react-native-qrcode-svg';
 import { useState } from 'react';
 import { BALOO_2 } from '../../../redux/types';
-import { track } from '../../../redux/merchant/merchant-thunks';
-import { useDispatch } from 'react-redux';
 import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { showMessage } from 'react-native-flash-message';
@@ -25,7 +24,6 @@ const MerchantCodeConfirmation = ({ navigation }) => {
 
   const merchantName = params?.merchantName;
   const confirmationNumber = params?.confirmationNumber;
-  const offerName = params?.offerName;
 
   const isSupportQrPromo = params?.x_is_support_qr_promo !== false;
   const qrCodeImageLink = params?.qr_code_image_link;
@@ -34,7 +32,6 @@ const MerchantCodeConfirmation = ({ navigation }) => {
   const merchantId = params?.merchant_id;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const dispatch = useDispatch();
 
   const { isDark } = useTheme();
 
@@ -42,29 +39,12 @@ const MerchantCodeConfirmation = ({ navigation }) => {
   const bgColor = isDark ? colors.darkBlue : colors.white;
 
   const handleSubmit = () => {
-    try {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
 
-      dispatch(
-        track(
-          'promocode',
-          params?.id,
-          false,
-          params?.promocode,
-          () => {
-            dispatch(track('promocode', params?.id, true, params?.promocode));
-            setIsSubmitting(false);
-
-            setTimeout(() => {
-              navigation.navigate('Main');
-            }, 1000);
-          },
-        ),
-      );
-    } catch (err) {
-      console.log(err, 'error');
+    setTimeout(() => {
       setIsSubmitting(false);
-    }
+      navigation.navigate("Main");
+    }, 1000);
   };
 
   return (
@@ -80,12 +60,8 @@ const MerchantCodeConfirmation = ({ navigation }) => {
           paddingHorizontal: 20,
         }}
       >
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.wrapper}
-          bounces={false}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.wrapper} bounces={false} showsVerticalScrollIndicator={false}>
+
           <TypographyText
             title={t('PremiumPartner.redeemAt', { merchantName })}
             textColor={textColor}
@@ -94,24 +70,11 @@ const MerchantCodeConfirmation = ({ navigation }) => {
             font={BALOO_2}
           />
 
-          {!!offerName && (
-            <TypographyText
-              title={offerName}
-              textColor={textColor}
-              size={16}
-              style={styles.offerName}
-              font={BALOO_2}
-            />
-          )}
-
           <TypographyText
-            title={
-              promoCodeDescription || t('PremiumPartner.promocodeInstruction1')
-            }
+            title={promoCodeDescription || t('PremiumPartner.promocodeInstruction1')}
             textColor={textColor}
             size={16}
             style={styles.instruction}
-            font={BALOO_2}
           />
 
           {isSupportQrPromo && !!confirmationNumber && (
@@ -119,11 +82,14 @@ const MerchantCodeConfirmation = ({ navigation }) => {
               {qrCodeImageLink ? (
                 <Image
                   source={{ uri: qrCodeImageLink }}
-                  style={styles.qrImage}
-                  resizeMode="contain"
+                  style={{ width: 180, height: 180 }}
+                  contentFit="contain"
                 />
               ) : (
-                <QRCode value={String(confirmationNumber)} size={180} />
+                <QRCode
+                  value={String(confirmationNumber)}
+                  size={180}
+                />
               )}
             </View>
           )}
@@ -185,22 +151,19 @@ const MerchantCodeConfirmation = ({ navigation }) => {
             />
           )}
 
+
           {!!storeWebsite && (
             <CommonButton
               onPress={() => {
                 trackActivity('page_visit', {
                   merchant_id: merchantId,
                   page_name: 'merchant_website',
-                  metadata: {
-                    link_type: 'website',
-                    link_value: storeWebsite,
-                    source: 'merchant_code_confirmation',
-                  },
+                  metadata: { link_type: 'website', link_value: storeWebsite, source: 'merchant_code_confirmation' },
                 });
                 Linking.openURL(storeWebsite);
               }}
               label={t('PremiumPartner.openOnlineStore')}
-              style={styles.storeButton}
+              style={styles.button}
               textColor={isDark ? colors.black : colors.white}
             />
           )}
@@ -212,20 +175,16 @@ const MerchantCodeConfirmation = ({ navigation }) => {
             textColor={isDark ? colors.black : colors.white}
             disabled={isSubmitting}
           />
+
+
         </ScrollView>
       </MainLayout>
-      {isSubmitting && (
-        <FullScreenLoader absolutePosition style={styles.loader} />
-      )}
+      {isSubmitting && <FullScreenLoader absolutePosition style={styles.loader} />}
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-
   wrapper: {
     flexGrow: 1,
     alignItems: 'center',
@@ -239,11 +198,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  offerName: {
-    marginTop: 5,
-    textAlign: 'center',
-  },
-
   instruction: {
     textAlign: 'center',
     marginTop: 12,
@@ -254,11 +208,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     padding: 20,
     borderRadius: 12,
-  },
-
-  qrImage: {
-    width: 180,
-    height: 180,
   },
 
   manualLabel: {
@@ -297,14 +246,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  storeButton: {
-    marginTop: 12,
-    width: '100%',
-  },
-
   loader: {
-    paddingBottom: 180,
-  },
+    paddingBottom: 180
+  }
 });
 
 export default MerchantCodeConfirmation;

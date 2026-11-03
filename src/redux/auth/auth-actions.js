@@ -1,20 +1,20 @@
 import {
   SET_IS_AUTHORIZED,
-  SET_IS_GUEST,
   SET_IS_LOGIN_ERROR,
   SET_IS_MAIN_USER,
   SET_IS_USER_JUST_LOG_OUT,
   SET_LOGIN_LOADING,
   SET_PROFILE_LOADING,
-  SET_PUBLIC_ORGANIZATIONS,
   SET_SPLASH_SCREEN_VISIBLE,
   SET_TOKEN,
   SET_USER,
   SET_USER_ID,
+  SET_VERSION,
   SET_WORK_STATUS,
   SET_CONFIRMATIONCODE_LOADING,
   SET_REGISTERATIONCODE_LOADING,
   SET_ISLOADING_AUTOLOGIN,
+  SET_IS_GUEST,
 } from "./auth-types";
 
 export const setProfileLoading = (profileLoading) => ({
@@ -42,10 +42,7 @@ export const setWorkStatus = (workStatus) => ({
   type: SET_WORK_STATUS,
   workStatus,
 });
-export const setPublicOrganizations = (publicOrganizations) => ({
-  type: SET_PUBLIC_ORGANIZATIONS,
-  publicOrganizations,
-});
+export const setVersion = (version) => ({ type: SET_VERSION, version });
 
 export const setIsUserJustLogOut = (payload) => ({
   type: SET_IS_USER_JUST_LOG_OUT,
@@ -77,7 +74,6 @@ export const setIsloadingAutologin = (payload) => ({
   type: SET_ISLOADING_AUTOLOGIN,
   payload,
 });
-
 
 export const setIsGuest = (payload) => ({
   type: SET_IS_GUEST,

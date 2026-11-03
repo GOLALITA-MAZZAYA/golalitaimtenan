@@ -2,35 +2,31 @@ import {
   SafeAreaView,
   StyleSheet,
   View,
-  Linking,
-  Image,
   Dimensions,
 } from "react-native";
 import { useTheme } from "../../../components/ThemeProvider";
 import { colors } from "../../../components/colors";
-import { TypographyText } from "../../../components/Typography";
-import { BALOO_REGULAR } from "../../../redux/types";
-import { TouchableOpacity } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import LocationSvg from "../../../assets/location.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { useState } from "react";
-import { createGiftCardOrder } from "../../../api/giftCard";
+import { useCallback, useState } from "react";
+import { checkCardmolaPaymentById, createGiftCardOrder } from "../../../api/giftCard";
 import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import { useTranslation } from "react-i18next";
 import Amount from "./Amount";
 import Total from "./Total";
 import { getCommission } from "./helpers";
-import ImageViwerModal from "../../../components/ImageViwer";
-import InfoBlock from "../../../components/InfoBlock";
-import HTMLRenderer from "../../../components/HTMLRenderer";
 import GiftInfoCard from "./GiftInfoCard";
 import { setPaymentDataGlobal } from "../../../redux/giftCards/giftcards-actions";
+import { org } from "../../../org/config";
 import CommonButton from "../../../components/CommonButton/CommonButton";
 import Header from "../../../components/Header";
-import RewardsPointsToggle from "../common/RewardPointsToggle";
-import PointsTotal from "../common/PointsTotal";
-import useUserLoyaltyPoints from "../../../hooks/useUserLoyaltyPoints";
+import LoyaltyGiftCardSwiper from "./LoyaltyGiftCardSwiper";
+import DescriptionSvg from '../../../assets/loyaltyPoints/description.svg';
+import InfoWithTitleBlock from "../../../components/InfoWithTitleBlock";
+import { useFocusEffect } from "@react-navigation/native";
+import store from "../../../redux/store";
+import { showMessage } from "react-native-flash-message";
 
 
 const { width } = Dimensions.get("screen");
@@ -43,18 +39,12 @@ const LoyaltyGiftCardInfo = (props) => {
   const { giftCard, filtersData } = props.route.params;
   const user = useSelector((state) => state.authReducer.user);
   const [loading, setLoading] = useState(false);
-  const [isPointsActivated, toggleRewardsPoints] = useState(false);
-  const { points } = useUserLoyaltyPoints();
   const dispatch = useDispatch();
-
 
   const [amount, setAmount] = useState(0);
 
   const [amount_org, setAmount_org] = useState(0);
 
-  const handleLocationPress = () => {
-    Linking.openURL(giftCard.locations_url);
-  };
 
   const handlePaymentPress = async () => {
     setLoading(true);
@@ -71,7 +61,7 @@ const LoyaltyGiftCardInfo = (props) => {
       receiver_email: user.email,
       receiver_phone: user.phone,
       customer_id: user.partner_id,
-      return_url: "golalitaimtenanrewards://giftcards?id=",
+      return_url: `${org.urlScheme}giftcards?id=`,
       currency_org: giftCard.brand_accepted_currency,
       amount_org: amount_org,
     };
@@ -88,8 +78,10 @@ const LoyaltyGiftCardInfo = (props) => {
         title: "Order details",
       });
     } catch (err) {
-      //console.log(err.message, "err");
-      alert("Sorry, something went wrong");
+      showMessage({
+        message: t('General.error'),
+        type: 'danger',
+      });
     } finally {
       setLoading(false);
     }
@@ -120,8 +112,47 @@ const LoyaltyGiftCardInfo = (props) => {
     setAmount(value * giftCard.x_rate);
   };
 
-  console.log(giftCard, 'gift')
 
+  useFocusEffect(
+    useCallback(() => {
+      console.log('us callback')
+      const { paymentDataGlobal } = store.getState().giftcardsReducer;
+      console.log(paymentDataGlobal, 'paymentDataGlobal')
+
+      async function checkPaymentStatus() {
+        if (paymentDataGlobal) {
+          try {
+            const data = await checkCardmolaPaymentById(
+              paymentDataGlobal.reference_id,
+            );
+
+
+            if (data.payment_status === 'Paid') {
+              showMessage({
+                message: t('Vouchers.giftCardPaymentSuccess'),
+                type: 'success',
+              });
+            } else {
+              showMessage({
+                message: t('Vouchers.giftCardPaymentFailure'),
+                type: 'danger',
+              });
+            }
+
+            dispatch(setPaymentDataGlobal(null));
+          } catch (err) {
+            showMessage({
+              message: t('Vouchers.giftCardPaymentFailure'),
+              type: 'danger',
+            });
+            console.log(err.message, 'dsadaerr');
+          }
+        }
+      }
+
+      checkPaymentStatus();
+    }, []),
+  );
 
   return (
     <View
@@ -143,22 +174,10 @@ const LoyaltyGiftCardInfo = (props) => {
           style={styles.scrollView}
           contentContainerStyle={styles.contentContainerStyle}
         >
-          <ImageViwerModal images={[{ url: giftCard.product_image }]}>
-            {(showImage) => (
-              <TouchableOpacity
-                onPress={() => showImage(true)}
-                style={styles.imageWrapper}
-              >
-                <Image
-                  source={{ uri: giftCard.product_image }}
-                  style={styles.image}
-                  resizeMode="stretch"
-                />
-              </TouchableOpacity>
-            )}
-          </ImageViwerModal>
 
-          <GiftInfoCard giftCard={giftCard} />
+          <LoyaltyGiftCardSwiper url={giftCard.product_image} onImagePress={() => showImage(true)} />
+
+          <GiftInfoCard giftCard={giftCard} name={giftCard.name} validity={giftCard.validity_in_months} />
 
           <Amount
             onSlidingComplete={onSlidingComplete}
@@ -167,40 +186,23 @@ const LoyaltyGiftCardInfo = (props) => {
             giftCardId={giftCard.id}
           />
 
-          {giftCard.locations_url && giftCard.locations_url !== "None" && (
-            <InfoBlock title={t("Vouchers.location")}>
-              <TouchableOpacity
-                style={styles.locationBtn}
-                onPress={handleLocationPress}
-              >
-                <LocationSvg color={colors.darkBlue} height={18} width={18} />
-                <TypographyText
-                  title={giftCard.locations_url}
-                  textColor={isDark ? colors.white : colors.darkBlue}
-                  size={15}
-                  font={BALOO_REGULAR}
-                  style={{ marginLeft: 10 }}
-                />
-              </TouchableOpacity>
-            </InfoBlock>
-          )}
+          {giftCard.locations_url && <InfoWithTitleBlock
+            style={styles.termsBlock}
+            title={t("Vouchers.location")}
+            description={giftCard.locations_url}
+            icon={<LocationSvg color={colors.loyaltyPrimary} />}
+          />}
 
-          {!!giftCard?.redemption_instructions && (
-            <InfoBlock title={t("Vouchers.terms")}>
-              <HTMLRenderer value={giftCard?.redemption_instructions} />
-            </InfoBlock>
-          )}
-
-          <RewardsPointsToggle
-            style={styles.rewardsPoints}
-            isChecked={isPointsActivated}
-            onToggleSwitch={toggleRewardsPoints}
+          <InfoWithTitleBlock
+            style={styles.termsBlock}
+            title={t("Vouchers.terms")}
+            description={giftCard?.redemption_instructions}
+            html
+            icon={<DescriptionSvg color={colors.loyaltyPrimary} />}
           />
 
-          {!isPointsActivated && (
-            <>
 
-              <Total
+          <Total
                 style={styles.total}
                 price={amount}
                 discount={0}
@@ -213,21 +215,6 @@ const LoyaltyGiftCardInfo = (props) => {
                 label={t("Vouchers.createOrderBtn")}
                 style={styles.paymentBtn}
               />
-
-            </>
-          )}
-
-          {isPointsActivated && (
-            <>
-              <PointsTotal priceInPoints={giftCard.x_minimum_point} availablePoints={points} style={styles.total} />
-
-              <CommonButton
-                onPress={handleRedeemPress}
-                label={t("Vouchers.redeem")}
-                style={styles.paymentBtn}
-              />
-            </>
-          )}
 
 
         </ScrollView>
@@ -293,6 +280,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignSelf: "center",
   },
+  termsBlock: {
+    marginTop: 20
+  }
 });
 
 export default LoyaltyGiftCardInfo;

@@ -10,23 +10,28 @@ import { CONTENT_DISABLED } from "../auth/auth-types";
 
 import { setIsNotificationsSettingsLoading } from "../loaders/loaders-actions";
 import { showMessage } from "react-native-flash-message";
+import i18next from "i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getToken } from '../../utils/secureStorage';
 import { setMerchantDetails } from "../merchant/merchant-actions";
-import { setUser } from "../auth/auth-actions";
-import { getAuthToken } from '../../utils/tokenStorage';
 
 export const getNotifications = () => async (dispatch, getState) => {
-  dispatch(setIsNotificationsSettingsLoading(true));
-  const { workStatus } = getState().authReducer;
-  const { token } = getState().authReducer;
-  const res = await notificationsApi.getNotifications({
-    params: { token },
-  });
+  try {
+    dispatch(setIsNotificationsSettingsLoading(true));
+    const { workStatus } = getState().authReducer;
+    const { token } = getState().authReducer;
+    const res = await notificationsApi.getNotifications({
+      params: { token },
+    });
 
-  dispatch(
-    setNotifications(workStatus === CONTENT_DISABLED ? [] : res.data.result)
-  );
-  dispatch(setIsNotificationsSettingsLoading(false));
+    dispatch(
+      setNotifications(workStatus === CONTENT_DISABLED ? [] : res.data.result)
+    );
+  } catch (err) {
+    console.log(err, 'getNotifications error');
+  } finally {
+    dispatch(setIsNotificationsSettingsLoading(false));
+  }
 };
 
 export const subscribeNotification =
@@ -85,7 +90,7 @@ export const subscribeNotification =
   };
 
 export const getMessageNotifications = () => async (dispatch, getState) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const { isNotificationModal } = getState().notificationsReducer;
   try {
@@ -94,7 +99,7 @@ export const getMessageNotifications = () => async (dispatch, getState) => {
     const res = await notificationsApi.getMessageNotifications({
       params: { token },
     });
-    if (res.data.result.error === undefined) {
+    if (res.data.result.error === undefined && Array.isArray(res.data.result)) {
       dispatch(setMessageNotifications(res.data.result));
       if (res.data.result.length !== 0 && isNotificationModal === false)
         dispatch(setIsNotificationModal(true));
@@ -122,10 +127,14 @@ export const deleteNotification = (body) => async (dispatch, getState) => {
     dispatch(getMessageNotifications());
   } catch (e) {
     console.log(e);
+    showMessage({
+      message: i18next.t("General.error"),
+      type: "danger",
+    });
   }
 };
 
-export const readNotification = (notification_id) => async (dispatch) => {
+export const readNotification = (notification_id) => async (dispatch, getState) => {
   const { token } = getState().authReducer;
 
   try {
@@ -146,47 +155,27 @@ export const readNotification = (notification_id) => async (dispatch) => {
 export const readAllNotifications = () => async (dispatch, getState) => {
   const { token } = getState().authReducer;
   let { messageNotifications } = getState().notificationsReducer;
-  messageNotifications = messageNotifications?.filter(
+  messageNotifications = (messageNotifications ?? []).filter(
     (m) => m.state === "unread"
   );
   try {
-    for (let notification of messageNotifications) {
-      const response = await notificationsApi.readNotification({
-        params: {
-          token,
-          notification_id: notification.notification_id,
-          read_status: "read",
-        },
-      });
-      console.log("read response.data", response.data);
-    }
+    await Promise.all(
+      messageNotifications.map((notification) =>
+        notificationsApi.readNotification({
+          params: {
+            token,
+            notification_id: notification.notification_id,
+            read_status: "read",
+          },
+        })
+      )
+    );
   } catch (e) {
     console.log(e);
+    showMessage({
+      message: i18next.t("General.error"),
+      type: "danger",
+    });
   }
 };
 
-export const pauseNotifications =
-  (paused_notification) => async (dispatch, getState) => {
-    const { token, user } = getState().authReducer;
-    const isPaused = await AsyncStorage.getItem("paused_notification");
-    try {
-      if (!paused_notification) {
-        const res = await notificationsApi.pauseAllNotifications({
-          params: { token },
-        });
-        console.log("res.data pause", res.data);
-      } else {
-        const res = await notificationsApi.unpauseAllNotifications({
-          params: { token },
-        });
-        console.log("res.data unpause", res.data);
-      }
-      dispatch(setUser({ ...user, paused_notification: !paused_notification }));
-      await AsyncStorage.setItem(
-        "paused_notification",
-        (!user.paused_notification).toString()
-      );
-    } catch (e) {
-      console.log(e);
-    }
-  };

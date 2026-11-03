@@ -4,7 +4,6 @@ import CommonHeader from "../../components/CommonHeader/CommonHeader";
 import { colors } from "../../components/colors";
 import { useTheme } from "../../components/ThemeProvider";
 import WebView from "react-native-webview";
-import { goBackOrHome } from "../../Navigation/RootNavigation";
 
 const Website = (props) => {
   const { isDark } = useTheme();
@@ -13,36 +12,19 @@ const Website = (props) => {
   let params = props.route?.params;
 
   const handleBackPress = () => {
-    goBackOrHome(navigation);
+    navigation.goBack ? navigation.goBack() : navigation.navigate("Main");
   };
 
   const handleNavigationChange = (navState) => {
     const { url } = navState;
-
+  
     if (url && url.includes("globaltixpaystatus.com")) {
+      // Navigate directly to GlobalTixCartScreen to ensure we end up on the right screen
       setTimeout(() => {
         navigation.navigate("GlobalTixCartScreen");
       }, 100);
     }
-
-    if (url && url.startsWith("https://qcbpaystatus.com/")) {
-      navigation.navigate("myVouchers", {
-        screen: "myVouchers-list",
-      });
-    }
   };
-
-  const handleShouldStartLoadWithRequest = (request) => {
-    const { url } = request;
-    console.log('[Website] onShouldStartLoadWithRequest url:', url);
-    if (url && url.startsWith("golalitaimtenanrewards://")) {
-      console.log('[Website] deep link detected — going back');
-      navigation.goBack();
-      return false;
-    }
-    return true;
-  };
-
   return (
     <View
       style={{
@@ -66,10 +48,8 @@ const Website = (props) => {
           allowUniversalAccessFromFileURLs={true}
           javaScriptEnabled={true}
           mixedContentMode={"always"}
-          originWhitelist={["*"]}
           style={{ flex: 1 }}
           onNavigationStateChange={handleNavigationChange}
-          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
         />
       </SafeAreaView>
     </View>

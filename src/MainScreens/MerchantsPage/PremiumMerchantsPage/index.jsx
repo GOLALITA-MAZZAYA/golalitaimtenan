@@ -5,14 +5,12 @@ import { SCREEN_HEIGHT } from "../../../styles/mainStyles";
 import { connect } from "react-redux";
 import { getPremiumMerchantList } from "../../../redux/merchant/merchant-thunks";
 import { useTranslation } from "react-i18next";
-import { setMerchants } from "../../../redux/merchant/merchant-actions";
 import MainLayout from "../../../components/MainLayout";
 import { useTheme } from "../../../components/ThemeProvider";
 import PremiumMerchants from "../../../components/PremiumMerchants";
 import { getMerchantDetails } from "../../../redux/merchant/merchant-thunks";
 import Header from "../../../components/Header";
 import {getUserLocationThunk} from "../../../redux/global/global-thunks";
-import { goBackOrHome } from "../../../Navigation/RootNavigation";
 
 const PremiumMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk }) => {
   const { t } = useTranslation();
@@ -20,7 +18,7 @@ const PremiumMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationT
   
 
   useEffect(() => {
-      getUserLocationThunk
+      getUserLocationThunk()
   },[])
 
   return (
@@ -32,7 +30,9 @@ const PremiumMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationT
           btns={["back"]}
           additionalBtnsProps={{
             back: {
-              onPress: () => goBackOrHome(navigation),
+              onPress: () => {
+                navigation.navigate("Main");
+              },
             },
           }}
         />
@@ -83,7 +83,6 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, {
   getPremiumMerchantList,
-  setMerchants,
   getMerchantDetails,
   getUserLocationThunk
 })(PremiumMerchantsPage);

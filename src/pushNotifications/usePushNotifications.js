@@ -8,10 +8,6 @@ import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import store from '../redux/store';
 import { setClickedNotificationData } from '../redux/notifications/notifications-actions';
 import { handleNotificationClick } from './notificationClickHandler';
-import {
-  consumePendingNotification,
-  startInitialNotificationCapture,
-} from './pendingPushNotification';
 
 export async function requestNotificationPermissions() {
   try {
@@ -67,22 +63,10 @@ export async function getFcmToken() {
   }
 }
 
-const hydrateColdStartNotification = async () => {
-  startInitialNotificationCapture();
-  const pending = await consumePendingNotification();
-  if (pending?.data) {
-    store.dispatch(setClickedNotificationData(pending));
-    handleNotificationClick({
-      data: pending.data,
-      messageId: pending.messageId,
-      id: pending.id,
-    });
-  }
-};
-
 const usePushNotifications = () => {
-  // Must live at App/Root level, not Login: Login unmounts when isAuthorized
-  // flips true, which would tear down every push listener for the session.
+  console.log('[Push][debug] usePushNotifications mounted, platform:', Platform.OS);
+
+  // 🔹 Настройка FCM, разрешений и сохранение токена
   useEffect(() => {
     async function setupFCM() {
       await requestNotificationPermissions();
@@ -95,10 +79,9 @@ const usePushNotifications = () => {
     }
 
     setupFCM();
-    hydrateColdStartNotification();
   }, []);
 
-  // Foreground pushes: display via Notifee (system does not show them)
+  // 🔹 Foreground-пуши: показываем уведомление сами
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       try {
@@ -119,14 +102,14 @@ const usePushNotifications = () => {
           data.body ||
           'You are near one of our partners';
 
+        // показываем локальное уведомление через Notifee
         await notifee.displayNotification({
+          id: remoteMessage.messageId,
           title,
           body,
           android: {
             channelId: NOTIFICATION_DEFAULT_CHANNEL_ID,
             pressAction: { id: 'default' },
-            smallIcon: 'ic_notification',
-            color: '#8D1B3D',
           },
           data,
         });
@@ -140,7 +123,7 @@ const usePushNotifications = () => {
     };
   }, []);
 
-  // Notifee click handling (foreground)
+  // 🔹 Обработка кликов по notifee-уведомлениям (foreground + initial)
   useEffect(() => {
     const unsubscribeForeground = notifee.onForegroundEvent(
       ({ type, detail }) => {
@@ -150,24 +133,66 @@ const usePushNotifications = () => {
           detail?.notification?.data,
         );
         if (type === EventType.PRESS) {
-          handleNotificationClick(detail?.notification);
+          handleNotificationClick(detail?.notification, 'foreground');
         }
       },
     );
 
+    async function handleInitialNotifeeNotification() {
+      console.log('[Push][debug] notifee.getInitialNotification() — checking for a killed-state notifee tap...');
+      try {
+        const initialNotification = await notifee.getInitialNotification();
+        console.log('[Push][debug] notifee.getInitialNotification() raw result:', JSON.stringify(initialNotification));
+
+        if (initialNotification?.notification) {
+          console.log(
+            'notifee.getInitialNotification',
+            initialNotification.notification.data,
+          );
+          handleNotificationClick(initialNotification.notification, 'killed');
+        } else {
+          console.log('[Push][debug] notifee.getInitialNotification() returned nothing — this app was not cold-started via a notifee-displayed notification tap.');
+        }
+      } catch (e) {
+        console.log('[Push][debug] Error in getInitialNotification (notifee)', e);
+      }
+    }
+
+    handleInitialNotifeeNotification();
+
     return unsubscribeForeground;
   }, []);
 
-  // FCM: background open (app was collapsed, not killed)
+  // 🔹 FCM: если система сама показала уведомление (background/killed)
   useEffect(() => {
+    async function getInitialNotification() {
+      console.log('[Push][debug] messaging().getInitialNotification() — checking for a killed-state system-notification tap...');
+      try {
+        const message = await messaging().getInitialNotification();
+        console.log('[Push][debug] messaging().getInitialNotification() raw result:', JSON.stringify(message));
+
+        if (message) {
+          console.log('messaging.getInitialNotification', message.data);
+          store.dispatch(setClickedNotificationData(message));
+          handleNotificationClick({ data: message.data, messageId: message.messageId }, 'killed');
+        } else {
+          console.log('[Push][debug] messaging().getInitialNotification() returned null — this app was not cold-started via a system-displayed notification tap.');
+        }
+      } catch (e) {
+        console.log('[Push][debug] Error in messaging.getInitialNotification', e);
+      }
+    }
+
+    getInitialNotification();
+
     const unsubscribe = messaging().onNotificationOpenedApp(remoteMessage => {
       console.log(
-        'messaging.onNotificationOpenedApp',
+        '[Push][debug] messaging.onNotificationOpenedApp fired. data:',
         remoteMessage?.data,
       );
       if (remoteMessage && remoteMessage?.messageId) {
         store.dispatch(setClickedNotificationData(remoteMessage));
-        handleNotificationClick({ data: remoteMessage.data });
+        handleNotificationClick({ data: remoteMessage.data, messageId: remoteMessage.messageId }, 'background');
       }
     });
 

@@ -1,19 +1,21 @@
 import { StyleSheet, Platform } from 'react-native';
-import { useTheme } from '../../components/ThemeProvider';
-import { colors } from '../../components/colors';
+import { useTheme } from '../ThemeProvider';
+import { colors } from '../colors';
 import { useDispatch } from 'react-redux';
 import { login } from '../../redux/auth/auth-thunks';
 import { setIsGuest } from '../../redux/auth/auth-actions';
 import { useTranslation } from 'react-i18next';
-import CommonButton from '../../components/CommonButton/CommonButton';
+import CommonButton from '../CommonButton/CommonButton';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BASE_URL } from '../../constants';
+import { org } from '../../org/config';
 import logger from '../../utils/logger';
 
-const FALLBACK_GUEST_LOGIN = 'guest@qcb.com';
 const FALLBACK_GUEST_PASSWORD = 'abc123123';
 
+// Visibility is gated by a backend feature flag for this org. The same
+// response may also carry the org's guest credentials, which win over the
+// fallback in org.guestEmail.
 const ContinueAsGuestBtn = ({ label }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -24,7 +26,7 @@ const ContinueAsGuestBtn = ({ label }) => {
 
   useEffect(() => {
     axios
-      .post(`https://${BASE_URL}/api/go/get_test_value/qcb`, {
+      .post(`https://${org.baseUrl}/api/go/get_test_value/${org.code}`, {
         params: { token: '' },
       })
       .then(res => {
@@ -35,7 +37,6 @@ const ContinueAsGuestBtn = ({ label }) => {
           setIsVisible(testGolalita);
         }
 
-        // Prefer backend-provided guest credentials when available.
         if (result?.guest_login && result?.guest_password) {
           setGuestCredentials({
             login: result.guest_login,
@@ -44,6 +45,7 @@ const ContinueAsGuestBtn = ({ label }) => {
         }
       })
       .catch(() => {
+        // Stay hidden if the flag can't be loaded.
         logger.warn('Failed to load guest login visibility');
       });
   }, []);
@@ -52,10 +54,7 @@ const ContinueAsGuestBtn = ({ label }) => {
     const credentials =
       guestCredentials?.login && guestCredentials?.password
         ? guestCredentials
-        : {
-            login: FALLBACK_GUEST_LOGIN,
-            password: FALLBACK_GUEST_PASSWORD,
-          };
+        : { login: org.guestEmail, password: FALLBACK_GUEST_PASSWORD };
 
     dispatch(
       login({

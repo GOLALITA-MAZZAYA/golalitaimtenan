@@ -3,6 +3,7 @@ import { AppState, StyleSheet, View } from 'react-native';
 import { TypographyText } from '../Typography';
 import { colors } from '../colors';
 import { useTheme } from '../ThemeProvider';
+import { org } from '../../org/config';
 
 const PrivacyOverlay = () => {
   const { isDark } = useTheme();
@@ -29,7 +30,7 @@ const PrivacyOverlay = () => {
       ]}
     >
       <TypographyText
-        title="ETIZAZ"
+        title={org.displayName}
         textColor="#FFFFFF"
         size={24}
         style={styles.title}

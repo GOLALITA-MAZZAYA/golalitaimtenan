@@ -23,8 +23,8 @@ import Header from '../../components/Header';
 import authApi from '../../redux/auth/auth-api';
 import { setRegisterationcodeLoading } from '../../redux/auth/auth-actions';
 import { verifyRegisterCode } from '../../redux/auth/auth-thunks';
-import { qcbEmailTest } from '../../../utils';
 import { ScrollView } from 'react-native-gesture-handler';
+import { qcbEmailTest } from '../../../utils';
 
 const RegCodeVerification = ({
   route,
@@ -61,12 +61,12 @@ const RegCodeVerification = ({
         <TouchableOpacity
           activeOpacity={1}
           onPress={Keyboard.dismiss}
-          style={{ flex: 1 }}
+          style={{ flex: 1, justifyContent: 'center' }}
         >
           <View
             style={[
               mainStyles.centeredRow,
-              { marginTop: getPixel(10), flexDirection: 'column', flex: 1 },
+              { marginTop: getPixel(10), flexDirection: 'column' },
             ]}
           >
             <TypographyText
@@ -80,10 +80,9 @@ const RegCodeVerification = ({
               ]}
             />
           </View>
-          <View style={[mainStyles.p20, { marginTop: getPixel(7), flex: 2 }]}>
+          <View style={[mainStyles.p20, { marginTop: getPixel(7) }]}>
             <Formik
               initialValues={{
-                //  registration_code: '',
                 email: '',
               }}
               validateOnChange={false}
@@ -103,7 +102,7 @@ const RegCodeVerification = ({
                     setFieldError('email', t('Profile.emailExists'));
                     throw 'err';
                   }
-                  verifyRegisterCode(
+                  await verifyRegisterCode(
                     {
                       params: {
                         code: values.registration_code,
@@ -123,7 +122,7 @@ const RegCodeVerification = ({
                 }
               }}
               validationSchema={Yup.object({
-                //  registration_code: Yup.string().required(t('Login.required')),
+                // Etizaz sign-up: QCB email domains only, no registration code.
                 email: Yup.string()
                   .email(t('Login.invalidEmail'))
                   .test(qcbEmailTest(t))
@@ -141,22 +140,12 @@ const RegCodeVerification = ({
                 return (
                   <View
                     style={{
-                      flex: 1,
-                      justifyContent: 'space-between',
                       paddingBottom: 26,
                       marginBottom: 19,
                     }}
                   >
                     <View>
-                      {/* <Input
-                        label={t('Login.code')}
-                        placeholder={t('Login.code')}
-                        value={values.registration_code}
-                        onChangeText={handleChange('registration_code')}
-                        error={errors.registration_code}
-                        returnKeyType={'next'}
-                        wrapperStyle={{ marginBottom: 25 }}
-                      /> */}
+
 
                       <Input
                         label={t('Login.email')}
@@ -173,7 +162,7 @@ const RegCodeVerification = ({
                       />
                     </View>
 
-                    <View>
+                    <View style={{ marginTop: 40 }}>
                       <CommonButton
                         onPress={handleSubmit}
                         label={t('Login.verify')}
@@ -241,7 +230,7 @@ const styles = StyleSheet.create({
   bottom: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 70,
+    marginTop: 24,
   },
 });
 

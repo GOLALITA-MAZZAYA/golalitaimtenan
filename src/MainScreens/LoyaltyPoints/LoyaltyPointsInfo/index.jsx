@@ -1,3 +1,4 @@
+import {useCallback, useMemo} from "react";
 import {FlatList, StyleSheet} from "react-native";
 import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
@@ -17,14 +18,18 @@ return [
         title: i18next.t('LoyaltyInfo.redeem'),
         description: i18next.t('LoyaltyInfo.redeemDescription'),
         icon: isDark ? require('../../../assets/loyaltyPoints/categories/redeem.png'): require('../../../assets/loyaltyPoints/categories/redeem_light.png'),
-        onPress: () => navigate('loyaltyPoints-categories'),
+        onPress: () => navigate('loyaltyPoints-products-list'),
     },
     {
         title: i18next.t('LoyaltyInfo.scan'),
         description: i18next.t('LoyaltyInfo.scanDescription'),
         icon: isDark ? require('../../../assets/loyaltyPoints/categories/scan.png'): require('../../../assets/loyaltyPoints/categories/scan_light.png'),
-        onPress: () => navigate('loyaltyPoints-transactions'),       
-    },
+        onPress: () => {
+           navigate('BillScannerHoToUse', {
+           title: i18next.t('Drawer.scanBill'),
+          });
+        }
+   },      
    {
         title: i18next.t('LoyaltyInfo.transactions'),
         description: i18next.t('LoyaltyInfo.transactionsDescription'),
@@ -49,6 +54,24 @@ return [
         icon: !isDark ? require('../../../assets/loyaltyPoints/categories/partner.png'): require('../../../assets/loyaltyPoints/categories/partner_light.png'),
         onPress: () => navigate('loyaltyPoints-partners-list'), 
     },
+    {
+        title: i18next.t('LoyaltyInfo.shopTitle'),
+        description: i18next.t('LoyaltyInfo.shopDescription'),
+        icon: !isDark ? require('../../../assets/loyaltyPoints/categories/goods_light.png') : require('../../../assets/loyaltyPoints/categories/goods.png'),
+        onPress: () => navigate('loyaltyPoints-goods-list'), 
+    },
+    {
+        title: i18next.t('LoyaltyInfo.travelTitle'),
+        description: i18next.t('LoyaltyInfo.travelDescription'),
+        icon: !isDark ?  require('../../../assets/loyaltyPoints/categories/travel_light.png'): require('../../../assets/loyaltyPoints/categories/travel.png'),
+        onPress: () => navigate('loyaltyPoints-travel-list'), 
+    },
+    {
+        title: i18next.t('LoyaltyInfo.merchantsWithPointsTitle'),
+        description: i18next.t('LoyaltyInfo.merchantsWithPointsDescription'),
+        icon: !isDark ?  require('../../../assets/loyaltyPoints/categories/goPointMerchantsLight.png'): require('../../../assets/loyaltyPoints/categories/goPointMerchantsDark.png'),
+        onPress: () => navigate('loyaltyPoints-go-merchants-list'), 
+    },
 ]
 }
 
@@ -59,9 +82,9 @@ const LoyaltyPointsInfo = () => {
     const {isDark} = useTheme();
     
    
-    const data = getQuickActionsData(isDark)
+    const data = useMemo(() => getQuickActionsData(isDark), [isDark]);
 
-
+    const renderItem = useCallback(({item}) => <ListCard {...item} style={styles.card} isDark={isDark}/>, [isDark]);
 
    const titleColor = isDark ? 'white': colors.mainDarkModeText;
 
@@ -80,6 +103,7 @@ const LoyaltyPointsInfo = () => {
         <FlatList 
           showsVerticalScrollIndicator={false}
           data={data}
+          keyExtractor={(item) => item.title}
           ListHeaderComponent={() => (
             <>
          <TypographyText
@@ -94,7 +118,7 @@ const LoyaltyPointsInfo = () => {
          />
            </>
           )}
-          renderItem={({item}) => <ListCard {...item} style={styles.card} isDark={isDark}/>}
+          renderItem={renderItem}
           ListFooterComponent={() => <TravelWithPoints />}
         />
 

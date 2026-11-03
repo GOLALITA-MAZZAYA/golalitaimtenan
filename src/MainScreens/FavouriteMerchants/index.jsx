@@ -13,7 +13,6 @@ import { getFavouriteMerchantsList } from "../../redux/favouriteMerchants/favour
 import TwoButtons from "../../components/TwoButtons/TwoButtons";
 import PagerView from "react-native-pager-view";
 import CardWithNesetedItems from "../../components/CardWithNestedItems";
-import { getLocalizedValue } from "../../../utils";
 import { useNavigation } from "@react-navigation/native";
 import {
   getFavoriteOffers,
@@ -82,7 +81,7 @@ const FavouriteMerchants = ({
           onPress: () => handleOfferCardPress(item),
           onPressFavourite: () => handleFavouritePress(item),
           uri: item.merchant_logo,
-          name: getLocalizedValue(item.x_arabic_name, item?.name),
+          name: i18n.language === "ar" ? item.x_arabic_name : item?.name,
           description:
             i18n.language === "ar"
               ? item.x_label_arabic || item.offer_label
@@ -138,8 +137,10 @@ const FavouriteMerchants = ({
             contentContainerStyle={styles.contentContainerStyle}
             showsVerticalScrollIndicator={false}
             data={favouriteMerchants}
-            windowSize={SCREEN_HEIGHT}
-            maxToRenderPerBatch={5}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={true}
             keyExtractor={keyExtractor}
             ListFooterComponent={() =>
               loading && (
@@ -162,8 +163,10 @@ const FavouriteMerchants = ({
             contentContainerStyle={styles.contentContainerStyle}
             showsVerticalScrollIndicator={false}
             data={favoriteOffers}
-            windowSize={SCREEN_HEIGHT}
-            maxToRenderPerBatch={5}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={true}
             keyExtractor={keyExtractor}
             ListFooterComponent={() =>
               isOffersLoading && (

@@ -11,7 +11,7 @@ const defaultModalText = {
    submitText: 'Apply Filters'
 }
 
-const ModalSelect = ({fetchData, onSubmit, renderItem, renderSelect, renderHeader, renderFooter, modalText = defaultModalText, modalKeyName}) => {
+const ModalSelect = ({fetchData, onSubmit, renderItem, renderSelect, renderHeader, renderFooter, modalText = defaultModalText, modalKeyName, autoOpen, dismissable, onDismiss}) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +50,9 @@ const ModalSelect = ({fetchData, onSubmit, renderItem, renderSelect, renderHeade
       onSubmit={onSubmit}
       single
       loading={loading}
+      autoOpen={autoOpen}
+      dismissable={dismissable}
+      onDismiss={onDismiss}
     />
   );
 };

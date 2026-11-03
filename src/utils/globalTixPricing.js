@@ -81,7 +81,7 @@ export const getTicketSellingPrice = (ticketType, markupPercentage = DEFAULT_MAR
   // If dynamic pricing data is provided, use it instead of static ticket properties
   const nettPrice = dynamicPricingData?.nettPrice ?? (ticketType.nettPrice || ticketType.net_price || 0);
   const msp = dynamicPricingData?.msp ?? (ticketType.minimumMerchantSellingPrice || ticketType.min_selling_price || null);
-
+  
   // Use original price from ticketType or rsp from dynamicPricingData as reference
   const originalPrice = dynamicPricingData?.rsp ?? (ticketType.originalMerchantPrice || ticketType.original_price || null);
 
@@ -118,18 +118,5 @@ export const validateSellingPrice = (sellingPrice, minimumMerchantSellingPrice =
  */
 export const getDefaultMarkupPercentage = () => {
   return DEFAULT_MARKUP_PERCENTAGE;
-};
-
-/**
- * Set default markup percentage (for configuration)
- * Note: This would typically be stored in config or state
- * @param {number} percentage - New markup percentage
- */
-export const setDefaultMarkupPercentage = (percentage) => {
-  if (typeof percentage === 'number' && percentage >= 0) {
-    // In a real implementation, this would update a config file or state
-    // For now, we'll use the constant, but this function signature allows for future expansion
-    console.warn('setDefaultMarkupPercentage: Markup percentage should be configured in config file');
-  }
 };
 

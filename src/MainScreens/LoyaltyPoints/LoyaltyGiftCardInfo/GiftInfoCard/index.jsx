@@ -1,77 +1,45 @@
-import { StyleSheet, View,Image,Dimensions } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { TypographyText } from "../../../../components/Typography";
-import { useTheme } from "../../../../components/ThemeProvider";
 import { colors } from "../../../../components/colors";
-import { useTranslation } from "react-i18next";
+import {BALOO_2} from "../../../../redux/types";
+import {isRTL} from "../../../../../utils";
 
-
-const { width } = Dimensions.get("screen");
-const cardWidth = width - 132;
-const GiftInfoCard = (props) => {
-  const { isDark } = useTheme();
-  const { t } = useTranslation();
-  const giftCard = props.giftCard;
-
- // console.log(giftCard, "gift card");
+const GiftInfoCard = ({name, validity}) => {
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.logoWrapper}>
-      <Image
-          source={{ uri: giftCard.logo }}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
-      </View>
-      <View style={styles.textWrapper}>
+    <View style={[styles.wrapper,{alignItems: isRTL() ? 'flex-end': 'flex-start'}]}>
         <TypographyText
-          title={giftCard.name}
-          textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-          size={14}
+          title={name}
+          textColor={colors.loyaltyTextMainTitle}
+          size={22}
           style={styles.name}
+          font={BALOO_2}
         />
         <TypographyText
-          title={`${giftCard.validity_in_months} months`}
-          textColor="#F0F0F0"
+          title={`${validity} months`}
+          textColor={colors.loyaltyPrimary}
           size={14}
           style={styles.months}
+          font={BALOO_2}
         />
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  logoWrapper: {
-    width: 80,
-    height: 80,
-    marginRight: 15,
-    backgroundColor: "grey",
-    borderRadius: 40,
-    overflow:'hidden'
-  },
   wrapper: {
-    flexDirection: "row",
-    marginTop: 30,
+    marginTop: 20,
   },
   textWrapper: {
     justifyContent: "center",
     paddingVertical: 5,
   },
   name: {
-    fontWeight: "800",
+    fontWeight: "700",
   },
   months: {
-    marginTop: 20,
+    marginTop: 2
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor: colors.lightGrey,
-    alignSelf: "center",
-  }
 });
 
 export default GiftInfoCard;

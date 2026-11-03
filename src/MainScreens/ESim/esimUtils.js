@@ -55,8 +55,6 @@ export const getDestinationDisplayName = (destination, language = 'en') => {
 const COUNTRY_NAME_TO_CODE = {
   turkey: 'TR',
   turkiye: 'TR',
-  'republic of turkey': 'TR',
-  'republic of turkiye': 'TR',
   uae: 'AE',
   'united arab emirates': 'AE',
   uk: 'GB',
@@ -78,7 +76,6 @@ const COUNTRY_NAME_TO_CODE = {
   'ivory coast': 'CI',
   "cote d ivoire": 'CI',
   تركيا: 'TR',
-  تركية: 'TR',
   الامارات: 'AE',
   الإمارات: 'AE',
   'الامارات العربية المتحدة': 'AE',
@@ -145,7 +142,6 @@ export const findEsimDestinationForCategory = (category, destinations) => {
     category.name,
     category.x_name_arabic,
     category.parentCategoryName,
-    category.title,
   ]
     .map(normalizeCountryLabel)
     .filter(Boolean);
@@ -163,26 +159,10 @@ export const findEsimDestinationForCategory = (category, destinations) => {
     }
   }
 
-  const exact = list.find(item =>
-    destinationLabels(item).some(label => labels.includes(label)),
-  );
-  if (exact) {
-    return exact;
-  }
-
-  // Fuzzy: "Türkiye" / "Republic of Turkey" vs API "Turkey"
   return (
-    list.find(item => {
-      const destLabels = destinationLabels(item);
-      return labels.some(label =>
-        destLabels.some(
-          dest =>
-            dest === label ||
-            dest.includes(label) ||
-            label.includes(dest),
-        ),
-      );
-    }) || null
+    list.find(item =>
+      destinationLabels(item).some(label => labels.includes(label)),
+    ) || null
   );
 };
 
@@ -213,33 +193,28 @@ export const resolveEsimDestinationForCategory = async category => {
     // Fall through to a targeted search when the full list is unavailable.
   }
 
-  const searchTerms = [
-    category.name,
-    category.parentCategoryName,
-    category.x_name_arabic,
-    category.country_code,
-    category.x_country_code,
-  ].filter(Boolean);
+  const searchTerm = category.name || category.x_name_arabic;
+  if (!searchTerm) {
+    return null;
+  }
 
-  for (const searchTerm of searchTerms) {
-    try {
-      const data = await getEsimDestinations({
-        type: 'local',
-        search: searchTerm,
-        page: 1,
-        limit: 20,
-      });
-      const items = Array.isArray(data?.items) ? data.items : [];
-      const matched = findEsimDestinationForCategory(category, items);
-      if (matched) {
-        return matched;
-      }
-      if (items.length === 1) {
-        return items[0];
-      }
-    } catch (error) {
-      // try next search term
+  try {
+    const data = await getEsimDestinations({
+      type: 'local',
+      search: searchTerm,
+      page: 1,
+      limit: 20,
+    });
+    const items = Array.isArray(data?.items) ? data.items : [];
+    const matched = findEsimDestinationForCategory(category, items);
+    if (matched) {
+      return matched;
     }
+    if (items.length === 1) {
+      return items[0];
+    }
+  } catch (error) {
+    return null;
   }
 
   return null;

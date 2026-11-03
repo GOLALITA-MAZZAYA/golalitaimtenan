@@ -1,8 +1,16 @@
 import React, { useRef, useState, useEffect } from "react";
-import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
+import Image from "../AppImage";
 import { colors } from "../colors";
 import { SCREEN_WIDTH } from "../../styles/mainStyles";
-import { rewriteAssetUrl } from "../../utils/rewriteAssetUrl";
+
+const RESIZE_MODE_TO_CONTENT_FIT = {
+  cover: "cover",
+  contain: "contain",
+  stretch: "fill",
+  center: "none",
+  repeat: "cover",
+};
 
 const BannerSwiper = ({
   banners = [],
@@ -27,17 +35,13 @@ const BannerSwiper = ({
   const autoplayTimerRef = useRef(null);
 
   // Support both banners array and direct images array
-  const imageList = (
-    images
-      ? images
-      : banners?.length
-        ? banners.map((b) => (typeof b === "string" ? b : b.banner_image))
-        : singleBannerUrl
-          ? [singleBannerUrl]
-          : []
-  )
-    .map(rewriteAssetUrl)
-    .filter(Boolean);
+  const imageList = images
+    ? images
+    : banners?.length
+    ? banners.map(b => (typeof b === 'string' ? b : b.banner_image))
+    : singleBannerUrl
+    ? [singleBannerUrl]
+    : [];
 
   if (!imageList.length) {
     return null;
@@ -98,17 +102,21 @@ const BannerSwiper = ({
     if (totalImages <= 1) return null;
     return (
       <View style={styles.pagination}>
-        {imageList.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              index === currentIndex && {
-                backgroundColor: isDark ? colors.green : colors.darkBlue,
-              },
-            ]}
-          />
-        ))}
+        {imageList.map((_, index) => {
+          const isActive = index === currentIndex;
+          return (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                isActive && styles.activeDot,
+                isActive && {
+                  backgroundColor: isDark ? colors.mainDarkMode : colors.darkBlue,
+                },
+              ]}
+            />
+          );
+        })}
       </View>
     );
   };
@@ -173,7 +181,7 @@ const BannerSwiper = ({
                   imageStyle
                 ]}
                 source={{ uri: imageUri }}
-                resizeMode={resizeMode}
+                contentFit={RESIZE_MODE_TO_CONTENT_FIT[resizeMode] || "cover"}
               />
             </TouchableOpacity>
           );
@@ -212,9 +220,13 @@ const styles = StyleSheet.create({
   dot: {
     width: 6,
     height: 6,
-    borderRadius: 50,
-    backgroundColor: colors.white,
+    borderRadius: 3,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
     marginHorizontal: 3,
+  },
+  activeDot: {
+    width: 18,
+    borderRadius: 3,
   },
 });
 

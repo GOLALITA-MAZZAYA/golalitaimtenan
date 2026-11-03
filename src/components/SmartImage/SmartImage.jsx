@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Image, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Image from "../AppImage";
 
 const SmartImage = ({ 
   imagePath, 
@@ -68,7 +69,7 @@ const SmartImage = ({
       onLoad={handleLoad}
       onError={handleError}
       // Add a small delay to prevent rapid URL switching
-      fadeDuration={300}
+      transition={300}
     />
   );
 };

@@ -1,4 +1,4 @@
-import { getAuthToken } from '../utils/tokenStorage';
+import { getToken } from '../utils/secureStorage';
 import instance from '../redux/instance';
 
 const unwrap = res => {
@@ -22,7 +22,7 @@ const unwrap = res => {
 const postEsim = async (path, params = {}, { auth = false } = {}) => {
   const body = { params: { ...params } };
   if (auth) {
-    body.params.token = await getAuthToken();
+    body.params.token = await getToken();
   }
   const res = await instance.post(path, body);
   return unwrap(res);

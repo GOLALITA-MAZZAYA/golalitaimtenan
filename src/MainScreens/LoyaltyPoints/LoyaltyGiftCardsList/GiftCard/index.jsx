@@ -1,4 +1,5 @@
-import { View, StyleSheet, TouchableOpacity, ImageBackground } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
+import Image from "../../../../components/AppImage";
 import { TypographyText } from "../../../../components/Typography";
 import { BALOO_2 } from "../../../../redux/types";
 import { colors } from "../../../../components/colors";
@@ -8,9 +9,9 @@ const IMAGE_HEIGHT = 174;
 
 const GiftCard = ({ name, onPress, imageUrl, index, tagline }) => {
   return (
-    <TouchableOpacity style={[styles.card, {marginTop: index ? 20: 0}]} onPress={onPress}>
+    <TouchableOpacity style={[styles.card, { marginTop: index ? 20 : 0 }]} onPress={onPress}>
 
-      <ImageBackground style={styles.cardImage} source={{ uri: imageUrl }} resizeMode="cover" />
+      <Image style={styles.cardImage} source={{ uri: imageUrl }} contentFit="cover" />
 
       <View style={styles.descriptionBlock}>
         {!!name && <TypographyText
@@ -21,7 +22,7 @@ const GiftCard = ({ name, onPress, imageUrl, index, tagline }) => {
           numberOfLines={1}
           style={styles.title}
         />}
-        {!!tagline &&<TypographyText
+        {!!tagline && <TypographyText
           title={tagline}
           textColor={colors.loyaltyGiftCardText}
           size={12}

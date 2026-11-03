@@ -1,98 +1,58 @@
-import React from 'react';
-import FilterScreen from '../../../components/FiltersScreen';
-import FormikCountryPicker from '../../../components/Formik/FormikCountryPicker';
-import FormikLocationPicker from '../../../components/Formik/FormikLocationPicker';
-import { useSelector } from 'react-redux';
-import { convertCategoriesToOptions, getAllCategories } from './utils';
-import FormikTags from '../../../components/Formik/FormikTags';
-import { useTranslation } from 'react-i18next';
-import FormikSearchInput from '../../../components/Formik/FormikSearchInput';
-import { getFlexDirection } from '../../../../utils';
-import CategoriesTypes from './components/CategoriesTypes';
-import MerchantTypes from './components/MerchantTypes';
-import SubCategoriesTags from './components/SubCategoriesTags';
-import trackActivity from '../../../api/activityTracker';
-import { useHardwareBackHandler } from '../../../hooks/useHardwareBackButton';
+import React from "react";
+import FilterScreen from "../../../components/FiltersScreen";
+import FormikCountryPicker from "../../../components/Formik/FormikCountryPicker";
+import FormikLocationPicker from "../../../components/Formik/FormikLocationPicker";
+import { useSelector } from "react-redux";
+import { convertCategoriesToOptions, getAllCategories } from "./utils";
+import FormikTags from "../../../components/Formik/FormikTags";
+import { useTranslation } from "react-i18next";
+import FormikSearchInput from "../../../components/Formik/FormikSearchInput";
+import { getFlexDirection } from "../../../../utils";
+import CategoriesTypes from "./components/CategoriesTypes";
+import MerchantTypes from "./components/MerchantTypes";
+import SubCategoriesTags from "./components/SubCategoriesTags";
+import trackActivity from "../../../api/activityTracker";
 
-const transformCategoryValue = category => {
-  if (category == null || category === '') {
+const transformCategoryValue = (category) => {
+  if (!category) {
     return [];
   }
 
-  if (typeof category === 'number') {
+  if (typeof category === "number") {
     return [category];
   }
 
-  if (Array.isArray(category)) {
-    return category.filter(id => id != null && id !== '');
-  }
-
-  return [category];
+  return category;
 };
 
 const MerchantsFilters = ({ navigation, route }) => {
-  const { categoriesType } = useSelector(state => state.merchantReducer);
+  const { categoriesType } = useSelector((state) => state.merchantReducer);
   const categories = useSelector(
-    state => state.merchantReducer.parentCategories,
+    (state) => state.merchantReducer.parentCategories
   );
 
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const params = route?.params;
-  const allCategories = getAllCategories(categories || []);
-  const options = convertCategoriesToOptions(allCategories, language);
-
-  const listInStack = () =>
-    !!navigation.getState?.()?.routes?.some(r => r.name === 'merchants-list');
-
-  const goToMerchantsList = listParams => {
-    if (listInStack()) {
-      navigation.navigate({
-        name: 'merchants-list',
-        params: listParams,
-        merge: true,
-      });
-      return;
-    }
-
-    // Opened filters as the only nested screen (e.g. home empty search) —
-    // replace so back doesn't return to filters.
-    navigation.replace('merchants-list', listParams);
-  };
 
   const onReset = () => {};
 
   const onClose = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-      return;
-    }
-
-    goToMerchantsList({
-      filters: params?.filters,
-      parentCategoryName: params?.parentCategoryName,
-      parentCategoryId: params?.parentCategoryId,
-    });
+    navigation.navigate("merchants-list");
   };
 
-  const onSubmit = filters => {
-    const categoryIds = transformCategoryValue(filters.category_id);
-    const subCategoryIds = transformCategoryValue(filters.sub_category_id);
-    // Merchant list chips need a single parent id (number), not an array.
-    const primaryCategoryId =
-      categoryIds.length === 1 ? categoryIds[0] : params?.parentCategoryId;
-
+  const onSubmit = (filters) => {
     const transformedFilters = {
       merchant_name: filters.merchant_name,
       country_id:
-        categoriesType === 'local'
-          ? 'qa'
+        categoriesType === "local"
+          ? "qa"
           : filters.country_id?.cca2?.toLowerCase(),
       location_id: filters.location_id,
+      gpoint: filters.gpoint,
       is_premium_merchant: filters.is_premium_merchant,
-      category_id:
-        primaryCategoryId != null ? primaryCategoryId : categoryIds,
-      sub_category_id: subCategoryIds,
+      category_id: transformCategoryValue(filters.category_id),
+      sub_category_id: transformCategoryValue(filters.sub_category_id),
     };
 
     trackActivity('search', {
@@ -108,41 +68,20 @@ const MerchantsFilters = ({ navigation, route }) => {
       },
     });
 
-    const selectedCategory =
-      primaryCategoryId != null
-        ? allCategories.find(
-            item => Number(item.id) === Number(primaryCategoryId),
-          )
-        : null;
-
-    goToMerchantsList({
-      filters: transformedFilters,
-      parentCategoryName: selectedCategory
-        ? language === 'ar'
-          ? selectedCategory.x_name_arabic || selectedCategory.name
-          : selectedCategory.name
-        : params?.parentCategoryName,
-      parentCategoryId:
-        primaryCategoryId ??
-        selectedCategory?.id ??
-        params?.parentCategoryId,
-    });
+    navigation.navigate("merchants-list", { filters: transformedFilters });
   };
 
   const onBackPress = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-      return;
-    }
-
-    goToMerchantsList({
+    navigation.goBack()
+    navigation.navigate("merchants-list", {
       filters: params?.filters,
-      parentCategoryName: params?.parentCategoryName,
-      parentCategoryId: params?.parentCategoryId,
+      merge: true,
     });
   };
 
-  useHardwareBackHandler(onBackPress);
+  const allCategories = getAllCategories(categories);
+
+  const options = convertCategoriesToOptions(allCategories, language);
 
   return (
     <FilterScreen
@@ -150,41 +89,41 @@ const MerchantsFilters = ({ navigation, route }) => {
       onClose={onClose}
       onSubmit={onSubmit}
       onBackPress={onBackPress}
-      title={t('Merchants.filtersTitle')}
+      title={t("Merchants.filtersTitle")}
       initialValues={{
-        category_id: transformCategoryValue(
-          params?.filters?.category_id ?? params?.parentCategoryId,
-        ),
+        category_id: transformCategoryValue(params?.filters?.category_id),
         sub_category_id: transformCategoryValue(
-          params?.filters?.sub_category_id,
+          params?.filters?.sub_category_id
         ),
-        merchant_name: params?.filters?.merchant_name || '',
+        merchant_name: params?.filters?.merchant_name || "",
+        gpoint: params?.filters?.gpoint || null,
       }}
       defaultValues={{
         category_id: [],
         sub_category_id: [],
-        merchant_name: '',
+        merchant_name: "",
+        gpoint: null,
       }}
     >
       <FormikSearchInput
         name="merchant_name"
-        placeholder={t('Merchants.searchPlaceholder')}
+        placeholder={t("Merchants.searchPlaceholder")}
         wrapperStyle={{ marginTop: 36 }}
       />
 
-      {categoriesType == 'global' && (
+      {categoriesType == "global" && (
         <FormikCountryPicker
           name="country_id"
           wrapperStyle={{ marginTop: 20 }}
-          placeholder={t('Merchants.all')}
+          placeholder={t("Merchants.all")}
         />
       )}
 
-      {categoriesType == 'local' && (
+      {categoriesType == "local" && (
         <FormikLocationPicker
           name="location_id"
           wrapperStyle={{ marginTop: 20 }}
-          placeholder={t('Merchants.location')}
+          placeholder={t("Merchants.location")}
         />
       )}
 
@@ -200,7 +139,7 @@ const MerchantsFilters = ({ navigation, route }) => {
           ...getFlexDirection(),
           marginTop: 10,
         }}
-        title={t('Merchants.categoriesLabel')}
+        title={t("Merchants.categoriesLabel")}
       />
 
       <SubCategoriesTags />

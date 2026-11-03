@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import useUserLocation from "../../hooks/useUserLocation";
 import { getRoadDistance } from "../../api/user";
 import { TypographyText } from "../Typography";
 
-const Distance = ({ latitude, longitude, textStyle }) => {
+/**
+ * @param {{ latitude?: number, longitude?: number, textStyle?: import('react-native').StyleProp<import('react-native').TextStyle> }} props
+ */
+const Distance = memo(function Distance({ latitude, longitude, textStyle }) {
   const { requestLocation } = useUserLocation();
   const [loading, setLoading] = useState(false);
   const [distance, setDistance] = useState(0);
@@ -14,10 +17,14 @@ const Distance = ({ latitude, longitude, textStyle }) => {
       setLoading(true);
       const data = await requestLocation();
 
+      if (!data.location) {
+        return;
+      }
+
       const userLatitude = data.location.latitude;
       const userLongitude = data.location.longitude;
 
-      if (userLatitude & userLongitude && latitude && longitude) {
+      if (userLatitude && userLongitude && latitude && longitude) {
         const distance = await getRoadDistance(
           userLatitude,
           userLongitude,
@@ -48,7 +55,7 @@ const Distance = ({ latitude, longitude, textStyle }) => {
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   wrapper: {

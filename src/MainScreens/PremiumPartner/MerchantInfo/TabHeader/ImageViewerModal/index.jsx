@@ -1,4 +1,5 @@
-import {ActivityIndicator, Image, Modal, StyleSheet, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Modal, StyleSheet, TouchableOpacity, View} from "react-native";
+import Image from "../../../../../components/AppImage";
 import ImageViewer from "react-native-image-zoom-viewer";
 import {colors} from "../../../../../components/colors";
 import {TypographyText} from "../../../../../components/Typography";
@@ -7,24 +8,9 @@ import {BALOO_REGULAR} from "../../../../../redux/types";
 import CloseSvg from '../../../../../assets/close_white.svg';
 import {sized} from "../../../../../Svg";
 
-const ImageViewerModal = ({ onClose, isVisible, merchantDetails}) => {
+const ImageViewerModal = ({ onClose, isVisible, data, initialIndex = 0}) => {
 
   const CloseIcon = sized(CloseSvg, 24);
-
-  const imageViwerImages = merchantDetails?.banners?.length
-      ? merchantDetails?.banners.map(banner => ({
-          url: banner.banner_image,
-          width: SCREEN_WIDTH,
-          height: 232,
-        }))
-      : [
-          {
-            url: merchantDetails.map_banner,
-            width: SCREEN_WIDTH,
-            height: 232,
-          },
-    ];
-
 
     return (
 
@@ -39,7 +25,7 @@ const ImageViewerModal = ({ onClose, isVisible, merchantDetails}) => {
             ]}
             pageAnimateTime={100}
             saveToLocalByLongPress={false}
-            index={0}
+            index={initialIndex}
             renderImage={({ source, style }) => {
               return (
                 <View
@@ -51,17 +37,17 @@ const ImageViewerModal = ({ onClose, isVisible, merchantDetails}) => {
                 >
                   <Image
                     source={{
-                      uri: merchantDetails.banners ? source.uri : merchantDetails.map_banner
+                      uri: source.uri 
                     }}
                     style={[
                       {
                         width: '100%',
                         height: '100%',
-                        resizeMode: 'contain',
                         marginTop: (SCREEN_HEIGHT / 100) * 22,
                       },
                       style,
                     ]} // your custom style object
+                    contentFit="contain"
                     // any supported props by Image
                   />
                 </View>
@@ -94,9 +80,9 @@ const ImageViewerModal = ({ onClose, isVisible, merchantDetails}) => {
             }}
             onSwipeDown={() => onClose(false)}
             enableSwipeDown={true}
-            imageUrls={imageViwerImages}
+            imageUrls={data}
             loadingRender={() => (
-              <ActivityIndicator size={'large'} color={colors.green} />
+              <ActivityIndicator size={'large'} color={colors.loyaltyPrimary} />
             )}
             renderIndicator={(currentIndex, allSize) => (
               <View style={styles.imagesIndicator}>

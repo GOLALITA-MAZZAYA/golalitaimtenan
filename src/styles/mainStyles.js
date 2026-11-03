@@ -104,6 +104,16 @@ export const mainStyles = StyleSheet.create({
     backgroundColor: colors.white,
     marginHorizontal: 3,
   },
+  pagination_x: {
+    position: "absolute",
+    bottom: 25,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
   swiper__img: {
     width: "100%",
     height: 230,
@@ -213,7 +223,7 @@ export const mainStyles = StyleSheet.create({
   },
   notificationModal: {
     width: (SCREEN_WIDTH / 100) * 90,
-    maxHeight: SCREEN_HEIGHT / 1.4,
+    maxHeight: SCREEN_HEIGHT / 1.7,
     backgroundColor: colors.white,
     borderRadius: 8,
     position: "relative",
@@ -221,13 +231,12 @@ export const mainStyles = StyleSheet.create({
   },
   notificationModal__image: {
     width: "100%",
-    height: (SCREEN_WIDTH / 100) * 70,
     borderRadius: 8,
   },
   notificationModal__button: {
     width: "50%",
     height: 45,
-    marginTop: 20,
+    marginTop: 30,
   },
   notificationModal__close: {
     position: "absolute",

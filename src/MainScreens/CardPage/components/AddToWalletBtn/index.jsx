@@ -10,7 +10,7 @@ import { SCREEN_WIDTH } from '../../../../styles/mainStyles';
 import WalletSvg from '../../../../assets/wallet.svg';
 import AndroidSvg from '../../../../assets/googleWallet.svg';
 import { Platform } from 'react-native';
-import { APP_ORGANIZATION_ID } from '../../../../api/wallet';
+import { GOLALITA_COMPANY_ORGANIZATION_ID } from '../../../../org/config';
 
 const AddToWalletBtn = ({ selectedCardItem }) => {
   const { isDark } = useTheme();
@@ -23,25 +23,26 @@ const AddToWalletBtn = ({ selectedCardItem }) => {
   const handlePress = async () => {
     if (!selectedCardItem) return;
     try {
-      const { name, x_user_expiry, barcode, x_moi_last_name, phone } =
+      const { name, x_user_expiry, barcode, x_moi_last_name, photo, phone } =
         selectedCardItem;
 
-      let lastName =
-        x_moi_last_name && x_moi_last_name !== 'false' ? x_moi_last_name : '';
-      let fullName = lastName ? `${name} ${lastName}`.trim() : (name || '').trim();
+      let fullName = name;
 
-      const defaultOrgName = 'Imtenan';
+      if (x_moi_last_name) {
+        fullName = fullName + ' ' + x_moi_last_name;
+      }
 
       const data = {
         name: fullName,
-        contact: phone || user?.phone || undefined,
+        contact: phone,
         x_user_expiry,
-        organisation: user?.organisation || defaultOrgName,
-        organisationAndroid: user?.organisation || defaultOrgName,
+        organisation: user.organisation || 'Golalita',
+        organisationAndroid: user.organisation || 'Golalita',
+        // GoLalita Company dashboard org id (admin panel Organizations).
         organizationId:
-          user?.wallet_organization_id ||
-          user?.organizationId ||
-          APP_ORGANIZATION_ID,
+          user.wallet_organization_id ||
+          user.organizationId ||
+          GOLALITA_COMPANY_ORGANIZATION_ID,
         appUserId: userId || user?.partner_id || user?.id || null,
         userEmail: user?.email || null,
         barcode,
@@ -52,31 +53,34 @@ const AddToWalletBtn = ({ selectedCardItem }) => {
         organisation_logo: undefined,
       };
 
+
       setLoading(true);
 
       const result = await addCardToWallet(data);
 
-      // Android returns { opened: true }
+      // Android: { opened: true } after Google Wallet save sheet.
+      // iOS: WalletPasses.addPass returns false when the pass was already present.
       if (result && result.opened) {
         showMessage({
           type: 'success',
           message: t('CardPage.addCardSuccessMsg'),
         });
       } else if (result === false) {
-        // iOS returns false if pass already present
         showMessage({
           type: 'warning',
           message: t('CardPage.addedCardMsg'),
         });
       } else if (result) {
-        // iOS returns true on success
         showMessage({
           type: 'success',
           message: t('CardPage.addCardSuccessMsg'),
         });
       }
     } catch (err) {
-      console.log('AddToWalletBtn error:', err?.message || err);
+      console.log('AddToWalletBtn error message:', err.message);
+      console.log('AddToWalletBtn error response data:', JSON.stringify(err.response?.data));
+      console.log('AddToWalletBtn error response status:', err.response?.status);
+      console.log('AddToWalletBtn full error:', err);
       const detail =
         err?.response?.data?.message ||
         err?.response?.data?.error ||

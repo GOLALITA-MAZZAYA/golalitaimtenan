@@ -1,10 +1,10 @@
 import {
   ActivityIndicator,
-  Image,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
 import { Modal, View } from "react-native";
+import Image from "../../../../../components/AppImage";
 import ImageViewer from "react-native-image-zoom-viewer";
 import {
   mainStyles,
@@ -41,6 +41,7 @@ const FullScreenImageModal = ({ visible, url, onClose }) => {
                 uri: url,
               }}
               style={[styles.image, style]}
+              contentFit="contain"
             />
           </View>
         )}
@@ -97,7 +98,6 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    resizeMode: "contain",
     marginTop: (SCREEN_HEIGHT / 100) * 22,
   },
 });

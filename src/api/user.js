@@ -1,8 +1,8 @@
+import { getToken } from '../utils/secureStorage';
 import instance from '../redux/instance';
-import { getAuthToken } from '../utils/tokenStorage';
 
 export async function getRoadDistance(lat, long, lat2, long2) {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const body = {
     params: {

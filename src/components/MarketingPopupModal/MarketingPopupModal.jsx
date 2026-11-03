@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { View, TouchableOpacity, StyleSheet, Image, Linking, Dimensions, FlatList } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Linking, Dimensions, FlatList } from "react-native";
+import Image from "../AppImage";
 import Modal from "react-native-modal";
 import { connect } from "react-redux";
 import { setMarketingPopup } from "../../redux/global/global-actions";
@@ -8,10 +9,10 @@ import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import CloseSvg from "../../assets/close.svg";
 import { sized } from "../../Svg";
 import { TypographyText } from "../Typography";
-import { BALOO_MEDIUM, BALOO_REGULAR } from "../../redux/types";
+import { BALOO_MEDIUM, INTER_REGULAR } from "../../redux/types";
 import { colors } from "../colors";
 import { useTranslation } from "react-i18next";
-import { openScreen as navigate } from "../../Navigation/RootNavigation";
+import { navigate } from "../../Navigation/RootNavigation";
 import { handleRedirectScreen } from "../../utils/redirectScreen";
 import trackActivity from "../../api/activityTracker";
 
@@ -140,7 +141,7 @@ const MarketingPopupModal = ({
 
     handleClose();
 
-    if (handleRedirectScreen(item, navigate)) {
+    if (item.redirectScreen && handleRedirectScreen(item.redirectScreen, navigate)) {
       return;
     }
 
@@ -164,11 +165,27 @@ const MarketingPopupModal = ({
     }
   };
 
-  const handleScrollEnd = (e) => {
+  const handleScrollBeginDrag = () => {
+    isDraggingRef.current = true;
+    stopAutoplay();
+  };
+
+  const handleScrollEndDrag = (e) => {
+    isDraggingRef.current = false;
     const index = Math.round(e.nativeEvent.contentOffset.x / MODAL_WIDTH);
-    const nextIndex = Math.max(0, Math.min(index, popups.length - 1));
-    currentIndexRef.current = nextIndex;
-    setCurrentIndex(nextIndex);
+    const clampedIndex = Math.max(0, Math.min(index, popups.length - 1));
+    setCurrentIndex(clampedIndex);
+    currentIndexRef.current = clampedIndex;
+    startAutoplay();
+  };
+
+  const handleScrollEnd = (e) => {
+    isDraggingRef.current = false;
+    const index = Math.round(e.nativeEvent.contentOffset.x / MODAL_WIDTH);
+    const clampedIndex = Math.max(0, Math.min(index, popups.length - 1));
+    setCurrentIndex(clampedIndex);
+    currentIndexRef.current = clampedIndex;
+    startAutoplay();
   };
 
   const renderSlide = ({ item }) => (
@@ -177,14 +194,14 @@ const MarketingPopupModal = ({
       onPress={() => handlePress(item)}
       style={[
         styles.slide,
-        !item.img && { backgroundColor: item.theme_color || colors.darkBlue },
+        !item.img && { backgroundColor: item.theme_color || colors.navyBlue },
       ]}
     >
       {item.img ? (
         <Image
           source={{ uri: item.img }}
           style={styles.image}
-          resizeMode="cover"
+          contentFit="cover"
         />
       ) : (
         <View style={styles.textContainer}>
@@ -199,7 +216,7 @@ const MarketingPopupModal = ({
             <TypographyText
               title={item.desc}
               size={16}
-              font={BALOO_REGULAR}
+              font={INTER_REGULAR}
               textColor="#FFF"
               align="center"
               style={{ marginTop: 10 }}
@@ -237,17 +254,9 @@ const MarketingPopupModal = ({
               bounces={false}
               scrollEnabled={popups.length > 1}
               showsHorizontalScrollIndicator={false}
-              onScrollBeginDrag={() => {
-                isDraggingRef.current = true;
-                stopAutoplay();
-              }}
-              onMomentumScrollEnd={(e) => {
-                isDraggingRef.current = false;
-                handleScrollEnd(e);
-                if (autoplay && popups.length > 1) {
-                  startAutoplay();
-                }
-              }}
+              onScrollBeginDrag={handleScrollBeginDrag}
+              onScrollEndDrag={handleScrollEndDrag}
+              onMomentumScrollEnd={handleScrollEnd}
               getItemLayout={(data, index) => ({
                 length: MODAL_WIDTH,
                 offset: MODAL_WIDTH * index,
@@ -268,8 +277,19 @@ const MarketingPopupModal = ({
         {popups.length > 1 && (
           <View style={styles.dots}>
             {popups.map((item, index) => (
-              <View
+              <TouchableOpacity
                 key={String(item.id ?? index)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+                onPress={() => {
+                  flatListRef.current?.scrollToOffset({
+                    offset: index * MODAL_WIDTH,
+                    animated: true,
+                  });
+                  setCurrentIndex(index);
+                  currentIndexRef.current = index;
+                  startAutoplay();
+                }}
                 style={[styles.dot, index === currentIndex && styles.dotActive]}
               />
             ))}

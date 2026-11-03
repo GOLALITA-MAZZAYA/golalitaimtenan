@@ -1,0 +1,1 @@
+export const loyaltySelector = (state) => state.loyaltyReducer;

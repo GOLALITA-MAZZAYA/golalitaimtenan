@@ -1,21 +1,19 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo } from "react";
 import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Image,
-} from 'react-native';
-import { TypographyText } from '../Typography';
-import { LUSAIL_REGULAR, BALOO_BOLD} from '../../redux/types';
-import StartIcon from '../../assets/star.svg';
-import { sized } from '../../Svg';
-import FullScreenLoader from '../Loaders/FullScreenLoader';
-import { getFlexDirection, isRTL } from '../../../utils';
-import { colors } from '../colors';
-import { useTheme } from '../ThemeProvider';
-import { useTranslation } from 'react-i18next';
-import useIsGuest from '../../hooks/useIsGuest';
-import { rewriteAssetUrl } from '../../utils/rewriteAssetUrl';
+} from "react-native";
+import Image from "../AppImage";
+import { TypographyText } from "../Typography";
+import { BALOO_BOLD, LUSAIL_REGULAR } from "../../redux/types";
+import StartIcon from "../../assets/star.svg";
+import { sized } from "../../Svg";
+import FullScreenLoader from "../Loaders/FullScreenLoader";
+import { getFlexDirection, isRTL } from "../../../utils";
+import { colors } from "../colors";
+import { useTheme } from "../ThemeProvider";
+import { useTranslation } from "react-i18next";
 
 const IMAGE_SIZE = 64;
 
@@ -30,42 +28,31 @@ const CardWithNesetedItems = ({ parentProps }) => {
     onPress,
     onPressFavourite,
     distance,
-    expiryDate,
     offerCount,
     offersLabel,
-    imageAspectRatio,
   } = parentProps;
-
-  const date = endDate || expiryDate;
 
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const isGuest = useIsGuest();
   const isRtl = isRTL();
 
-  // Prefer an explicit offersLabel from the list API (offer_count). Never invent
-  // a bare "Offers" label when the count is missing or zero.
+  const StarIconSmall = useMemo(() => sized(StartIcon, 20, 20), []);
+  const starColor = isDark ? colors.mainDarkMode : colors.darkBlue;
+
   const displayOffersLabel = useMemo(() => {
-    if (
-      offersLabel !== undefined &&
-      offersLabel !== null &&
-      offersLabel !== ''
-    ) {
+    if (offersLabel !== undefined && offersLabel !== null && offersLabel !== "") {
       return offersLabel;
     }
     if (offerCount === undefined || offerCount === null) {
       return null;
     }
     const num = Number(offerCount);
-    if (num <= 0) {
-      return null;
+    if (num > 0) {
+      if (isRtl) return `${num} عروض`;
+      return `${num} ${num === 1 ? "Offer" : "Offers"}`;
     }
-    if (isRtl) return `${num} عروض`;
-    return `${num} ${num === 1 ? 'Offer' : 'Offers'}`;
+    return isRtl ? "عروض" : "Offers";
   }, [offersLabel, offerCount, isRtl]);
-
-  const StarIconSmall = useMemo(() => sized(StartIcon, 20, 20), []);
-  const starColor = isDark ? colors.mainDarkMode : colors.darkBlue;
 
   return (
     <TouchableOpacity
@@ -74,8 +61,8 @@ const CardWithNesetedItems = ({ parentProps }) => {
       style={[
         styles.wrapper,
         {
-          backgroundColor: isDark ? colors.darkBlue : colors.white,
-          borderBottomColor: isDark ? colors.borderGrey : colors.highlatedGrey,
+          backgroundColor: isDark ? "#000000" : colors.white,
+          borderBottomColor: isDark ? "#222222" : colors.highlatedGrey,
         },
       ]}
     >
@@ -83,24 +70,17 @@ const CardWithNesetedItems = ({ parentProps }) => {
         <View
           style={[
             styles.imageWrapper,
-            imageAspectRatio
-              ? {
-                  width: 112,
-                  height: undefined,
-                  aspectRatio: imageAspectRatio,
-                }
-              : null,
             {
-              backgroundColor: isDark ? colors.white : '#F5F5F5',
+              backgroundColor: isDark ? "#fff" : "#F5F5F5",
               marginLeft: isRtl ? 14 : 0,
               marginRight: isRtl ? 0 : 14,
             },
           ]}
         >
           <Image
-            source={{ uri: rewriteAssetUrl(uri) }}
+            source={{ uri }}
             style={styles.image}
-            resizeMode={imageAspectRatio ? 'cover' : 'contain'}
+            contentFit="contain"
           />
         </View>
 
@@ -115,9 +95,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
           />
 
           {loadingDescription && (
-            <FullScreenLoader
-              style={{ alignSelf: 'flex-start', marginTop: 4 }}
-            />
+            <FullScreenLoader style={{ alignSelf: "flex-start", marginTop: 4 }} />
           )}
 
           {!!description && !loadingDescription && (
@@ -130,7 +108,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
               style={[
                 styles.description,
                 {
-                  alignSelf: isRtl ? 'flex-end' : 'flex-start',
+                  alignSelf: isRtl ? "flex-end" : "flex-start",
                 },
               ]}
             />
@@ -141,7 +119,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
               style={[
                 styles.offersLinkToggle,
                 {
-                  alignSelf: isRtl ? 'flex-end' : 'flex-start',
+                  alignSelf: isRtl ? "flex-end" : "flex-start",
                 },
               ]}
             >
@@ -160,36 +138,34 @@ const CardWithNesetedItems = ({ parentProps }) => {
           style={[
             styles.rightBlock,
             {
-              alignItems: isRtl ? 'flex-start' : 'flex-end',
+              alignItems: isRtl ? "flex-start" : "flex-end",
               justifyContent:
-                (date || distance) && !loadingDescription
-                  ? 'space-between'
-                  : 'center',
+                (endDate || distance) && !loadingDescription
+                  ? "space-between"
+                  : "center",
               paddingLeft: isRtl ? 0 : 10,
               paddingRight: isRtl ? 10 : 0,
             },
           ]}
         >
-          {!isGuest && (
-            <TouchableOpacity
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              activeOpacity={0.7}
-              style={[
-                styles.favoriteButton,
-                {
-                  alignSelf: isRtl ? 'flex-start' : 'flex-end',
-                },
-              ]}
-              onPress={onPressFavourite}
-            >
-              <StarIconSmall
-                color={starColor}
-                fill={isSaved ? starColor : 'transparent'}
-              />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
+            style={[
+              styles.favoriteButton,
+              {
+                alignSelf: isRtl ? "flex-start" : "flex-end",
+              },
+            ]}
+            onPress={onPressFavourite}
+          >
+            <StarIconSmall
+              color={starColor}
+              fill={isSaved ? starColor : "transparent"}
+            />
+          </TouchableOpacity>
 
-          <View style={{ alignItems: isRtl ? 'flex-start' : 'flex-end' }}>
+          <View style={{ alignItems: isRtl ? "flex-start" : "flex-end" }}>
             {!!distance && (
               <TypographyText
                 textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
@@ -197,27 +173,27 @@ const CardWithNesetedItems = ({ parentProps }) => {
                 font={LUSAIL_REGULAR}
                 title={distance}
                 numberOfLines={1}
-                style={{ fontWeight: '700', marginBottom: 2 }}
+                style={{ fontWeight: "700", marginBottom: 2 }}
               />
             )}
-            {!!date && date !== '...' && !loadingDescription && (
+            {!!endDate && !loadingDescription && (
               <View
                 style={[
                   styles.endDateBlock,
-                  { alignItems: isRtl ? 'flex-start' : 'flex-end' },
+                  { alignItems: isRtl ? "flex-start" : "flex-end" },
                 ]}
               >
                 <TypographyText
                   textColor={
-                    isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)'
+                    isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.5)"
                   }
                   size={11}
                   font={LUSAIL_REGULAR}
-                  title={`${t('PremiumPartner.validTill')} ${date}`}
+                  title={`${t("PremiumPartner.validTill", "Valid till")} ${endDate}`}
                   numberOfLines={1}
                   style={[
                     styles.endDate,
-                    { textAlign: isRtl ? 'left' : 'right' },
+                    { textAlign: isRtl ? "left" : "right" },
                   ]}
                 />
               </View>
@@ -235,59 +211,59 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   row: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
     minHeight: IMAGE_SIZE,
   },
   imageWrapper: {
     width: IMAGE_SIZE,
     height: IMAGE_SIZE,
     borderRadius: 8,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 3,
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   infoWrapper: {
     flex: 1,
-    justifyContent: 'center',
-    alignSelf: 'stretch',
+    justifyContent: "center",
+    alignSelf: "stretch",
   },
   name: {
-    fontWeight: '700',
+    fontWeight: "700",
     lineHeight: 22,
   },
   description: {
     marginTop: 4,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   rightBlock: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     minHeight: IMAGE_SIZE,
-    alignSelf: 'stretch',
-  },
-  offersLinkToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 2,
-    marginTop: 4,
-  },
-  offersLinkText: {
-    fontWeight: '700',
-    textDecorationLine: 'underline',
+    alignSelf: "stretch",
   },
   favoriteButton: {
     padding: 2,
   },
   endDateBlock: {
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   endDate: {
-    fontWeight: '400',
+    fontWeight: "400",
+  },
+  offersLinkToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  offersLinkText: {
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
 });
 

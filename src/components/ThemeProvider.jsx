@@ -1,9 +1,9 @@
 import * as React from 'react';
-// import {useColorScheme} from 'react-native-appearance';
-import { StatusBar, Text, TouchableOpacity } from 'react-native';
-import { charitiesDarkColors, charitiesLightColors, colors, loyaltyDarkColors, loyaltyLightColors } from './colors';
+import { StatusBar, useColorScheme } from 'react-native';
+import { charitiesDarkColors, charitiesLightColors, colors, loyaltyDarkColors, loyaltyLightColors, mainDarkColors, mainLightColors } from './colors';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { org } from '../org/config';
 
 const darkColors = {
   mainBg: '#2F1539',
@@ -17,29 +17,29 @@ const lightColors = {
 export const ThemeContext = React.createContext({
   isDark: true,
   colors: darkColors,
-  setScheme: () => { },
+  setScheme: () => {},
 });
-
-colors.darkBlue = '#000';
-colors.navyBlue = '#000';
 
 export const ThemeProvider = props => {
   // Getting the device color theme, this will also work with react-native-web
-  // const colorScheme = useColorScheme(); // Can be dark | light | no-preference
-  const colorScheme = 'dark';
+  const colorScheme = useColorScheme(); // 'dark' | 'light' | null
   /*
    * To enable changing the app theme dynamicly in the app (run-time)
    * we're gonna use useState so we can override the default device theme
    */
-  const [isDark, setIsDark] = React.useState(false);
+  const [isDark, setIsDark] = React.useState(org.defaultTheme === 'dark');
 
   const setDefaultTheme = async () => {
-    const isDark = await AsyncStorage.getItem('isDark');
+    const storedIsDark = await AsyncStorage.getItem('isDark');
 
-    // Default to 'light' if no preference is stored, otherwise use the stored preference
-    const scheme = isDark === 'true' ? 'dark' : 'light';
+    if (storedIsDark === null) {
+      // No explicit user choice saved yet — default to org.defaultTheme
+      // regardless of the OS theme.
+      setScheme(org.defaultTheme);
+      return;
+    }
 
-    setScheme(scheme);
+    setScheme(storedIsDark === 'false' ? 'light' : 'dark');
   };
 
   // Listening to changes of device appearance while in run-time
@@ -47,19 +47,22 @@ export const ThemeProvider = props => {
     setDefaultTheme();
   }, [colorScheme]);
 
-  const setScheme = scheme => {
+  const setScheme = React.useCallback(scheme => {
     if (scheme === 'dark') {
       Object.entries(charitiesDarkColors).forEach(([key, value]) => {
         colors[key] = value
       })
-
-
+      
       Object.entries(loyaltyDarkColors).forEach(([key, value]) => {
         colors[key] = value
       })
 
-      colors.darkBlue = '#000';
-      colors.navyBlue = '#000';
+      Object.entries(mainDarkColors).forEach(([key, value]) => {
+        colors[key] = value
+      })
+
+      colors.darkBlue = org.colors.dark.base.darkBlue;
+      colors.navyBlue = org.colors.dark.base.navyBlue;
     } else {
 
       Object.entries(charitiesLightColors).forEach(([key, value]) => {
@@ -67,32 +70,40 @@ export const ThemeProvider = props => {
       })
 
       Object.entries(loyaltyLightColors).forEach(([key, value]) => {
-        console.log(key, value);
         colors[key] = value
       })
 
-      colors.darkBlue = '#a29475';
-      colors.navyBlue = '#072536';
+      Object.entries(mainLightColors).forEach(([key, value]) => {
+        colors[key] = value
+      })
+
+      colors.darkBlue = org.colors.light.base.darkBlue;
+      colors.navyBlue = org.colors.light.base.navyBlue;
 
     }
-    //#072536
     setIsDark(scheme === 'dark');
-  };
+  }, []);
 
-  const defaultTheme = {
-    isDark,
-    // Chaning color schemes according to theme
-    colors: isDark ? darkColors : lightColors,
-    // Overrides the isDark value will cause re-render inside the context.
-    setScheme,
-  };
+  // Memoized so the 188+ consumers of useTheme() only re-render when isDark
+  // actually changes, not on every ThemeProvider render (setScheme is
+  // stable via useCallback above, so it's safe to include here).
+  const defaultTheme = React.useMemo(
+    () => ({
+      isDark,
+      // Chaning color schemes according to theme
+      colors: isDark ? darkColors : lightColors,
+      // Overrides the isDark value will cause re-render inside the context.
+      setScheme,
+    }),
+    [isDark, setScheme],
+  );
 
   const backgroundColor = isDark ? colors.darkModeBackground : '#fff';
 
   return (
     <ThemeContext.Provider value={defaultTheme}>
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor }}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor }}>
           <StatusBar translucent={false} backgroundColor={backgroundColor} />
           {props.children}
         </SafeAreaView>

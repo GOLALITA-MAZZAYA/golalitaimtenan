@@ -13,8 +13,8 @@ const NotificationIcon = ({isSubscribe, merchantId}) => {
     const dispatch = useDispatch();
     const {t} = useTranslation();
 
-    const NotificationIcon = sized(NotificationSvg, 17, 20, '#fff');
-    const NotificationDisabledIcon = sized(NotificationDisabledSvg, 17, 17, '#fff');
+    const NotificationIcon = sized(NotificationSvg, 10, 10, '#fff');
+    const NotificationDisabledIcon = sized(NotificationDisabledSvg, 10, 10, '#fff');
 
     return (
           <TouchableOpacity
@@ -49,8 +49,8 @@ const NotificationIcon = ({isSubscribe, merchantId}) => {
 
 const styles = StyleSheet.create({
   notificationIcon: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#DDDFE4",

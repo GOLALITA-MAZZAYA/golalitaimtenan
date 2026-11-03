@@ -20,17 +20,17 @@ const initialState = {
 export const globalTixCartReducer = (state = initialState, action) => {
   // Only log for cart-related actions, not every action
   if (action.type.includes('GLOBALTIX_CART')) {
-    console.log('=== globalTixCartReducer Debug ===');
-    console.log('Action type:', action.type);
-    console.log('Action payload:', action.payload);
+    // console.log('=== globalTixCartReducer Debug ===');
+    // console.log('Action type:', action.type);
+    // console.log('Action payload:', action.payload);
   }
-  
+
   switch (action.type) {
     case ADD_TO_GLOBALTIX_CART: {
       console.log('Processing ADD_TO_GLOBALTIX_CART');
-      const { productId, optionId, ticketTypeId, product, option, ticketType, quantity = 1, convertedPrice, visitDate, isUserAction = true } = action.payload;
+      const { productId, optionId, ticketTypeId, product, option, ticketType, quantity = 1, convertedPrice, visitDate, eventId, timeSlot, isUserAction = true, isDynamicPrice, ceaNettPrice, ceaMsp, ceaRsp } = action.payload;
       const cartKey = `${productId}_${optionId}_${ticketTypeId}`;
-      
+
       console.log('Cart key:', cartKey);
       console.log('Existing cart items:', state.cartItems);
       console.log('Item exists in cart:', !!state.cartItems[cartKey]);
@@ -39,7 +39,7 @@ export const globalTixCartReducer = (state = initialState, action) => {
       // Check if this is the same attraction (same productId)
       const existingCartItems = Object.values(state.cartItems);
       const isSameAttraction = existingCartItems.some(item => item.productId === productId);
-      
+
       if (!state.cartItems[cartKey]) {
         // If cart is empty or this is the same attraction, proceed
         if (existingCartItems.length === 0 || isSameAttraction) {
@@ -55,6 +55,12 @@ export const globalTixCartReducer = (state = initialState, action) => {
             quantity,
             price: convertedPrice || ticketType.nettPrice || ticketType.originalPrice || ticketType.price || 0,
             visitDate: visitDate || null,
+            eventId: eventId || null,
+            timeSlot: timeSlot || null,
+            isDynamicPrice: isDynamicPrice || false,
+            ceaNettPrice: ceaNettPrice || null,
+            ceaMsp: ceaMsp || null,
+            ceaRsp: ceaRsp || null,
           };
           console.log('New cart items after adding:', newCartItems);
           return { ...state, cartItems: newCartItems, isUserAction: false };
@@ -72,15 +78,21 @@ export const globalTixCartReducer = (state = initialState, action) => {
             quantity,
             price: convertedPrice || ticketType.nettPrice || ticketType.originalPrice || ticketType.price || 0,
             visitDate: visitDate || null,
+            eventId: eventId || null,
+            timeSlot: timeSlot || null,
+            isDynamicPrice: isDynamicPrice || false,
+            ceaNettPrice: ceaNettPrice || null,
+            ceaMsp: ceaMsp || null,
+            ceaRsp: ceaRsp || null,
           };
           console.log('New cart items after clearing and adding:', newCartItems);
-          
+
           // Only show notification if there were existing items in the cart AND this is a user action
           const hadExistingItems = Object.keys(state.cartItems).length > 0;
           const shouldShowNotification = hadExistingItems && isUserAction;
-          
-          return { 
-            ...state, 
+
+          return {
+            ...state,
             cartItems: newCartItems,
             cartClearedForNewAttraction: shouldShowNotification, // Only true if there were existing items AND user action
             newAttractionName: shouldShowNotification ? (product.name || 'New Attraction') : null,
@@ -96,6 +108,8 @@ export const globalTixCartReducer = (state = initialState, action) => {
         quantity: quantity, // Set the quantity directly instead of adding
         price: convertedPrice || newCartItems[cartKey].price, // Update price if converted price is provided
         visitDate: visitDate || newCartItems[cartKey].visitDate, // Update visit date if provided
+        eventId: eventId !== undefined ? eventId : newCartItems[cartKey].eventId, // Update eventId if provided
+        timeSlot: timeSlot !== undefined ? timeSlot : newCartItems[cartKey].timeSlot, // Update timeSlot if provided
       };
       console.log('New cart items after updating:', newCartItems);
 
@@ -117,7 +131,7 @@ export const globalTixCartReducer = (state = initialState, action) => {
     }
 
     case UPDATE_GLOBALTIX_CART_QUANTITY: {
-      const { productId, optionId, ticketTypeId, quantity, convertedPrice, visitDate } = action.payload;
+      const { productId, optionId, ticketTypeId, quantity, convertedPrice, visitDate, eventId, timeSlot, ceaNettPrice } = action.payload;
       const cartKey = `${productId}_${optionId}_${ticketTypeId}`;
 
       if (!state.cartItems[cartKey] || quantity <= 0) {
@@ -128,8 +142,11 @@ export const globalTixCartReducer = (state = initialState, action) => {
       newCartItems[cartKey] = {
         ...newCartItems[cartKey],
         quantity,
-        price: convertedPrice || newCartItems[cartKey].price, // Update price if converted price is provided
-        visitDate: visitDate || newCartItems[cartKey].visitDate, // Update visit date if provided
+        price: convertedPrice || newCartItems[cartKey].price,
+        visitDate: visitDate || newCartItems[cartKey].visitDate,
+        eventId: eventId !== undefined ? eventId : newCartItems[cartKey].eventId,
+        timeSlot: timeSlot !== undefined ? timeSlot : newCartItems[cartKey].timeSlot,
+        ...(ceaNettPrice !== undefined && { ceaNettPrice }),
       };
 
       console.log('Updated cart item:', newCartItems[cartKey]);
@@ -161,7 +178,7 @@ export const globalTixCartReducer = (state = initialState, action) => {
       // Use the stored prices (which should be converted QAR prices)
       Object.entries(state.cartItems).forEach(([key, item]) => {
         const itemPrice = item.price || 0; // Use the stored price (converted QAR)
-        
+
         console.log('Item price for calculation:', itemPrice, 'for item:', item.ticketType?.name);
         totalPrice += itemPrice * item.quantity;
         totalQuantity += item.quantity;

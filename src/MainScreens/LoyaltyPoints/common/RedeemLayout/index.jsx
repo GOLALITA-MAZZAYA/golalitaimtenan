@@ -1,77 +1,93 @@
 import {useTranslation} from "react-i18next";
 import {StyleSheet, View} from "react-native";
-import {useTheme} from "../../../../components/ThemeProvider";
 import {colors} from "../../../../components/colors";
-import CommonButton from "../../../../components/CommonButton/CommonButton";
 import useUserLoyaltyPoints from "../../../../hooks/useUserLoyaltyPoints";
 import {TypographyText} from "../../../../components/Typography";
+import GiftSvg from '../../../../assets/loyaltyPoints/gift.svg';
+import {BALOO_2} from "../../../../redux/types";
+import {useNavigation} from "@react-navigation/native";
+import Button from "../../../../components/Button";
 
 const RedeemLayout = ({title, subTitle, price, loading, onRedeemPress}) => {
     const {points} = useUserLoyaltyPoints();
     const {t} = useTranslation();
-    const {isDark} = useTheme();
-
-    const textColor = isDark ? colors.white: 'black'
+    const navigation = useNavigation();
 
     return (
        <View style={styles.wrapper}>
 
-            <TypographyText
-                title={title}
-                textColor={textColor}
-                size={22}  
-                style={styles.title}              
-            />
+            <View style={[styles.giftIcon,{backgroundColor: colors.loyaltyPrimaryIconBackground}]}>
+               <GiftSvg color={colors.loyaltyPrimary}/>
+            </View>
 
             <TypographyText
                 title={subTitle}
-                textColor={textColor}
-                size={16}   
-                style={styles.subTitle}             
+                textColor={colors.loyaltyTextMainTitle}
+                size={30}  
+                style={styles.title}  
+                font={BALOO_2}            
+            />
+
+            <TypographyText
+                title={title}
+                textColor={colors.loyaltyPrimary}
+                size={14}   
+                style={styles.subTitle}
+                font={BALOO_2}             
             />
 
      <View style={styles.priceWrapper}>
+
             <View style={styles.block}>
-
-
             <TypographyText
                 title={points}
-                textColor={textColor}
-                size={24}   
-                style={styles.valueText}             
+                textColor={colors.loyaltyTextMainTitle}
+                size={42}   
+                style={styles.valueTextBold}
+                font={BALOO_2}             
             />
              <TypographyText
                 title={t('LoyaltyMain.availablePoints')}
-                textColor={textColor}
-                size={16} 
-                style={styles.valueDescription}               
+                textColor={colors.loyaltySecondary}
+                size={14} 
+                style={styles.valueDescription}
+                font={BALOO_2}               
             />
             </View>
 
-            <View>
+            <View style={styles.block}>
             <TypographyText
                 title={price}
-                textColor={textColor}
-                size={24} 
-                style={styles.valueText}                
+                textColor={colors.loyaltyPrimary}
+                size={42} 
+                style={styles.valueTextBold}
+                font={BALOO_2}                
             />
                  <TypographyText
                 title={t('LoyaltyMain.pointsNeeded')}
-                textColor={textColor}
-                size={16} 
-                style={styles.valueDescription}                
+                textColor={colors.loyaltyPrimary}
+                size={14} 
+                style={styles.valueDescription}
+                font={BALOO_2}                
             />
             </View>
             </View>
 
 
-            <CommonButton
+            <Button
                 loading={loading}
-                label={t('LoyaltyMain.redeem')}
+                text={t('LoyaltyMain.confirmRedemption')}
                 style={
                   styles.redeemBtn
                 }
                 onPress={onRedeemPress}
+            />
+
+            <Button
+                text={t('LoyaltyMain.cancel')}
+                style={styles.cancelBtn}
+                onPress={navigation.goBack}
+                primary={false}
             />
  
        </View>
@@ -81,33 +97,48 @@ const RedeemLayout = ({title, subTitle, price, loading, onRedeemPress}) => {
 const styles = StyleSheet.create({
    wrapper: {
      flex: 1,
-     justifyContent: 'center',
-     marginBottom: 80
+     alignItems: 'center',
+     marginBottom: 80,
+     paddingTop: 30
    },
    title: {
      marginTop: 20,
-     textAlign: 'center'
+     textAlign: 'center',
+     fontWeight: '700'
    },
    subTitle: {
       marginTop: 20,
       textAlign: 'center'
    },
    redeemBtn: {
-    marginTop: 40
+    alignSelf: 'stretch',
+    marginTop: 60
    },
    block: {
-  
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginHorizontal: 40
    },
    priceWrapper: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: 80
+      marginTop: 40
    },
-   valueText: {
+   valueTextBold: {
      fontWeight: '700'
    },
    valueDescription: {
 
+   },
+   giftIcon: {
+     width: 100,
+     height: 100,
+     borderRadius: 30,
+     justifyContent: 'center',
+     alignItems: 'center'
+   },
+   cancelBtn: {
+    marginTop: 5
    }
 });
 

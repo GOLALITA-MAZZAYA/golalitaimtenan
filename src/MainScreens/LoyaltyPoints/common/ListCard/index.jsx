@@ -1,87 +1,131 @@
-import {Image, StyleSheet, TouchableOpacity, View} from "react-native"
+import React, { memo } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import Image from "../../../../components/AppImage";
 import RightArrowSvg from '../../../../assets/loyaltyPoints/rightArrow.svg';
 import RightArrowLightSvg from '../../../../assets/loyaltyPoints/right-arrow-light';
-import {colors} from "../../../../components/colors";
-import {TypographyText} from "../../../../components/Typography";
-import {isRTL} from "../../../../../utils";
+import { colors } from "../../../../components/colors";
+import { TypographyText } from "../../../../components/Typography";
+import { isRTL } from "../../../../../utils";
+import { useTheme } from "../../../../components/ThemeProvider";
+import { BALOO_BOLD, BALOO_REGULAR } from "../../../../redux/types";
 
-const ListCard = ({icon, onPress, title, description, style, isDark}) => {
+const ListCard = memo(({ icon, onPress, title, description, style, isDark: isDarkProp, isGrouped }) => {
+  const { isDark: isDarkTheme } = useTheme();
+  const isDark = isDarkProp ?? isDarkTheme;
 
-    return (
-        <TouchableOpacity style={[styles.wrapper,
-          {flexDirection: isRTL() ? 'row-reverse': 'row',
-            backgroundColor: colors.loyaltyCardBackground,
-            borderColor: colors.loyaltyMainBorder,
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      style={[
+        isGrouped ? styles.groupedWrapper : styles.standaloneWrapper,
+        {
+          flexDirection: isRTL() ? 'row-reverse' : 'row',
+          backgroundColor: isGrouped ? 'transparent' : isDark ? '#18181B' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+        },
+        style,
+      ]}
+      onPress={onPress}
+    >
+      <View
+        style={[
+          styles.iconWrapper,
+          {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F4F4F5',
+            marginLeft: isRTL() ? 12 : 0,
+            marginRight: isRTL() ? 0 : 12,
           },
-           style,
-          ]}
-          onPress={onPress}
-          >
-           <View style={styles.iconWrapper}>
-            <Image source={typeof icon === 'string' ? {uri: icon}: icon} style={styles.icon} resizeMode="cover"/>
-          </View>
+        ]}
+      >
+        <Image
+          source={typeof icon === 'string' ? { uri: icon } : icon}
+          style={styles.icon}
+          contentFit="contain"
+        />
+      </View>
 
-          <View style={styles.textWrapper}>
-           <TypographyText
-              title={title}
-              textColor={colors.loyaltyTextMainTitle}
-              size={18}
-              style={styles.title}
-            />
+      <View style={styles.textWrapper}>
+        <TypographyText
+          title={title}
+          textColor={isDark ? '#FFFFFF' : '#111827'}
+          size={15}
+          font={BALOO_BOLD}
+          style={styles.title}
+        />
 
-            {description && <TypographyText
-              title={description}
-              textColor={colors.loyaltyTextSecondary}
-              size={14}
-            />}
-          </View>
-          
-          <View style={[
-            styles.arrowWrapper,
-            {
-            transform: [
-              { rotate: isRTL() ? "180deg": '0deg' },
-            ]
-            }
-           ]}>
-             {isDark ? <RightArrowSvg color={'white'}/>: <RightArrowLightSvg />}
-          </View>
+        {!!description && (
+          <TypographyText
+            title={description}
+            textColor={isDark ? '#71717A' : '#A1A1AA'}
+            size={12}
+            font={BALOO_REGULAR}
+            style={styles.description}
+          />
+        )}
+      </View>
 
-        </TouchableOpacity>
-    )
-};
-
-const styles = StyleSheet.create({
-    wrapper: {
-      flexDirection: 'row',
-      padding: 16,
-      borderRadius: 20,
-      borderWidth: 1,
-    },
-    iconWrapper: {
-      width: 52,
-      height: 52,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    icon: {
-      width: 52,
-      height: 52,
-      borderRadius: 14
-    },
-    title: {
-        fontWeight: '700'
-    },
-    textWrapper: {
-      paddingHorizontal: 8,
-      justifyContent: 'center',
-      flex: 1,
-    },
-    arrowWrapper: {
-      alignSelf: 'stretch',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }
+      <View
+        style={[
+          styles.arrowWrapper,
+          {
+            transform: [{ rotate: isRTL() ? '180deg' : '0deg' }],
+          },
+        ]}
+      >
+        {isDark ? (
+          <RightArrowSvg color="#71717A" />
+        ) : (
+          <RightArrowLightSvg color="#A1A1AA" />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 });
 
-export default ListCard
+const styles = StyleSheet.create({
+  standaloneWrapper: {
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  groupedWrapper: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  iconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    width: 34,
+    height: 34,
+  },
+  title: {
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  description: {
+    marginTop: 2,
+  },
+  textWrapper: {
+    justifyContent: 'center',
+    flex: 1,
+  },
+  arrowWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+});
+
+export default ListCard;

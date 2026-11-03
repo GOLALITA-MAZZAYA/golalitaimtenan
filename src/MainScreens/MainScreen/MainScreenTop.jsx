@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { mainStyles } from "../../styles/mainStyles";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { getFlexDirection, isRTL } from "../../../utils";
@@ -13,6 +13,7 @@ import { sized } from "../../Svg";
 import BurgerSvg from "../../assets/burger.svg";
 import SearchSvg from "../../assets/search.svg";
 import NotificationSvg from "../../assets/notification_white.svg";
+import { logo } from "../../org/assets";
 
 const MainScreenTop = ({ user, messageNotifications }) => {
   const { t } = useTranslation();
@@ -35,6 +36,11 @@ const MainScreenTop = ({ user, messageNotifications }) => {
     });
   };
 
+  const unreadCount = useMemo(
+    () => messageNotifications?.filter((m) => m.state === "unread")?.length,
+    [messageNotifications]
+  );
+
   return (
     <View style={[styles.container, mainStyles.p20]}>
       <View style={[mainStyles.betweenRow, getFlexDirection()]}>
@@ -51,7 +57,7 @@ const MainScreenTop = ({ user, messageNotifications }) => {
         <TouchableOpacity>
           <Image
             style={styles.logo}
-            source={require("../../../assets/logo.png")}
+            source={logo}
           />
         </TouchableOpacity>
 
@@ -64,17 +70,13 @@ const MainScreenTop = ({ user, messageNotifications }) => {
           </TouchableOpacity>
           <TouchableOpacity onPress={toNotifications} style={styles.actionBtn}>
             <NotificationIcon />
-            {messageNotifications?.filter((m) => m.state === "unread")?.length >
-              0 && (
+            {unreadCount > 0 && (
               <View style={styles.TabView__notifications}>
                 <TypographyText
                   textColor={colors.white}
                   size={9}
                   font={BALOO_SEMIBOLD}
-                  title={
-                    messageNotifications?.filter((m) => m.state === "unread")
-                      ?.length
-                  }
+                  title={unreadCount}
                   style={{ width: 5, height: 14 }}
                 />
               </View>

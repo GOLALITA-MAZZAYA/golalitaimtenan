@@ -13,14 +13,11 @@ import {
   SET_ORGANIZATIONS,
   SET_PREMIUM_BANNERS,
   SET_PREMIUM_MERCHANTS,
-  SET_SOCIAL_MEDIA,
   SET_PARENT_CATEGORIES,
   SET_TRAVEL_CATEGORIES,
   SET_MERCHANT_DETAILS_LOADING,
   SET_PARENT_CATEGORIES_LOADING,
   SET_CATEGORIES_TYPE,
-  SET_HAS_ESIM_CATEGORY,
-  SET_PARENT_CATEGORIES_BY_TYPE,
 } from "./merchant-types";
 
 const initialState = {
@@ -29,7 +26,6 @@ const initialState = {
   premiumMerchants: [],
 
   offers: [],
-  offersTotalCount: 0,
   currentOffer: [],
   currentOfferLoading: false,
   offersPage: 1,
@@ -40,13 +36,7 @@ const initialState = {
   categories: [],
   parentCategoriesLoading: false,
   parentCategories: null,
-  // Keep last Local/Global lists so switching tabs is instant.
-  parentCategoriesByType: {
-    local: null,
-    global: null,
-  },
   categoriesType: "local",
-  hasEsimCategory: false,
   travelCategories: null,
 
   merchantDetails: null,
@@ -63,19 +53,16 @@ const initialState = {
   organizations: [],
   advert: null,
   currentVideo: 0,
-  socialMedia: null,
 };
 
 export const merchantReducer = (state = initialState, action) => {
   switch (action.type) {
     case SET_MERCHANTS:
       const { data = [], concat = false, page = 1 } = action.merchants;
-      const nextData = Array.isArray(data) ? data : [];
-      const current = Array.isArray(state.merchants) ? state.merchants : [];
 
       return {
         ...state,
-        merchants: concat ? current.concat(nextData) : nextData,
+        merchants: concat ? state.merchants.concat(data) : data,
         searchedMerchants: [],
         merchantsPage: page,
       };
@@ -87,53 +74,24 @@ export const merchantReducer = (state = initialState, action) => {
         data: offfers = [],
         concat: offersConcat = false,
         page: offersPage = 1,
-        totalCount: offersTotalCount,
       } = action.offers;
 
       return {
         ...state,
         offers: offersConcat ? state.offers.concat(offfers) : offfers,
         offersPage,
-        merchantIdsToGroup: action.offers.merchantIdsToGroup,
-        ...(offersTotalCount !== undefined
-          ? { offersTotalCount: Number(offersTotalCount) || 0 }
-          : {}),
+        merchantIdsToGroup: action.offers.merchantIdsToGroup
       };
     case SET_MERCHANT_OFFERS:
       return { ...state, merchantOffers: action.merchantOffers };
     case SET_CATEGORIES:
       return { ...state, categories: action.categories };
-    case SET_CATEGORIES_TYPE: {
-      const nextType = action.categoriesType;
-      const cached = state.parentCategoriesByType?.[nextType];
-
-      return {
-        ...state,
-        categoriesType: nextType,
-        // Instant swap when cached; otherwise clear so the loader can show.
-        parentCategories: Array.isArray(cached) ? cached : [],
-      };
-    }
+    case SET_CATEGORIES_TYPE:
+      return { ...state, categoriesType: action.categoriesType };
     case SET_PARENT_CATEGORIES:
       return { ...state, parentCategories: action.parentCategories };
-    case SET_PARENT_CATEGORIES_BY_TYPE: {
-      const type = action.categoriesType;
-      const list = action.parentCategories;
-
-      return {
-        ...state,
-        parentCategoriesByType: {
-          ...state.parentCategoriesByType,
-          [type]: list,
-        },
-        parentCategories:
-          state.categoriesType === type ? list : state.parentCategories,
-      };
-    }
     case SET_PARENT_CATEGORIES_LOADING:
       return { ...state, parentCategoriesLoading: action.loading };
-    case SET_HAS_ESIM_CATEGORY:
-      return { ...state, hasEsimCategory: !!action.hasEsimCategory };
     case SET_TRAVEL_CATEGORIES:
       return { ...state, travelCategories: action.travelCategories };
     case SET_MERCHANT_DETAILS_LOADING:
@@ -183,8 +141,6 @@ export const merchantReducer = (state = initialState, action) => {
       return { ...state, advert: action.advert };
     case SET_CURRENT_VIDEO:
       return { ...state, currentVideo: action.currentVideo };
-    case SET_SOCIAL_MEDIA:
-      return { ...state, socialMedia: action.socialMedia };
     default:
       return state;
   }

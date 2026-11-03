@@ -35,23 +35,38 @@ const getCacheKey = (text, targetLang) => {
 export const getCachedTranslation = async (text, targetLang) => {
   try {
     if (!text || text.trim().length === 0) return null;
-    
+
     const cacheKey = getCacheKey(text, targetLang);
+    const now = Date.now();
+
+    const fromMemory = memoryCache.get(cacheKey);
+    if (fromMemory) {
+      if (fromMemory.text === text && now - fromMemory.timestamp < CACHE_EXPIRY_MS) {
+        return fromMemory.translation;
+      }
+      memoryCache.delete(cacheKey);
+    }
+
     const cached = await AsyncStorage.getItem(cacheKey);
-    
+
     if (cached) {
-      const { translation, timestamp } = JSON.parse(cached);
-      const now = Date.now();
-      
+      const { text: cachedText, translation, timestamp } = JSON.parse(cached);
+
+      // Guard against hash collisions between different source texts
+      if (cachedText !== text) {
+        return null;
+      }
+
       // Check if cache is still valid
       if (now - timestamp < CACHE_EXPIRY_MS) {
+        memoryCache.set(cacheKey, { text: cachedText, translation, timestamp });
         return translation;
       } else {
         // Remove expired cache
         await AsyncStorage.removeItem(cacheKey);
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error getting cached translation:', error);
@@ -68,6 +83,7 @@ export const setCachedTranslation = async (text, targetLang, translation) => {
     
     const cacheKey = getCacheKey(text, targetLang);
     const cacheData = {
+      text,
       translation,
       timestamp: Date.now(),
     };
@@ -84,25 +100,6 @@ export const setCachedTranslation = async (text, targetLang, translation) => {
     await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheData));
   } catch (error) {
     console.error('Error caching translation:', error);
-  }
-};
-
-/**
- * Clear all translation cache (both memory and AsyncStorage)
- */
-export const clearTranslationCache = async () => {
-  try {
-    // Clear memory cache
-    const memoryCacheSize = memoryCache.size;
-    memoryCache.clear();
-    
-    // Clear AsyncStorage cache
-    const keys = await AsyncStorage.getAllKeys();
-    const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX));
-    await AsyncStorage.multiRemove(cacheKeys);
-    console.log(`Cleared ${memoryCacheSize} memory + ${cacheKeys.length} AsyncStorage cached translations`);
-  } catch (error) {
-    console.error('Error clearing translation cache:', error);
   }
 };
 

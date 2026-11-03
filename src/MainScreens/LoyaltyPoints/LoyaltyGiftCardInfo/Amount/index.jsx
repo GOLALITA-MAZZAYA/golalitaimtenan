@@ -12,13 +12,14 @@ import { colors } from "../../../../components/colors";
 import { getGiftCardAmount } from "../../../../api/giftCard";
 import Range from "./Range";
 import { useTranslation } from "react-i18next";
-import Select from "../../../../components/Form/Select";
+import CustomSelect from "../../../../components/Form/CustomSelect";
+import CustomSelectTabs from "../../../../components/Form/CustomSelectTabs";
 
 const getOptions = (denominations) => {
   return denominations.map((item) => ({
     value: item.amount,
     label: `${item.amount} ${item.currency}`,
-  }));
+  })).sort((a,b) => a.amount - b.amount);
 };
 
 const Amount = ({
@@ -67,16 +68,9 @@ const Amount = ({
   };
 
   return (
-    <View>
-      <TypographyText
-        title={t("Vouchers.giftCardAmount")}
-        textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-        size={18}
-        font={BALOO_BOLD}
-        style={styles.priceTitle}
-      />
+    <View style={styles.wrapper}>
 
-      {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
 
       {!loading &&
         giftCardAmounts?.length === 1 &&
@@ -144,26 +138,21 @@ const Amount = ({
       {!loading &&
         !!giftCardAmounts?.length &&
         !!giftCardAmounts?.[0]?.amount && (
-          <Select
-            mainStyle={styles.select}
-            placeholder={t("Vouchers.amountSelectPlaceholder")}
-            options={getOptions(giftCardAmounts)}
-            value={amount}
-            onChange={(val) => {
-              if (val) {
-                onSlidingComplete(val);
-              }
-              setAmount(val);
-            }}
-            single={true}
-            allowClear={false}
-          />
+
+        giftCardAmounts.length > 4 ? 
+          <CustomSelect onSelect={(value) => setAmount(value)} value={amount} options={getOptions(giftCardAmounts)} placeholder={t("Vouchers.amountSelectPlaceholder")}/> 
+        : <CustomSelectTabs  onSelect={(value) => setAmount(value)} value={amount} options={getOptions(giftCardAmounts)} label={t("Vouchers.amountSelectPlaceholder")}/>
         )}
+
+      
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+     marginTop: 20
+  },
   priceTitle: {
     marginTop: 24,
     marginBottom: 11,

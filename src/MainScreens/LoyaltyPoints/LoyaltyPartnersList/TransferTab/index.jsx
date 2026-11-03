@@ -1,12 +1,13 @@
+import {useCallback} from "react";
 import {FlatList, StyleSheet} from "react-native";
 import {useInfiniteQuery} from "react-query";
 import {useTranslation} from "react-i18next";
 import { getLoyaltyTransferPartners} from "../../../../api/loyalty";
-import PartnerListCard from "../../common/PartnerListCard";
 import FullScreenLoader from "../../../../components/Loaders/FullScreenLoader";
 import NoData from "../../../Transactions/components/NoData";
 import {useTheme} from "../../../../components/ThemeProvider";
 import {useNavigation} from "@react-navigation/native";
+import ListCard from "../../common/ListCard";
 
 const TransferTab = () => {
   const {
@@ -32,20 +33,34 @@ const TransferTab = () => {
     
   const partners = data?.pages.flatMap(page => page.data) || [];
 
-  const handleSelectPress = (item) => {
+  const handleSelectPress = useCallback((item) => {
        navigation.navigate('loyaltyPoints-partners-transfer',{
           partner: item
       })
-  }
+  }, [navigation]);
+
+  const renderItem = useCallback(({ item }) => {
+    return (
+      <ListCard
+        icon={item.merchant_logo}
+        title={isAr ? item.x_arabic_name: item.merchant_name}
+        description={t('LoyaltyPartners.transferListCardInfo')}
+        onPress={() => handleSelectPress(item)}
+        style={styles.listCard}
+        isDark={isDark}
+      />
+    )
+  }, [isAr, isDark, t, handleSelectPress]);
     
     return (
-          <FlatList
+  <FlatList
+      showsVerticalScrollIndicator={false}
       data={!isLoading ? partners : []}
-      renderItem={({ item, index }) => {
-        return (
-          <PartnerListCard howToUse={isAr ? item.x_use_term_ar: item.x_use_term_en} uri={item.merchant_logo} title={isAr ? item.x_arabic_name: item.merchant_name} isDark={isDark} submitText={t('LoyaltyPartners.select')} onPress={() => handleSelectPress(item)}/>
-        );
-      }}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      removeClippedSubviews={true}
+      renderItem={renderItem}
       keyExtractor={(item, index) => index.toString()}
       style={styles.list}
       contentContainerStyle={styles.contentContainerStyle}
@@ -75,6 +90,12 @@ const styles = StyleSheet.create({
    contentContainerStyle: {
     flexGrow: 1,
     paddingBottom: 160
+   },
+   listCard: {
+    marginTop: 15
+   },
+   title: {
+    fontWeight: '500'
    }
 });
 

@@ -1,51 +1,31 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Platform, TouchableOpacity, Text } from 'react-native';
+import { View, ActivityIndicator, Platform, Linking } from 'react-native';
 import MainLayout from '../../components/MainLayout';
-import { SCREEN_HEIGHT } from '../../styles/mainStyles';
 import { colors } from '../../components/colors';
 import { useTheme } from '../../components/ThemeProvider';
 import { connect } from 'react-redux';
-import {
-  getMerchantDetails,
-  trackBanner,
-} from '../../redux/merchant/merchant-thunks';
-import { useTranslation } from 'react-i18next';
-import { onBannerPress } from '../../../utils';
+import useBannerPress from '../../hooks/useBannerPress';
 import { handleNotificationClick } from '../../pushNotifications/notificationClickHandler';
 import AdwertSwiper from '../../components/AdwertSwiper/AdwertSwiper';
-import { ScrollView } from 'react-native-gesture-handler';
 import { setIsSplashScreenVisible } from '../../redux/auth/auth-actions';
 import Categories from './components/Categories';
 import NotificationModal from '../../components/NotificationModal/NotificationModal';
 import MarketingPopupModal from '../../components/MarketingPopupModal/MarketingPopupModal';
 import { getMarketingPopupThunk } from '../../redux/global/global-thunks';
 import MerchantListHeader from '../MerchantsPage/components/MerchantsHeader';
-import Header from '../../components/Header';
-import AdwertisementModal from './components/AdwertisementModal';
-import { CHARITY_MERCHANT_IDS } from '../../constants';
-import { handleRedirectScreen } from '../../utils/redirectScreen';
-import { openScreen } from '../../Navigation/RootNavigation';
-import trackActivity from '../../api/activityTracker';
+import NotificationsBtn from '../../components/Header/components/NotificationsBtn';
 import FloatingAiChatButton from '../../components/FloatingAiChatButton';
+import { isRTL } from '../../../utils';
 
 const MainScreen = ({
-  navigation,
-  user,
-  getMerchantDetails,
   advert,
   clickedNotification,
-  trackBanner,
   setIsSplashScreenVisible,
   getMarketingPopupThunk,
-  hasShownMarketingPopup,
+  hasShownMarketingPopup
 }) => {
-  const { t } = useTranslation();
   const { isDark } = useTheme();
   const isLoaded = !!advert && hasShownMarketingPopup;
-
-  useEffect(() => {
-    getMarketingPopupThunk();
-  }, []);
 
   useEffect(() => {
     if (clickedNotification) {
@@ -53,61 +33,24 @@ const MainScreen = ({
     }
   }, [clickedNotification]);
 
-  const handleBannerPress = item => {
-    trackActivity('home_banner_click', {
-      reference: item.tracking_code || item.id,
-      page_name: 'home',
-      merchant_id: item.merchant_id || undefined,
-      product_id: item.product_id || undefined,
-      metadata: { slot: 'ad_1' },
-    });
+  useEffect(() => {
+    getMarketingPopupThunk();
+  }, []);
 
-    if (item.redirectScreen && handleRedirectScreen(item.redirectScreen)) {
-      return;
-    }
-
-    if (item.product_id) {
-      openScreen('AllOffers', {
-        screen: 'offer-info',
-        params: {
-          productId: item.product_id,
-          title: item.name,
-        },
-      });
-      return;
-    }
-
-    if (item.name == 'Mumayizat') {
-      openScreen('MumayzInfo', { title: 'Mumayizat Oman' });
-      return;
-    }
-
-    if (item.internal) {
-      if (item.merchant_id) {
-        if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
-          openScreen('Charities', { merchantId: item.merchant_id });
-          return;
-        }
-
-        getMerchantDetails(item.merchant_id, null, t);
-      }
-    } else {
-      onBannerPress(
-        item.banner_url,
-        getMerchantDetails,
-        navigation,
-        t,
-        trackBanner,
-        user,
-        item.tracking_code,
-      );
-    }
-  };
+  const handleBannerPress = useBannerPress({ pageName: 'home' });
 
   useEffect(() => {
-    setTimeout(() => {
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      console.log('DEEP LINK RECEIVED:', url);
+    });
+
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
       setIsSplashScreenVisible(false);
-    }, 1000);
+    }
   }, [isLoaded]);
 
   if (!isLoaded) {
@@ -129,53 +72,66 @@ const MainScreen = ({
   }
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <MainLayout
         outsideScroll={true}
         headerChildren={
-          <Header label={t('TabBar.home')} btns={['notifications']} />
+          <View
+            style={{
+              flexDirection: isRTL() ? 'row-reverse' : 'row',
+              alignItems: 'center',
+              paddingHorizontal: 20,
+              paddingVertical: 8,
+              justifyContent: 'space-between',
+            }}
+          >
+            <MerchantListHeader isHome={true} style={{ flex: 1 }} />
+            <View
+              style={{
+                marginLeft: isRTL() ? 0 : 12,
+                marginRight: isRTL() ? 12 : 0,
+              }}
+            >
+              <NotificationsBtn />
+            </View>
+          </View>
         }
-        headerHeight={50}
-        contentStyle={{ height: SCREEN_HEIGHT - 120, paddingHorizontal: 20 }}
+        headerHeight={64}
+        contentStyle={{ flex: 1, paddingHorizontal: 20 }}
       >
-        <MerchantListHeader isHome={true} />
-
         {advert !== null && advert.ad_1 && advert.ad_1.length > 0 && (
           <AdwertSwiper
             data={advert.ad_1}
             onBannerPress={handleBannerPress}
             isDark={isDark}
-            style={{ marginTop: 16, overflow: 'hidden', borderRadius: 16 }}
+            style={{
+              marginTop: 8,
+              overflow: 'hidden',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+            }}
           />
         )}
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 30, flexGrow: 1 }}
-        >
-          <Categories />
+        <Categories />
 
-          <NotificationModal />
-          <MarketingPopupModal />
-
-          {/* <AdwertisementModal /> */}
-        </ScrollView>
+        <NotificationModal />
+        <MarketingPopupModal />
       </MainLayout>
+
       <FloatingAiChatButton />
-    </>
+    </View>
   );
 };
 
 const mapStateToProps = state => ({
-  user: state.authReducer.user,
   advert: state.merchantReducer.advert,
   clickedNotification: state.notificationsReducer.clickedNotification,
-  hasShownMarketingPopup: state.globalReducer.hasShownMarketingPopup,
+  hasShownMarketingPopup: state.globalReducer.hasShownMarketingPopup
 });
 
 export default connect(mapStateToProps, {
-  trackBanner,
   setIsSplashScreenVisible,
-  getMerchantDetails,
   getMarketingPopupThunk,
 })(MainScreen);

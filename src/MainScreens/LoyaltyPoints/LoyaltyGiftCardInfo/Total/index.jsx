@@ -1,15 +1,14 @@
 import { StyleSheet, View } from "react-native";
-import { BALOO_BOLD, BALOO_REGULAR } from "../../../../redux/types";
-import { useTheme } from "../../../../components/ThemeProvider";
+import { BALOO_2 } from "../../../../redux/types";
 import { TypographyText } from "../../../../components/Typography";
 import { colors } from "../../../../components/colors";
 import { useTranslation } from "react-i18next";
 
-const Total = (props) => {
-  const { isDark } = useTheme();
+const LoyaltyVoucherInfoTotal = (props) => {
   const { t } = useTranslation();
 
   const { price = 0, discount, style, commission, total } = props;
+
 
   const renderValue = (item) => {
     if (!item.value) {
@@ -20,44 +19,27 @@ const Total = (props) => {
       <View style={styles.itemWrapper} key={item.title}>
         <TypographyText
           title={item.title}
-          textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+          textColor={item.isTotal ? colors.loyaltyTextMainTitle: colors.loyaltyTextSecondary}
           size={16}
-          font={item.isTotal ? BALOO_BOLD : BALOO_REGULAR}
+          font={BALOO_2}
+          style={{fontWeight: item.isTotal ? '600': '400'}}
         />
         <TypographyText
           title={item.value}
-          textColor={isDark ? 'white' : colors.darkBlue}
+          textColor={item.isTotal ? colors.loyaltyTextMainTitle: colors.loyaltyTextMainTitle}
           size={16}
-          font={item.isTotal ? BALOO_BOLD : BALOO_REGULAR}
-        />
-      </View>
-    );
-  };
-  const renderValueTot = (item) => {
-    if (!item.value) {
-      return null;
-    }
-
-    return (
-      <View style={styles.itemWrapper} key={item.title}>
-        <TypographyText
-          title={item.title}
-          textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-          size={16}
-          font={item.isTotal ? BALOO_BOLD : BALOO_REGULAR}
-        />
-        <TypographyText
-          title={item.value}
-          textColor={isDark ? colors.white : colors.darkBlue}
-          size={16}
-          font={item.isTotal ? BALOO_BOLD : BALOO_REGULAR}
+          font={BALOO_2}
+          style={{fontWeight: item.isTotal ? '600': '400'}}
         />
       </View>
     );
   };
 
-  const config = [
-    {
+  let config = [];
+
+
+    config = [
+        {
       title: t("Vouchers.price"),
       value: `QAR ${price?.toFixed(2)}`,
       visible: true,
@@ -70,9 +52,10 @@ const Total = (props) => {
     {
       title: t("Vouchers.commission"),
       value: `QAR ${commission?.toFixed(2)}`,
-      visible: true,
-    },
+      visible: commission
+    }
   ];
+ 
 
   const totalConfig = {
     title: t("Vouchers.orderTotal"),
@@ -83,24 +66,30 @@ const Total = (props) => {
   const filteredConfig = config.filter((item) => item.visible);
 
   return (
-    <View style={style}>
-      <View style={styles.wrapper}>{filteredConfig.map(renderValue)}</View>
-      {renderValueTot(totalConfig)}
+    <View style={[style,styles.mainWrapper,{backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder}]}>
+      <View style={[styles.wrapper,{borderBottomColor: colors.loyaltyTextSecondary}]}>{filteredConfig.map(renderValue)}</View>
+      {renderValue(totalConfig)}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainWrapper: {
+    padding: 20,
+    borderWidth: 1,
+    borderRadius: 40,
+    
+  },
   wrapper: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.darkBlue,
+    paddingBottom: 10
   },
   itemWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 2,
+    marginTop: 10
   },
 });
 
-export default Total;
+export default LoyaltyVoucherInfoTotal;

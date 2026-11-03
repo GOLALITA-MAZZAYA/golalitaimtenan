@@ -1,4 +1,5 @@
-import {Image, StyleSheet, TouchableOpacity, View} from "react-native";
+import {StyleSheet, TouchableOpacity, View} from "react-native";
+import Image from "../../../AppImage";
 import {TypographyText} from "../../../Typography";
 import {isRTL} from "../../../../../utils";
 import {colors} from "../../../colors";
@@ -29,6 +30,7 @@ const ModalListItem = (props) => {
            font={BALOO_2}
            style={[styles.title, {marginHorizontal: item?.icon ? 14: 0}]}
            textColor={isActive ? colors.loyaltyRadioBorderActive: colors.loyaltyTextInputText}
+           numberOfLines={2}
         />
         </View>
 
@@ -63,13 +65,15 @@ const styles = StyleSheet.create({
     },
     title: {
       fontSize: 16,
+      flex: 1,
     },
     circle: {
 
     },
     titleWrapper: {
       flexDirection: 'row',
-      alignItems: 'center'
+      alignItems: 'center',
+      flex: 1
     },
     icon: {
         width: 32,

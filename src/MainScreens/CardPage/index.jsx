@@ -13,12 +13,16 @@ import { transformDisplayedExpiryDate } from './utils';
 import { useTheme } from '../../components/ThemeProvider';
 import { colors } from '../../components/colors';
 import AddToWalletBtn from './components/AddToWalletBtn';
+import { fetchWalletMigrationStatus } from '../../api/wallet';
+import { GOLALITA_COMPANY_ORGANIZATION_ID } from '../../org/config';
 import { getFamilyMembers } from '../../redux/transactions/transactions-thunks';
 import Carousel from 'react-native-reanimated-carousel';
 import { SCREEN_WIDTH } from '../../styles/mainStyles';
+import Clock from './components/Clock';
 
 const CardPage = () => {
   const user = useSelector(userSelector);
+  const userId = useSelector(state => state.authReducer.userId);
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const dispatch = useDispatch();
@@ -30,6 +34,8 @@ const CardPage = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFullScreenVisible, setIsFullScreenVisible] = useState(false);
   const [isBarcodeFullScreenVisible, setIsBarcodeFullScreenVisible] = useState(false);
+  const [isWalletMigrationVisible, setIsWalletMigrationVisible] = useState(false);
+
   const expiryDate = transformDisplayedExpiryDate(user?.x_user_expiry);
   const mainnBackgroundColor = isDark ? colors.darkModeBackground : '#fff';
   const barcodeLineColor = isDark ? '#fff' : 'black';
@@ -37,11 +43,9 @@ const CardPage = () => {
   useEffect(() => {
     if (!user) return;
 
-    if (familyMembers?.length && isMainUser) {
-      setData([user, ...familyMembers]);
-    } else {
-      setData([user]);
-    }
+    setData(
+      familyMembers?.length && isMainUser ? [user, ...familyMembers] : [user],
+    );
   }, [user, familyMembers?.length, isMainUser]);
 
   useEffect(() => {
@@ -51,13 +55,56 @@ const CardPage = () => {
   }, []);
 
   const selectedCardItem = data[selectedIndex];
-  // Odoo often returns false/null for empty barcode; barcode-expo crashes on Android
-  // if value is not a non-empty string (especially boolean false).
   const rawBarcode = selectedCardItem?.barcode;
   const barcodeValue =
     rawBarcode && typeof rawBarcode !== 'boolean'
       ? String(rawBarcode).trim()
       : '';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkWalletMigration = async () => {
+      const appUserId = userId || user?.partner_id || user?.id;
+      if (!appUserId) {
+        setIsWalletMigrationVisible(false);
+        return;
+      }
+
+      const organizationId =
+        user?.wallet_organization_id ||
+        user?.organizationId ||
+        GOLALITA_COMPANY_ORGANIZATION_ID;
+
+      const status = await fetchWalletMigrationStatus({
+        appUserId,
+        organizationId,
+      });
+
+  
+
+      if (cancelled) return;
+
+      if (status?.ok && status.needsMigration) {
+        setIsWalletMigrationVisible(true);
+      } else {
+        setIsWalletMigrationVisible(false);
+      }
+
+    };
+
+    checkWalletMigration();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    userId,
+    user?.partner_id,
+    user?.id,
+    user?.wallet_organization_id,
+    user?.organizationId,
+  ]);
 
   return (
     <SafeAreaView
@@ -78,17 +125,18 @@ const CardPage = () => {
       >
         <Carousel
           width={SCREEN_WIDTH}
+          height={220}
           data={data}
           scrollAnimationDuration={1000}
           onScrollEnd={setSelectedIndex}
           renderItem={({ item }) => (
             <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} activeOpacity={0.9} onPress={() => setIsFullScreenVisible(true)}>
               <Card
-                name={item.name}
-                lname={item.x_moi_last_name}
-                barcode={item.barcode}
+                name={item?.name}
+                lname={item?.x_moi_last_name}
+                barcode={item?.barcode}
                 expiryDate={expiryDate}
-                availablePoints={item.available_points || item.points}
+                availablePoints={item?.available_points || item?.points}
               />
             </TouchableOpacity>
           )}
@@ -114,6 +162,7 @@ const CardPage = () => {
             marginBottom: 5,
           }}
         >
+
           <TouchableOpacity activeOpacity={0.8} onPress={() => setIsBarcodeFullScreenVisible(true)} style={{ alignItems: 'center' }}>
             {barcodeValue ? (
               <Barcode
@@ -123,7 +172,7 @@ const CardPage = () => {
                 height={70}
                 lineColor="black"
                 background="white"
-                onError={err => console.log('Barcode error:', err)}
+                onError={(err) => console.log('Barcode error:', err)}
               />
             ) : null}
 
@@ -133,16 +182,17 @@ const CardPage = () => {
               title={barcodeValue}
               style={{ fontWeight: '600' }}
             />
-            
+
             <View style={{ marginTop: 5, paddingVertical: 5, alignSelf: 'flex-end', paddingRight: 10 }}>
               <EnlargeIcon size={28} color={isDark ? '#FFF' : colors.darkBlue} strokeWidth={2} />
             </View>
           </TouchableOpacity>
+
+          <Clock style={styles.clock}/>
         </View>
 
-        {selectedCardItem ? (
-          <AddToWalletBtn selectedCardItem={selectedCardItem} />
-        ) : null}
+
+        <AddToWalletBtn selectedCardItem={selectedCardItem} />
       </View>
 
       <Modal
@@ -152,24 +202,76 @@ const CardPage = () => {
         onRequestClose={() => setIsFullScreenVisible(false)}
       >
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' }}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={{ position: 'absolute', top: 60, right: 30, zIndex: 10, padding: 10 }}
             onPress={() => setIsFullScreenVisible(false)}
           >
-             <TypographyText title="✕" size={30} textColor="#FFFFFF" />
+            <TypographyText title="✕" size={30} textColor="#FFFFFF" />
           </TouchableOpacity>
 
-          {selectedCardItem ? (
-            <View style={{ height: 220, transform: [{ rotate: '90deg' }, { scale: 1.6 }] }}>
-              <Card
-                name={selectedCardItem?.name}
-                lname={selectedCardItem?.x_moi_last_name}
-                barcode={selectedCardItem?.barcode}
-                expiryDate={expiryDate}
-                availablePoints={selectedCardItem?.available_points || selectedCardItem?.points}
+          <View style={{ height: 220, transform: [{ rotate: '90deg' }, { scale: 1.6 }] }}>
+            <Card
+              name={selectedCardItem?.name}
+              lname={selectedCardItem?.x_moi_last_name}
+              barcode={selectedCardItem?.barcode}
+              expiryDate={expiryDate}
+              availablePoints={selectedCardItem?.available_points || selectedCardItem?.points}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isWalletMigrationVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setIsWalletMigrationVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            justifyContent: 'center',
+            paddingHorizontal: 24,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: isDark ? colors.darkModeBackground : '#fff',
+              borderRadius: 16,
+              padding: 22,
+            }}
+          >
+            <TypographyText
+              title={t('CardPage.walletMigrationTitle')}
+              size={20}
+              textColor={isDark ? '#FFF' : colors.darkBlue}
+              style={{ fontWeight: '700', marginBottom: 12 }}
+            />
+            <TypographyText
+              title={t('CardPage.walletMigrationMessage')}
+              size={15}
+              textColor={isDark ? '#E8E8E8' : '#333'}
+              style={{ lineHeight: 22, marginBottom: 20 }}
+            />
+            <TouchableOpacity
+              onPress={() => setIsWalletMigrationVisible(false)}
+              style={{
+                alignSelf: 'stretch',
+                backgroundColor: isDark ? colors.mainDarkMode : colors.darkBlue,
+                borderRadius: 10,
+                paddingVertical: 14,
+                alignItems: 'center',
+              }}
+            >
+              <TypographyText
+                title={t('CardPage.walletMigrationDismiss')}
+                size={16}
+                textColor="#FFFFFF"
+                style={{ fontWeight: '600' }}
               />
-            </View>
-          ) : null}
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
@@ -180,11 +282,11 @@ const CardPage = () => {
         onRequestClose={() => setIsBarcodeFullScreenVisible(false)}
       >
         <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={{ position: 'absolute', top: 60, right: 30, zIndex: 10, padding: 10 }}
             onPress={() => setIsBarcodeFullScreenVisible(false)}
           >
-             <TypographyText title="✕" size={30} textColor="#000000" />
+            <TypographyText title="✕" size={30} textColor="#000000" />
           </TouchableOpacity>
 
           <View style={{ transform: [{ rotate: '90deg' }, { scale: 1.5 }], alignItems: 'center' }}>
@@ -196,7 +298,7 @@ const CardPage = () => {
                 height={100}
                 lineColor="black"
                 background="white"
-                onError={err => console.log('Barcode error:', err)}
+                onError={(err) => console.log('Barcode error:', err)}
               />
             ) : null}
             <TypographyText
@@ -208,7 +310,6 @@ const CardPage = () => {
           </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 };
@@ -218,12 +319,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  cardType: {
-    alignSelf: 'right',
-    textAlign: 'right',
-    marginRight: 20,
-    marginBottom: 5,
-  },
+  clock: {
+    marginTop: 10
+  }
 });
 
 export default CardPage;

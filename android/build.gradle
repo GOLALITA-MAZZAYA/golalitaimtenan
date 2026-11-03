@@ -36,3 +36,4 @@ plugins {
 apply plugin: "com.facebook.react.rootproject"
 // apply plugin: 'com.google.gms.google-services'
 
+apply plugin: "expo-root-project"

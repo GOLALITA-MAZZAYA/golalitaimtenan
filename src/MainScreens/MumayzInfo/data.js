@@ -1,4 +1,5 @@
 import { isRTL } from "../../../utils";
+import { org } from "../../org/config";
 
 export const getData = () => {
   const isArabic = isRTL();
@@ -30,16 +31,16 @@ export const getData = () => {
       value: isArabic
         ? "1. اضغط على الزر - تنزيل / فتح تطبيق مميزات.\n\n" +
           "2. سيتم توجيهك إلى صفحة ويب لتنزيل وتثبيت تطبيق مميزات.\n\n" +
-          "3. عد إلى تطبيق Golalita واضغط على الزر مرة أخرى.\n\n" +
+          `3. عد إلى تطبيق ${org.displayName} واضغط على الزر مرة أخرى.\n\n` +
           "4. إذا كان تطبيق مميزات مثبتًا مسبقًا، سيتم فتحه تلقائيًا.\n\n" +
           "5. سيتم تسجيل الدخول تلقائيًا في تطبيق مميزات.\n\n" +
-          "6. ابدأ بالاستمتاع بمزايا مميزات + Golalita فورًا."
+          `6. ابدأ بالاستمتاع بمزايا مميزات + ${org.displayName} فورًا.`
         : "1. Tap on the button - Download / Open Mumayizat.\n\n" +
           "2. You'll be redirected to a web page to download Mumayizat App and install it.\n\n" +
-          "3. Return to the Golalita app and tap the button (Download / Open Mumayizat) again.\n\n" +
+          `3. Return to the ${org.displayName} app and tap the button (Download / Open Mumayizat) again.\n\n` +
           "4. If the Mumayizat app is already installed, it will open automatically when you tap the below button.\n\n" +
           "5. The Mumayizat app will open and auto sign-in will be completed.\n\n" +
-          "6. Start enjoying Mumayizat + Golalita benefits instantly.",
+          `6. Start enjoying Mumayizat + ${org.displayName} benefits instantly.`,
       showButton: true,
     },
     {

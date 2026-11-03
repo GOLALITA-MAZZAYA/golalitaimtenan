@@ -1,4 +1,5 @@
 import UIKit
+import Expo
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
@@ -8,8 +9,7 @@ import UserNotifications
 import RNBootSplash
 
 @main
-class AppDelegate: UIResponder,
-  UIApplicationDelegate,
+class AppDelegate: ExpoAppDelegate,
   UNUserNotificationCenterDelegate,
   MessagingDelegate
 {
@@ -18,13 +18,13 @@ class AppDelegate: UIResponder,
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
 
-  func application(
+  override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     // React Native bootstrap
     let delegate = ReactNativeDelegate()
-    let factory = RCTReactNativeFactory(delegate: delegate)
+    let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
 
     // Google Maps
@@ -54,6 +54,7 @@ class AppDelegate: UIResponder,
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
+    bindReactNativeFactory(factory)
 
     window = UIWindow(frame: UIScreen.main.bounds)
 
@@ -63,12 +64,12 @@ class AppDelegate: UIResponder,
       launchOptions: launchOptions
     )
 
-    return true
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   // MARK: - APNs registration
 
-  func application(
+  override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
@@ -76,7 +77,7 @@ class AppDelegate: UIResponder,
     print("[Push] didRegisterForRemoteNotificationsWithDeviceToken")
   }
 
-  func application(
+  override func application(
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
@@ -84,7 +85,7 @@ class AppDelegate: UIResponder,
   }
 
   // Получение data-пушей / silent-пушей
-  func application(
+  override func application(
     _ application: UIApplication,
     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
@@ -123,12 +124,13 @@ class AppDelegate: UIResponder,
   }
 }
 
-class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
+class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
   override func sourceURL(for bridge: RCTBridge) -> URL? {
-    self.bundleURL()
+    bridge.bundleURL ?? bundleURL()
   }
 
-  override func customize(_ rootView: RCTRootView) {
+  // ExpoReactNativeFactoryDelegate declares this with UIView (not RCTRootView).
+  override func customize(_ rootView: UIView) {
     super.customize(rootView)
     RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
   }

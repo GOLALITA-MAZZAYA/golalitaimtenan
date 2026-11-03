@@ -8,17 +8,18 @@ import { mainStyles } from '../../styles/mainStyles';
 import { useTranslation } from 'react-i18next';
 import { getFlexDirection } from '../../../utils';
 import useIsMumayz from '../../hooks/useIsMumayz';
+import { org } from '../../org/config';
+import { cardBg } from '../../org/assets';
 
-const cardImage = require('../../assets/card_bg.jpg');
+const cardImage = cardBg;
 const MumayizatLogo = require('../../assets/MumayizatLogoWhite.png');
 
-const Card = ({ name, lname, expiryDate, email, renderHeader }) => {
+const Card = ({ name, lname, expiryDate, email }) => {
   const isMumayaz = useIsMumayz(email);
   const { t } = useTranslation();
 
   return (
     <View style={styles.wrapper}>
-      {renderHeader?.()}
       <ImageBackground
         source={cardImage}
         style={styles.card}

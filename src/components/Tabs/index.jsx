@@ -99,40 +99,40 @@ Tabs.TabWithIcon = ({ name, title, style, icon }) => {
   const { isDark } = useTheme();
   const { activeTab, setActiveTab } = useTabsContext();
 
-  const mainColor = isDark ? colors.mainDarkMode : colors.darkBlue;
-  const inactiveColor = colors.loyaltyPrimary;
-
   const isActive = activeTab === name;
-  const activeStyle = isDark ? styles.activeItemText: styles.activeItemTextLight;
   const isRtl = isRTL();
+
+  const activeBg = colors.loyaltyPrimary;
+  const activeText = colors.loyaltyActiveTabText;
+  const inactiveText = colors.loyaltyCardExpiringText || colors.loyaltyTextSecondary;
 
   return (
     <TouchableOpacity
       onPress={() => setActiveTab(name)}
+      activeOpacity={0.8}
       style={[
         styles.tabWithIcon,
-        isActive && { borderColor: mainColor },
         style,
-        { backgroundColor: isActive ? colors.loyaltyPrimary : colors.loyaltyTabsBackground,
-          borderColor: isActive ?  'transparent': colors.loyaltyTabsBorder,
+        {
+          backgroundColor: isActive ? activeBg : 'transparent',
+          borderColor: 'transparent',
           flexDirection: isRtl ? "row-reverse" : "row",
-          marginHorizontal: 5
         } 
       ]}
     >
       {icon &&
         React.cloneElement(icon, {
-          color: isActive ?  colors.loyaltyActiveTabText : colors.loyaltyTextPrimary
+          color: isActive ? activeText : inactiveText
       })}
       <TypographyText
         title={title}
-        size={16}
+        size={15}
         font={BALOO_REGULAR}
         style={[
           { fontWeight: "700" },
-          {marginLeft: isRtl ? 0: 4, marginRight: isRtl? 4 : 0}
+          { marginLeft: isRtl ? 0 : 6, marginRight: isRtl ? 6 : 0 }
         ]}
-        textColor={isActive ?  colors.loyaltyActiveTabText : colors.loyaltyTextPrimary}
+        textColor={isActive ? activeText : inactiveText}
       />
     </TouchableOpacity>
   );
@@ -151,11 +151,9 @@ Tabs.Content = ({ children, name }) => {
 const styles = StyleSheet.create({
   wrapper: {
     flexDirection: "row",
-    // borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 16,
     marginTop: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 2,
+    padding: 4,
     borderWidth: 1,
   },
   item: {
@@ -183,12 +181,11 @@ const styles = StyleSheet.create({
     borderColor: 'transparent'
   },
   tabWithIcon: {
-    height: 46,
+    height: 42,
     paddingHorizontal: 12,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 12,
     flex: 1,
   }
 });

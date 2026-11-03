@@ -21,11 +21,14 @@ const TwoButtons = ({
   selectedButton,
   isLight,
   isWhite,
+  style,
+  itemStyle,
+  buttonStyle,
 }) => {
   const { isDark } = useTheme();
 
   const iconColor = isDark ? colors.white : colors.darkBlue;
-  const iconPassiveColor = isDark ? colors.white : "#999CAD";
+  const iconPassiveColor = isDark ? "#999CAD" : "#999CAD";
 
   return (
     <View style={mainStyles.centeredRow}>
@@ -46,11 +49,13 @@ const TwoButtons = ({
           isDark && {
             backgroundColor: isLight ? colors.transparent : "#444444",
           },
+          style,
         ]}
       >
         <LinearGradient
           style={[
             mainStyles.twoButtons__item,
+            itemStyle,
             selectedButton === 0 && { transform: [{ translateX: -1 }] },
           ]}
           colors={
@@ -67,7 +72,7 @@ const TwoButtons = ({
         >
           <TouchableOpacity
             onPress={onPress1}
-            style={mainStyles.twoButtons__button}
+            style={[mainStyles.twoButtons__button, buttonStyle]}
           >
             {icon1}
             <TypographyText
@@ -82,6 +87,8 @@ const TwoButtons = ({
                   ? isWhite
                     ? iconPassiveColor
                     : iconPassiveColor
+                  : isDark
+                  ? "#999CAD"
                   : colors.white
               }
               size={12}
@@ -94,13 +101,14 @@ const TwoButtons = ({
         <LinearGradient
           style={[
             mainStyles.twoButtons__item,
+            itemStyle,
             selectedButton === 1 && { transform: [{ translateX: 1 }] },
           ]}
           colors={
             selectedButton === 1
               ? isDark
                 ? isLight
-                  ? [colors.secBlue, colors.secBlue]
+                  ? [colors.darkBlue, colors.darkBlue]
                   : [colors.darkModeBackground, colors.darkModeBackground]
                 : isWhite
                 ? [colors.white, colors.white]
@@ -110,7 +118,7 @@ const TwoButtons = ({
         >
           <TouchableOpacity
             onPress={onPress2}
-            style={mainStyles.twoButtons__button}
+            style={[mainStyles.twoButtons__button, buttonStyle]}
           >
             {icon2}
             <TypographyText
@@ -125,6 +133,8 @@ const TwoButtons = ({
                   ? isWhite
                     ? iconPassiveColor
                     : iconPassiveColor
+                  : isDark
+                  ? "#999CAD"
                   : colors.white
               }
               size={12}
@@ -138,13 +148,14 @@ const TwoButtons = ({
           <LinearGradient
             style={[
               mainStyles.twoButtons__item,
+              itemStyle,
               selectedButton === 2 && { transform: [{ translateX: 1 }] },
             ]}
             colors={
               selectedButton === 2
                 ? isDark
                   ? isLight
-                    ? [colors.secBlue, colors.secBlue]
+                    ? [colors.darkBlue, colors.darkBlue]
                     : [colors.darkModeBackground, colors.darkModeBackground]
                   : isWhite
                   ? [colors.white, colors.white]
@@ -154,7 +165,7 @@ const TwoButtons = ({
           >
             <TouchableOpacity
               onPress={onPress3}
-              style={mainStyles.twoButtons__button}
+              style={[mainStyles.twoButtons__button, buttonStyle]}
             >
               {icon3}
               <TypographyText
@@ -169,6 +180,8 @@ const TwoButtons = ({
                     ? isWhite
                       ? iconPassiveColor
                       : iconPassiveColor
+                    : isDark
+                    ? "#999CAD"
                     : colors.white
                 }
                 size={12}

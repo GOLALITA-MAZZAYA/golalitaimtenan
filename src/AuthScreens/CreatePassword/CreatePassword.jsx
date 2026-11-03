@@ -22,10 +22,10 @@ import { connect } from "react-redux";
 import {
   changePassword,
   register,
-  sendOTP,
 } from "../../redux/auth/auth-thunks";
 import AuthLayout from "../component/AuthLayout";
 import TopCircleShadow from "../../components/TopCircleShadow";
+import { logoMono } from "../../org/assets";
 
 const CreatePassword = ({
   navigation,
@@ -43,7 +43,7 @@ const CreatePassword = ({
     navigation.navigate("Login");
   }, []);
 
-  const logoIcon = require("../../assets/logo.png");
+  const logoIcon = logoMono;
 
   return (
     <AuthLayout light>
@@ -232,8 +232,8 @@ const styles = {
     backgroundColor: "transparent",
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
   },
 };
 
@@ -242,6 +242,6 @@ const mapStateToProps = (state) => ({
   profileLoading: state.authReducer.profileLoading,
 });
 
-export default connect(mapStateToProps, { sendOTP, changePassword, register })(
+export default connect(mapStateToProps, { changePassword, register })(
   CreatePassword
 );

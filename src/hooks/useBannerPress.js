@@ -30,10 +30,7 @@ const useBannerPress = ({ pageName, slot = 'ad_1' }) => {
         metadata: { slot },
       });
 
-      if (
-        item.redirectScreen &&
-        handleRedirectScreen(item.redirectScreen, navigation.navigate)
-      ) {
+      if (item.redirectScreen && handleRedirectScreen(item.redirectScreen, navigation.navigate)) {
         return;
       }
 

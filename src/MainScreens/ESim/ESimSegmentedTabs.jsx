@@ -8,13 +8,17 @@ import { isRTL } from '../../../utils';
 
 const ESimSegmentedTabs = ({ tabs, value, onChange }) => {
   const { isDark } = useTheme();
+  const accent = isDark ? colors.mainDarkMode : colors.darkBlue;
   const rtl = isRTL();
 
   return (
     <View
       style={[
         styles.tabs,
-        { flexDirection: rtl ? 'row-reverse' : 'row' },
+        {
+          backgroundColor: isDark ? '#1C1C1E' : '#E5E7EB',
+          flexDirection: rtl ? 'row-reverse' : 'row',
+        },
       ]}
     >
       {tabs.map(item => {
@@ -22,10 +26,7 @@ const ESimSegmentedTabs = ({ tabs, value, onChange }) => {
         return (
           <TouchableOpacity
             key={item.value}
-            style={[
-              styles.tab,
-              active && (isDark ? styles.tabActiveDark : styles.tabActiveLight),
-            ]}
+            style={[styles.tab, active && { backgroundColor: accent }]}
             onPress={() => onChange(item.value)}
           >
             <TypographyText
@@ -35,11 +36,11 @@ const ESimSegmentedTabs = ({ tabs, value, onChange }) => {
               textColor={
                 active
                   ? isDark
-                    ? colors.mainDarkModeText
+                    ? colors.black
                     : colors.white
                   : isDark
-                  ? colors.white
-                  : colors.darkBlue
+                  ? '#8E8E93'
+                  : '#6B7280'
               }
               style={[
                 { textAlign: 'center' },
@@ -56,22 +57,16 @@ const ESimSegmentedTabs = ({ tabs, value, onChange }) => {
 const styles = StyleSheet.create({
   tabs: {
     alignSelf: 'stretch',
-    alignItems: 'center',
+    borderRadius: 20,
+    padding: 3,
     marginBottom: 16,
   },
   tab: {
     flex: 1,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 17,
     alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  tabActiveLight: {
-    backgroundColor: colors.darkBlue,
-  },
-  tabActiveDark: {
-    backgroundColor: colors.mainDarkMode,
   },
 });
 

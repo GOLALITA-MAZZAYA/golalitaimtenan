@@ -3,6 +3,23 @@ import {TypographyText} from "../../Typography";
 import {colors} from "../../colors";
 import {BALOO_2} from "../../../redux/types";
 
+const NUM_COLUMNS = 2;
+// Row gap = ItemSeparatorComponent height (4) + columnWrapperStyle
+// marginBottom (4); same additive mechanism verified against real device
+// measurements on GalleryTab (identical numColumns + separator + wrapper
+// combination).
+const ROW_HEIGHT = 60 + 8;
+
+const getItemLayout = (data, index) => {
+    const row = Math.floor(index / NUM_COLUMNS);
+
+    return {
+        length: ROW_HEIGHT,
+        offset: ROW_HEIGHT * row,
+        index,
+    };
+};
+
 const CustomSelectTabs = ({onSelect, value, options, label, style}) => {
     const handleItemSelect = (item) => {
         onSelect(value === item.value ? null : item.value)
@@ -19,8 +36,14 @@ const CustomSelectTabs = ({onSelect, value, options, label, style}) => {
             textColor={colors.loyaltySecondary}
         />}
 
-        <FlatList 
+        <FlatList
           data={options}
+          keyExtractor={(item, index) => String(item.value ?? index)}
+          getItemLayout={getItemLayout}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          removeClippedSubviews={true}
           bounces={false}
           columnWrapperStyle={{
             justifyContent: 'space-between', 
@@ -44,7 +67,7 @@ const CustomSelectTabs = ({onSelect, value, options, label, style}) => {
                 </TouchableOpacity>
             )
           }}
-          numColumns={2}
+          numColumns={NUM_COLUMNS}
         />
         </View>
     );

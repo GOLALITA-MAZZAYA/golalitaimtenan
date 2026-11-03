@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useMemo,
   useRef,
+  memo,
 } from "react";
 import {
   View,
@@ -26,9 +27,39 @@ import {
   BottomSheetModal,
   BottomSheetFlatList,
   BottomSheetModalProvider,
+  BottomSheetFooter,
 } from "@gorhom/bottom-sheet";
 import { colors } from "../../../../../components/colors";
 import Portal from "../../../../../components/Portal";
+
+// Pixels of paddingLeft per nesting level for indented filter options
+// (option.indent). Was referencing an undefined `levelIndent` — threw
+// ReferenceError whenever a nested option actually rendered.
+const LEVEL_INDENT = 16;
+
+const getFormattedLabel = (option) => {
+  const mainLabel = option.label;
+  const shortNames = option.short_names.map((item) => item.name);
+  return [mainLabel, ...shortNames].join(", ") + ".";
+};
+
+const FilterOptionRow = memo(({ option, active, onToggle }) => (
+  <View
+    style={{
+      paddingLeft: option.indent > 0 ? option.indent * LEVEL_INDENT : 0,
+    }}
+  >
+    <Checkbox
+      style={{ paddingHorizontal: 16, paddingLeft: 0 }}
+      isLocationfilter={true}
+      label={getFormattedLabel(option)}
+      flag={option.x_flag_image}
+      emoji={option.emoji}
+      active={active}
+      onChange={(checked) => onToggle(option, checked)}
+    />
+  </View>
+));
 
 const BottomSheetComponent = (props) => {
   const {
@@ -63,7 +94,7 @@ const BottomSheetComponent = (props) => {
   const bottomSheetModalRef = useRef(null);
 
   // variables
-  const snapPoints = useMemo(() => ["1%", "90%"], []);
+  const snapPoints = useMemo(() => ["65%", "90%"], []);
 
   // callbacks
   const handlePresentModalPress = useCallback(() => {
@@ -74,8 +105,7 @@ const BottomSheetComponent = (props) => {
   }, []);
 
   const handleSheetChanges = useCallback((index) => {
-    if (!index) {
-      handlePresentModalclose();
+    if (index === -1) {
       setVisible(false);
     }
   }, []);
@@ -83,6 +113,50 @@ const BottomSheetComponent = (props) => {
   const handleSearchChange = (text) => {
     setSearch(text);
   };
+
+  const handleToggleOption = useCallback((option, checked) => {
+    if (checked) {
+      setValue((state) => {
+        if (single) {
+          return option.value;
+        }
+
+        if (Array.isArray(state)) {
+          return state.concat([option.value]);
+        }
+
+        return state;
+      });
+    } else {
+      setValue((state) => {
+        if (single) {
+          return undefined;
+        }
+
+        if (Array.isArray(state)) {
+          return state.filter((item) => item !== option.value);
+        }
+
+        return state;
+      });
+    }
+  }, [single]);
+
+  const renderListItem = useCallback(({ item: option }) => {
+    if (renderItem) {
+      return renderItem(option, () => {
+        setVisible(false);
+      });
+    }
+
+    const active = single
+      ? option.value === value
+      : value.includes(option.value);
+
+    return (
+      <FilterOptionRow option={option} active={active} onToggle={handleToggleOption} />
+    );
+  }, [renderItem, single, value, handleToggleOption]);
 
   const updatedOptions = useMemo(() => {
     return options?.filter((item) => {
@@ -173,128 +247,34 @@ const BottomSheetComponent = (props) => {
     );
   };
   // renders
-  const renderFooter = () => (
-    <View
-      style={{
-        backgroundColor: isDark ? colors.darkBlue : colors.white,
-        paddingVertical: 20,
-        marginBottom: 50,
-      }}
-    >
-      <TouchableOpacity
-        onPress={onOk}
-        style={[
-          styles.footerContainer,
-          { backgroundColor: isDark ? colors.navyBlue : colors.darkBlue },
-        ]}
-      >
-        <TypographyText
-          title={t("General.confirm")}
-          textColor={isDark ? colors.white : colors.white}
-          size={16}
-          font={BALOO_MEDIUM}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-  const renderBody = () => (
-    <BottomSheetFlatList
-      style={[
-        styles.contentContainer,
-        { backgroundColor: isDark ? colors.darkBlue : colors.white },
-      ]}
-      ListEmptyComponent={() => (
+  const renderFooter = useCallback(
+    (props) => (
+      <BottomSheetFooter {...props} bottomInset={0}>
         <View
-          style={{
-            ...styles.empty,
-            height: 200,
-          }}
+          style={[
+            styles.footerWrapper,
+            { backgroundColor: isDark ? colors.darkBlue : colors.white },
+          ]}
         >
-          <TypographyText
-            textColor={"#312B3E"}
-            size={14}
-            font={BALOO_REGULAR}
-            title={t("General.noData")}
-            numberOfLines={1}
-          />
-        </View>
-      )}
-      renderItem={({ item: option }) => {
-        function getFormattedLabel(option) {
-          // Extract label
-          const mainLabel = option.label;
-
-          // Extract names from short_names array
-          const shortNames = option.short_names.map((item) => item.name);
-
-          // Combine main label with short names
-          const fLabel = [mainLabel, ...shortNames].join(", ") + ".";
-
-          return fLabel;
-        }
-        if (renderItem) {
-          return renderItem(option, () => {
-            setVisible(false);
-          });
-        }
-
-        const active = single
-          ? option.value === value
-          : value.includes(option.value);
-
-        return (
-          <View
-            key={option.value}
-            style={{
-              paddingLeft: option.indent > 0 ? option.indent * levelIndent : 0,
-            }}
+          <TouchableOpacity
+            onPress={onOk}
+            activeOpacity={0.8}
+            style={[
+              styles.footerContainer,
+              { backgroundColor: isDark ? colors.mainDarkMode : colors.darkBlue },
+            ]}
           >
-            <Checkbox
-              style={{ paddingHorizontal: 16, paddingLeft: 0 }}
-              isLocationfilter={true}
-              label={getFormattedLabel(option)}
-              flag={option.x_flag_image}
-              emoji={option.emoji}
-              active={active}
-              onChange={(checked) => {
-                if (checked) {
-                  setValue((state) => {
-                    if (single) {
-                      return option.value;
-                    }
-
-                    if (Array.isArray(state)) {
-                      return state.concat([option.value]);
-                    }
-
-                    return state;
-                  });
-                } else {
-                  setValue((state) => {
-                    if (single) {
-                      return undefined;
-                    }
-
-                    if (Array.isArray(state)) {
-                      return state.filter((item) => {
-                        return item !== option.value;
-                      });
-                    }
-
-                    return state;
-                  });
-                }
-              }}
+            <TypographyText
+              title={t("General.confirm")}
+              textColor={isDark ? colors.mainDarkModeText : colors.white}
+              size={16}
+              font={BALOO_MEDIUM}
             />
-          </View>
-        );
-      }}
-      data={updatedOptions}
-      keyExtractor={(item) => {
-        return String(item.value);
-      }}
-      showsVerticalScrollIndicator={false}
-    />
+          </TouchableOpacity>
+        </View>
+      </BottomSheetFooter>
+    ),
+    [isDark, onOk, t]
   );
 
   const renderHeader = () => (
@@ -316,6 +296,80 @@ const BottomSheetComponent = (props) => {
         placeholder={t("Merchants.searchPlaceholder")}
       />
     </View>
+  );
+
+  const renderListHeader = () => (
+    <View>
+      <View
+        style={{
+          flexDirection: isRTL() ? "row-reverse" : "row",
+          justifyContent: "space-between",
+          marginVertical: 14,
+          paddingHorizontal: 25,
+          width: "100%",
+        }}
+      >
+        <TypographyText
+          title={modalTitle}
+          textColor={isDark ? colors.white : colors.darkBlue}
+          size={20}
+          font={BALOO_MEDIUM}
+        />
+        <TouchableOpacity
+          onPress={() => {
+            handleClosePress();
+            handlePresentModalclose();
+          }}
+          style={{ padding: 8 }}
+        >
+          <TypographyText
+            title={"X"}
+            textColor={isDark ? colors.white : colors.darkBlue}
+            size={21}
+            font={BALOO_MEDIUM}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {renderHeader()}
+    </View>
+  );
+
+  const renderBody = () => (
+    <BottomSheetFlatList
+      ListHeaderComponent={renderListHeader}
+      data={updatedOptions}
+      contentContainerStyle={[
+        styles.contentContainer,
+        { backgroundColor: isDark ? colors.darkBlue : colors.white, paddingBottom: 100 },
+      ]}
+      ListEmptyComponent={() => (
+        <View
+          style={{
+            ...styles.empty,
+            height: 200,
+          }}
+        >
+          <TypographyText
+            textColor={isDark ? colors.white : "#312B3E"}
+            size={14}
+            font={BALOO_REGULAR}
+            title={t("General.noData")}
+            numberOfLines={1}
+          />
+        </View>
+      )}
+      renderItem={renderListItem}
+      data={updatedOptions}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      removeClippedSubviews={true}
+      keyExtractor={(item) => {
+        return String(item.value);
+      }}
+      showsVerticalScrollIndicator={false}
+    />
   );
 
   const showArrowIcon = Boolean((!value?.length && !value) || !allowClear);
@@ -404,50 +458,16 @@ const BottomSheetComponent = (props) => {
             <BottomSheetModal
               key={name}
               ref={bottomSheetModalRef}
-              index={1}
+              index={0}
               snapPoints={snapPoints}
               enablePanDownToClose={true}
               onChange={handleSheetChanges}
+              footerComponent={renderFooter}
               backgroundStyle={{
                 backgroundColor: isDark ? colors.darkBlue : colors.white,
               }}
-              topInset={250}
             >
-              <View
-                style={{
-                  flexDirection: isRTL() ? "row-reverse" : "row",
-                  justifyContent: "space-between",
-                  marginVertical: 16,
-                  paddingHorizontal: 25,
-                  width: "100%",
-                }}
-              >
-                <TypographyText
-                  title={modalTitle}
-                  textColor={isDark ? colors.white : colors.darkBlue}
-                  size={20}
-                  font={BALOO_MEDIUM}
-                />
-                <TouchableOpacity
-                  onPress={() => {
-                    handleClosePress();
-                    handlePresentModalclose();
-                  }}
-                >
-                  <TypographyText
-                    title={"X"}
-                    textColor={isDark ? colors.white : colors.darkBlue}
-                    size={21}
-                    font={BALOO_MEDIUM}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              {renderHeader()}
-
               {renderBody()}
-
-              {renderFooter()}
             </BottomSheetModal>
           </View>
         </BottomSheetModalProvider>
@@ -541,22 +561,33 @@ const styles = StyleSheet.create({
   },
   container: {
     justifyContent: "center",
-    // backgroundColor: 'grey',
     alignItems: "center",
+  },
+  modalContent: {
+    flex: 1,
+  },
+  listStyle: {
+    flex: 1,
   },
   contentContainer: {
-    flex: 1,
-    //alignItems: 'center',
     paddingHorizontal: 25,
-    paddingBottom: 100,
-    //alignSelf:'center'
+    paddingBottom: 16,
+    flexGrow: 1,
+  },
+  footerWrapper: {
+    paddingVertical: 12,
+    paddingBottom: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   footerContainer: {
-    padding: 12,
-    // margin: 12,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 100,
     alignItems: "center",
-    width: "40%",
+    justifyContent: "center",
+    minWidth: 140,
     alignSelf: "center",
   },
   footerText: {

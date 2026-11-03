@@ -13,6 +13,7 @@ const LogOutBtn = () => {
 
   return (
     <TouchableOpacity
+      activeOpacity={0.7}
       onPress={() => dispatch(logout())}
       style={[
         styles.wrapper,
@@ -29,6 +30,7 @@ const LogOutBtn = () => {
 
       <View style={styles.iconWrapper}>
         <LogoutSvg
+          color="#EA3434"
           height={20}
           width={20}
           style={{ transform: [{ rotate: isRTL() ? "180deg" : "0deg" }] }}
@@ -44,6 +46,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     marginTop: 20,
+    paddingVertical: 10,
   },
   iconWrapper: {
     marginHorizontal: 5,

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -13,16 +14,24 @@ import { useTheme } from "../../../../components/ThemeProvider";
 import { TypographyText } from "../../../../components/Typography";
 import { BALOO_2 } from "../../../../redux/types";
 import { isRTL } from "../../../../../utils";
-import { getAvailableFilterLabel } from "../../../../api/categories";
-import { SORT_NEAREST, SORT_OPTIONS } from "../helpers";
+import {
+  FILTER_GROUP_DISCOUNT,
+  SORT_NEAREST,
+  SORT_OPTIONS,
+  getAvailableFilterLabel,
+  groupAvailableFilters,
+} from "../helpers";
 
 const FILTER = "filter";
 const SORT = "sort";
 
 const OfferFilterBar = ({
-  filterIds = [],
+  // Offer filters come from /category/available_filters. When showFilters is
+  // false (nothing configured for the category) only Sort is shown.
   availableFilters = [],
+  filterIds = [],
   filtersLoading = false,
+  showFilters = true,
   sortOrder,
   isNearest,
   onApplyFilters,
@@ -38,6 +47,11 @@ const OfferFilterBar = ({
   // several chips doesn't fire a merchant list request per tap.
   const [draftFilterIds, setDraftFilterIds] = useState([]);
   const [draftSort, setDraftSort] = useState(null);
+
+  const filterGroups = useMemo(
+    () => groupAvailableFilters(availableFilters),
+    [availableFilters]
+  );
 
   const activeColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const activeTextColor = isDark ? "#000000" : "#FFFFFF";
@@ -63,12 +77,23 @@ const OfferFilterBar = ({
 
   const closeSheet = () => setOpenSheet(null);
 
-  const toggleDraftFilter = (id) => {
-    setDraftFilterIds((prev) =>
-      prev.some((item) => String(item) === String(id))
-        ? prev.filter((item) => String(item) !== String(id))
-        : [...prev, id]
-    );
+  // Discount ranges are single-choice; offer types can be combined.
+  const toggleDraftFilter = (filter) => {
+    setDraftFilterIds((prev) => {
+      if (prev.includes(filter.id)) {
+        return prev.filter((id) => id !== filter.id);
+      }
+
+      if (filter.filter_group !== FILTER_GROUP_DISCOUNT) {
+        return [...prev, filter.id];
+      }
+
+      const discountIds = availableFilters
+        .filter((item) => item.filter_group === FILTER_GROUP_DISCOUNT)
+        .map((item) => item.id);
+
+      return [...prev.filter((id) => !discountIds.includes(id)), filter.id];
+    });
   };
 
   const applyFilters = () => {
@@ -206,13 +231,14 @@ const OfferFilterBar = ({
   return (
     <>
       <View style={[styles.bar, rowDirection]}>
-        {renderBarButton(
-          filtersCount
-            ? `${t("Merchants.filterOffers")} (${filtersCount})`
-            : t("Merchants.filterOffers"),
-          filtersCount > 0,
-          openFilters
-        )}
+        {showFilters &&
+          renderBarButton(
+            filtersCount
+              ? `${t("Merchants.filterOffers")} (${filtersCount})`
+              : t("Merchants.filterOffers"),
+            filtersCount > 0,
+            openFilters
+          )}
         {renderBarButton(
           `${t("Merchants.sortLabel")}: ${sortLabel}`,
           selectedSort !== null,
@@ -278,7 +304,7 @@ const OfferFilterBar = ({
           )}
 
           {openSheet === FILTER && (
-            <>
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
               <TypographyText
                 size={13}
                 font={BALOO_2}
@@ -287,40 +313,32 @@ const OfferFilterBar = ({
                 style={textAlign}
               />
 
-              {renderSectionTitle(t("Merchants.offerTypeLabel"))}
-
               {filtersLoading ? (
-                <View style={styles.loaderRow}>
-                  <ActivityIndicator
-                    size="small"
-                    color={isDark ? colors.mainDarkMode : colors.darkBlue}
-                  />
-                </View>
-              ) : availableFilters.length === 0 ? (
-                <TypographyText
-                  size={13}
-                  font={BALOO_2}
-                  title={t("Merchants.listNoData")}
-                  textColor={mutedTextColor}
-                  style={[styles.emptyFilters, textAlign]}
+                <ActivityIndicator
+                  size="small"
+                  color={activeColor}
+                  style={styles.loader}
                 />
               ) : (
-                <View style={[styles.chips, rowDirection]}>
-                  {availableFilters.map((filter) =>
-                    renderChip(
-                      String(filter.id),
-                      getAvailableFilterLabel(filter, isRtl),
-                      draftFilterIds.some(
-                        (id) => String(id) === String(filter.id)
-                      ),
-                      () => toggleDraftFilter(filter.id)
-                    )
-                  )}
-                </View>
+                filterGroups.map((group) => (
+                  <View key={group.key}>
+                    {renderSectionTitle(t(group.labelKey))}
+                    <View style={[styles.chips, rowDirection]}>
+                      {group.items.map((filter) =>
+                        renderChip(
+                          String(filter.id),
+                          getAvailableFilterLabel(filter, isRtl),
+                          draftFilterIds.includes(filter.id),
+                          () => toggleDraftFilter(filter)
+                        )
+                      )}
+                    </View>
+                  </View>
+                ))
               )}
 
               {renderApplyButton(applyFilters)}
-            </>
+            </ScrollView>
           )}
         </View>
       </Modal>
@@ -395,14 +413,8 @@ const styles = StyleSheet.create({
   chipText: {
     fontWeight: "700",
   },
-  emptyFilters: {
-    marginBottom: 8,
-  },
-  loaderRow: {
-    minHeight: 40,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    marginBottom: 8,
+  loader: {
+    marginVertical: 24,
   },
   sortRow: {
     alignItems: "center",

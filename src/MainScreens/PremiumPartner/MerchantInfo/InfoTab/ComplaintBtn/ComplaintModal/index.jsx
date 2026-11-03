@@ -171,10 +171,10 @@ const ComplaintModal = ({ visible, onClose, user, merchantData = {} }) => {
 
           <Formik
             initialValues={{
-              name: user.name ?? '',
-              x_moi_last_name: user.x_moi_last_name ?? '',
-              phone: user.phone ?? '+974',
-              email: user.email ?? '',
+              name: user?.name ?? '',
+              x_moi_last_name: user?.x_moi_last_name ?? '',
+              phone: user?.phone ?? '+974',
+              email: user?.email ?? '',
               merchant_name: merchantData?.merchant_name ?? '',
               offer_name: merchantData?.offer_name ?? '',
               // complaint_type: "", // commented out for now
@@ -328,7 +328,7 @@ const ComplaintModal = ({ visible, onClose, user, merchantData = {} }) => {
                           icon={<EditIcon />}
                           error={errors.complaint_description}
                         />
-                        {/* Preferred Contact Method - Radio Buttons */}
+                
                         <View
                           style={{
                             marginBottom: 20,

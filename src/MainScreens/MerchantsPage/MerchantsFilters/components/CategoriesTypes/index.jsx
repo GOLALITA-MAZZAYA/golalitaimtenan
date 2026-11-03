@@ -15,7 +15,6 @@ const CategoriesTypes = () => {
   useEffect(() => {
     if (categoriesType && !isFirstMount.current) {
       context.setFieldValue("category_id", []);
-      context.setFieldValue("sub_category_id", []);
       dispatch(getParentCategories(categoriesType));
     }
     isFirstMount.current = false;

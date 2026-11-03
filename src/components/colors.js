@@ -1,90 +1,50 @@
+import { org } from '../org/config';
 
-export const loyaltyDarkColors = {
-   loyaltyTextMain: "#fff",
-   loyaltyTextMainTitle: "#fff",
-   loyaltyTextSecondary: "#B1B1B4",
-   loyaltyTextSecondary2: "#6B6B6C",
-   loyaltyTextSecondary3: "#6B6B6C",
-   loyaltyTextPrimary: "#D7BC76",
-   loyaltyCardBackground: "#0F0F0F",
-   loyaltyMainBorder: '#1B1B1B',
-   loyaltyBtnTextPrimary: "#000",
-   loyaltyBtnTextRegular: "#D7BC76",
-   loyaltyBackground: "#000",
-   loyaltyPrimary: "#D7BC76",
-   loyaltySecondary: "#B1B1B4",
-   loyaltySecondary2: "#2E2E2E",
-   loyaltyActiveTabText: "#000",
-   loyaltyTabsBackground: "#0F0F0F",
-   loyaltyTabsBorder: '#D7BC76',
-   loyaltyGiftCardText: '#fff',
-   loyaltyRadioBorder: "#272727",
-   loyaltyRadioBorderActive: "#fff",
-   loyaltyTextInputText: "#B1B1B4",
-   loyaltyTextInputTextActive: "#fff",
-   loyaltyCardExpiringText: '#B1B1B4',
-   loyaltyExpiringCard: '#0F0F0F'
-};
+// loyalty/charity/main blocks below are references into org.colors, not
+// copies — ThemeProvider.jsx's Object.entries(loyaltyDarkColors).forEach()
+// etc. works identically on them either way, and this keeps colors.js as
+// the single place every consumer imports from while org/config.js stays
+// the single place the actual values live.
+export const loyaltyDarkColors = org.colors.dark.loyalty;
 
-export const loyaltyLightColors = {
-   loyaltyTextMain: "#8A1538",
-   loyaltyTextMainTitle: "#000",
-   loyaltyTextSecondary: "#616060",
-   loyaltyTextSecondary2: "#6B6B6C",
-   loyaltyTextSecondary3: "#000",
-   loyaltyTextPrimary: "#8A1538",
-   loyaltyCardBackground: "#D9D9D9",
-   loyaltyMainBorder: 'transparent',
-   loyaltyBtnTextPrimary: "#fff",
-   loyaltyBtnTextRegular: "#8A1538",
-   loyaltyBackground: "#000",
-   loyaltyPrimary: "#8A1538",
-   loyaltySecondary: "#B1B1B4",
-   loyaltySecondary2: "#2E2E2E",
-   loyaltyActiveTabText: "#fff",
-   loyaltyTabsBackground: "#fff",
-   loyaltyTabsBorder: '#fff',
-   loyaltyGiftCardText: '#fff',
-   loyaltyRadioBorder: "#8A1538",
-   loyaltyRadioBorderActive: "#fff",
-   loyaltyTextInputText: "#616060",
-   loyaltyTextInputTextActive: "#fff",
-   loyaltyCardExpiringText: "#000",
-   loyaltyExpiringCard: '#fff'
+export const loyaltyLightColors = org.colors.light.loyalty;
 
-};
+export const charitiesDarkColors = org.colors.dark.charity;
 
+export const charitiesLightColors = org.colors.light.charity;
 
-export const charitiesDarkColors = {
-   charityBackground: '#000'
-}
+export const mainDarkColors = org.colors.dark.main;
 
-export const charitiesLightColors = {
-   charityBackground: '#fff'
-}
+export const mainLightColors = org.colors.light.main;
 
+// Default (pre-ThemeProvider-mount) values for the 7 brand-tinted keys come
+// from org.colors.light.base — matches this block's previous literals
+// exactly, since the app's static default was always the light-mode value.
+// ThemeProvider.setScheme() overwrites these at runtime (see 2.4c).
 export let colors = {
-   darkBlue: '#a29475',
-   navyBlue: "#072536",
-   darkModeBackground: "#000",
-   mainDarkMode: "#DDBD6B",
-   mainDarkModeText: "#000",
-   white: "#ffffff",
-   bg: "#F0F0F0",
-   grey: '#a29475',
-   lightGrey: "#DDDFE4",
-   darkGrey: "#838383",
-   green: "#2DC8D8",
-   lightGreen: "#8DDDAD",
-   orange: "#FFB800",
-   blue: "#4FA7F8",
-   red: "#ED544C",
-   secBlue: "#072536",
-   black: "#000000",
-   transparent: "transparent",
-   highlatedGrey: "#EDEDED",
-   borderGrey: "#2F2F2F",
-   categoryGrey: "#313131",
-   ...loyaltyLightColors,
-   ...charitiesLightColors,
+  darkBlue: org.colors.light.base.darkBlue,
+  navyBlue: org.colors.light.base.navyBlue,
+  darkModeBackground: org.colors.light.base.darkModeBackground,
+  mainDarkMode: org.colors.light.base.mainDarkMode,
+  mainDarkModeText: org.colors.light.base.mainDarkModeText,
+  white: "#ffffff",
+  bg: "#F0F0F0",
+  grey: org.colors.light.base.grey,
+  lightGrey: "#DDDFE4",
+  darkGrey: "#838383",
+  green: "#2DC8D8",
+  lightGreen: "#8DDDAD",
+  success: "#54C261",
+  orange: "#FFB800",
+  blue: "#4FA7F8",
+  red: "#ED544C",
+  secBlue: org.colors.light.base.secBlue,
+  black: "#000000",
+  transparent: "transparent",
+  highlatedGrey: "#EDEDED",
+  borderGrey: "#2F2F2F",
+  categoryGrey: "#313131",
+  ...loyaltyLightColors,
+  ...charitiesLightColors,
+  ...mainLightColors
 };

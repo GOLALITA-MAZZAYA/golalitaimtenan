@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
+import Image from "../../AppImage";
 import { LUSAIL_REGULAR } from "../../../redux/types";
 import { TypographyText } from "../../Typography";
 import { isRTL } from "../../../../utils";
@@ -37,10 +38,16 @@ const Checkbox = (props) => {
           <Image
             source={{ uri: isBase64 ? base64Image : flag }}
             style={{
-              width: 32,
-              height: 20,
+              width: 25,
+              height: 18,
               marginRight: 11,
+              borderRadius: 3,
+              borderWidth: 0.2,
+              padding: 6,
+              elevation: 5,
+              borderColor: "#000",
             }}
+            contentFit="contain"
           />
         )}
         {!!emoji && (
@@ -67,12 +74,16 @@ const Checkbox = (props) => {
         {active ? (
           <Image
             source={require("../../../assets/Checkbox1.png")}
-            style={[styles.logo, { tintColor }]}
+            style={styles.logo}
+            tintColor={tintColor}
+            contentFit="contain"
           />
         ) : (
           <Image
             source={require("../../../assets/Checkbox4.png")}
-            style={[styles.logo, { tintColor }]}
+            style={styles.logo}
+            tintColor={tintColor}
+            contentFit="contain"
           />
         )}
       </View>
@@ -102,7 +113,6 @@ const styles = StyleSheet.create({
     height: 16,
   },
   logo: {
-    resizeMode: "contain",
     with: "100%",
     height: "100%",
   },

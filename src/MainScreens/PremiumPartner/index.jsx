@@ -16,6 +16,7 @@ const MerchantNavigator = () => {
       <Stack.Screen name="merchant-info" component={MerchantInfo} />
 
       <Stack.Screen name="merchant-menu" component={Menu} />
+      
     </Stack.Navigator>
   );
 };

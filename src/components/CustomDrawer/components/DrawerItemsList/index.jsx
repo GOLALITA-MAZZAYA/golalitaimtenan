@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { sized } from '../../../../Svg';
 import FavoritesSvg from '../../../../assets/favorites.svg';
+import HeartSvg from '../../../../assets/heart.svg';
+import DiscountSvg from '../../../../assets/discountLabel.svg';
+import BookingsSvg from '../../../../assets/menu-book.svg';
 import SettingsSvg from '../../../../assets/settings.svg';
 import FamilySvg from '../../../../assets/family.svg';
 import ARSvg from '../../../../assets/aricon.svg';
@@ -14,119 +17,161 @@ import PlanetSvg from '../../../../assets/planet.svg';
 import PremiumSvg from '../../../../assets/premium2.svg';
 import Gopoint from '../../../../assets/goPoints.svg';
 import MerchantsSvg from '../../../../assets/merchants.svg';
-import GiftSvg from '../../../../assets/gift.svg';
+import AiChatSvg from '../../../../assets/ai_chat.svg';
+import CardSvg from '../../../../assets/card.svg';
+import { navigate } from '../../../../Navigation/RootNavigation';
+
 import VouchersSvg from '../../../../assets/vouchers.svg';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
-import OffersSvg from '../../../../assets/offers.svg';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../../colors';
 import {
-  getGoPointMerchatnsCount,
   getPremiumMerchantsCount,
 } from '../../../../api/merchants';
-import { showMessage } from 'react-native-flash-message';
-import useIsGuest from '../../../../hooks/useIsGuest';
 import useDrawerMenuVisibility from '../../../../hooks/useDrawerMenuVisibility';
 import { DRAWER_SCREEN_NAMES } from '../../drawerConfig';
-import { openScreen } from '../../../../Navigation/RootNavigation';
 
-const DrawerItemList = () => {
+// Every drawer item routes through RootNavigation's global navigate() — the
+// same function every other screen/thunk/deep-link in the app uses to reach
+// a MainStack screen (Main > Home > TabsBar > screenName). It also closes
+// the Drawer itself, so items here don't need their own navigation prop or
+// closeDrawer() call.
+const DrawerItemList = ({ routeName }) => {
   const { isDark } = useTheme();
   const isMainUser = useSelector(state => state.authReducer.isMainUser);
   const { t, i18n } = useTranslation();
-  const navigation = useNavigation();
-  const isGuest = useIsGuest();
-  const { isScreenVisible } = useDrawerMenuVisibility();
+  const { loading: menuLoading, isScreenVisible } = useDrawerMenuVisibility();
 
   const iconColor = isDark ? colors.mainDarkMode : colors.darkBlue;
-  const FavoritesIcon = sized(FavoritesSvg, 20, 20, iconColor);
+  const FavoritesIcon = sized(HeartSvg, 20, 20, iconColor);
+  const OffersIcon = sized(DiscountSvg, 20, 20, iconColor);
+  const BookingsIcon = sized(BookingsSvg, 20, 20, iconColor);
   const SettingsIcon = sized(SettingsSvg, 20, 20, iconColor);
   const ContactUsIcon = sized(ContactUsSvg, 20, 20, iconColor);
+  const GopointIcon = sized(Gopoint, 20, 20, iconColor);
+  const PremiumIcon = sized(PremiumSvg, 20, 20, iconColor);
   const PlanetIcon = sized(PlanetSvg, 20, 20, iconColor);
   const FamilyIcon = sized(FamilySvg, 20, 20, iconColor);
-  const OffersIcon = sized(OffersSvg, 20, 20, iconColor);
+  const AiChatIcon = sized(AiChatSvg, 20, 20, iconColor);
+  const DiscountCardsIcon = sized(CardSvg, 20, 20, iconColor);
+  const StampCardsIcon = sized(DiscountSvg, 20, 20, iconColor);
   const VouchersIcon = sized(VouchersSvg, 20, 20, iconColor);
-
   const [premiumMerchantsCount, setPremiumMerchantsCount] = useState(0);
-  const [goPointsMerchantsCount, setGoPointsMerchantsCount] = useState(0);
-
-  // openScreen pushes on MainStack and does not auto-close the drawer.
-  const openFromDrawer = (name, params) => {
-    navigation.dispatch(DrawerActions.closeDrawer());
-    openScreen(name, params);
-  };
+  const isPremiumMerchantsVisible =
+    !menuLoading && isScreenVisible(DRAWER_SCREEN_NAMES.PREMIUM_MERCHANTS);
 
   useEffect(() => {
+    if (!isPremiumMerchantsVisible) {
+      return;
+    }
+
     getPremiumMerchantsCount()
-      .then(async i => {
+      .then(i => {
         setPremiumMerchantsCount(i.total_premium_merchants);
       })
       .catch(error => {
         console.error('Error :', error);
       });
-
-    getGoPointMerchatnsCount()
-      .then(async i => {
-        setGoPointsMerchantsCount(i.total_gpoint_merchants);
-      })
-      .catch(error => {
-        console.error('Error :', error);
-      });
-  }, []);
+  }, [isPremiumMerchantsVisible]);
 
   const drawerItems = [
     {
       screenName: DRAWER_SCREEN_NAMES.FAMILY_MEMBERS,
+      route: 'Family',
       icon: () => <FamilyIcon style={styles.iconWrapper} />,
       title: t('Drawer.familyMembers'),
-      onPress: () => {
-        if (isGuest) {
-          showMessage({
-            type: 'warning',
-            message: t('Drawer.notForGuest'),
-          });
-          return;
-        }
-        openFromDrawer('Family');
-      },
-      hidden: !isMainUser || isGuest,
+      onPress: () => navigate('Family'),
+      hidden: !isMainUser,
     },
     {
-      screenName: DRAWER_SCREEN_NAMES.VOUCHERS,
+      screenName: DRAWER_SCREEN_NAMES.GIFT_CARDS,
       icon: () => <VouchersIcon style={styles.iconWrapper} />,
       title: t('Drawer.vouchersAndGiftCards'),
       onPress: () =>
-        openFromDrawer('myVouchers', {
-          screen: 'myVouchers-list',
+        navigate('loyaltyPoints', {
+          screen: 'loyaltyPoints-giftCards-list',
         }),
     },
     {
       screenName: DRAWER_SCREEN_NAMES.ALL_OFFERS,
+      route: 'AllOffers',
       icon: () => <OffersIcon style={styles.iconWrapper} />,
       title: t('Drawer.allOffers'),
-      onPress: () => openFromDrawer('AllOffers'),
+      onPress: () => navigate('AllOffers'),
+    },
+    {
+      screenName: DRAWER_SCREEN_NAMES.PREMIUM_MERCHANTS,
+      route: 'merchants',
+      icon: () => <PremiumIcon style={styles.iconWrapper} />,
+      title: t('Drawer.premiumMerchants'),
+      onPress: () =>
+        navigate('merchants', {
+          screen: 'premiumMerchants-list',
+          params: { selectedCategory: null },
+        }),
+      counts: premiumMerchantsCount,
+      hidden: premiumMerchantsCount == 0,
+    },
+    {
+      screenName: DRAWER_SCREEN_NAMES.AI_CHAT,
+      route: 'AiChat',
+      icon: () => <AiChatIcon style={styles.iconWrapper} />,
+      title: t('Drawer.aiChat'),
+      onPress: () => navigate('AiChat'),
+    },
+    {
+      screenName: DRAWER_SCREEN_NAMES.LOYALTY_POINTS,
+      route: 'loyaltyPoints',
+      icon: () => <GopointIcon style={styles.iconWrapper} />,
+      title: t('Drawer.loyaltyPoints'),
+      onPress: () =>
+        navigate('loyaltyPoints', {
+          screen: 'loyaltyPoints-main',
+        }),
+    },
+    {
+      screenName: DRAWER_SCREEN_NAMES.DISCOUNT_CARDS,
+      route: 'DiscountCardsList',
+      icon: () => <DiscountCardsIcon style={styles.iconWrapper} />,
+      title: t('Drawer.discountCards', 'Complimentary Coupons'),
+      onPress: () => navigate('DiscountCardsList'),
+    },
+    {
+      screenName: DRAWER_SCREEN_NAMES.STAMP_CARDS,
+      route: 'StampCards',
+      icon: () => <StampCardsIcon style={styles.iconWrapper} />,
+      title: t('Drawer.stampCards', 'Loyalty Stamps'),
+      onPress: () => navigate('StampCards'),
     },
     {
       screenName: DRAWER_SCREEN_NAMES.FAVORITES,
+      route: 'favouriteMerchants',
       icon: () => <FavoritesIcon style={styles.iconWrapper} />,
       title: t('Favorites.favorites'),
-      onPress: () => openFromDrawer('favouriteMerchants'),
-      hidden: isGuest,
+      onPress: () => navigate('favouriteMerchants'),
+    },
+    {
+      screenName: DRAWER_SCREEN_NAMES.MY_BOOKINGS,
+      route: 'myBookings',
+      icon: () => <BookingsIcon style={styles.iconWrapper} />,
+      title: t('Drawer.myBookings'),
+      onPress: () => navigate('myBookings'),
     },
     {
       screenName: DRAWER_SCREEN_NAMES.SETTINGS,
+      route: 'Settings',
       icon: () => <SettingsIcon style={styles.iconWrapper} />,
       title: t('Settings.settings'),
-      onPress: () => openFromDrawer('Settings'),
+      onPress: () => navigate('Settings'),
     },
     {
       screenName: DRAWER_SCREEN_NAMES.LANGUAGE,
-      icon: () => <PlanetIcon style={styles.iconWrapper} />,
+      icon: () => <PlanetIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
       title: t('Drawer.language'),
       onPress: () => {
         const newLang = i18n.language === 'ar' ? 'en' : 'ar';
+
         i18next.changeLanguage(newLang);
         AsyncStorage.setItem('lang', newLang);
       },
@@ -135,10 +180,19 @@ const DrawerItemList = () => {
     },
     {
       screenName: DRAWER_SCREEN_NAMES.CONTACT_US,
+      route: 'ContactUs',
       icon: () => <ContactUsIcon style={styles.iconWrapper} />,
       title: t('ContactUs.contactUs'),
-      onPress: () => openFromDrawer('ContactUs'),
+      onPress: () => navigate('ContactUs'),
     },
+    // {
+    //   icon: () => <ScanIcon style={styles.iconWrapper} />,
+    //   title: t('Drawer.scanBill'),
+    //   onPress: () =>
+    //     navigation.navigate('BillScannerHoToUse', {
+    //       title: t('Drawer.scanBill'),
+    //     }),
+    // },
   ];
 
   const filteredDrawerItems = useMemo(() => {
@@ -151,10 +205,8 @@ const DrawerItemList = () => {
     isMainUser,
     i18n.language,
     isDark,
-    premiumMerchantsCount,
-    goPointsMerchantsCount,
     isScreenVisible,
-    isGuest,
+    premiumMerchantsCount,
   ]);
 
   return (
@@ -168,6 +220,7 @@ const DrawerItemList = () => {
           onPress={item.onPress}
           languages={item.languages}
           counts={item.counts}
+          focused={!!item.route && item.route === routeName}
         />
       ))}
     </View>

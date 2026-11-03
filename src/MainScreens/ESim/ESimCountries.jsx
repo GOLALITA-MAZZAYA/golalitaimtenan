@@ -80,7 +80,7 @@ const ESimCountries = ({ navigation }) => {
     SearchSvg,
     18,
     18,
-    isDark ? colors.white : colors.darkBlue,
+    isDark ? '#8E8E93' : '#6B7280',
   );
 
   const load = useCallback(async (nextType, keyword) => {
@@ -144,8 +144,7 @@ const ESimCountries = ({ navigation }) => {
         style={[
           styles.search,
           {
-            backgroundColor: isDark ? colors.navyBlue : colors.white,
-            borderColor: isDark ? colors.navyBlue : colors.lightGrey,
+            backgroundColor: isDark ? '#1C1C1E' : '#F3F4F6',
             flexDirection: isRTL() ? 'row-reverse' : 'row',
           },
         ]}
@@ -155,11 +154,11 @@ const ESimCountries = ({ navigation }) => {
           value={search}
           onChangeText={onSearchChange}
           placeholder={t('ESim.search')}
-          placeholderTextColor={isDark ? colors.white : colors.lightGrey}
+          placeholderTextColor={isDark ? '#8E8E93' : '#6B7280'}
           style={[
             styles.input,
             {
-              color: isDark ? colors.white : colors.mainDarkModeText,
+              color: isDark ? colors.white : colors.black,
               textAlign: isRTL() ? 'right' : 'left',
               marginLeft: isRTL() ? 0 : 8,
               marginRight: isRTL() ? 8 : 0,
@@ -168,7 +167,12 @@ const ESimCountries = ({ navigation }) => {
         />
       </View>
 
-      <View style={[styles.tabs, { flexDirection: isRTL() ? 'row-reverse' : 'row' }]}>
+      <View
+        style={[
+          styles.tabs,
+          { backgroundColor: isDark ? '#1C1C1E' : '#E5E7EB' },
+        ]}
+      >
         {TABS.map(tab => {
           const active = type === tab.value;
           return (
@@ -176,8 +180,9 @@ const ESimCountries = ({ navigation }) => {
               key={tab.value}
               style={[
                 styles.tab,
-                active &&
-                  (isDark ? styles.tabActiveDark : styles.tabActiveLight),
+                active && {
+                  backgroundColor: isDark ? colors.mainDarkMode : colors.darkBlue,
+                },
               ]}
               onPress={() => setType(tab.value)}
             >
@@ -188,11 +193,11 @@ const ESimCountries = ({ navigation }) => {
                 textColor={
                   active
                     ? isDark
-                      ? colors.mainDarkModeText
+                      ? colors.black
                       : colors.white
                     : isDark
-                    ? colors.white
-                    : colors.darkBlue
+                    ? '#8E8E93'
+                    : '#6B7280'
                 }
                 style={active ? styles.tabActiveText : undefined}
               />
@@ -257,7 +262,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 46,
     marginBottom: 12,
-    borderWidth: 1,
   },
   input: {
     flex: 1,
@@ -267,20 +271,14 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
-    alignItems: 'center',
+    borderRadius: 20,
+    padding: 3,
     marginBottom: 8,
   },
   tab: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 10,
-  },
-  tabActiveLight: {
-    backgroundColor: colors.darkBlue,
-  },
-  tabActiveDark: {
-    backgroundColor: colors.mainDarkMode,
+    borderRadius: 17,
   },
   tabActiveText: {
     fontWeight: '700',

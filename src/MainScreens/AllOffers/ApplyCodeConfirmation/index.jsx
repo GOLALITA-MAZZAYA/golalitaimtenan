@@ -1,4 +1,4 @@
-import { Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import MainLayout from '../../../components/MainLayout';
 import Header from '../../../components/Header';
 import { SCREEN_HEIGHT } from '../../../styles/mainStyles';
@@ -18,6 +18,7 @@ import { useTheme } from '../../../components/ThemeProvider';
 import { colors } from '../../../components/colors';
 import CommonButton from '../../../components/CommonButton/CommonButton';
 import { isRTL } from '../../../../utils';
+import QRCode from 'react-native-qrcode-svg';
 
 const getDateString = date => {
   if (!date.getFullYear) return '';
@@ -37,6 +38,7 @@ const ApplyCodeConfirmation = ({ navigation }) => {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
 
   const getData = async () => {
     try {
@@ -94,14 +96,14 @@ const ApplyCodeConfirmation = ({ navigation }) => {
         throw 'err';
       }
 
-      showMessage({
-        type: 'success',
-        message: t('General.success'),
-      });
+      // showMessage({
+      //   type: 'success',
+      //   message: t('General.success'),
+      // });
 
       setTimeout(() => {
         navigation.navigate('Main');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       console.log(err, 'sendRedemptionEmail error');
       showMessage({
@@ -145,6 +147,7 @@ const ApplyCodeConfirmation = ({ navigation }) => {
 
   const address = getAddress(merchantDataRef.current);
 
+
   return (
     <MainLayout
       outsideScroll={true}
@@ -157,16 +160,18 @@ const ApplyCodeConfirmation = ({ navigation }) => {
       {loading && (
         <FullScreenLoader absolutePosition style={{ top: -HEADER_HEIGHT }} />
       )}
-      {!loading && (
-        <View style={styles.wrapper}>
-          <Image
-            source={require('../../../assets/logo.png')}
-            style={[
-              styles.logo,
-              { tintColor: isDark ? colors.mainDarkMode : colors.darkBlue },
-            ]}
+      {!loading && (!data || !merchantDataRef.current) && (
+        <View style={styles.errorContainer}>
+          <TypographyText
+            title={t('General.error')}
+            textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+            size={18}
+            style={styles.errorText}
           />
-
+        </View>
+      )}
+      {!loading && data && merchantDataRef.current && (
+        <View style={styles.wrapper}>
           <TypographyText
             title={
               isRTL()
@@ -191,12 +196,18 @@ const ApplyCodeConfirmation = ({ navigation }) => {
             style={styles.confirmationText}
           />
 
+          {data?.confirmation_number && <QRCode
+            value={String(data.confirmation_number)}
+            size={120}
+          />}
+
           <TypographyText
             title={t('AllOffers.codeConfirmation')}
             textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
             size={16}
-            style={{ marginTop: 10 }}
+            style={{ marginTop: 15 }}
           />
+
 
           <View style={styles.codeWrapper}>
             <TypographyText
@@ -221,8 +232,15 @@ const ApplyCodeConfirmation = ({ navigation }) => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorText: {
+    textAlign: 'center',
   },
   logo: {
     width: 90,
@@ -231,7 +249,6 @@ const styles = StyleSheet.create({
   name: {
     textAlign: 'center',
     fontWeight: '800',
-    marginTop: 30,
   },
   address: {
     textAlign: 'center',
@@ -250,6 +267,7 @@ const styles = StyleSheet.create({
   },
   confirmationText: {
     marginTop: 40,
+    marginBottom: 20
   },
 });
 

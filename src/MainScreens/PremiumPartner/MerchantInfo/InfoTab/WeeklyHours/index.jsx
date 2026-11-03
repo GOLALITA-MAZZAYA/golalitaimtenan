@@ -5,7 +5,7 @@ import { getMerchantWeeklyTimetable } from '../../../../../api/merchants';
 import { useTheme } from '../../../../../components/ThemeProvider';
 import { TypographyText } from '../../../../../components/Typography';
 import { colors } from '../../../../../components/colors';
-import { BALOO_REGULAR, BALOO_SEMIBOLD } from '../../../../../redux/types';
+import { BALOO_2, BALOO_SEMIBOLD } from '../../../../../redux/types';
 import { isRTL } from '../../../../../../utils';
 import { sized } from '../../../../../Svg';
 import InstructionSvg from '../../../../../assets/loyaltyPoints/instruction.svg';
@@ -286,7 +286,7 @@ const WeeklyHours = ({ merchantId, isLast, onLoaded }) => {
           <TypographyText
             title={t('ProductPage.workingHours') || 'Working hours'}
             textColor={mutedColor}
-            font={BALOO_REGULAR}
+            font={BALOO_2}
             size={12}
             style={styles.label}
           />
@@ -384,7 +384,7 @@ const WeeklyHours = ({ merchantId, isLast, onLoaded }) => {
                   <TypographyText
                     title={dayLabel(day)}
                     textColor={day.isToday ? textColor : mutedColor}
-                    font={day.isToday ? BALOO_SEMIBOLD : BALOO_REGULAR}
+                    font={day.isToday ? BALOO_SEMIBOLD : BALOO_2}
                     size={14}
                     style={[{ textAlign }]}
                   />
@@ -425,7 +425,7 @@ const WeeklyHours = ({ merchantId, isLast, onLoaded }) => {
                           ? textColor
                           : mutedColor
                     }
-                    font={day.isToday ? BALOO_SEMIBOLD : BALOO_REGULAR}
+                    font={day.isToday ? BALOO_SEMIBOLD : BALOO_2}
                     size={14}
                   />
 
@@ -433,7 +433,7 @@ const WeeklyHours = ({ merchantId, isLast, onLoaded }) => {
                     <TypographyText
                       title={holidayLabel(day.holiday)}
                       textColor={closedColor}
-                      font={BALOO_REGULAR}
+                      font={BALOO_2}
                       size={11}
                     />
                   )}
@@ -470,14 +470,14 @@ const WeeklyHours = ({ merchantId, isLast, onLoaded }) => {
                   <TypographyText
                     title={holidayLabel(holiday)}
                     textColor={textColor}
-                    font={BALOO_REGULAR}
+                    font={BALOO_2}
                     size={13}
                     style={[styles.dayName, { textAlign }]}
                   />
                   <TypographyText
                     title={`${isArabic ? holiday.day_ar || holiday.day : holiday.day}, ${holiday.date}`}
                     textColor={mutedColor}
-                    font={BALOO_REGULAR}
+                    font={BALOO_2}
                     size={12}
                   />
                 </View>

@@ -142,12 +142,12 @@ export const getColor = (categoryId) => {
 export const getStringDate = (dateString) => {
   console.log(dateString, "date");
   if (dateString === undefined || dateString === null || String(dateString).trim() === "") return "...";
-  
+
   // Handle DD-MM-YYYY or DD.MM.YYYY or DD/MM/YYYY formats
   let cleanStr = String(dateString).trim();
   let parts = cleanStr.split(/[-./]/);
   let date;
-  
+
   if (parts.length === 3) {
     if (parts[0].length === 4) {
       // YYYY-MM-DD
@@ -157,19 +157,19 @@ export const getStringDate = (dateString) => {
       date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
     }
   }
-  
+
   if (!date || isNaN(date.getTime())) {
     date = new Date(dateString);
   }
-  
+
   if (isNaN(date.getTime())) {
     return "...";
   }
-  
+
   let day = date.getDate();
   let month = date.getMonth() + 1;
   let year = date.getFullYear(); // Corrected: removed the incorrect "+ 1" bug
-  
+
   return `${day.toString().padStart(2, "0")}.${month
     .toString()
     .padStart(2, "0")}.${year}`;

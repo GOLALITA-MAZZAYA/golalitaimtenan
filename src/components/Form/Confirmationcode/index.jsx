@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
 import { BALOO_MEDIUM } from "../../../redux/types";
 import { TypographyText } from "../../Typography";
@@ -21,16 +21,14 @@ const Confirmationcode = (props) => {
     setModalVisible,
     method,
     confirmationcodeLoading,
-    contactValue,
   } = props;
 
   const { isDark } = useTheme();
   const { t } = useTranslation();
 
-  const instructionText =
-    method === "phone"
-      ? `${t("Login.enter4DigitsPhone")}${contactValue ? ` ${contactValue}` : ""}`
-      : `${t("Login.enter4DigitsEmail")}${contactValue ? ` ${contactValue}` : ""}`;
+  // useMemo(() => {
+  //   console.log("isModalVisible:", isModalVisible);
+  // }, [isModalVisible]);
 
   return (
     <Modal
@@ -80,17 +78,11 @@ const Confirmationcode = (props) => {
             handleSubmit,
             errors,
             submitCount,
+            setFieldError,
           }) => {
             errors = submitCount > 0 ? errors : {};
             return (
               <View>
-                <TypographyText
-                  title={instructionText}
-                  textColor={isDark ? colors.white : colors.darkBlue}
-                  size={15}
-                  font={BALOO_MEDIUM}
-                  style={styles.instruction}
-                />
                 <CodeField
                   value={values.code}
                   onChangeText={(text) => {
@@ -107,8 +99,9 @@ const Confirmationcode = (props) => {
                   keyboardType="number-pad"
                   textContentType="oneTimeCode"
                   renderCell={({ index, symbol, isFocused }) => (
-                    <View style={styles.cellWrapper} key={index}>
+                    <View style={styles.cellWrapper}>
                       <Text
+                        key={index}
                         style={[
                           styles.cell,
                           isFocused && styles.focusCell,
@@ -142,11 +135,6 @@ const Confirmationcode = (props) => {
 };
 
 const styles = StyleSheet.create({
-  instruction: {
-    textAlign: "center",
-    paddingHorizontal: 12,
-    marginTop: 8,
-  },
   codeWrapper: {
     marginVertical: 30,
     paddingHorizontal: 20,

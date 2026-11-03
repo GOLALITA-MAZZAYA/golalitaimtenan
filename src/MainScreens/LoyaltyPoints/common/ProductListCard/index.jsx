@@ -1,63 +1,81 @@
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { memo } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import Image from "../../../../components/AppImage";
 import { TypographyText } from "../../../../components/Typography";
 import { useTranslation } from "react-i18next";
 import { colors } from "../../../../components/colors";
 import {useTheme} from "../../../../components/ThemeProvider";
-import {BALOO_BOLD, BALOO_MEDIUM, BALOO_REGULAR, BALOO_SEMIBOLD} from "../../../../redux/types";
+import {BALOO_2} from "../../../../redux/types";
 import {isRTL} from "../../../../../utils";
+import ArrowSvg from '../../../../assets/loyaltyPoints/rightArrow.svg';
 
 const IMAGE_HEIGHT = 242;
 const IMAGE_RADIUS = 38;
 
-const ProductListCard = ({ onPress, uri, style, expiringDate, value, description }) => {
+const ProductListCard = memo(({ onPress, uri='', style, expiringDate, value, description, onArrowPress, aspectRatio }) => {
   const { t } = useTranslation();
   const {isDark} = useTheme();
   const isRtl = isRTL();
-
   return (
-    <TouchableOpacity onPress={onPress} style={[styles.wrapper, style]}>
-      {/* Background image */}
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.wrapper,
+        aspectRatio ? { aspectRatio } : styles.fixedHeight,
+        style,
+      ]}
+    >
+
       <Image
-        source={{ uri: `data:image/png;base64,${uri}` }}
-        style={styles.backgroundImage}
-        resizeMode="cover"
+        source={{ uri }}
+        style={[
+          styles.backgroundImage,
+          aspectRatio ? { aspectRatio } : styles.fixedHeight,
+        ]}
+        contentFit="cover"
+        recyclingKey={uri}
       />
 
-      {/* Description block */}
+      {!!onArrowPress && <TouchableOpacity style={[styles.arrow,{right: isRtl ? undefined: 20, left: isRtl ? 20: undefined}]} onPress={onArrowPress}>
+        <ArrowSvg color={colors.loyaltyTextMain}/>
+      </TouchableOpacity>}
+
+
       <View style={[styles.descriptionBlock, { backgroundColor: colors.loyaltyCardBackground, flexDirection: isRtl ? 'row-reverse': 'row' }]}>
         <View style={styles.nameWrapper}>
           <TypographyText
             title={description}
-            size={20}
+            size={18}
             style={styles.pointsBlockText}
             textColor={colors.loyaltyTextMainTitle}
             numberOfLines={2}
+            font={BALOO_2}
           />
         </View>
 
-        <View style={[styles.pointsBlock, {flexDirection: isRtl ? 'row-reverse': 'row'}]}>
+        {!!value && <View style={[styles.pointsBlock, {flexDirection: isRtl ? 'row-reverse': 'row'}]}>
           <TypographyText
             title={value}
-            size={20}
+            size={18}
             style={styles.pointsValueText}
             textColor={colors.loyaltyPrimary}
-            font={BALOO_BOLD}
+            font={BALOO_2}
           />
           <TypographyText
             title={t("LoyaltyOffers.points")}
-            size={14}
+            size={13}
             style={[
                 styles.pointsText,
                 {marginLeft: isRtl ? 0 : 3, marginRight: isRtl ? 3 : 0}
             ]}
             textColor={colors.loyaltyPrimary}
-            font={BALOO_REGULAR}
+            font={BALOO_2}
           />
-        </View>
+        </View>}
       </View>
 
-      {/* Expiring date */}
-      <View style={[
+
+      {expiringDate && <View style={[
           styles.expiringDateBlock,
           { backgroundColor: isDark ? colors.loyaltyCardBackground: colors.loyaltyTabsBackground,
             left: isRtl ? undefined: 20,
@@ -69,23 +87,26 @@ const ProductListCard = ({ onPress, uri, style, expiringDate, value, description
           textColor={isDark ? colors.loyaltyTextSecondary: colors.loyaltyTextMainTitle}
           size={10}
           style={styles.expiringDateText}
+          font={BALOO_2}
         />
-      </View>
+      </View>}
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   wrapper: {
     borderRadius: IMAGE_RADIUS,
-    height: IMAGE_HEIGHT,
     overflow: "hidden",
     backgroundColor: "#fff",
   },
 
+  fixedHeight: {
+    height: IMAGE_HEIGHT,
+  },
+
   backgroundImage: {
     width: "100%",
-    height: IMAGE_HEIGHT,
     borderRadius: IMAGE_RADIUS,
   },
 
@@ -123,7 +144,7 @@ const styles = StyleSheet.create({
   },
 
   pointsText: {
-    marginBottom: 4
+    marginBottom: 1
   },
 
   expiringDateBlock: {
@@ -138,6 +159,10 @@ const styles = StyleSheet.create({
   expiringDateText: {
     fontWeight: "600",
   },
+  arrow: {
+    position: 'absolute',
+    top: 100
+  }
 });
 
 export default ProductListCard;

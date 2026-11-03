@@ -8,7 +8,7 @@ import {sized} from "../../../../../Svg";
 const ShareIcon = ({onShare}) => {
     const {isDark} = useTheme();
 
-    const ShareIcon = sized(ShareSvg, 20, 20, '#fff');
+    const ShareIcon = sized(ShareSvg, 10, 10, '#fff');
 
     const shareIconBorderColor = isDark ? colors.mainDarkMode : colors.darkBlue;
 
@@ -30,8 +30,8 @@ const ShareIcon = ({onShare}) => {
 
 const styles = StyleSheet.create({
 shareIcon: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#DDDFE4",

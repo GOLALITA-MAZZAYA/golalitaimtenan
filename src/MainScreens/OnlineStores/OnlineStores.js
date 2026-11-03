@@ -35,8 +35,8 @@ const OnlineStores = ({
 
   const fetchMoreData = () => {
     if (
-      (isMerchantsLoading || isOffersLoading,
-      params?.isMyVouchers || !canGetMoreDataRef.current)
+      isMerchantsLoading || isOffersLoading ||
+        params?.isMyVouchers || !canGetMoreDataRef.current
     ) {
       return;
     }
@@ -140,8 +140,10 @@ const OnlineStores = ({
         contentContainerStyle={{ paddingBottom: 60 }}
         showsVerticalScrollIndicator={false}
         data={listData}
-        windowSize={SCREEN_HEIGHT}
-        maxToRenderPerBatch={5}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={true}
         onEndReachedThreshold={0.4}
         onEndReached={fetchMoreData}
         ListFooterComponent={() =>

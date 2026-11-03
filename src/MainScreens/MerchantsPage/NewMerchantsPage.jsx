@@ -1,18 +1,16 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { colors } from "../../components/colors";
 import { SCREEN_HEIGHT } from "../../styles/mainStyles";
 import { connect } from "react-redux";
 import { getMerchantList } from "../../redux/merchant/merchant-thunks";
 import { useTranslation } from "react-i18next";
-import { setMerchants } from "../../redux/merchant/merchant-actions";
 import MainLayout from "../../components/MainLayout";
 import { useTheme } from "../../components/ThemeProvider";
 import NewMerchants from "../../components/NewMerchants";
 import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import Header from "../../components/Header";
-import {getUserLocationThunk} from "../../redux/global/global-thunks";
-import { goBackOrHome } from "../../Navigation/RootNavigation";
+import { getUserLocationThunk } from "../../redux/global/global-thunks";
 
 const NewMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk }) => {
   const { t } = useTranslation();
@@ -20,7 +18,7 @@ const NewMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk
 
   useEffect(() => {
     getUserLocationThunk()
-  },[])
+  }, [])
 
   return (
     <MainLayout
@@ -31,7 +29,9 @@ const NewMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk
           btns={["back"]}
           additionalBtnsProps={{
             back: {
-              onPress: () => goBackOrHome(navigation),
+              onPress: () => {
+                navigation.navigate("Main");
+              },
             },
           }}
         />
@@ -42,7 +42,7 @@ const NewMerchantsPage = ({ navigation, getMerchantDetails, getUserLocationThunk
     >
       <NewMerchants
         isDark={isDark}
-        title={t("MainScreen.localClients")}
+        // title={t("MainScreen.localClients")}
         onPress={(merchantId) => {
           getMerchantDetails(
             merchantId,
@@ -83,7 +83,6 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, {
   getMerchantList,
-  setMerchants,
   getMerchantDetails,
   getUserLocationThunk
 })(NewMerchantsPage);

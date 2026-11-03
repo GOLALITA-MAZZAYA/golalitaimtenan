@@ -1,8 +1,10 @@
+import { getToken } from '../utils/secureStorage';
 import instance from "../redux/instance";
-import { getAuthToken } from '../utils/tokenStorage';
+import i18next from "i18next";
+import axios from "axios";
 
 export const getNewOffers = async (reqParams) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("/user/offers/v3", {
     params: {
@@ -10,13 +12,13 @@ export const getNewOffers = async (reqParams) => {
       ...reqParams,
     },
   });
-
-  return res.data.result;
+  console.log("user/offers/v3 res:", res)
+  return Array.isArray(res?.data?.result) ? res.data.result : [];
 };
 
 export const getProductCategoryTypes = async () => {
   try {
-    const token = await getAuthToken();
+    const token = await getToken();
     const res = await instance.post("/product/category_type/list", {
       params: { token },
     });
@@ -28,7 +30,7 @@ export const getProductCategoryTypes = async () => {
 };
 
 export const getOfferById = async (product_id) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("/user/offer/details", {
     params: {
@@ -40,21 +42,8 @@ export const getOfferById = async (product_id) => {
   return res.data.result;
 };
 
-export const getFilteredOffers = async (params = {}) => {
-  const token = await getAuthToken();
-
-  const res = await instance.post("/user/offers/v3", {
-    params: {
-      token,
-      ...params,
-    },
-  });
-
-  return res.data.result;
-};
-
 export const sendRedemptionEmail = async (body) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("/send_redemption_email", {
     params: {
@@ -65,3 +54,23 @@ export const sendRedemptionEmail = async (body) => {
 
   return res.data.result;
 };
+
+
+export const bookHotel = async (body) => {
+
+
+  const token = await getToken();
+
+  const res = await axios.post(
+    'https://golalitatwffer.com/api/go/sendinblue_email/V2',
+    {
+      params: {
+        ...body,
+        token,
+      },
+    },
+  );
+
+
+  return res?.data?.result
+}

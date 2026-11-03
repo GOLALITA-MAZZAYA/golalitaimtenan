@@ -1,14 +1,34 @@
+import { getToken } from '../utils/secureStorage';
 import instance from '../redux/instance';
-import { ORG_ID, ORG_CODE } from '../constants';
-import { getAuthToken } from '../utils/tokenStorage';
+import { org } from '../org/config';
+
+const logOfferFieldCheck = (endpoint, result) => {
+  const list = Array.isArray(result) ? result : [];
+  console.log(
+    `[OffersTab] ${endpoint} FIELD CHECK (${list.length} offers):`,
+    JSON.stringify(
+      list.map(o => ({
+        id: o?.id,
+        name: o?.name,
+        has_x_home_offer: o != null && 'x_home_offer' in o,
+        x_home_offer: o?.x_home_offer,
+        has_is_in_offer: o != null && 'is_in_offer' in o,
+        is_in_offer: o?.is_in_offer,
+      })),
+      null,
+      2,
+    ),
+  );
+};
 
 export const getMerchants = async (params = {}) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  console.log(params, 'params');
+  console.log(params, 'params getMerchants');
   const res = await instance.post('/user/category/merchant/lists', {
-    params: { token, ...params, x_org_linked: ORG_CODE },
+    params: { token, ...params, x_org_linked: org.code },
   });
+  console.log("getMerchants res:", res.data)
 
   if (!res.data.result) {
     throw new Error();
@@ -18,7 +38,7 @@ export const getMerchants = async (params = {}) => {
 };
 
 export const getMerchantById = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/merchant/details', {
     params: { token, merchant_id },
@@ -32,11 +52,13 @@ export const getMerchantById = async merchant_id => {
 };
 
 export const getOffers = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await instance.post('/user/offers/golalita/v3', {
-    params: { token, merchant_id },
-  });
+  const payload = { params: { token, merchant_id } };
+  console.log('[OffersTab] /user/offers/golalita/v3 REQUEST:', JSON.stringify(payload, null, 2));
+  const res = await instance.post('/user/offers/golalita/v3', payload);
+  console.log('[OffersTab] /user/offers/golalita/v3 RESPONSE:', JSON.stringify(res?.data, null, 2));
+  logOfferFieldCheck('/user/offers/golalita/v3', res?.data?.result);
 
   if (!res.data.result) {
     throw new Error();
@@ -46,19 +68,20 @@ export const getOffers = async merchant_id => {
 };
 
 export const getAllOffersByMeerchantId = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await instance.post('/user/offers/v3', {
-    params: { token, merchant_id },
-  });
-
+  const payload = { params: { token, merchant_id } };
+  console.log('[OffersTab] /user/offers/v3 REQUEST:', JSON.stringify(payload, null, 2));
+  const res = await instance.post('/user/offers/v3', payload);
+  console.log('[OffersTab] /user/offers/v3 RESPONSE:', JSON.stringify(res?.data, null, 2));
+  logOfferFieldCheck('/user/offers/v3', res?.data?.result);
   const offers = res?.data?.result;
 
-  if (!offers) {
-    throw new Error();
+  if (!Array.isArray(offers)) {
+    return [];
   }
 
-  const transformedOffers = offers?.map(offer => ({
+  const transformedOffers = offers.map(offer => ({
     ...offer,
     value: offer.list_price,
     name: offer.name,
@@ -69,7 +92,7 @@ export const getAllOffersByMeerchantId = async merchant_id => {
 };
 
 export const getMerchantDetails = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/merchant/details', {
     params: {
@@ -82,37 +105,29 @@ export const getMerchantDetails = async merchant_id => {
   return res.data.result;
 };
 
-export const getPasscard = async (userName, expDate, barcode) => {
-  const token = await getAuthToken();
-
-  const res = await instance.post('/golalta/passcard/v2', {
-    params: {
-      token,
-      key_label1: userName,
-      key_label2: expDate,
-      barcode,
-    },
-  });
-
-  return res.data.result;
-};
 
 export const getAllMerchants = async (otherParams = {}) => {
-  const token = await getAuthToken();
+  const token = await getToken();
+
+  console.log("getAllMerchants:params:", {
+    token,
+    x_org_linked: org.code,
+    ...otherParams,
+  })
 
   const res = await instance.post('/user/category/merchant/lists', {
     params: {
       token,
-      x_org_linked: ORG_CODE,
+      x_org_linked: org.code,
       ...otherParams,
     },
   });
-
+  console.log("getAllMerchants:", res.data)
   return res.data.result;
 };
 
 export const getAllMerchantsForScan = async (otherParams = {}) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/scan/merchant/list', {
     params: {
@@ -125,7 +140,7 @@ export const getAllMerchantsForScan = async (otherParams = {}) => {
 };
 
 export const getLocalClients = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/category/new/merchant/lists', {
     params: {
@@ -137,7 +152,7 @@ export const getLocalClients = async () => {
 };
 
 export const getBranchesById = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/merchant/branch/list', {
     params: {
@@ -146,11 +161,15 @@ export const getBranchesById = async merchant_id => {
     },
   });
 
+  if (!res.data.result) {
+    throw new Error();
+  }
+
   return res.data.result;
 };
 
 export const getMerchantDisscountForOffers = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/offers-discount-tag', {
     params: {
@@ -168,7 +187,7 @@ export const getMerchantDisscountForOffers = async merchant_id => {
 };
 
 export const getFavouriteMerchants = async customer_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/get/favourite/merchants', {
     params: {
@@ -181,9 +200,9 @@ export const getFavouriteMerchants = async customer_id => {
 };
 
 export const saveBill = async params => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await instance.post('/scan/merchant/list', {
+  const res = await instance.post('/user/scan/bills', {
     params: {
       token,
       ...params,
@@ -194,7 +213,7 @@ export const saveBill = async params => {
 };
 
 export const getPremiumMerchants = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/merchant/lists/premium', {
     params: {
@@ -205,8 +224,9 @@ export const getPremiumMerchants = async () => {
   return res.data.result;
 };
 
-export const getGoPointsMerchants = async () => {
-  const token = await getAuthToken();
+
+export const getGoPointsMerchantsWithDiscount = async () => {
+  const token = await getToken();
 
   const res = await instance.post('/user/category/merchant/lists/', {
     params: {
@@ -217,11 +237,30 @@ export const getGoPointsMerchants = async () => {
     },
   });
 
-  return res.data.result;
+  const result = res.data.result;
+
+  if (!result) {
+    throw 'can not get go point merchants list'
+  }
+
+  const updatedClients = await Promise.all(
+    result.map(async client => {
+      const discountData = await getMerchantDisscountForOffers(
+        client.merchant_id,
+      );
+
+      return { ...client, ...discountData };
+    }),
+  );
+
+
+  return updatedClients;
 };
 
 export const getNearbyMerchants = async ({ latitude, longitude }) => {
-  const token = await getAuthToken();
+  const token = await getToken();
+
+  console.log(latitude, longitude, 'longitude');
 
   const res = await instance.post('/user/category/merchant/list/nearby', {
     params: {
@@ -235,7 +274,7 @@ export const getNearbyMerchants = async ({ latitude, longitude }) => {
 };
 
 export const getTemsAndConditions = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/terms-conditions', {
     params: {
@@ -244,11 +283,15 @@ export const getTemsAndConditions = async merchant_id => {
     },
   });
 
+  if (!res.data.result) {
+    throw new Error();
+  }
+
   return res.data.result;
 };
 
 export const getContracts = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/contracts', {
     params: {
@@ -257,11 +300,15 @@ export const getContracts = async merchant_id => {
     },
   });
 
+  if (!res.data.result) {
+    throw new Error();
+  }
+
   return res.data.result;
 };
 
 export const getPremiumMerchantsCount = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/merchant/count/premium', {
     params: {
@@ -273,7 +320,7 @@ export const getPremiumMerchantsCount = async () => {
 };
 
 export const getGoPointMerchatnsCount = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/merchant/count/gpoint', {
     params: {
@@ -285,7 +332,7 @@ export const getGoPointMerchatnsCount = async () => {
 };
 
 export const verifyEmail = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/verify/email', {
     params: {
@@ -297,7 +344,7 @@ export const verifyEmail = async () => {
 };
 
 export const verifyPhone = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/user/verify/phone', {
     params: {
@@ -309,7 +356,7 @@ export const verifyPhone = async () => {
 };
 
 export const submitComplaint = async complaintData => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   console.log('Submitting complaint:', complaintData);
 
@@ -318,6 +365,8 @@ export const submitComplaint = async complaintData => {
       token,
       merchant_id: complaintData.merchant_id,
       merchant_name: complaintData.merchant_name,
+      // Explicit so it's always a new complaint ticket (reviews would upsert).
+      feedback_type: 'complaint',
       date: complaintData.date,
       time: complaintData.time,
       subject: complaintData.subject,
@@ -348,44 +397,9 @@ export const submitComplaint = async complaintData => {
   return res.data.result;
 };
 
-export const getMerchantsByCoordinates = async (
-  latitude,
-  longitude,
-  category_id,
-  radius = 5,
-) => {
-  const token = await getAuthToken();
-
-  const res = await instance.post('/user/category/merchant/list/nearby', {
-    params: {
-      token,
-      latitude,
-      longitude,
-      category_id,
-      limit: 20,
-      x_org_linked: ORG_ID,
-      radius,
-    },
-  });
-
-  return res.data.result?.merchants;
-};
-
-export const trackMerchantOpensCount = async (merchant_id) => {
-  const token = await getAuthToken();
-
-  const res = await instance.post('/merchant/mobile/count/add', {
-    params: {
-      token,
-      merchant_id
-    },
-  });
-
-  return res.data.result?.merchants;
-}
-
+// Star rating + optional comment. Upserts: re-submitting edits the user's existing review.
 export const submitMerchantFeedback = async ({ merchant_id, rating, comment }) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/feedback/submit', {
     params: {
@@ -405,8 +419,9 @@ export const submitMerchantFeedback = async ({ merchant_id, rating, comment }) =
   return result;
 };
 
+// Deletes the user's own review for a merchant (never complaints).
 export const deleteMerchantFeedback = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/feedback/delete', {
     params: { token, merchant_id },
@@ -424,7 +439,7 @@ export const deleteMerchantFeedback = async merchant_id => {
 };
 
 export const getMerchantFeedbackSummary = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post('/merchant/feedback/summary', {
     params: { token, merchant_id },
@@ -440,22 +455,84 @@ export const getMerchantFeedbackSummary = async merchant_id => {
 };
 
 export const getMerchantWeeklyTimetable = async merchant_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
+
+  console.log('[Timetable] request:', { merchant_id, hasToken: !!token });
 
   const res = await instance.post('/merchant/weekly/timetable', {
     params: { token: token || '', merchant_id },
   });
 
+  console.log('[Timetable] raw response:', JSON.stringify(res.data));
+
   const result = res.data?.result;
 
   if (!result || result.error || !Array.isArray(result.timetable)) {
+    // JSON-RPC level errors (e.g. server exception) come back in res.data.error, not result.
     const message =
       result?.error ||
       res.data?.error?.data?.message ||
       res.data?.error?.message ||
       'Failed to load timetable';
+    console.log('[Timetable] invalid response for merchant', merchant_id, '->', message);
     throw new Error(message);
   }
 
   return result;
 };
+
+export const getMerchantsByCoordinates = async (
+  latitude,
+  longitude,
+  category_id,
+  radius = 5,
+) => {
+  const token = await getToken();
+
+  const res = await instance.post('/user/category/merchant/list/nearby', {
+    params: {
+      token,
+      latitude,
+      longitude,
+      category_id,
+      limit: 20,
+      x_org_linked: org.id,
+      radius,
+    },
+  });
+
+  return res.data.result?.merchants;
+};
+
+export const trackMerchantOpensCount = async (merchant_id) => {
+  const token = await getToken();
+
+  const res = await instance.post('/merchant/mobile/count/add', {
+    params: {
+      token,
+      merchant_id
+    },
+  });
+
+  return res.data.result?.merchants;
+}
+
+export const getMerchantMatrixDiscount = async (merchant_id) => {
+  const token = await getToken();
+
+  const res = await instance.post('/user/merchant-matrix/discount', {
+    params: {
+      token,
+      merchant_id
+    },
+  });
+
+  return res.data.result;
+}
+
+
+
+
+
+
+

@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import {
   Image,
-  Text,
   Keyboard,
   Platform,
   SafeAreaView,
@@ -10,7 +9,7 @@ import {
 } from 'react-native';
 import i18next from 'i18next';
 import { colors } from '../../components/colors';
-import { getPixel, mainStyles, SCREEN_HEIGHT } from '../../styles/mainStyles';
+import { getPixel, mainStyles } from '../../styles/mainStyles';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TypographyText } from '../../components/Typography';
 import { LUSAIL_REGULAR } from '../../redux/types';
@@ -26,7 +25,8 @@ import { connect } from 'react-redux';
 import { register } from '../../redux/auth/auth-thunks';
 import TopCircleShadow from '../../components/TopCircleShadow';
 import Header from '../../components/Header';
-import { ORG_ID } from '../../constants';
+import { org } from '../../org/config';
+import { logoMono } from '../../org/assets';
 
 const Register = ({ route, navigation, register }) => {
   let params = route?.params;
@@ -44,7 +44,7 @@ const Register = ({ route, navigation, register }) => {
   const [loading, setLoading] = useState(false);
 
   const language = i18n.language;
-  const logoIcon = require('../../assets/logo.png');
+  const logoIcon = logoMono;
 
   const toLogin = useCallback(() => {
     navigation.navigate('Login');
@@ -68,9 +68,9 @@ const Register = ({ route, navigation, register }) => {
             return;
           }
 
-          try {
-            setLoading(true);
+          setLoading(true);
 
+          try {
             const { name, last_name, email, phone } = values;
 
             const res = await authApi.checkEmail({
@@ -79,7 +79,7 @@ const Register = ({ route, navigation, register }) => {
 
             if (res.data.result?.error) {
               setFieldError('email', t('Profile.emailExists'));
-              throw 'err';
+              return;
             }
 
             const phoneRes = await authApi.checkPhone({
@@ -88,7 +88,7 @@ const Register = ({ route, navigation, register }) => {
 
             if (phoneRes.data.result?.error) {
               setFieldError('phone', t('Profile.phoneExists'));
-              throw 'err';
+              return;
             }
 
             const registerBody = {
@@ -96,16 +96,17 @@ const Register = ({ route, navigation, register }) => {
               last_name,
               email,
               phone,
-              parent_id: ORG_ID.toString(),
+              parent_id: org.id.toString(),
               active_period: 1,
               password: values.password,
-              device_type: Platform.OS
+              device_type: Platform.OS,
             };
 
             console.log('registerBodyregisterBody:', registerBody);
-            register(registerBody);
+            await register(registerBody);
           } catch (err) {
             console.log(err, 'err');
+          } finally {
             setLoading(false);
           }
         }}
@@ -115,12 +116,7 @@ const Register = ({ route, navigation, register }) => {
           errors = submitCount > 0 ? errors : {};
 
           return (
-            <View
-              scrollEnabled={Platform.OS === 'android'}
-              style={{
-                height: SCREEN_HEIGHT,
-              }}
-            >
+            <View style={{ flex: 1 }}>
               <SafeAreaView style={{ flex: 1 }}>
                 <KeyboardAwareScrollView
                   contentContainerStyle={styles.contentContainerStyle}
@@ -138,15 +134,18 @@ const Register = ({ route, navigation, register }) => {
                     <View
                       style={[
                         mainStyles.centeredRow,
-                        { margin: 10, alignItems: 'center', flex: 1 },
+                        { margin: 30, flexDirection: 'column' },
                       ]}
                     >
                       <Image
                         source={logoIcon}
                         style={{
+                          width: 140,
+                          height: 140,
+                          resizeMode: 'contain',
                           tintColor: isDark
                             ? colors.mainDarkMode
-                            : colors.darkBlue, width: 100, height: 100
+                            : colors.darkBlue,
                         }}
                       />
                     </View>
@@ -173,11 +172,11 @@ const Register = ({ route, navigation, register }) => {
                             returnKeyType={'next'}
                             //onSubmitEditing={() => ref_to_input2.current.focus()}
                             wrapperStyle={{
-                              marginBottom: 12,
+                              marginBottom: 10,
                               flex: 1,
                               marginRight: 20,
                             }}
-                            style={{ fontSize: 16 }}
+                            style={{ fontSize: 15, height: 46 }}
                           />
 
                           <Input
@@ -190,11 +189,11 @@ const Register = ({ route, navigation, register }) => {
                             returnKeyType={'next'}
                             //onSubmitEditing={() => ref_to_input3.current.focus()}
                             wrapperStyle={{
-                              marginBottom: 12,
+                              marginBottom: 10,
                               flex: 1,
                               marginLeft: 20,
                             }}
-                            style={{ fontSize: 16 }}
+                            style={{ fontSize: 15, height: 46 }}
                           />
                         </View>
 
@@ -209,13 +208,12 @@ const Register = ({ route, navigation, register }) => {
                           error={errors.email}
                           returnKeyType={'next'}
                           autoCapitalize="none"
+                          autoCorrect={false}
+                          autoComplete="email"
+                          textContentType="emailAddress"
+                          keyboardType="email-address"
                           onSubmitEditing={Keyboard.dismiss}
                           wrapperStyle={{ marginBottom: 12 }}
-                          keyboardType={
-                            Platform.OS === 'android'
-                              ? 'visible-password'
-                              : undefined
-                          }
                           style={{ fontSize: 16 }}
                           editable={false}
                         />
@@ -232,7 +230,7 @@ const Register = ({ route, navigation, register }) => {
                           returnKeyType={'next'}
                           onSubmitEditing={() => ref_to_input7.current.focus()}
                           disableInputRtl
-                          style={{ fontSize: 16 }}
+                          style={{ fontSize: 15, height: 46 }}
                         />
 
                         <Input
@@ -246,8 +244,8 @@ const Register = ({ route, navigation, register }) => {
                           secureTextEntry={true}
                           innerRef={ref_to_input7}
                           onSubmitEditing={() => ref_to_input8.current.focus()}
-                          style={{ fontSize: 16 }}
-                          wrapperStyle={{ marginBottom: 12, marginTop: 12 }}
+                          style={{ fontSize: 15, height: 46 }}
+                          wrapperStyle={{ marginBottom: 10, marginTop: 10 }}
                         />
                         <Input
                           label={t('Profile.confirmPassword')}
@@ -259,8 +257,8 @@ const Register = ({ route, navigation, register }) => {
                           secureTextEntry={true}
                           returnKeyType={'next'}
                           onSubmitEditing={Keyboard.dismiss}
-                          wrapperStyle={{ marginBottom: 12 }}
-                          style={{ fontSize: 16 }}
+                          wrapperStyle={{ marginBottom: 10 }}
+                          style={{ fontSize: 15, height: 46 }}
                         />
 
                         <TouchableOpacity
@@ -280,8 +278,8 @@ const Register = ({ route, navigation, register }) => {
                               textColor={
                                 isDark ? colors.mainDarkMode : colors.darkBlue
                               }
-                              size={16}
-                              style={[mainStyles.underline, { margin: 6 }]}
+                              size={14}
+                              style={[mainStyles.underline, { marginLeft: 4 }]}
                               font={LUSAIL_REGULAR}
                             />
                           </View>
@@ -345,57 +343,60 @@ const Register = ({ route, navigation, register }) => {
                               ></View>
                             )}
                           </TouchableOpacity>
-                          {language == 'ar' ? (
-                            <TouchableOpacity
-                              style={{ flex: 1, flexDirection: 'row' }}
-                              onPress={() => {
-                                navigation.navigate('PrivacyPolicy');
-                              }}
-                            >
-                              <Text style={{ color: 'blue' }}>
-                                {t('Profile.privacypPolicy')}
-                              </Text>
+                          <View style={{ flex: 1, flexDirection: 'row' }}>
+                            {language == 'ar' ? (
+                              <>
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    navigation.navigate('PrivacyPolicy');
+                                  }}
+                                >
+                                  <TypographyText
+                                    title={t('Profile.privacypPolicy')}
+                                    textColor={
+                                      isDark ? colors.mainDarkMode : 'blue'
+                                    }
+                                    size={14}
+                                    font={LUSAIL_REGULAR}
+                                  />
+                                </TouchableOpacity>
 
-                              <TouchableOpacity>
-                                <Text
-                                  style={{
-                                    color: isDark ? colors.white : colors.grey,
-                                    fontSize: 16,
+                                <TypographyText
+                                  title={' ' + t('Profile.agreeTo')}
+                                  textColor={
+                                    isDark ? colors.white : colors.grey
+                                  }
+                                  size={14}
+                                  font={LUSAIL_REGULAR}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <TypographyText
+                                  title={t('Profile.agreeTo') + ' '}
+                                  textColor={
+                                    isDark ? colors.white : colors.grey
+                                  }
+                                  size={14}
+                                  font={LUSAIL_REGULAR}
+                                />
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    navigation.navigate('PrivacyPolicy');
                                   }}
                                 >
-                                  {t('Profile.agreeTo')}{' '}
-                                </Text>
-                              </TouchableOpacity>
-                            </TouchableOpacity>
-                          ) : (
-                            <TouchableOpacity
-                              style={{ flex: 1, flexDirection: 'row' }}
-                            >
-                              {console.log('languagelanguage:', language)}
-                              <Text
-                                style={{
-                                  color: isDark ? colors.white : colors.grey,
-                                }}
-                              >
-                                {t('Profile.agreeTo')}{' '}
-                              </Text>
-                              <TouchableOpacity
-                                onPress={() => {
-                                  navigation.navigate('PrivacyPolicy');
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    color: isDark
-                                      ? colors.mainDarkMode
-                                      : 'blue',
-                                  }}
-                                >
-                                  {t('Profile.privacypPolicy')}
-                                </Text>
-                              </TouchableOpacity>
-                            </TouchableOpacity>
-                          )}
+                                  <TypographyText
+                                    title={t('Profile.privacypPolicy')}
+                                    textColor={
+                                      isDark ? colors.mainDarkMode : 'blue'
+                                    }
+                                    size={14}
+                                    font={LUSAIL_REGULAR}
+                                  />
+                                </TouchableOpacity>
+                              </>
+                            )}
+                          </View>
                         </View>
 
                         <CommonButton

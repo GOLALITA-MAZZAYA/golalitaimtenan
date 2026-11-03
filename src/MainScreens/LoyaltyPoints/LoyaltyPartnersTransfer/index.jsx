@@ -1,46 +1,34 @@
-import {Image, ScrollView, StyleSheet, View} from "react-native";
+import {Alert, ScrollView, StyleSheet, View} from "react-native";
+import Image from "../../../components/AppImage";
 import Header from "../../../components/Header";
 import MainLayout from "../../../components/MainLayout";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "../../../components/ThemeProvider";
 import {colors} from "../../../components/colors";
-import {isRTL, getLocalizedValue} from "../../../../utils";
+import {isRTL} from "../../../../utils";
 import {TypographyText} from "../../../components/Typography";
 import AmountSlider from "./AmountSlider";
-import AmountSelect from "./AmountSelect";
 import {useRef, useState} from "react";
-import FormikTextInput from "../../../components/Formik/FormikTextInput";
 import {Formik} from "formik";
 import {getValidationSchema} from "./validationSchema";
-import Label from "./Label";
-import CommonButton from "../../../components/CommonButton/CommonButton";
-import Checkbox from "../../../components/Form/Checkbox";
-import TermsCheckbox from "./TermsCheckbox";
+import Tabs from "../../../components/Tabs";
+import PhoneSvg from '../../../assets/loyaltyPoints/partners/phone.svg';
+import EmailSvg from '../../../assets/loyaltyPoints/partners/email.svg';
+import FormikCustomInput from "../../../components/Formik/FormikCustomInput";
+import FormikCustomPhoneInput from "../../../components/Formik/FormikCustomPhoneInput";
+import Button from "../../../components/Button";
 
-const testText = 'Nojoom is Ooredoo’s rewards programme that thanks you for your loyalty. Earn points, unlock tiers, and redeem rewards for exclusive experiences, personalised offers, and real value.'
 
-const testOptions = [
-    {
-        label: '100',
-        value: '100'
-    },
-    {
-        label: '200',
-        value: '200'
-    },
-]
-
-const LoyaltyPartnersTransfer = ({route}) => {
+const LoyaltyPartnersTransfer = ({route, navigation}) => {
     const {t} = useTranslation();
     const {isDark} = useTheme();
     const {partner} = route.params;
     const [amount, setAmount] = useState(0);
-    const [isTermsSelected, toggleTerms] = useState(false);
     const formikRef = useRef(null);
+    const [activeTab, setActiveTab] = useState('transfer-phone')
 
     console.log(partner,'partner')
 
-    const titleColor = isDark ? colors.white : colors.darkBlue;
 
     const handleValueChange = (value) => {
       console.log(value,'value');
@@ -51,109 +39,119 @@ const LoyaltyPartnersTransfer = ({route}) => {
       );
     }
 
-    const handleSubmit = () => {
+    const onSubmit = () => {
+       Alert.alert(t('General.unavailableFeature'))
+ 
+       return 
 
-    };
 
+       navigation.navigate('loyaltyPoints-partners-transfer-confirmation')
+    }; 
 
 
     return (
      <MainLayout
         outsideScroll={true}
         headerChildren={
-          <Header label={getLocalizedValue(partner.x_arabic_name, partner.merchant_name)} btns={['back']} />
+          <Header label={isRTL() ? partner.x_arabic_name: partner.merchant_name} btns={['back']} />
         }
         headerHeight={50}
         contentStyle={styles.contentStyle}
       >
         <ScrollView contentContainerStyle={styles.contentContainerStyle} showsVerticalScrollIndicator={false}>
 
-       <View style={styles.logoBlock}>
+       <View style={[styles.logoBlock,{backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder}]}>
 
-          <Image source={{uri: partner.merchant_logo}} style={styles.logo} resizeMode="cover"/>
+          <Image source={{uri: partner.merchant_logo}} style={styles.logo} contentFit="cover"/>
 
             <TypographyText
-                textColor={titleColor}
-                size={16}
-                title={testText}
+                textColor={colors.loyaltyTextSecondary}
+                size={14}
+                title={t('LoyaltyPartners.description')}
                 style={styles.title}
             />
 
        </View>
        
-       <AmountSlider onChange={handleValueChange} />
-       {/* <AmountSelect onChange={handleValueChange} value={amount} options={testOptions}/> */}
+        <AmountSlider onChange={handleValueChange} />
 
         <Formik
             initialValues={{
                 amount: 0,
                 membershipNumber: '',
                 name: '',
-                lastName: ''
+                lastName: '',
+                partnerEmail: '',
+                phone: ''
             }}
-            validationSchema={getValidationSchema()}
-            onSubmit={handleSubmit}
+            validationSchema={getValidationSchema(activeTab)}
+            onSubmit={onSubmit}
             innerRef={formikRef}
         >
-             {({ values, errors, submitCount }) => (
-    <View style={styles.container}>
+             {({ submitForm}) => {
 
-      <Label text={t('LoyaltyPartners.pointsLabel')}>
-      <FormikTextInput
-        editable={false}
-        value={values.amount}
-        returnKeyType="next"
-        wrapperStyle={{ marginBottom: 20 }}
-        name="amount"
-        error={submitCount > 0 ? errors.amount : undefined}
-        style={styles.input}
-      />
-      </Label>
-
-      <Label text={t('LoyaltyPartners.partnerNumLabel')}>
-      <FormikTextInput
-        value={values.membershipNumber}
-        returnKeyType="next"
-        wrapperStyle={{ marginBottom: 20 }}
-        placeholder={t('LoyaltyPartners.partnerNumPlaceholder')}
-        name="membershipNumber"
-        error={submitCount > 0 ? errors.membershipNumber : undefined}
-        style={styles.input}
-      />
-      </Label>
-
-       <Label text={t('LoyaltyPartners.firstNameLabel')}>
-      <FormikTextInput
-        value={values.name}
-        returnKeyType="next"
-        wrapperStyle={{ marginBottom: 20 }}
-        placeholder={t('LoyaltyPartners.firstNamePlaceholder')}
-        name="name"
-        error={submitCount > 0 ? errors.name : undefined}
-      />
-      </Label>
-
-       <Label text={t('LoyaltyPartners.lastNameLabel')}>
-      <FormikTextInput
-        value={values.lastName}
-        returnKeyType="next"
-        wrapperStyle={{ marginBottom: 20 }}
-        placeholder={t('LoyaltyPartners.lastNamePlaceholder')}
-        name="lastName"
-        error={submitCount > 0 ? errors.lastName : undefined}
-      />
-      </Label>
-
-      <TermsCheckbox isActive={isTermsSelected} onChange={toggleTerms}/>
-
-
-        <CommonButton
-            label={'Transfer'}
-            style={styles.transferBtn}
-            onPress={() => {}}
+              
+        return (
+         <Tabs defaultActiveTab="transfer-phone" style={styles.tabsWrapper} onTabChange={setActiveTab}>
+ 
+        <Tabs.TabWithIcon name="transfer-phone" title={t('LoyaltyPartners.phone')} icon={<PhoneSvg/>}/>
+        <Tabs.TabWithIcon
+          name="transfer-email"
+          title={t('LoyaltyPartners.email')}
+          style={{ marginLeft: 10 }}
+          icon={<EmailSvg />}
         />
-    </View>
-  )}
+
+
+      <Tabs.Content name="transfer-phone">
+
+        <FormikCustomPhoneInput 
+            label={t('LoyaltyPartners.membershipNumber')} 
+            wrapperStyle={{ marginBottom: 20, marginTop: 40 }}
+            name="phone" 
+        />
+
+        <View style={{flexDirection: 'row', flex: 1, gap: 15}}>
+         <FormikCustomInput 
+            label={t('LoyaltyPartners.firstNameLabel')}
+            name="name"
+            wrapperStyle={{flex: 1}}
+         />
+           <FormikCustomInput 
+            label={t('LoyaltyPartners.lastNameLabel')}
+            name="lastName"
+            wrapperStyle={{flex: 1}}
+         />
+         </View>
+
+          <Button text={t('LoyaltyPartners.transfer')} style={styles.transferBtn} onPress={submitForm}/>
+      </Tabs.Content>
+
+      <Tabs.Content name="transfer-email">
+         <FormikCustomInput
+            label={t('LoyaltyPartners.membershipEmail')} 
+            placeholder="info@test.com"
+            wrapperStyle={{ marginBottom: 20, marginTop: 40 }}
+            name="partnerEmail"
+         />
+
+        <View style={{flexDirection: 'row', flex: 1, gap: 15}}>
+         <FormikCustomInput 
+            label={t('LoyaltyPartners.firstNameLabel')}
+            name="name"
+            wrapperStyle={{flex: 1}}
+         />
+           <FormikCustomInput 
+            label={t('LoyaltyPartners.lastNameLabel')}
+            name="lastName"
+            wrapperStyle={{flex: 1}}
+         />
+         </View>
+
+         <Button text={t('LoyaltyPartners.transfer')} style={styles.transferBtn} onPress={submitForm}/>
+      </Tabs.Content>
+      </Tabs>
+        )}}
            
         </Formik>
       </ScrollView>
@@ -173,12 +171,16 @@ const styles = StyleSheet.create({
   logoBlock: {
      flexDirection: 'row',
      marginTop: 20,
-     width: '100%'
+     width: '100%',
+     height: 136,
+     borderWidth: 1,
+     borderRadius: 38,
+     padding: 24
   },
   logo: {
-    width: 140,
-    height: 140,
-    borderRadius: 8,
+    width: 80,
+    height: 80,
+    borderRadius: 14,
     marginRight: 10
   },
   title: {
@@ -193,6 +195,12 @@ const styles = StyleSheet.create({
   },
   transferBtn: {
     marginTop: 20
+  },
+  tabsWrapper: {
+    marginTop: 40
+  },
+  transferBtn: {
+    marginTop: 25
   }
 });
 

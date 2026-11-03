@@ -1,6 +1,8 @@
-import { SafeAreaView, StyleSheet, View, FlatList, Image } from 'react-native';
+import { SafeAreaView, StyleSheet, View, FlatList } from 'react-native';
+import Image from "../../../components/AppImage";
 import { useTheme } from '../../../components/ThemeProvider';
 import { colors } from '../../../components/colors';
+import { mainStyles } from '../../../styles/mainStyles';
 import { useTranslation } from 'react-i18next';
 import { TouchableOpacity } from 'react-native';
 import { TypographyText } from '../../../components/Typography';
@@ -15,6 +17,8 @@ import { getChildCategoriesById } from '../../../api/categories';
 import Header from '../../../components/Header';
 import AdwertSwiper from '../../../components/AdwertSwiper/AdwertSwiper';
 import { getCountryBanners } from '../../../redux/merchant/merchant-thunks';
+import { getCountryMarketingPopups } from '../../../redux/global/global-thunks';
+import MarketingPopupModal from '../../../components/MarketingPopupModal/MarketingPopupModal';
 import useBannerPress from '../../../hooks/useBannerPress';
 import TintedSvg from '../../../components/TintedSvg';
 import { showMessage } from 'react-native-flash-message';
@@ -22,17 +26,13 @@ import ArrowSvg from '../../../assets/arrow_right.svg';
 import EsimSvg from '../../../assets/esim.svg';
 import { sized } from '../../../Svg';
 import {
+  isEsimCategory,
   openEsimPlans,
   resolveEsimDestinationForCategory,
-  isEsimCategory,
 } from '../../ESim/esimUtils';
-import {
-  pickCategoryImage,
-  withRewrittenCategoryImages,
-} from '../../../utils/rewriteAssetUrl';
 import { isEventsTicketsCategory } from '../../../config/globalTix';
 
-// rowItem: paddingVertical 14*2 + iconWrapper height 60 + borderBottomWidth 1
+// rowItem: paddingVertical 14*2 + iconWrapper height 60 (tallest child) + borderBottomWidth 1
 const ITEM_HEIGHT = 89;
 
 const GRID_COLUMNS = 4;
@@ -57,18 +57,14 @@ const ChildCategories = ({ navigation }) => {
       preloadedChildren,
     },
   } = useRoute();
-  const { categoriesType, hasEsimCategory, parentCategories } = useSelector(
+  const { categoriesType, parentCategories } = useSelector(
     state => state.merchantReducer,
   );
-
-  // Country eSIM row only when Global home is also showing the eSIM tile
-  // (API returned category 709 for type=global — mirrored in hasEsimCategory /
-  // parentCategories).
-  const homeShowsEsim =
+  const globalHasEsimCategory =
+    categoriesType === 'global' &&
     (Array.isArray(parentCategories) ? parentCategories : []).some(
       isEsimCategory,
-    ) || !!hasEsimCategory;
-  const showCountryEsim = categoriesType === 'global' && homeShowsEsim;
+    );
 
   const globalHasEventsTicketsCategory =
     categoriesType === 'global' &&
@@ -80,6 +76,7 @@ const ChildCategories = ({ navigation }) => {
   const [esimDestination, setEsimDestination] = useState(null);
   const [loading, setLoading] = useState(false);
   const [countryBanners, setCountryBanners] = useState([]);
+  const [countryPopups, setCountryPopups] = useState(null);
   const dispatch = useDispatch();
   const countryCode = parentCategoryData?.x_country_code;
   const handleBannerPress = useBannerPress({ pageName: 'global_country' });
@@ -102,17 +99,34 @@ const ChildCategories = ({ navigation }) => {
     };
   }, [countryCode, dispatch]);
 
+  useEffect(() => {
+    if (!countryCode) {
+      setCountryPopups(null);
+      return;
+    }
+
+    let mounted = true;
+    dispatch(getCountryMarketingPopups(countryCode)).then(popups => {
+      if (mounted) {
+        setCountryPopups(popups.length > 0 ? popups : null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [countryCode, dispatch]);
+
   const getChildCategories = async () => {
     try {
       setLoading(true);
 
+      // Already fetched by the previous level's tap (see openCategory below).
       const data = Array.isArray(preloadedChildren)
         ? preloadedChildren
         : await getChildCategoriesById(parentCategoryId, categoriesType);
-
-      const list = withRewrittenCategoryImages(
-        Array.isArray(data) ? data : [],
-      );
+      console.log("getChildCategoriesgetChildCategories******:", data)
+      const list = Array.isArray(data) ? data : [];
       const filteredChildCategories = list.filter(item => {
         if (item.parent_id?.[0] === 47 && (item.id === 156 || item.id === 160)) {
           return false;
@@ -135,33 +149,18 @@ const ChildCategories = ({ navigation }) => {
   }, [parentCategoryId, categoriesType]);
 
   useEffect(() => {
-    if (!showCountryEsim) {
+    if (!globalHasEsimCategory) {
       setEsimDestination(null);
       return;
     }
 
-    const parentFromStore = (
-      Array.isArray(parentCategories) ? parentCategories : []
-    ).find(item => Number(item?.id) === Number(parentCategoryId));
-
     let mounted = true;
-    resolveEsimDestinationForCategory({
-      id: parentCategoryId,
-      name: parentFromStore?.name || parentCategoryName || parentCategoryData?.name,
-      x_name_arabic:
-        parentFromStore?.x_name_arabic || parentCategoryData?.x_name_arabic,
-      parentCategoryName,
-      country_code:
-        parentFromStore?.x_country_code ||
-        parentFromStore?.country_code ||
-        parentCategoryData?.x_country_code ||
-        parentCategoryData?.country_code,
-      x_country_code:
-        parentFromStore?.x_country_code ||
-        parentFromStore?.country_code ||
-        parentCategoryData?.x_country_code ||
-        parentCategoryData?.country_code,
-    })
+    const category =
+      parentCategoryData || {
+        name: parentCategoryName,
+      };
+
+    resolveEsimDestinationForCategory(category)
       .then(destination => {
         if (mounted) {
           setEsimDestination(destination);
@@ -177,10 +176,9 @@ const ChildCategories = ({ navigation }) => {
       mounted = false;
     };
   }, [
-    showCountryEsim,
+    globalHasEsimCategory,
     parentCategoryId,
     parentCategoryName,
-    parentCategories,
     parentCategoryData,
   ]);
 
@@ -209,7 +207,8 @@ const ChildCategories = ({ navigation }) => {
     });
   };
 
-  // /child/category/v2's `has_sub_category` isn't reliable, so look for children
+  // /child/category/v2's `has_sub_category` isn't reliable (e.g. K.S.A ->
+  // Hotels 710 reports false but has children), so look for children
   // ourselves: any -> next level, none -> merchant list.
   const openCategory = async category => {
     if (isOpeningCategory.current) {
@@ -220,11 +219,12 @@ const ChildCategories = ({ navigation }) => {
     try {
       const children = await getChildCategoriesById(category.id, categoriesType);
       if (Array.isArray(children) && children.length > 0) {
-        pushChildLevel(category, withRewrittenCategoryImages(children));
+        pushChildLevel(category, children);
         return;
       }
     } catch (err) {
-      // No children or request failed — fall through to merchant list.
+      // No children (endpoint throws on empty result) or request failed —
+      // fall through to the merchant list, same as before this check existed.
     } finally {
       isOpeningCategory.current = false;
     }
@@ -232,15 +232,7 @@ const ChildCategories = ({ navigation }) => {
     openMerchantList(category);
   };
 
-  const getCountryCodeFromParent = parentId => {
-    if (parentCategoryData?.x_country_code) {
-      return parentCategoryData.x_country_code;
-    }
-    console.warn(`Missing x_country_code for category ${parentId}`);
-    return null;
-  };
-
-  const navigateToMerchant = category => {
+  const navigateToMerchant = (category) => {
     if (category.isEsimEntry) {
       if (!category.esimDestination) {
         showMessage({
@@ -268,11 +260,9 @@ const ChildCategories = ({ navigation }) => {
     }
 
     if (category.isEventsAndTickets) {
-      const eventsCountryCode = getCountryCodeFromParent(
-        category.parent_id?.[0],
-      );
+      const countryCode = getCountryCodeFromParent(category.parent_id?.[0]);
 
-      if (!eventsCountryCode) {
+      if (!countryCode) {
         showMessage({
           message: t('GlobalTix.countryUnavailable'),
           type: 'warning',
@@ -282,14 +272,11 @@ const ChildCategories = ({ navigation }) => {
 
       navigation.navigate('GlobalTix', {
         initialFilters: {
-          countryCode: eventsCountryCode,
+          countryCode: countryCode,
           categoryIds: undefined,
           cityIds: undefined,
         },
-        parentCategoryName:
-          language === 'ar'
-            ? parentCategoryData?.x_name_arabic
-            : parentCategoryData?.name,
+        parentCategoryName: language === 'ar' ? parentCategoryData?.x_name_arabic : parentCategoryData?.name,
       });
       return;
     }
@@ -297,16 +284,35 @@ const ChildCategories = ({ navigation }) => {
     openCategory(category);
   };
 
+  const getCountryCodeFromParent = (parentId) => {
+    if (parentCategoryData?.x_country_code) {
+      return parentCategoryData.x_country_code;
+    }
+    console.warn(`Missing x_country_code for category ${parentId}`);
+    return null;
+  };
+
+  const filteredChildCategories = childCategories.filter((item) => {
+    if (item.parent_id?.[0] === 47 && (item.id === 156 || item.id === 160)) {
+      return false;
+    }
+
+    return true;
+  });
+
   // Home-style grid only on a Global country screen (2nd level, e.g. K.S.A);
-  // deeper levels keep the original row list.
+  // deeper levels (e.g. K.S.A -> Hotels) keep the original row list.
   const isGrid = Boolean(countryCode);
 
-  // Only show Events & Tickets when the backend switch category (734/711)
-  // exists on Global home — same as Golalita.
   const shouldShowEventsTickets =
     globalHasEventsTicketsCategory && parentCategoryData?.x_country_code;
 
-  let categoriesWithEventsTickets = childCategories;
+  // TEMP [EventsTickets] debug — remove after diagnosing live.
+  console.log(
+    `[EventsTickets] country screen: type=${categoriesType} parent=${parentCategoryId} cc=${countryCode || 'NONE'} parentCount=${Array.isArray(parentCategories) ? parentCategories.length : 'null'} hasCategory=${globalHasEventsTicketsCategory} show=${Boolean(shouldShowEventsTickets)}`,
+  );
+
+  let categoriesWithEventsTickets = filteredChildCategories;
 
   if (shouldShowEventsTickets) {
     const eventsAndTicketsItem = {
@@ -318,13 +324,10 @@ const ChildCategories = ({ navigation }) => {
       isEventsAndTickets: true,
     };
 
-    categoriesWithEventsTickets = [
-      eventsAndTicketsItem,
-      ...childCategories,
-    ];
+    categoriesWithEventsTickets = [eventsAndTicketsItem, ...filteredChildCategories];
   }
 
-  if (showCountryEsim && esimDestination) {
+  if (globalHasEsimCategory && esimDestination) {
     const esimItem = {
       id: 'esim-for-country',
       name: t('ESim.title'),
@@ -345,12 +348,8 @@ const ChildCategories = ({ navigation }) => {
         : item.name;
 
   const renderItemIcon = (item, { size, localImageSize, esimSize }) => {
-    const uri =
-      item.isEventsAndTickets || item.isEsimEntry
-        ? null
-        : pickCategoryImage(item);
-    const isSvg =
-      typeof uri === 'string' && uri.toLowerCase().endsWith('.svg');
+    const uri = item.isEventsAndTickets || item.isEsimEntry ? null : item.image3;
+    const isSvg = typeof uri === 'string' && uri.toLowerCase().endsWith('.svg');
 
     if (item.isEsimEntry) {
       const SimIcon = sized(EsimSvg, esimSize, esimSize, tint);
@@ -364,15 +363,16 @@ const ChildCategories = ({ navigation }) => {
     const imageSize = item.isEventsAndTickets ? localImageSize : size;
     return (
       <Image
-        style={{ width: imageSize, height: imageSize, resizeMode: 'contain' }}
-        source={
-          item.isEventsAndTickets ? item.image3 : { uri: uri || undefined }
-        }
+        style={{ width: imageSize, height: imageSize }}
+        source={item.isEventsAndTickets ? item.image3 : { uri: uri || undefined }}
         tintColor={tint}
+        contentFit="contain"
       />
     );
   };
 
+  // Same tile as the Home screen's Local grid
+  // (MainScreen/components/Categories/index.jsx).
   const renderGridItem = item => (
     <TouchableOpacity
       activeOpacity={0.7}
@@ -383,10 +383,8 @@ const ChildCategories = ({ navigation }) => {
         style={[
           styles.gridIconWrapper,
           {
-            backgroundColor: isDark ? colors.categoryGrey : colors.highlatedGrey,
-            borderColor: isDark
-              ? 'rgba(255, 255, 255, 0.08)'
-              : 'rgba(0, 0, 0, 0.05)',
+            backgroundColor: isDark ? '#1C1C1E' : '#F5F5F7',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
           },
         ]}
       >
@@ -398,7 +396,7 @@ const ChildCategories = ({ navigation }) => {
       </View>
       <View style={styles.gridTitleContainer}>
         <TypographyText
-          textColor={isDark ? colors.white : colors.darkBlue}
+          textColor={isDark ? colors.white : '#1C1C1E'}
           size={12}
           font={LUSAIL_REGULAR}
           title={getItemTitle(item)}
@@ -430,8 +428,8 @@ const ChildCategories = ({ navigation }) => {
           styles.iconWrapper,
           {
             backgroundColor: isDark
-              ? colors.categoryGrey
-              : colors.highlatedGrey,
+              ? 'rgba(221, 189, 107, 0.12)'
+              : 'rgba(162, 148, 117, 0.09)',
           },
         ]}
       >
@@ -439,7 +437,7 @@ const ChildCategories = ({ navigation }) => {
       </View>
 
       <TypographyText
-        textColor={isDark ? colors.white : colors.darkBlue}
+        textColor={isDark ? colors.white : '#1C1C1E'}
         size={16}
         font={LUSAIL_REGULAR}
         title={getItemTitle(item)}
@@ -461,17 +459,20 @@ const ChildCategories = ({ navigation }) => {
       style={[
         styles.root,
         {
-          backgroundColor: isDark ? colors.darkBlue : colors.white,
+          backgroundColor: isDark ? colors.darkModeBackground : colors.white,
         },
       ]}
     >
       <SafeAreaView style={styles.safeArea}>
-        <Header label={parentCategoryName} btns={['back']} />
+        <Header
+          label={parentCategoryName}
+          btns={['back']}
+        />
 
         <FlatList
           key={isGrid ? 'child-categories-grid' : 'child-categories-rows'}
-          data={loading ? [] : categoriesWithEventsTickets}
-          keyExtractor={item => String(item.id)}
+          data={categoriesWithEventsTickets}
+          keyExtractor={(item) => String(item.id)}
           numColumns={isGrid ? GRID_COLUMNS : 1}
           columnWrapperStyle={isGrid ? styles.gridColumnWrapper : undefined}
           getItemLayout={isGrid ? undefined : getItemLayout}
@@ -504,6 +505,14 @@ const ChildCategories = ({ navigation }) => {
           }
         />
       </SafeAreaView>
+
+      {!!countryCode && (
+        <MarketingPopupModal
+          popups={countryPopups}
+          onClose={() => setCountryPopups(null)}
+          pageName="global_country"
+        />
+      )}
     </View>
   );
 };

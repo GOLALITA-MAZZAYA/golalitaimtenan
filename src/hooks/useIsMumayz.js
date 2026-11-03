@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { MUMAYIZATEMAIL } from "../constants";
+import { org } from "../org/config";
 
 const useIsMumayz = (userEmail) => {
   return useMemo(() => {
-    if (!userEmail || !MUMAYIZATEMAIL) return false;
-    return userEmail.toLowerCase() === MUMAYIZATEMAIL.toLowerCase();
-  }, [userEmail, MUMAYIZATEMAIL]);
+    if (!userEmail || !org.mumayizatEmail) return false;
+    return userEmail.toLowerCase() === org.mumayizatEmail.toLowerCase();
+  }, [userEmail]);
 };
 
 export default useIsMumayz;

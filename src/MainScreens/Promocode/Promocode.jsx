@@ -2,13 +2,13 @@ import React, { useCallback, useState } from 'react';
 import CommonHeader from '../../components/CommonHeader/CommonHeader';
 import { colors } from '../../components/colors';
 import {
-  Image,
   SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Image from "../../components/AppImage";
 import { styles } from './styles';
 import { useTranslation } from 'react-i18next';
 import { mainStyles } from '../../styles/mainStyles';
@@ -17,7 +17,7 @@ import PremiumSvg from '../../assets/premium.svg';
 import PresentSvg from '../../assets/present.svg';
 import IconButton from '../../components/IconButton/IconButton';
 import PresentActiveSvg from '../../assets/presend_active.svg';
-import { BALOO_REGULAR } from '../../redux/types';
+import { BALOO_REGULAR, BALOO_SEMIBOLD } from '../../redux/types';
 import { TypographyText } from '../../components/Typography';
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import CommonButton from '../../components/CommonButton/CommonButton';
@@ -26,6 +26,7 @@ import { useTheme } from '../../components/ThemeProvider';
 import { connect } from 'react-redux';
 import { redeem } from '../../redux/merchant/merchant-thunks';
 import Select from '../../components/Form/Select';
+import Header from '../../components/Header';
 
 const PresentIcon = sized(PresentSvg, 13);
 
@@ -77,6 +78,7 @@ const Promocode = ({ route, navigation, redeem }) => {
     selectedBranch,
     code,
   );
+
   function getBranchName(value) {
     const branch = branchesOptions.find(branch => branch.value === value);
     return branch && branch.label;
@@ -89,9 +91,9 @@ const Promocode = ({ route, navigation, redeem }) => {
       }}
     >
       <SafeAreaView>
-        <CommonHeader
-          isWhite={isDark}
+        <Header
           label={getBranchName(selectedBranch) || params?.merchant_name}
+          btns={['back']}
         />
         <ScrollView>
           <View style={mainStyles.p20}>
@@ -120,6 +122,7 @@ const Promocode = ({ route, navigation, redeem }) => {
                   label={t('ProductPage.redeem')}
                 />
               </View>
+
               <TypographyText
                 textColor={!isDark ? colors.darkBlue : colors.white}
                 size={18}
@@ -174,6 +177,7 @@ const Promocode = ({ route, navigation, redeem }) => {
                   </Text>
                 )}
               />
+
               <CommonButton
                 disabled={isSubmitDisabled}
                 label={t('ProductPage.redeem')}

@@ -72,20 +72,18 @@
 			</dict>
 		</dict>
 	</dict>
-
 	<key>NSCameraUsageDescription</key>
 	<string>Golalita ETIZAZ Rewards uses the camera to let user put a photo in his profile page.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to use Face ID</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to access your location to show nearby merchants.</string>
-
-
 	<key>NSLocationUsageDescription</key>
 	<string>Turning on location services allows us to show you nearby merchants</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Golalita ETIZAZ Rewards uses your location for displaying nearest merchants on the map.</string>
-
+	<key>NSMotionUsageDescription</key>
+	<string>Access to motion sensors is required for AR mode.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save pictures for certain activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -128,13 +126,10 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIUserInterfaceStyle</key>
-	<string>Automatic</string>
+	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>googleMapApi</key>
 	<string>AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o</string>
-
-	<key>NSMotionUsageDescription</key>
-	<string>Access to motion sensors is required for AR mode.</string>
 </dict>
 </plist>

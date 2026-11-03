@@ -1,52 +1,31 @@
 // App.jsx
-import React, { useEffect, useState } from 'react';
-import { Alert, BackHandler, I18nManager, Platform } from 'react-native';
-import { Provider, connect, useDispatch } from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
+import { I18nManager } from 'react-native';
+import { Provider, useSelector } from 'react-redux';
 import FlashMessage from 'react-native-flash-message';
 import Geocoder from 'react-native-geocoding';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import RNExitApp from 'react-native-exit-app';
-import { BASE_DOMAIN, IS_PRODUCTION } from './src/constants';
-import logger from './src/utils/logger';
+// import Geolocation from 'react-native-geolocation-service';
 
 import store from './src/redux/store';
 import { ThemeProvider, useTheme } from './src/components/ThemeProvider';
-import {
-  getAppStatus,
-  getInitialData,
-} from './src/redux/auth/auth-thunks';
-import { APP_DISABLED } from './src/redux/auth/auth-types';
-import { setIsAuthorized } from './src/redux/auth/auth-actions';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 import { Root } from './src/Navigation/Root';
 import UpdateModal from './src/components/UpdateModal';
 import SplashScreenModal from './src/components/SplashScreenModal';
-import RedirectToStoresModal, {
-  STORES_CONFIG,
-} from './src/components/RedirectToStoresModal';
 import PortalProvider from './src/components/Portal/PortalProvider';
 import { colors } from './src/components/colors';
 
 import './src/languages/index';
-import { resetImageCacheDate } from './src/api/asyncStorage';
-import { checkIfTokenIsValid } from './src/api/auth';
-import { initializeAppSslPinning } from './src/api/ssl';
-import { initializeGlobalTixToken } from './src/redux/globalTix/globalTix-api';
-
-import usePushNotifications from './src/pushNotifications/usePushNotifications';
-import { useSecurityCheck, isDeviceBlocked } from './src/utils/deviceSecurityCheck';
+import { useSecurityCheck } from './src/utils/deviceSecurityCheck';
 import { useScreenSecurity } from './src/hooks/useScreenSecurity';
 import PrivacyOverlay from './src/components/PrivacyOverlay';
-import { clearAuthToken } from './src/utils/tokenStorage';
 
-
-import {
-  requestMultiple,
-  PERMISSIONS,
-  RESULTS,
-} from 'react-native-permissions';
+import usePushNotifications from './src/pushNotifications/usePushNotifications';
+import { useAppStartup } from './src/hooks/useAppStartup';
+import { useAppUpdateCheck } from './src/hooks/useAppUpdateCheck';
+import { useAppStatusGate } from './src/hooks/useAppStatusGate';
 
 I18nManager.allowRTL(false);
 
@@ -58,250 +37,38 @@ Geocoder.init('AIzaSyAQdSJ757bWixdQLltgkgVNhqTWMfiSP1o', {
   }
 });
 
-
-let App = ({
-  workStatus,
-  getAppStatus,
-  user,
-  isAuthorized,
-  isSplashScreenVisible,
-}) => {
-  const dispatch = useDispatch();
-  const { i18n } = useTranslation();
+const App = () => {
   const { isDark } = useTheme();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isReady, setIsReady] = useState(false);
-  const [hasLocationPermission, setHasLocationPermission] = useState(false);
+  const user = useSelector(state => state.authReducer.user);
+  const workStatus = useSelector(state => state.authReducer.workStatus);
+  const version = useSelector(state => state.authReducer.version);
+  const isAuthorized = useSelector(state => state.authReducer.isAuthorized);
+  const isSplashScreenVisible = useSelector(
+    state => state.authReducer.isSplashScreenVisible,
+  );
 
-  // пуши (и FCM токен кладётся в AsyncStorage.deviceToken)
   usePushNotifications();
-  // useSecurityCheck();
+  useSecurityCheck();
 
   // Protection is unconditional — every screen, from the first frame. The
   // hook retries internally if the native call fires too early in boot.
-  useScreenSecurity(true);
+  // useScreenSecurity(true);
 
-  useEffect(() => {
-    //  console.log('[App] user from Redux changed:', user?.id, user?.email);
-  }, [user]);
-
-  // =========================
-  //   Геолокация: запрос прав (первый запуск, iOS + Android)
-  // =========================
-  const requestLocationPermissions = async () => {
-    try {
-      if (Platform.OS === 'android') {
-        const perms = [
-          PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-          PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION,
-        ];
-
-        // if (Platform.Version >= 29) {
-        //   perms.push(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
-        // }
-
-        const result = await requestMultiple(perms);
-        console.log('[Location] Android permissions result:', result);
-
-        const fineGranted =
-          result[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] ===
-          RESULTS.GRANTED ||
-          result[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] ===
-          RESULTS.LIMITED;
-
-        if (fineGranted) {
-          setHasLocationPermission(true);
-        }
-      } else if (Platform.OS === 'ios') {
-        const result = await requestMultiple([
-          PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
-          PERMISSIONS.IOS.LOCATION_ALWAYS,
-        ]);
-        console.log('[Location] iOS permissions result:', result);
-
-        const whenInUseGranted =
-          result[PERMISSIONS.IOS.LOCATION_WHEN_IN_USE] === RESULTS.GRANTED ||
-          result[PERMISSIONS.IOS.LOCATION_WHEN_IN_USE] === RESULTS.LIMITED;
-
-        if (whenInUseGranted) {
-          setHasLocationPermission(true);
-        }
-      }
-    } catch (e) {
-      console.log('[Location] error requesting permissions', e);
-    }
-  };
-
-  useEffect(() => {
-    requestLocationPermissions();
-  }, []);
-
-  async function runStartupTasks() {
-    try {
-      // await initializeAppSslPinning();
-      setIsReady(true);
-    } catch (err) {
-      logger.error('SSL pinning initialization failed');
-
-      // Fail closed on release builds — do not continue without pinning.
-      if (IS_PRODUCTION) {
-        Alert.alert(
-          'Security Error',
-          'Unable to establish a secure connection. Please reinstall the app or try again later.',
-          [{ text: 'Exit', onPress: () => RNExitApp.exitApp() }],
-          { cancelable: false },
-        );
-        return;
-      }
-
-      // Metro / debug builds may continue so local development is not blocked.
-      setIsReady(true);
-    }
-  }
-
-  useEffect(() => {
-    runStartupTasks();
-  }, []);
-
-  // Первичная инициализация (до isReady)
-  // useEffect(() => {
-  //   (async () => {
-  //     await initializeGlobalTixToken();
-  //     const isTokenValid = await checkIfTokenIsValid();
-
-  //     console.log(isTokenValid, 'isTokenValid (pre-ready)');
-
-  //     if (!isTokenValid) {
-  //       dispatch(setIsAuthorized(false));
-  //     }
-
-  //     const isLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
-
-  //     console.log(isLoggedOut, 'isLoggedOut (pre-ready)');
-
-  //     if (isLoggedOut === 'true') {
-  //       dispatch(setIsAuthorized(false));
-  //       return;
-  //     }
-
-  //     if (isLoggedOut === 'false') {
-  //       dispatch(getInitialData());
-  //     }
-  //   })();
-  // }, [dispatch]);
-
-  // Resolve auth after SSL/startup is ready. Must always set isAuthorized to a
-  // boolean — otherwise Root never mounts and splash stays forever.
-  // Fresh TestFlight reinstalls often keep a Keychain token while AsyncStorage
-  // flags (isUserLoggedOut) are missing.
-  useEffect(() => {
-    if (!isReady) return;
-
-    let cancelled = false;
-
-    // GlobalTix token init is independent of the main auth flow below — fire
-    // it in the background (fire-and-forget) so a slow/failed GlobalTix login
-    // never blocks or delays app auth resolution.
-    initializeGlobalTixToken().catch(() => { });
-
-    (async () => {
-      try {
-        if (await isDeviceBlocked()) {
-          if (!cancelled) {
-            dispatch(setIsAuthorized(false));
-          }
-          return;
-        }
-
-        const isLoggedOut = await AsyncStorage.getItem('isUserLoggedOut');
-        const isTokenValid = await checkIfTokenIsValid();
-
-        console.log(isTokenValid, 'isTokenValid (post-ready)');
-        console.log(isLoggedOut, 'isLoggedOut (post-ready)');
-
-        if (cancelled) {
-          return;
-        }
-
-        // User explicitly logged out — never auto-resume, wipe surviving Keychain.
-        if (isLoggedOut === 'true') {
-          await clearAuthToken();
-          dispatch(setIsAuthorized(false));
-          return;
-        }
-
-        // Valid token + logged-in flag, OR reinstall with Keychain token still
-        // present while isUserLoggedOut was wiped with AsyncStorage.
-        if (isTokenValid) {
-          if (isLoggedOut !== 'false') {
-            await AsyncStorage.setItem('isUserLoggedOut', 'false');
-          }
-          dispatch(getInitialData());
-          return;
-        }
-
-        // No usable session — clear any stale Keychain token from a previous install.
-        await clearAuthToken();
-        dispatch(setIsAuthorized(false));
-      } catch (err) {
-        console.log(err, 'startup auth resolve error');
-        if (!cancelled) {
-          dispatch(setIsAuthorized(false));
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isReady, dispatch]);
-
-  useEffect(() => {
-    if (!!user && isReady) {
-      dispatch(setIsAuthorized(true));
-    }
-  }, [!!user, isReady, dispatch]);
-
-  useEffect(() => {
-    if (typeof isAuthorized === 'boolean' && isReady) {
-      setIsLoading(false);
-    }
-  }, [isAuthorized, isReady]);
-
-  useEffect(() => {
-    if (isReady) {
-      resetImageCacheDate();
-    }
-  }, [isReady]);
-
-  useEffect(() => {
-    if (isReady) {
-      getAppStatus();
-      (async () => {
-        const lang = await AsyncStorage.getItem('lang');
-        i18n.changeLanguage(lang ?? 'en');
-      })();
-    }
-  }, [isReady, getAppStatus, i18n]);
-
-  // Выключение приложения при APP_DISABLED
-  useEffect(() => {
-    if (workStatus === APP_DISABLED && isReady) {
-      BackHandler.exitApp();
-    }
-  }, [workStatus, isReady]);
-
-
-
-  if (STORES_CONFIG.find(item => item.name === user?.organisation)) {
-    return <RedirectToStoresModal organization={user.organisation} />;
-  }
+  const { isReady } = useAppStartup({ user, isAuthorized });
+  const { updateModal, setUpdateModal } = useAppUpdateCheck({ isReady, version });
+  useAppStatusGate({ isReady, workStatus });
 
   return (
     <>
       {isAuthorized !== null && isReady && <Root isAuthorized={isAuthorized} />}
-      {isReady && <UpdateModal />}
+      {updateModal && isReady && (
+        <UpdateModal
+          updateModal={updateModal}
+          setUpdateModal={setUpdateModal}
+          version={version}
+        />
+      )}
       <FlashMessage
         position="center"
         style={{ backgroundColor: isDark ? colors.darkBlue : colors.white }}
@@ -313,26 +80,19 @@ let App = ({
   );
 };
 
-const mapStateToProps = state => ({
-  user: state.authReducer.user,
-  workStatus: state.authReducer.workStatus,
-  isAuthorized: state.authReducer.isAuthorized,
-  isSplashScreenVisible: state.authReducer.isSplashScreenVisible,
-});
-
-App = connect(mapStateToProps, { getAppStatus })(App);
-
 const AppWrapper = () => {
   return (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <PortalProvider>
-            <App />
-          </PortalProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <PortalProvider>
+              <App />
+            </PortalProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </Provider>
+    </ErrorBoundary>
   );
 };
 

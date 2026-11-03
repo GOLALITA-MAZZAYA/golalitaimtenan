@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
 import { FlatList, StyleSheet } from "react-native";
@@ -6,7 +7,7 @@ import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
 import NoData from "../../Transactions/components/NoData";
 import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
-import {isRTL, getLocalizedValue} from "../../../../utils";
+import {isRTL} from "../../../../utils";
 import {useTheme} from "../../../components/ThemeProvider";
 import ListCard from "../common/ListCard";
 
@@ -33,21 +34,28 @@ const LoyaltyGoodsList = ({navigation}) => {
 
   const partners = data?.pages.flatMap(page => page.data) || [];
 
-    const handleBookNowPress = (item) => {
-       navigation.navigate('loyaltyPoints-goods-info',{
-          partnerName: getLocalizedValue(item.x_arabic_name, item.merchant_name),
-          partnerLogo: item.map_banner,
-          website: item.website,
-          howToRedeem: isAr ? item.x_use_term_ar: item.x_use_term_en
-      })
-  }
+    const navigateToGoodInfoScreen = useCallback((item) => {
+       navigation.navigate('loyaltyPoints-goods-info',{id: item.merchant_id})
+  }, [navigation]);
 
+    const renderItem = useCallback(({ item }) => {
+      return (
+        <ListCard
+          icon={item.merchant_logo}
+          title={isAr ? item.x_arabic_name: item.merchant_name}
+          description={"Redeem points for shopping online"}
+          onPress={() => navigateToGoodInfoScreen(item)}
+          style={styles.listCard}
+          isDark={isDark}
+        />
+      );
+    }, [isAr, isDark, navigateToGoodInfoScreen]);
 
   return (
       <MainLayout
         outsideScroll={true}
         headerChildren={
-          <Header label={t('LoyaltyGoods.title')} btns={['back']} />
+          <Header label={t('LoyaltyMain.shop')} btns={['back']} />
         }
         headerHeight={50}
         contentStyle={styles.contentStyle}
@@ -55,18 +63,12 @@ const LoyaltyGoodsList = ({navigation}) => {
 
     <FlatList
       data={!isLoading ? partners : []}
-      renderItem={({ item }) => {
-        return (
-          <ListCard 
-            icon={item.merchant_logo} 
-            title={getLocalizedValue(item.x_arabic_name, item.merchant_name)}
-            description={"Redeem points for shopping online"}
-            onPress={() => handleBookNowPress(item)}
-            style={styles.listCard}
-            isDark={isDark}
-          />
-        );
-      }}
+      showsVerticalScrollIndicator={false}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      removeClippedSubviews={true}
+      renderItem={renderItem}
       keyExtractor={(_, index) => index.toString()}
       contentContainerStyle={styles.contentContainerStyle}
       

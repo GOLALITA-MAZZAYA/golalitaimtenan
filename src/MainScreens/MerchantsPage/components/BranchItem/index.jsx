@@ -14,7 +14,7 @@ import { isRTL } from "../../../../../utils";
   
 
 const BranchItem = ({ merchantId }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const { isDark } = useTheme();
   const { t } = useTranslation();
@@ -62,77 +62,69 @@ const BranchItem = ({ merchantId }) => {
     handleBranchPress(branch);
   };
 
-  const textColor = isDark ? colors.mainDarkModeText : colors.darkBlue;
-  const backgroundColor = isDark ? colors.mainDarkMode : "transparent";
-
   return (
-    <>
+    <View style={styles.container}>
       {!loading &&
         data?.length &&
         data.map((branch, i) => (
           <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => handleBranchPressFunc(branch)}
             style={[
-              styles.row,
               styles.childWrapper,
               {
-                borderColor: textColor,
-                backgroundColor,
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F5F5F7',
+                flexDirection: isArabic ? 'row-reverse' : 'row',
               },
             ]}
             key={i}
           >
-            <View style={styles.childInfoWrapper}>
-              <View style={styles.row}>
-                <TypographyText
-                  textColor={textColor}
-                  size={14}
-                  font={BALOO_SEMIBOLD}
-                  title={isArabic ? branch.name_arabic : branch.name}
-                  style={styles.name}
-                  numberOfLines={2}
-                />
-              </View>
-            </View>
+            <TypographyText
+              textColor={isDark ? '#FFFFFF' : '#111827'}
+              size={13}
+              font={BALOO_SEMIBOLD}
+              title={isArabic ? branch.name_arabic : branch.name}
+              style={styles.name}
+              numberOfLines={1}
+            />
           </TouchableOpacity>
         ))}
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
   childWrapper: {
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 8,
-    marginTop: 16,
-    marginRight: 10,
-    width: 200,
-  },
-  childInfoWrapper: {
-    flex: 1,
-    justifyContent: "space-around",
-    height: 40,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
   },
   name: {
-    flex: 1,
-    textAlign: "left",
-    flexGrow: 1,
-  },
-  row: {
-    flexWrap: "wrap",
-    flex: 1,
-    flexDirection: "row",
+    fontWeight: '600',
   },
   loader: {
-    marginTop: 16,
+    marginTop: 12,
     alignSelf: "center",
   },
   noData: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 16,
+    marginTop: 12,
     flexGrow: 1,
+  },
+  noDataText: {
+    opacity: 0.7,
   },
 });
 

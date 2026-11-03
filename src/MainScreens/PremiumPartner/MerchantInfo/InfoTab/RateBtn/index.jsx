@@ -66,12 +66,19 @@ const RateBtn = ({
         onPress={handleOpen}
         textStyle={{
           color: btnColor,
-          fontSize: 11,
-          marginLeft: 4,
+          fontSize: 12,
+          marginLeft: 6,
         }}
         wrapperStyle={{
-          borderColor: btnColor,
-          paddingHorizontal: 10,
+          borderColor: isDark
+            ? 'rgba(255, 221, 0, 0.4)'
+            : 'rgba(10, 37, 64, 0.18)',
+          backgroundColor: isDark
+            ? 'rgba(255, 221, 0, 0.08)'
+            : 'rgba(10, 37, 64, 0.04)',
+          paddingHorizontal: 14,
+          paddingVertical: 7,
+          borderRadius: 20,
         }}
       />
 

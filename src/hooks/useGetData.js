@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import instance from "../redux/instance";
-import { getAuthToken } from '../utils/tokenStorage';
+import { getToken } from '../utils/secureStorage';
 
 const useGetData = (apiUrl, params = {}) => {
   const [data, setData] = useState(null);
@@ -11,7 +11,7 @@ const useGetData = (apiUrl, params = {}) => {
     try {
       setLoading(true);
 
-      const token = await getAuthToken();
+      const token = await getToken();
 
       let data = null;
 

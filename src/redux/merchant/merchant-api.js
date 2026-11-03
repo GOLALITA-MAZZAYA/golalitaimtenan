@@ -1,4 +1,5 @@
 import instance from "../instance";
+import { org } from "../../org/config";
 
 export const merchantApi = {
   getCategories: (body) => instance.post("/partner.category/search", body),
@@ -14,7 +15,8 @@ export const merchantApi = {
   getMerchantDetails: (body) => instance.post("/user/merchant/details", body),
   getOffers: (body) => instance.post("/user/offers/v2", body),
   getNewOffers: (body) => instance.post("/user/offers/v3", body),
-  getFilteredOffers: (body) => instance.post("/user/offers/v3", body),
+  getProductCategoryTypes: (body) =>
+    instance.post("/product/category_type/list", body),
   getVouchers: () => instance.post("/user/voucher/list"),
   getProducts: (body) => instance.post("/product.template/search", body),
   getProductById: (body) => instance.post("user/offers/product/v2", body),
@@ -23,9 +25,8 @@ export const merchantApi = {
   getOrganizationDetails: (body) => instance.post("/user/org/details", body),
   bookNow: (body) => instance.post("/merchant/hotel/enquiry", body),
   deleteAccount: (body) => instance.post("/user/account/delete", body),
-  getAdvert: (body) => instance.post("/v5/advertisement/banner/qcb", body),
+  getAdvert: (body) => instance.post(`/v5/advertisement/banner/${org.code}`, body),
   trackBanner: (body) => instance.post("/advertisement_tracking", body),
-  getSocialMedia: (body) => instance.post("/user/social/v2", body),
   saveOffer: (body) => instance.post("/save/offer/as/favourite", body),
   saveMerchant: (body) => instance.post("/save/merchant/as/favourite", body),
   removeMerchant: (body) => instance.post("/remove/favourite/merchant", body),

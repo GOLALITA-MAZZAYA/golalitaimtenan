@@ -21,7 +21,7 @@ const ListNoData = ({ text, style = {} }) => {
       <TypographyText
         title={text || t("General.noData")}
         textColor={isDark ? "white" : colors.darkBlue}
-        size={16}
+        size={12}
         font={LUSAIL_REGULAR}
         style={{ fontWeight: "700" }}
       />

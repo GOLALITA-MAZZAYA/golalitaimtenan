@@ -1,12 +1,12 @@
 import { useQuery } from "react-query";
-import { getRoadDistance } from "../api/user";
+import {getRoadDistance} from "../api/user";
 
 const useRoadDistance = (
   userLatitude,
   userLongitude,
   merchantLatitude,
   merchantLongitude,
-  enabled = true,
+  enabled = true
 ) => {
   const { data: distance, isLoading: distanceLoading } = useQuery({
     queryKey: [
@@ -26,7 +26,7 @@ const useRoadDistance = (
       ),
 
     enabled:
-      enabled &&
+        enabled &&
       !!userLatitude &&
       !!userLongitude &&
       !!merchantLatitude &&

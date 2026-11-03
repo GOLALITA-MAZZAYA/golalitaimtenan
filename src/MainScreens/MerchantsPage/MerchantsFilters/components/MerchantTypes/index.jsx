@@ -7,6 +7,10 @@ import FormikButtonCheckbox from "../../../../../components/Formik/FormikButtonC
 const MerchantTypes = ({ style }) => {
   const config = [
     {
+      label: "Gopoints",
+      name: "gpoint",
+    },
+    {
       label: "Premium",
       name: "is_premium_merchant",
     },

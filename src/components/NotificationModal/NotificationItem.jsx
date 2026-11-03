@@ -1,11 +1,11 @@
 import {
   ActivityIndicator,
-  Image,
   Linking,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import Image from "../AppImage";
 import { BALOO_MEDIUM } from "../../redux/types";
 import { colors } from "../colors";
 import { TypographyText } from "../Typography";
@@ -13,43 +13,42 @@ import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { openScreen } from "../../Navigation/RootNavigation";
+import { navigate, navigationRef } from "../../Navigation/RootNavigation";
 import { useTheme } from "../ThemeProvider";
 import { readNotification } from "../../redux/notifications/notifications-thunks";
+import { setIsNotificationModal } from "../../redux/notifications/notifications-actions";
 import { getNotificationDescription } from "../../MainScreens/Notifications/helpers";
 import HTMLRenderer from "../HTMLRenderer";
 import { CHARITY_MERCHANT_IDS } from "../../constants";
-import { setIsNotificationModal } from "../../redux/notifications/notifications-actions";
 import { handleRedirectScreen } from "../../utils/redirectScreen";
 import trackActivity from "../../api/activityTracker";
 
-const NotificationItem = ({ item, onPress }) => {
+const NotificationItem = ({ item }) => {
   const dispatch = useDispatch();
+  const navigation = navigationRef;
   const { i18n, t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
 
   const language = i18n.language;
   const handleItemPress = () => {
-    // Close sheet first so it does not stay open over merchant/offer screens.
-    onPress?.();
-    dispatch(setIsNotificationModal(false));
+    dispatch(setIsNotificationModal(null));
 
-    trackActivity("popup_click", {
+    trackActivity('popup_click', {
       reference: item.notification_id,
-      page_name: item.redirectScreen || "home",
+      page_name: item.redirectScreen || 'home',
       merchant_id: item.merchant_id || undefined,
       product_id: item.product_id || undefined,
     });
 
-    if (item.redirectScreen && handleRedirectScreen(item.redirectScreen)) {
+    if (item.redirectScreen && handleRedirectScreen(item.redirectScreen, navigate)) {
       dispatch(readNotification(item.notification_id));
       return;
     }
 
     if (item.product_id) {
-      openScreen("AllOffers", {
-        screen: "offer-info",
+      navigate('AllOffers', {
+        screen: 'offer-info',
         params: {
           productId: item.product_id,
           title: item.merchant_name,
@@ -61,12 +60,16 @@ const NotificationItem = ({ item, onPress }) => {
 
     if (item.merchant_id) {
       if (CHARITY_MERCHANT_IDS.includes(+item.merchant_id)) {
-        openScreen("Charities", { merchantId: item.merchant_id });
+
+        navigate('Charities', { merchantId: item.merchant_id });
         dispatch(readNotification(item.notification_id));
-        return;
+
+        return
       }
-      dispatch(getMerchantDetails(item.merchant_id, null, t));
+
+      dispatch(getMerchantDetails(item.merchant_id, navigation, t, "Back"));
       dispatch(readNotification(item.notification_id));
+
       return;
     }
 
@@ -84,17 +87,19 @@ const NotificationItem = ({ item, onPress }) => {
           <ActivityIndicator />
         </View>
       )}
-      <TypographyText
-        title={language === "ar" ? item?.merchant_name_arabic : item?.merchant_name}
-        textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-        size={16}
-        font={BALOO_MEDIUM}
-        style={[styles.name, { alignSelf: language === "ar" ? "flex-end" : "flex-start" }]}
-      />
+      {!!(language === "ar" ? item?.merchant_name_arabic : item?.merchant_name) && (
+        <TypographyText
+          title={language === "ar" ? item?.merchant_name_arabic : item?.merchant_name}
+          textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+          size={16}
+          font={BALOO_MEDIUM}
+          style={[styles.name, { alignSelf: language === "ar" ? "flex-end" : "flex-start" }]}
+        />
+      )}
       <Image
         source={{ uri: item.offer_image }}
         style={styles.logo}
-        resizeMode="cover"
+        contentFit="cover"
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
       />
@@ -118,6 +123,7 @@ const NotificationItem = ({ item, onPress }) => {
 const styles = StyleSheet.create({
   logo: {
     width: "100%",
+    // height: 150,
     borderRadius: 8,
     aspectRatio: 135 / 76,
     marginBottom: 10,

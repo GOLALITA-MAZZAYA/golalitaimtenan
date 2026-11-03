@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { I18nManager } from "react-native";
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
 import esimHelpAr from "./locales/esimHelp.ar.json";
@@ -8,13 +9,15 @@ import esimHelpEn from "./locales/esimHelp.en.json";
 en.translation.ESimHelp = esimHelpEn;
 ar.translation.ESimHelp = esimHelpAr;
 
+// the translations
+// (tip move them in a JSON file and import them)
 const resources = {
   ar,
   en,
 };
 
 i18n
-  .use(initReactI18next)
+  .use(initReactI18next) // passes i18n down to react-i18next
   .init({
     resources,
     fallbackLng: "en",
@@ -22,8 +25,10 @@ i18n
     react: {
       useSuspense: false,
     },
+    // keySeparator: false, // we do not use keys in form messages.welcome
+    //
     interpolation: {
-      escapeValue: false,
+      escapeValue: false, // react already safes from xss
     },
   });
 

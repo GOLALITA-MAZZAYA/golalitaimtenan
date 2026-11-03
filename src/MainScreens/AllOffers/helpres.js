@@ -1,52 +1,60 @@
 import i18next from "i18next";
-import { getStringDate, isRTL, getLocalizedValue } from "../../../utils";
+import { getStringDate, isRTL } from "../../../utils";
 import { getMerchantDetails, getOffers } from "../../api/merchants";
 import i18n from "../../languages";
-import { navigateNested, openScreen } from "../../Navigation/RootNavigation";
+import { navigate } from "../../Navigation/RootNavigation";
 import store from "../../redux/store";
 import { B1G1 } from "../../redux/types";
+import { track } from "../../redux/merchant/merchant-thunks";
 
 export const handleOfferCardPress = (item, isOfferList) => {
-  const params = {
-    productId: item.id,
-    title: getLocalizedValue(item.x_arabic_name, item.name),
-  };
-
   if (isOfferList) {
-    navigateNested("offer-info", params);
+    navigate("offer-info", {
+      productId: item.id,
+      title: isRTL() ? item.x_arabic_name : item.name,
+    });
+
     return;
   }
 
-  openScreen("AllOffers", {
+  navigate("AllOffers", {
     screen: "offer-info",
-    params,
+    params: {
+      productId: item.id,
+      title: isRTL() ? item.x_arabic_name : item.name,
+    },
   });
 };
 
 export const navigateToBookNow = (offer, merchant) => {
-  openScreen("BookHotel", {
-    productId: offer.id,
-    title: getLocalizedValue(offer.x_arabic_name, offer.name),
-    merchant_id: merchant.merchant_id || merchant.id,
-    name: offer.merchant_name,
-    email: merchant.email,
-    product_id: offer.product_id,
-    product_name: offer.name,
-    product_price: offer.price,
+
+  navigate("AllOffers", {
+    screen: "offer-book-hotel",
+    params: {
+      productId: offer.id,
+      title: isRTL() ? offer.arabic_name : offer.name,
+      merchant_id: merchant.merchant_id || merchant.id,
+      name: offer.merchant_name,
+      email: merchant.email,
+      product_id: offer.product_id,
+      product_name: offer.name,
+      product_price: offer.price || offer.value || offer.list_price,
+      hotel: merchant?.merchant_name
+    }
   });
 };
 
 export const navigateTopProductPage = (offer, merchant) => {
-  console.log(merchant.is_business_hotel, "merchant.is_business_hotel");
-  console.log(offer, "offer");
 
-  openScreen("AllOffers", {
+  console.log(merchant, "mmmmmmmmmmmm");
+
+  navigate("AllOffers", {
     screen: "offer-info",
     params: {
       productId: offer.id,
-      title: getLocalizedValue(offer.x_arabic_name, offer.name),
+      title: isRTL() ? offer.x_arabic_name : offer.name,
       merchant,
-      bookNow: merchant.is_business_hotel ? "true" : "false",
+      bookNow: merchant.is_business_hotel || merchant.is_hotel ? "true" : "false",
     },
   });
 
@@ -79,30 +87,17 @@ export const getInfoText = (offer, merchant) => {
 };
 
 export const getDescription = (offer) => {
-  // Prefer API label (e.g. "Buy 1 Get 1 Free"). Fall back for b1g1 only
-  // when the backend leaves offer_label empty — never show "B1G1".
-  const label =
-    i18next.language === "ar" ? offer.x_label_arabic : offer.offer_label;
-
-  if (label) {
-    return label;
-  }
-
-  if (offer.x_offer_type === B1G1) {
-    return i18n.t("Merchants.b1g1Free");
-  }
-
-  return "";
+  return i18next.language === "ar" ? offer.x_label_arabic : offer.offer_label;
 };
 
 export const handleInfoTextPress = (offer, merchant) => {
   if (merchant.is_business_hotel || offer.is_business_hotel) {
     if (merchant.is_business_hotel) {
-      openScreen("AllOffers", {
+      navigate("AllOffers", {
         screen: "offer-info",
         params: {
           productId: offer.id,
-          title: getLocalizedValue(offer.x_arabic_name, offer.name),
+          title: isRTL() ? offer.x_arabic_name : offer.name,
           merchant,
           bookNow: "true",
         },
@@ -113,23 +108,32 @@ export const handleInfoTextPress = (offer, merchant) => {
   }
 
   if (offer.x_offer_type_promo_code) {
-    openScreen("Voucher", {
-      name: offer.name,
-      id: offer.id,
-      merchant_name: offer.merchant_name,
-      expiryDate: offer.end_date
-        ? getStringDate(offer.end_date.split(" ")[0])
-        : null,
-      merchant_logo: offer.merchant_logo,
-      promocode: offer.x_offer_type_promo_code,
-      merchant_id: offer.merchant_id,
+    store.dispatch(track("promocode", offer.id, false, offer.x_offer_type_promo_code));
+    store.dispatch(track("promocode", offer.id, true, offer.x_offer_type_promo_code));
+
+    navigate("AllOffers", {
+      screen: "merchant-code-confirmation",
+      params: {
+        merchantName: offer.merchant_name,
+        confirmationNumber: offer.x_offer_type_promo_code,
+        id: offer.id,
+        promocode: offer.x_offer_type_promo_code,
+        merchant_id: offer.merchant_id,
+        expiryDate: offer.end_date
+          ? getStringDate(offer.end_date.split(" ")[0])
+          : null,
+        x_is_support_qr_promo: offer.x_is_support_qr_promo,
+        qr_code_image_link: offer.qr_code_image_link,
+        promo_code_description: offer.promo_code_description,
+        store_website: offer.x_merchant_online_store,
+      },
     });
 
     return;
   }
 
   if (offer.x_offer_type === B1G1) {
-    openScreen("Promocode", {
+    navigate("Promocode", {
       merchant_name: offer.merchant_name,
       name: offer.name,
       expiryDate: offer.end_date
@@ -139,9 +143,6 @@ export const handleInfoTextPress = (offer, merchant) => {
       id: offer.id,
       promocode: offer.x_offer_type_promo_code,
       merchant_id: offer.merchant_id,
-      isB1G1: true,
-      branches: offer.branches,
-      promo_code_description: offer.promo_code_description,
     });
   }
 };
@@ -169,11 +170,11 @@ export const getOffersForNestedItemsCard = async (merchant, type) => {
     return transformedData;
   }
 
-  console.log(merchant.merchant_id,'merchant.merchant_id')
+  console.log(merchant.merchant_id, 'merchant.merchant_id')
 
   let offers = await getOffers(merchant.merchant_id || merchant.id);
 
-  console.log(offers,'offers offers')
+  console.log(offers, 'offers offers')
 
   if (type === B1G1) {
     offers = offers.filter((o) => o.x_offer_type === B1G1);

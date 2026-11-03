@@ -3,7 +3,6 @@ import { Keyboard, SafeAreaView, TouchableOpacity, View } from "react-native";
 import { colors } from "../../components/colors";
 import CommonHeader from "../../components/CommonHeader/CommonHeader";
 import { sized } from "../../Svg";
-import MacDonaldsSvg from "../../assets/macdonalds.svg";
 import Input from "../../components/Input/Input";
 import CommonButton from "../../components/CommonButton/CommonButton";
 import { mainStyles } from "../../styles/mainStyles";
@@ -18,10 +17,8 @@ import { merchantApi } from "../../redux/merchant/merchant-api";
 import { showMessage } from "react-native-flash-message";
 import i18next from "i18next";
 
+import { getToken } from '../../utils/secureStorage';
 import { setProfileLoading } from "../../redux/auth/auth-actions";
-import { getAuthToken } from '../../utils/tokenStorage';
-
-const MacDonaldsIcon = sized(MacDonaldsSvg, 38, 30);
 
 const ChangePassword = ({ user, profileLoading }) => {
   const { t } = useTranslation();
@@ -48,7 +45,6 @@ const ChangePassword = ({ user, profileLoading }) => {
           isWhite={isDark}
           isNotifications
           label={t("Profile.changePassword")}
-          companyIcon={<MacDonaldsIcon />}
         />
         <Formik
           initialValues={{
@@ -81,7 +77,7 @@ const ChangePassword = ({ user, profileLoading }) => {
             try {
               dispatch(setProfileLoading(true));
 
-              const token = await getAuthToken();
+              const token = await getToken();
 
               const res = await merchantApi.changePassword({
                 params: {
@@ -164,8 +160,8 @@ const ChangePassword = ({ user, profileLoading }) => {
                           ? colors.mainDarkModeText
                           : colors.white
                         : isDark
-                          ? colors.mainDarkModeText
-                          : colors.darkBlue
+                        ? colors.mainDarkModeText
+                        : colors.darkBlue
                     }
                     loading={profileLoading}
                   />

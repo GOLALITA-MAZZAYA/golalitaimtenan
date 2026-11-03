@@ -7,7 +7,7 @@ import useMerchantFeedbackSummary, {
 import { useTheme } from '../../../../../components/ThemeProvider';
 import { TypographyText } from '../../../../../components/Typography';
 import { colors } from '../../../../../components/colors';
-import { BALOO_REGULAR, BALOO_SEMIBOLD } from '../../../../../redux/types';
+import { BALOO_2, BALOO_SEMIBOLD } from '../../../../../redux/types';
 import { isRTL } from '../../../../../../utils';
 import { sized } from '../../../../../Svg';
 import StarFilledSvg from '../../../../../assets/star-filled.svg';
@@ -127,7 +127,7 @@ const RatingSummary = ({
           <TypographyText
             title={t('MerchantFeedback.beFirstToReview')}
             textColor={mutedColor}
-            font={BALOO_REGULAR}
+            font={BALOO_2}
             size={12}
             style={styles.emptySubtitle}
           />
@@ -182,14 +182,14 @@ const RatingSummary = ({
           <TypographyText
             title={average.toFixed(1)}
             textColor={textColor}
-            font={BALOO_REGULAR}
+            font={BALOO_2}
             size={36}
             style={styles.averageText}
           />
           <TypographyText
             title="/5"
             textColor={mutedColor}
-            font={BALOO_REGULAR}
+            font={BALOO_2}
             size={14}
             style={styles.maxScore}
           />
@@ -220,7 +220,7 @@ const RatingSummary = ({
           <TypographyText
             title={`${total} ${total === 1 ? t('MerchantFeedback.review', 'review') : t('MerchantFeedback.reviews', 'reviews')}`}
             textColor={mutedColor}
-            font={BALOO_REGULAR}
+            font={BALOO_2}
             size={11}
           />
         </View>
@@ -284,7 +284,7 @@ const RatingSummary = ({
               <TypographyText
                 title={`${count}`}
                 textColor={mutedColor}
-                font={BALOO_REGULAR}
+                font={BALOO_2}
                 size={11}
                 style={styles.barCount}
               />

@@ -24,7 +24,6 @@ import {
   unhideCancelledEsimOrder,
   withoutCancelledEsimOrders,
 } from './esimUtils';
-import { isRTL } from '../../../utils';
 
 const PAGE_SIZE = 20;
 const FILTERS = [
@@ -109,10 +108,7 @@ const ESimOrders = ({ navigation }) => {
       <View
         style={[
           styles.tabs,
-          {
-            flexDirection: isRTL() ? 'row-reverse' : 'row',
-            backgroundColor: isDark ? colors.navyBlue : '#F5F5F5',
-          },
+          { backgroundColor: isDark ? '#1C1C1E' : '#E5E7EB' },
         ]}
       >
         {FILTERS.map(item => {
@@ -122,9 +118,7 @@ const ESimOrders = ({ navigation }) => {
               key={item.value}
               style={[
                 styles.tab,
-                active && {
-                  backgroundColor: isDark ? colors.darkBlue : colors.white,
-                },
+                active && { backgroundColor: accent },
               ]}
               onPress={() => setFilter(item.value)}
             >
@@ -135,11 +129,11 @@ const ESimOrders = ({ navigation }) => {
                 textColor={
                   active
                     ? isDark
-                      ? colors.white
-                      : colors.darkBlue
+                      ? colors.black
+                      : colors.white
                     : isDark
-                    ? colors.white
-                    : colors.darkBlue
+                    ? '#8E8E93'
+                    : '#6B7280'
                 }
                 style={active ? { fontWeight: '700' } : undefined}
               />
@@ -176,7 +170,7 @@ const ESimOrders = ({ navigation }) => {
               style={[
                 styles.card,
                 {
-                  backgroundColor: isDark ? colors.navyBlue : '#F5F5F5',
+                  backgroundColor: isDark ? '#1C1C1E' : '#F3F4F6',
                 },
               ]}
               onPress={() =>
@@ -196,7 +190,7 @@ const ESimOrders = ({ navigation }) => {
                 title={`${item.destination || ''} • ${item.data || ''}`}
                 size={13}
                 font={LUSAIL_REGULAR}
-                textColor={isDark ? colors.lightGrey : '#616060'}
+                textColor={isDark ? '#B1B1B4' : '#616060'}
                 style={{ marginTop: 4 }}
               />
               <View style={styles.meta}>
@@ -204,7 +198,7 @@ const ESimOrders = ({ navigation }) => {
                   title={formatPrice(item.total_price, item.currency)}
                   size={14}
                   font={LUSAIL_REGULAR}
-                  textColor={isDark ? colors.white : colors.darkBlue}
+                  textColor={accent}
                   style={{ fontWeight: '700' }}
                 />
                 <TypographyText
@@ -215,16 +209,7 @@ const ESimOrders = ({ navigation }) => {
                   }
                   size={12}
                   font={LUSAIL_REGULAR}
-                  textColor={
-                    isEsimPaid(item)
-                      ? isDark
-                        ? colors.lightGreen
-                        : colors.green
-                      : isDark
-                      ? colors.orange
-                      : '#B45309'
-                  }
-                  style={{ fontWeight: '700' }}
+                  textColor={isDark ? '#8E8E93' : '#6B7280'}
                 />
               </View>
             </TouchableOpacity>
@@ -242,18 +227,15 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    borderRadius: 12,
+    alignSelf: 'flex-start',
+    borderRadius: 20,
     padding: 3,
     marginBottom: 8,
   },
   tab: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 17,
   },
   card: {
     borderRadius: 16,

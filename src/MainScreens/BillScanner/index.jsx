@@ -30,6 +30,14 @@ import {
   requestLocationPermission,
   toEnglishNumber,
 } from "../../helpers";
+import {TypographyText} from "../../components/Typography";
+import {BALOO_2} from "../../redux/types";
+import {colors} from "../../components/colors";
+import CustomCalendar from "../../components/CustomDateCalendar";
+import FormikDiscountAndAmount from "./componets/FormikDiscountAndAmount";
+import CustomInput from "../../components/Form/CustomInput";
+import FlagModal from "../../components/FlagModal/FlagModal";
+import CustomPhoneInput from "../../components/Form/CustomPhoneInput";
 
 const digitValidate = (value, context) => {
   var reg = new RegExp("^[\u0660-\u0669 0-9]+$");
@@ -116,6 +124,7 @@ const BillScanner = ({ navigation }) => {
     }
   };
 
+
   return (
     <>
       <MainLayout
@@ -126,7 +135,7 @@ const BillScanner = ({ navigation }) => {
       >
         <Formik
           initialValues={{
-            name: user.name,
+            name: user?.name,
             phone: user?.phone,
             email: user?.email,
             discount: undefined,
@@ -163,6 +172,8 @@ const BillScanner = ({ navigation }) => {
           {({ values, handleSubmit, errors, submitCount }) => {
             errors = submitCount > 0 ? errors : {};
 
+            console.log(values,'values')
+
             return (
               <>
                 <ScrollView
@@ -170,59 +181,63 @@ const BillScanner = ({ navigation }) => {
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.contentContainerStyle}
                 >
-                  <TouchableOpacity activeOpacity={1}>
+       
                     <View style={{ marginHorizontal: 4 }}>
-                      <AsyncFormikMerchantSelect />
+
+                      <TypographyText 
+                        title={t("BillScanner.title")}
+                        font={BALOO_2}
+                        size={14}
+                        textColor={colors.loyaltyTextSecondary}
+                      />
 
                       <FormikCameraPicker />
 
-                      <FormikDatePickers />
+                      <AsyncFormikMerchantSelect />
 
-                      <FormikTextInput
-                        label={t("BillScanner.discountLabel")}
-                        value={values.discount}
-                        returnKeyType={"next"}
-                        keyboardType="numeric"
-                        wrapperStyle={{ marginBottom: 20 }}
-                        name="discount"
-                        error={errors?.["discount"]}
+                      <FormikDatePickers /> 
+                      
+                      <FormikDiscountAndAmount 
+                         discountError={errors?.["discount"]}
+                         amountError={errors?.["total_bill_amount"]}
                       />
 
-                      <FormikTextInput
-                        label={t("BillScanner.amountLabel")}
-                        value={values.total_bill_amount}
-                        returnKeyType={"next"}
-                        keyboardType="numeric"
-                        wrapperStyle={{ marginBottom: 20 }}
-                        name="total_bill_amount"
-                        error={errors?.["total_bill_amount"]}
+                      <TypographyText 
+                        title={t("BillScanner.userInformation")}
+                        font={BALOO_2}
+                        size={16}
+                        textColor={colors.loyaltyTextPrimary}
+                        style={{marginTop: 40, marginHorizontal: 9}}
                       />
 
-                      <Input
+                      {values.name && <CustomInput 
                         label={t("BillScanner.userNameLabel")}
                         value={values.name}
-                        returnKeyType={"next"}
-                        wrapperStyle={{ marginBottom: 20 }}
-                      />
+                        style={{marginTop: 10}}
+                        disabled
+                      />}
+                      
+
                       {values.phone && (
-                        <Input
-                          label={t("BillScanner.userPhone")}
-                          value={values.phone}
-                          returnKeyType={"next"}
-                          wrapperStyle={{ marginBottom: 20 }}
+                        <CustomPhoneInput 
+                           label={t("BillScanner.userPhone")}
+                           value={values.phone}
+                           style={{marginTop: 20}}
+                           disabled
                         />
                       )}
 
-                      {values.email && (
-                        <Input
-                          label={t("BillScanner.userEmailLabel")}
-                          value={values.email}
-                          returnKeyType={"next"}
-                          wrapperStyle={{ marginBottom: 20 }}
-                        />
-                      )}
+
+                      {values.email && <CustomInput 
+                        label={t("BillScanner.userEmailLabel")}
+                        value={values.email}
+                        style={{marginTop: 20}}
+                        disabled
+                      />}
+
+
                     </View>
-                  </TouchableOpacity>
+      
 
                   <CommonButton
                     onPress={handleSubmit}
@@ -253,7 +268,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80
   },
   save: {
-    marginTop: 10
+    marginTop: 30
   }
 });
 

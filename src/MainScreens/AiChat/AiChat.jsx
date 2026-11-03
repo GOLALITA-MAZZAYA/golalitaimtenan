@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   Keyboard,
@@ -8,34 +8,31 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
-} from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { useTranslation } from "react-i18next";
-import Header from "../../components/Header";
-import { TypographyText } from "../../components/Typography";
-import { colors } from "../../components/colors";
-import { BALOO_REGULAR } from "../../redux/types";
-import { useTheme } from "../../components/ThemeProvider";
-import { sized } from "../../Svg";
-import SendSvg from "../../assets/send.svg";
-import DeleteSvg from "../../assets/delete.svg";
-import FullScreenLoader from "../../components/Loaders/FullScreenLoader";
-import { isRTL } from "../../../utils";
+} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import Header from '../../components/Header';
+import { TypographyText } from '../../components/Typography';
+import { colors } from '../../components/colors';
+import { BALOO_REGULAR } from '../../redux/types';
+import { useTheme } from '../../components/ThemeProvider';
+import { sized } from '../../Svg';
+import SendSvg from '../../assets/send.svg';
+import DeleteSvg from '../../assets/delete.svg';
+import FullScreenLoader from '../../components/Loaders/FullScreenLoader';
+import { isRTL } from '../../../utils';
 import {
   clearAiChatHistory,
   getAiChatHistory,
   sendAiChatMessage,
-} from "../../redux/aiChat/aiChat-thunks";
-
-const bubbleSurface = (isDark) =>
-  isDark ? colors.categoryGrey : colors.highlatedGrey;
+} from '../../redux/aiChat/aiChat-thunks';
 
 const AiChat = () => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const dispatch = useDispatch();
   const listRef = useRef(null);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState('');
   const [androidKeyboardHeight, setAndroidKeyboardHeight] = useState(0);
 
   const { messages, historyLoading, sending } = useSelector(
@@ -47,12 +44,12 @@ const AiChat = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (Platform.OS !== "android") return undefined;
+    if (Platform.OS !== 'android') return undefined;
 
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
       setAndroidKeyboardHeight(e.endCoordinates?.height ?? 0);
     });
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
       setAndroidKeyboardHeight(0);
     });
 
@@ -73,17 +70,17 @@ const AiChat = () => {
   const handleSend = () => {
     if (!draft.trim() || sending) return;
     dispatch(sendAiChatMessage(draft));
-    setDraft("");
+    setDraft('');
   };
 
   const renderMessage = ({ item }) => {
-    const isUser = item.role === "user";
+    const isUser = item.role === 'user';
 
     return (
       <View
         style={[
           styles.bubbleRow,
-          { justifyContent: isUser ? "flex-end" : "flex-start" },
+          { justifyContent: isUser ? 'flex-end' : 'flex-start' },
         ]}
       >
         <View
@@ -94,7 +91,9 @@ const AiChat = () => {
                 ? isDark
                   ? colors.mainDarkMode
                   : colors.darkBlue
-                : bubbleSurface(isDark),
+                : isDark
+                  ? colors.cardBackground
+                  : colors.highlatedGrey,
               borderBottomRightRadius: isUser ? 4 : 16,
               borderBottomLeftRadius: isUser ? 16 : 4,
             },
@@ -127,8 +126,8 @@ const AiChat = () => {
       }}
     >
       <Header
-        label={t("AiChat.title")}
-        btns={["back"]}
+        label={t('AiChat.title')}
+        btns={['back']}
         rightChildren={
           messages.length > 0 ? (
             <TouchableOpacity onPress={() => dispatch(clearAiChatHistory())}>
@@ -141,10 +140,10 @@ const AiChat = () => {
       <KeyboardAvoidingView
         style={[
           styles.keyboardAvoider,
-          Platform.OS === "android" && { paddingBottom: androidKeyboardHeight },
+          Platform.OS === 'android' && { paddingBottom: androidKeyboardHeight },
         ]}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {historyLoading ? (
           <FullScreenLoader />
@@ -162,33 +161,33 @@ const AiChat = () => {
             ListEmptyComponent={
               <View style={styles.emptyWrapper}>
                 <TypographyText
-                  title={t("AiChat.emptyState")}
+                  title={t('AiChat.emptyState')}
                   font={BALOO_REGULAR}
                   size={15}
-                  textColor={isDark ? colors.mainDarkMode : colors.darkGrey}
-                  style={{ textAlign: "center" }}
+                  textColor={isDark ? colors.secondary : colors.darkGrey}
+                  style={{ textAlign: 'center' }}
                 />
               </View>
             }
             ListFooterComponent={
               sending ? (
-                <View
-                  style={[styles.bubbleRow, { justifyContent: "flex-start" }]}
-                >
+                <View style={[styles.bubbleRow, { justifyContent: 'flex-start' }]}>
                   <View
                     style={[
                       styles.bubble,
                       styles.typingBubble,
-                      { backgroundColor: bubbleSurface(isDark) },
+                      {
+                        backgroundColor: isDark
+                          ? colors.cardBackground
+                          : colors.highlatedGrey,
+                      },
                     ]}
                   >
                     <TypographyText
-                      title={t("AiChat.typing")}
+                      title={t('AiChat.typing')}
                       font={BALOO_REGULAR}
                       size={15}
-                      textColor={
-                        isDark ? colors.mainDarkMode : colors.darkGrey
-                      }
+                      textColor={isDark ? colors.secondary : colors.darkGrey}
                     />
                   </View>
                 </View>
@@ -200,20 +199,22 @@ const AiChat = () => {
         <View
           style={[
             styles.inputRow,
-            { flexDirection: isRTL() ? "row-reverse" : "row" },
+            { flexDirection: isRTL() ? 'row-reverse' : 'row' },
           ]}
         >
           <TextInput
             value={draft}
             onChangeText={setDraft}
-            placeholder={t("AiChat.inputPlaceholder")}
+            placeholder={t('AiChat.inputPlaceholder')}
             placeholderTextColor={colors.darkGrey}
             style={[
               styles.input,
               {
                 color: isDark ? colors.white : colors.black,
-                backgroundColor: bubbleSurface(isDark),
-                textAlign: isRTL() ? "right" : "left",
+                backgroundColor: isDark
+                  ? colors.cardBackground
+                  : colors.highlatedGrey,
+                textAlign: isRTL() ? 'right' : 'left',
               },
             ]}
             multiline
@@ -248,11 +249,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   bubbleRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 10,
   },
   bubble: {
-    maxWidth: "78%",
+    maxWidth: '78%',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 16,
@@ -262,12 +263,12 @@ const styles = StyleSheet.create({
   },
   emptyWrapper: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 30,
   },
   inputRow: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 30,
@@ -286,8 +287,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Linking, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Linking, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
@@ -10,18 +10,17 @@ import { BALOO_MEDIUM } from "../../../../redux/types";
 import { useTheme } from "../../../../components/ThemeProvider";
 import { TypographyText } from "../../../../components/Typography";
 import { colors } from "../../../../components/colors";
-import { Image } from "react-native";
+import Image from "../../../../components/AppImage";
 import store from "../../../../redux/store";
 import { getMerchantDetails } from "../../../../redux/merchant/merchant-thunks";
 import { getCategoryNameByIdAndLang } from "../../../../components/Categories/helpres";
-import { isRTL, getLocalizedValue } from "../../../../../utils";
+import { isRTL } from "../../../../../utils";
 import { useTranslation } from "react-i18next";
 import { getMerchantDisscountForOffers } from "../../../../api/merchants";
 import {
   getCurrentLocation,
   requestLocationPermission,
 } from "../../../../helpers";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import Distance from "../../../../components/Distance";
 import { useIsFocused } from "@react-navigation/native";
 
@@ -50,11 +49,10 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   }, []);
 
   const handleSheetChanges = useCallback((index) => {
-    // Same as MinistryOfSports: clear selection when sheet is not open
     if (index) {
       setSelectedMerchant(null);
     }
-  }, [setSelectedMerchant]);
+  }, []);
 
   const getOffersDiscountValue = async () => {
     try {
@@ -77,8 +75,7 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   };
 
   const handleDetailsPress = () => {
-    bottomSheetModalRef.current?.dismiss();
-    setSelectedMerchant(null);
+    onClosePress()
 
     store.dispatch(
       getMerchantDetails(
@@ -92,7 +89,7 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   };
 
   const handleNavigatePress = async () => {
-    bottomSheetModalRef.current?.dismiss();
+    onClosePress()
 
     try {
       const status = await requestLocationPermission();
@@ -129,9 +126,9 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
   }, [merchant]);
 
   useEffect(() => {
-    if (merchant?.merchant_id) {
+    if(merchant?.merchant_id){
 
-      getOffersDiscountValue();
+    getOffersDiscountValue();
 
     }
   }, [merchant?.merchant_id]);
@@ -185,7 +182,11 @@ const MerchantModal = ({ merchant, setSelectedMerchant }) => {
                         }}
                       >
                         <TypographyText
-                          title={getLocalizedValue(merchant?.x_arabic_name, merchant?.merchant_name)}
+                          title={
+                            isRTL()
+                              ? merchant?.x_arabic_name
+                              : merchant?.merchant_name
+                          }
                           textColor={
                             isDark ? colors.mainDarkMode : colors.darkBlue
                           }

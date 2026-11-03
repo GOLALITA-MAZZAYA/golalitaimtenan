@@ -26,9 +26,8 @@ export const TypographyText = (props) => {
       color: textColor,
       fontSize: size,
       textTransform: transform,
-      fontFamily: font,
+      fontFamily: font || BALOO_REGULAR,
       textAlign: isRTL() ? "right" : "left",
-      font: font || BALOO_REGULAR
     },
   ];
 

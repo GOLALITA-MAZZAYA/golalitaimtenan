@@ -10,7 +10,6 @@ import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
 import { TypographyText } from "../../../components/Typography";
 import { useTranslation } from "react-i18next";
 import { BALOO_MEDIUM } from "../../../redux/types";
-import { goBackOrHome } from "../../../Navigation/RootNavigation";
 
 const Menu = (props) => {
   const { isDark } = useTheme();
@@ -21,7 +20,7 @@ const Menu = (props) => {
   const [error, setError] = useState(!company_contract_url);
 
   const handleBackPress = () => {
-    goBackOrHome(navigation);
+    navigation.goBack ? navigation.goBack() : navigation.navigate("Main");
   };
 
 
@@ -54,6 +53,13 @@ const Menu = (props) => {
               return <FullScreenLoader style={styles.loader} />;
             }}
             trustAllCerts={false}
+              autoScale={false}
+  enableDoubleTapZoom={true}
+  minScale={1}
+  maxScale={5}
+  onScaleChanged={(scale) => {
+    console.log('Zoom:', scale);
+  }}
           />
         )}
 
@@ -73,7 +79,8 @@ const Menu = (props) => {
 };
 
 const styles = StyleSheet.create({
-  pdf: { flex: 1 },
+  pdf: { flex: 1,       width: '100%',
+        height: '100%', },
   loader: {
     position: "absolute",
     top: 0,

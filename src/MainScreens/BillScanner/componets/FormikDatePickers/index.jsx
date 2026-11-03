@@ -1,8 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import Input from '../../../../components/Input/Input';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Field } from 'formik';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {TypographyText} from '../../../../components/Typography';
+import DateSvg from '../../../../assets/loyaltyPoints/date.svg';
+import TimeSvg from '../../../../assets/loyaltyPoints/time.svg';
+import CustomCalendar from '../../../../components/CustomDateCalendar';
+import {colors} from '../../../../components/colors';
+import {BALOO_2} from '../../../../redux/types';
+import {isRTL} from '../../../../../utils';
 
 const getDateString = date => {
   if (!date.getFullYear) return '';
@@ -39,53 +46,80 @@ const getTimeAsDate = (hours, minutes) => {
 };
 
 const FormikDatePickers = () => {
-  const [isDepartureDateVisible, setIsDepartureDateVisible] = useState(false);
   const [isReturnDateVisible, setIsReturnDateVisible] = useState(false);
+  const [isDateModalVisible, setIsDateModalVisible] = useState(false);
   const { t } = useTranslation();
-  const dateInputRef = useRef(null);
-  const timeInputRef = useRef(null);
+  const isRtl = isRTL();
 
   return (
     <Field>
       {({ form: { setFieldValue, errors, values } }) => {
         return (
-          <>
-            <Input
-              label={t('BillScanner.dateLabel')}
-              value={values.date}
-              onChangeText={() => {}}
-              returnKeyType={'next'}
-              error={errors.date}
-              wrapperStyle={{ marginBottom: 20 }}
-              onFocus={() => setIsDepartureDateVisible(true)}
-              innerRef={dateInputRef}
-            />
-            <Input
-              label={t('BillScanner.timeLabel')}
-              value={values.time}
-              onChangeText={() => {}}
-              returnKeyType={'next'}
-              error={errors.time}
-              onFocus={() => {
-                setIsReturnDateVisible(true);
-              }}
-              wrapperStyle={{ marginBottom: 20 }}
-              innerRef={timeInputRef}
-            />
+           <>
+          <View style={[styles.wrapper,{flexDirection: isRtl ? 'row-reverse': 'row'}]}>
 
-            <DateTimePickerModal
-              isVisible={isDepartureDateVisible}
-              mode="date"
-              onConfirm={date => {
-                setFieldValue('date', getDateString(date));
-                setIsDepartureDateVisible(false);
-              }}
-              onCancel={() => {
-                setIsDepartureDateVisible(false);
-              }}
-              minimumDate={getOneMonthAgoDate()}
-              maximumDate={new Date()}
-            />
+            <View style={styles.block}>
+                <TypographyText 
+                   title={t('BillScanner.date')}
+                   textColor={colors.loyaltyTextSecondary}
+                   font={BALOO_2}
+                   style={styles.label}
+                />
+
+                <TouchableOpacity 
+                    style={[
+                      styles.select,
+                      {backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder},
+                      {flexDirection: isRtl ? 'row-reverse': 'row'}
+                    ]}
+                    onPress={() => setIsDateModalVisible(true)}>
+
+                  <TypographyText 
+                   title={values.date || 'dd/mm/yyyy'}
+                   style={styles.text}
+                   textColor={colors.loyaltyTextMainTitle}
+                   size={12}
+                   font={BALOO_2}
+                  />
+
+                  <DateSvg color={colors.loyaltyPrimary}/>
+
+                </TouchableOpacity>
+            </View>
+
+             <View style={styles.block}>
+                <TypographyText 
+                   title={t('BillScanner.time')}
+                   textColor={colors.loyaltyTextSecondary}
+                   font={BALOO_2}
+                   style={styles.label}
+                />
+
+                <TouchableOpacity 
+                   style={
+                    [styles.select,
+                    {backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder},
+                    {flexDirection: isRtl ? 'row-reverse': 'row'}
+                  ]}
+                   onPress={() => setIsReturnDateVisible(true)}>
+
+                  <TypographyText 
+                   title={values.time || '— / — / —'}
+                   style={styles.text}
+                   textColor={colors.loyaltyTextMainTitle}
+                   size={12}
+                   font={BALOO_2}
+                  />
+
+                  <TimeSvg color={colors.loyaltyPrimary}/>
+
+                </TouchableOpacity>
+            </View>
+
+
+            <CustomCalendar isVisible={isDateModalVisible} setIsVisible={setIsDateModalVisible} onApply={(date) =>setFieldValue('date', getDateString(date))}/>
+
+   
             <DateTimePickerModal
               isVisible={isReturnDateVisible}
               mode="time"
@@ -100,11 +134,47 @@ const FormikDatePickers = () => {
               maximumDate={getTimeAsDate(23, 59)}
               is24Hour={true}
             />
+          </View>
+          {(errors['date'] || errors['time']) &&  (
+                <TypographyText
+                    title={`${errors['date'] || errors['time']}`}
+                    textColor={"#FF406E"}
+                    size={14}
+                    font={BALOO_2}
+                    style={{ fontWeight: "700", marginTop:  3 }}
+                />
+            )}
           </>
         );
       }}
     </Field>
   );
 };
+
+const styles = StyleSheet.create({
+    wrapper: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 20
+    },
+    select: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 58,
+      width: 160,
+      paddingHorizontal: 20,
+      marginTop: 3,
+      borderRadius: 17,
+    },
+    block: {
+      height: 78
+    },
+    text: {
+      flex: 1
+    },
+    label: {
+      marginHorizontal: 10
+    }
+});
 
 export default FormikDatePickers;

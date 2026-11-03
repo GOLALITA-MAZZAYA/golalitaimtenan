@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import MainLayout from "../../components/MainLayout";
-import { Image, ScrollView, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
+import Image from "../../components/AppImage";
 import { mainStyles } from "../../styles/mainStyles";
 import { TypographyText } from "../../components/Typography";
 import { colors } from "../../components/colors";
@@ -11,7 +12,6 @@ import { sized } from "../../Svg";
 import { useTheme } from "../../components/ThemeProvider";
 import LinearGradient from "react-native-linear-gradient";
 import PlusWhiteSvg from "../../assets/plus_white.svg";
-import CameraSvg from "../../assets/camera.svg";
 import { connect } from "react-redux";
 import {
   deleteFamilyMember,
@@ -20,11 +20,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { showMessage } from "react-native-flash-message";
 import Header from "../../components/Header";
-import { DialogWindow } from "../../components/DialogWindow/DialogWindow";
+import {DialogWindow} from "../../components/DialogWindow/DialogWindow";
 
 const PlusIcon = sized(PlusSvg, 20, 20);
 const PlusWhiteIcon = sized(PlusWhiteSvg, 20, 20);
-const CameraIcon = sized(CameraSvg, 36, 32);
 
 const Family = ({
   navigation,
@@ -41,7 +40,7 @@ const Family = ({
     getFamilyMembers();
   }, []);
 
-  let items = [
+   let items = [
     {
       name: t("Profile.deleteMember"),
       func: () => {
@@ -67,7 +66,7 @@ const Family = ({
 
 
   const handleAddFamilyMember = () => {
-    if (familyMembers?.length === 10) {
+    if (familyMembers?.length >= 10) {
       showMessage({
         message: t("Family.membersLimitError"),
         type: "danger",
@@ -82,117 +81,134 @@ const Family = ({
 
   return (
 
-    <MainLayout outsideScroll headerChildren={<Header label={t("Family.familyMembers")} btns={['back']} />} headerHeight={40}>
-      <View style={mainStyles.p20}>
-        <>
-          <TypographyText
-            textColor={isDark ? colors.white : colors.grey}
-            size={18}
-            font={BALOO_REGULAR}
-            title={t("Family.addInfo")}
-            style={{ marginVertical: 10 }}
-
-          />
-          {isDialogWindow && (
-            <DialogWindow
-              items={items}
-              isVisible={isDialogWindow}
-              onCancel={() => {
-                setSelectedFamily(null);
-                setIsDialogWindow(false);
-              }}
-            />
-          )}
-          <ScrollView
-            style={{ marginTop: 12, marginBottom: 28 }}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-          >
-            <TouchableOpacity
-              onPress={handleAddFamilyMember}
-              style={styles.family}
-            >
-              <LinearGradient
-                colors={
-                  isDark
-                    ? [colors.mainDarkMode, colors.mainDarkMode]
-                    : [colors.darkBlue, colors.darkBlue]
-                }
-                style={[
-                  styles.circleFamily,
-                  { backgroundColor: colors.darkBlue },
-                ]}
-              >
-                {isDark ? <PlusWhiteIcon /> : <PlusIcon />}
-              </LinearGradient>
-              <TypographyText
-                textColor={isDark ? colors.white : colors.grey}
-                size={14}
-                font={BALOO_REGULAR}
-                title={t("Family.add")}
-                style={{ marginTop: 3 }}
+            <MainLayout outsideScroll headerChildren={<Header label={t("Family.familyMembers")} btns={['back']}/>} headerHeight={40}>
+              <View style={mainStyles.p20}>
+                <>
+                  <TypographyText
+                        textColor={isDark ? colors.white : colors.grey}
+                        size={18}
+                        font={BALOO_REGULAR}
+                        title={t("Family.addInfo")}
+                        style={{marginVertical: 10}}
+      
+                  />
+                {isDialogWindow && (
+              <DialogWindow
+                items={items}
+                isVisible={isDialogWindow}
+                onCancel={() => {
+                  setSelectedFamily(null);
+                  setIsDialogWindow(false);
+                }}
               />
-            </TouchableOpacity>
+            )}
+                  <ScrollView
+                    style={{ marginTop: 12, marginBottom: 28 }}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                  >
+                    <TouchableOpacity
+                      onPress={handleAddFamilyMember}
+                      style={styles.family}
+                    >
+                      <LinearGradient
+                        colors={
+                          isDark
+                            ? [colors.mainDarkMode, colors.mainDarkMode]
+                            : [colors.darkBlue, colors.darkBlue]
+                        }
+                        style={[
+                          styles.circleFamily,
+                          { backgroundColor: colors.darkBlue },
+                        ]}
+                      >
+                        {isDark ? <PlusWhiteIcon /> : <PlusIcon />}
+                      </LinearGradient>
+                      <TypographyText
+                        textColor={isDark ? colors.white : colors.grey}
+                        size={14}
+                        font={BALOO_REGULAR}
+                        title={t("Family.add")}
+                        style={{ marginTop: 3 }}
+                      />
+                    </TouchableOpacity>
 
-            {familyMembers.map((item, index) => (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedFamily(item);
-                }}
-                onLongPress={() => {
-                  setSelectedFamily(item);
-                  setIsDialogWindow(true);
-                }}
-                key={index}
-                style={[styles.family, { borderRadius: 50 }]}
-              >
-                <View
-                  style={[
-                    styles.circleFamily,
-                    selectedFamily?.id === item.id && {
-                      borderWidth: 2,
-                      borderStyle: "solid",
-                      borderColor: isDark
-                        ? colors.mainDarkMode
-                        : colors.darkBlue,
-                      borderRadius: 50,
-                    },
-                  ]}
-                >
-                  {item.image_url && typeof item.image_url === "string" ? (
-                    <Image
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 50,
-                      }}
-                      source={{ uri: item.image_url }}
-                    />
-                  ) : (
-                    <CameraIcon />
-                  )}
-                </View>
-                <TypographyText
-                  textColor={
-                    isDark
-                      ? selectedFamily?.id === item.id
-                        ? colors.mainDarkMode
-                        : colors.white
-                      : selectedFamily?.id === item.id
-                        ? colors.darkBlue
-                        : colors.grey
-                  }
-                  size={14}
-                  font={BALOO_REGULAR}
-                  title={item.name}
-                  style={{ marginTop: 3 }}
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </>
-      </View>
-    </MainLayout>
+                    {familyMembers.map((item, index) => {
+                      const hasImage =
+                        Boolean(item?.image_url) &&
+                        typeof item.image_url === "string" &&
+                        item.image_url.trim() !== "" &&
+                        item.image_url !== "false";
+                      const initial = (item?.name?.trim()?.[0] || "?").toUpperCase();
+                      const isSelected = selectedFamily?.id === item.id;
+
+                      return (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSelectedFamily(item);
+                          }}
+                          onLongPress={() => {
+                            setSelectedFamily(item);
+                            setIsDialogWindow(true);
+                          }}
+                          key={index}
+                          style={[styles.family, { borderRadius: 50 }]}
+                        >
+                          <View
+                            style={[
+                              styles.circleFamily,
+                              {
+                                backgroundColor: isDark
+                                  ? "rgba(221, 189, 107, 0.15)"
+                                  : "rgba(162, 148, 117, 0.12)",
+                                borderWidth: isSelected ? 2 : 1,
+                                borderColor: isSelected
+                                  ? isDark
+                                    ? colors.mainDarkMode
+                                    : colors.darkBlue
+                                  : isDark
+                                  ? "rgba(255, 255, 255, 0.12)"
+                                  : "rgba(0, 0, 0, 0.08)",
+                              },
+                            ]}
+                          >
+                            {hasImage ? (
+                              <Image
+                                style={{ width: 64, height: 64, borderRadius: 32 }}
+                                source={{ uri: item.image_url }}
+                              />
+                            ) : (
+                              <TypographyText
+                                title={initial}
+                                textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+                                size={24}
+                                font={BALOO_REGULAR}
+                                style={{ fontWeight: "700" }}
+                              />
+                            )}
+                          </View>
+                          <TypographyText
+                            textColor={
+                              isDark
+                                ? isSelected
+                                  ? colors.mainDarkMode
+                                  : colors.white
+                                : isSelected
+                                ? colors.darkBlue
+                                : colors.grey
+                            }
+                            size={14}
+                            font={BALOO_REGULAR}
+                            title={item.name}
+                            style={{ marginTop: 3 }}
+                          />
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </>
+              </View>
+            </MainLayout>
 
   );
 };

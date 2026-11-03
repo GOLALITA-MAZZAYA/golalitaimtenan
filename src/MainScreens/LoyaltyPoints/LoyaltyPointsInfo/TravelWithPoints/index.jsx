@@ -7,6 +7,15 @@ import i18next from "i18next";
 import {isRTL} from "../../../../../utils";
 
 
+// Horizontal list: backgroundImage is a fixed width: 263 + marginRight: 12.
+const ITEM_WIDTH = 263 + 12;
+
+const getItemLayout = (data, index) => ({
+  length: ITEM_WIDTH,
+  offset: ITEM_WIDTH * index,
+  index,
+});
+
 const TravelWithPoints = () => {
     const {t} = useTranslation();
     const isRtl = isRTL();
@@ -30,7 +39,7 @@ const TravelWithPoints = () => {
         
         <View style={styles.titleWrapper}>
         <TypographyText
-            title={t('LoyaltyInfo.travelWithPoints')}
+            title={t('LoyaltyInfo.travelWithPointsTitle')}
             style={styles.title}
             textColor={colors.loyaltyTextPrimary}
         />
@@ -45,6 +54,8 @@ const TravelWithPoints = () => {
           style={styles.flatList}
           horizontal
           data={data}
+          keyExtractor={(item) => item.title}
+          getItemLayout={getItemLayout}
           renderItem={({item}) => (
             <ImageBackground source={item.source} style={styles.backgroundImage}>
             <TouchableOpacity style={[

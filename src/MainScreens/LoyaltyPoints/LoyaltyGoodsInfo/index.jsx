@@ -1,24 +1,38 @@
-import {Image, Linking, ScrollView, StyleSheet} from "react-native";
+import { Linking, ScrollView, StyleSheet} from "react-native";
+import Image from "../../../components/AppImage";
 import Header from "../../../components/Header"
 import MainLayout from "../../../components/MainLayout"
 import {useTranslation} from "react-i18next";
-import {useTheme} from "../../../components/ThemeProvider";
 import {colors} from "../../../components/colors";
 import {TypographyText} from "../../../components/Typography";
-import CommonButton from "../../../components/CommonButton/CommonButton";
+import InstructionSvg from '../../../assets/loyaltyPoints/instruction.svg';
+import InfoWithTitleBlock from "../../../components/InfoWithTitleBlock";
+import Button from "../../../components/Button";
+import useMerchantDetails from "../../../hooks/useMerchantDetails";
+import FullScreenLoader from "../../../components/Loaders/FullScreenLoader";
+import {isRTL} from "../../../../utils";
+import trackActivity from "../../../api/activityTracker";
 
-
-const LoyaltyGoodsInfo = ({route, howToRedeem}) => {
+const LoyaltyGoodsInfo = ({route}) => {
     const {t} = useTranslation();
-    const {isDark} = useTheme();
-    const {partnerName, partnerLogo, website} = route.params;
+    const {id} = route.params;
+    const {data, loading} = useMerchantDetails(id);
+    const isAr = isRTL();
 
-    const textColor = isDark ? colors.white: colors.mainDarkModeText;
-    const btnTextColor = isDark ? colors.mainDarkModeText: colors.white;
-
-    const handleBookNowPress = () => {
-       Linking.openURL(website)
+    const handleShopNowPress = () => {
+       if(data?.website){
+        trackActivity('page_visit', {
+          merchant_id: id,
+          page_name: 'merchant_website',
+          metadata: { link_type: 'website', link_value: data.website, source: 'loyalty_goods_info' },
+        });
+        Linking.openURL(data.website)
+       }
     };
+
+    const partnerName = isAr ? data?.x_arabic_name: data?.merchant_name;
+    const partnerLogo = data?.map_banner;
+    const howToRedeem = isAr ? data?.x_use_term_ar : data?.x_use_term_en;
 
 
     return (
@@ -30,40 +44,33 @@ const LoyaltyGoodsInfo = ({route, howToRedeem}) => {
         headerHeight={50}
         contentStyle={styles.contentStyle}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainerStyle}>
+        {!!loading && <FullScreenLoader style={styles.loader}/>}
 
-        <Image source={{uri: partnerLogo}} style={styles.logo} resizeMode="cover"/>
 
-        <TypographyText
-            textColor={textColor}
-             size={22}
-             title={t('LoyaltyPartners.instrunction6',{partnerName,interpolation: { escapeValue: false }})}
-             style={styles.redeemTitle}
-        />
+        {!loading  && <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainerStyle}>
+
+        <Image source={{uri: partnerLogo}} style={styles.logo} contentFit="cover"/>
 
         <TypographyText
-            textColor={textColor}
-             size={18}
-             title={`${t('LoyaltyPartners.howToRedeem')}:`}
-             style={styles.howToRedeem}
+           textColor={colors.loyaltyTextMainTitle}
+           size={16}
+           title={t('LoyaltyPartners.instrunction6',{partnerName,interpolation: { escapeValue: false }})}
+           style={styles.redeemTitle}
         />
 
-
-            <TypographyText
-            textColor={textColor}
-             size={15}
-             title={howToRedeem}
-             style={styles.redeemText}
+        <InfoWithTitleBlock
+              style={styles.howToRedeem}
+              title={t('LoyaltyPartners.howToRedeem')}
+              description={howToRedeem}
+              icon={<InstructionSvg color={colors.loyaltyPrimary}/>}
         />
  
-
-        <CommonButton
-                label={t('LoyaltyGoods.shopNow')}
-                style={styles.bookNowBtn}
-                onPress={handleBookNowPress}
-                textColor={btnTextColor}
+        <Button
+            text={t('LoyaltyGoods.shopNow')}
+            style={styles.bookNowBtn}
+            onPress={handleShopNowPress}
         />
-        </ScrollView>
+        </ScrollView>}
 
       </MainLayout>
     )
@@ -71,36 +78,32 @@ const LoyaltyGoodsInfo = ({route, howToRedeem}) => {
 
 const styles = StyleSheet.create({
     contentStyle: {
-        flex: 1,
-        paddingHorizontal: 20
+       flex: 1,
+       paddingHorizontal: 20
     },
     logo: {
         width: '100%',
-        height: 220,
+        height: 242,
         marginTop: 20,
-        borderRadius: 12
+        borderRadius: 40
 
     },
     redeemTitle: {
-      marginTop: 30,
+      marginTop: 26,
       fontWeight: '600'
     },
     howToRedeem: {
-        marginTop: 30,
-        fontWeight: '600'
-
-    },
-    redeemText: {
-        marginTop: 10
-
+      marginTop: 20
     },
     bookNowBtn: {
-       width: 220,
-       marginTop: 40,
-       alignSelf: 'center'
+       marginTop: 45,
+       alignSelf: 'stretch'
     },
     contentContainerStyle: {
         paddingBottom: 120
+    },
+    loader: {
+      marginBottom: 60
     }
 
 });

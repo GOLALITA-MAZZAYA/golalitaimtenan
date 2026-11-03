@@ -3,59 +3,59 @@ import { Platform, Alert, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFreeRasp } from 'freerasp-react-native';
 import RNExitApp from 'react-native-exit-app';
-import {
-  ANDROID_PACKAGE_NAME,
-  ENFORCE_CODE_OBFUSCATION,
-  FREERASP_MALWARE_CONFIG,
-  IOS_PACKAGE_NAME,
-  IOS_TEAM_ID,
-  IS_PRODUCTION,
-  SIGN_IN_CERTIFICATE_HASHES,
-  SUPPORTMAIL,
-} from '../constants';
-import { clearAuthToken } from './tokenStorage';
+import { IS_PRODUCTION } from '../constants';
+import { org } from '../org/config';
+import { removeToken } from './secureStorage';
 import logger from './logger';
 
-// Legacy key from builds that persisted threats across updates.
+// Once set, the block persists until the app's data is cleared or the app is
+// reinstalled — and a fresh install still has to pass detection again. There
+// is deliberately no time-based auto-clear: freeRasp gives no "all clear"
+// signal, so the absence of a callback on a given launch proves nothing.
 const SECURITY_BLOCK_KEY = 'securityBlockedIssues';
 
 let triggeredIssues = new Set();
+let persistedIssues = new Set();
 let alertVisible = false;
 let alertScheduled = false;
-let raspInitialized = false;
-
-const ignoreThreat = message => () =>
-  logger.warn(`[Security] ${message} detected; ignored`);
 
 const securityMessages = {
   privilegedAccess: 'Root or elevated privileges were detected.',
   debug: 'Debugging tools are enabled.',
   simulator: 'The app is running on an emulator or simulator.',
-  appIntegrity: 'App integrity check failed.',
+  //  appIntegrity: 'App integrity check failed.',
   unofficialStore: 'The app was installed from an unrecognized source.',
   hooks: 'Security hooking was detected.',
-  deviceBinding: 'Device binding mismatch was detected.',
-  secureHardwareNotAvailable: 'Secure hardware is unavailable on this device.',
   systemVPN: 'VPN usage is detected.',
-  passcode: 'Device passcode or screen lock is not set.',
-  deviceID: 'Device identity mismatch was detected.',
-  devMode: 'Developer mode is enabled.',
-  adbEnabled: 'USB debugging (ADB) is enabled.',
-  screenRecording: 'Screen recording was detected.',
   multiInstance: 'App cloning or multi-instance was detected.',
 };
 
-const obfuscationMessage = 'Application code is not properly obfuscated.';
+const genericBlockMessage =
+  'Security issues were previously detected on this device.';
 
+// Hard threats mean the device or app is compromised/tampered: the session is
+// revoked and the block survives relaunches. Soft signals (VPN, no passcode,
+// dev mode, screenshots, ...) keep the existing alert-only behavior so a
+// screenshot or an active VPN never logs a legitimate user out.
+//
+// appIntegrity is deliberately NOT here: it alerts and refuses login for the
+// current launch, but is never persisted. A signing-cert mismatch (new Play
+// key, store re-signing) would otherwise lock real users out until they
+// reinstall; this way a fixed release recovers them on the next launch.
 const hardThreatMessages = new Set([
   securityMessages.privilegedAccess,
   securityMessages.debug,
   securityMessages.simulator,
-  securityMessages.appIntegrity,
   securityMessages.unofficialStore,
   securityMessages.hooks,
   securityMessages.multiInstance,
-  obfuscationMessage,
+]);
+
+// A debug build always has a debugger attached and usually runs on a
+// simulator, so these two can never be enforced there.
+const devBuildSignals = new Set([
+  securityMessages.debug,
+  securityMessages.simulator,
 ]);
 
 const showAlert = () => {
@@ -97,70 +97,173 @@ const scheduleAlertOnce = () => {
 
 const revokeSession = async () => {
   try {
-    await clearAuthToken();
+    // Clears the Keychain entry (and its in-memory cache), not just the
+    // logged-out flag — on iOS the Keychain survives a reinstall, so leaving
+    // the token behind would let a reinstall auto-login again.
+    await removeToken();
     await AsyncStorage.setItem('isUserLoggedOut', 'true');
   } catch (error) {
     logger.error('Failed to revoke session after security threat');
   }
 };
 
-export const isDeviceBlocked = async () => {
-  if (!raspInitialized) {
-    triggeredIssues.clear();
-    alertVisible = false;
-    alertScheduled = false;
+const blockDevice = message => {
+  persistedIssues.add(message);
+  AsyncStorage.setItem(
+    SECURITY_BLOCK_KEY,
+    JSON.stringify(Array.from(persistedIssues)),
+  ).catch(() => logger.error('Failed to persist security block'));
+  revokeSession();
+};
+
+// Enforcement point for the login flow: the alert alone is not a gate — on
+// iOS it can silently fail to present when triggered over a modal (splash /
+// onboarding), leaving the app usable. Callers must treat `true` as "refuse
+// to authenticate".
+const applyStoredIssues = issues => {
+  issues.forEach(issue => {
+    if (issue === securityMessages.appIntegrity) {
+      return;
+    }
+    persistedIssues.add(issue);
+    triggeredIssues.add(issue);
+  });
+
+  const remaining = Array.from(persistedIssues);
+  if (remaining.length === 0) {
+    AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => { });
     return false;
   }
 
-  return triggeredIssues.size > 0;
+  AsyncStorage.setItem(SECURITY_BLOCK_KEY, JSON.stringify(remaining)).catch(
+    () => logger.error('Failed to persist security block'),
+  );
+  return true;
+};
+
+export const isDeviceBlocked = async () => {
+  if (__DEV__ || !IS_PRODUCTION) {
+    return false;
+  }
+
+  if (triggeredIssues.size > 0) {
+    return true;
+  }
+
+  try {
+    const stored = await AsyncStorage.getItem(SECURITY_BLOCK_KEY);
+
+    if (!stored) {
+      return false;
+    }
+
+    let issues;
+    try {
+      issues = JSON.parse(stored);
+    } catch (error) {
+      issues = [genericBlockMessage];
+    }
+
+    return applyStoredIssues(issues);
+  } catch (error) {
+    logger.error('Failed to read security block flag');
+    return false;
+  }
 };
 
 export const showSecurityAlert = () => {
-  if (!raspInitialized) {
-    return;
-  }
-
+  // A failed iOS presentation leaves alertVisible stuck true — reset it so an
+  // explicit enforcement point always gets a fresh attempt.
   alertVisible = false;
   showAlert();
 };
 
 const handleThreat = message => () => {
+  if (__DEV__ && devBuildSignals.has(message)) {
+    logger.warn(`[Security] ${message} Ignored in development build`);
+    return;
+  }
+
+  if (
+    !IS_PRODUCTION &&
+    (devBuildSignals.has(message) ||
+      message === securityMessages.unofficialStore ||
+      message === securityMessages.appIntegrity)
+  ) {
+    logger.warn(`[Security] ${message} Ignored in direct device testing build`);
+    return;
+  }
+
   triggeredIssues.add(message);
 
-  if (hardThreatMessages.has(message) && IS_PRODUCTION) {
-    revokeSession();
-  } else if (hardThreatMessages.has(message)) {
-    logger.warn(
-      'Hard security threat detected; session kept in non-production build',
-    );
+  if (hardThreatMessages.has(message)) {
+    if (IS_PRODUCTION && !__DEV__) {
+      blockDevice(message);
+    } else {
+      logger.warn('Hard security threat detected; session kept in non-production build');
+    }
   }
 
   scheduleAlertOnce();
 };
 
-const handleObfuscationIssue = () => {
-  if (!ENFORCE_CODE_OBFUSCATION) {
-    logger.warn('Obfuscation is not enabled for this build');
-    return;
-  }
-
-  handleThreat(obfuscationMessage)();
-};
-
-const handleMalware = () => {
-  logger.warn('Malware scan flagged apps');
-};
-
 export const useSecurityCheck = () => {
-  raspInitialized = true;
-
-  // Drop any leftover block from older builds that persisted threats.
+  // A device flagged on a previous launch is confronted with the alert again
+  // right away, instead of racing freeRasp's async detection against startup.
+  // The session was already revoked when the threat fired, so even if the
+  // alert is dismissed by killing the app, there is nothing to resume into.
   useEffect(() => {
-    AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => {
-      logger.error('Failed to clear legacy security block');
-    });
+    (async () => {
+      // A block left on a dev/test device by an earlier production-flagged install
+      // would otherwise survive forever — drop it.
+      if (__DEV__ || !IS_PRODUCTION) {
+        AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => { });
+        return;
+      }
+
+      let stored = null;
+
+      try {
+        stored = await AsyncStorage.getItem(SECURITY_BLOCK_KEY);
+      } catch (error) {
+        logger.error('Failed to read persisted security issues');
+      }
+
+      if (!stored) {
+        return;
+      }
+
+      let issues;
+      try {
+        issues = JSON.parse(stored);
+      } catch (error) {
+        issues = [genericBlockMessage];
+      }
+
+      applyStoredIssues(issues);
+      if (triggeredIssues.size === 0) {
+        return;
+      }
+
+      scheduleAlertOnce();
+
+      // On iOS the first presentation can silently fail while the splash
+      // modal is animating, leaving alertVisible stuck true. Force one more
+      // attempt after startup has settled.
+      if (Platform.OS === 'ios') {
+        setTimeout(() => {
+          if (triggeredIssues.size > 0) {
+            showSecurityAlert();
+          }
+        }, 4000);
+      }
+    })();
   }, []);
 
+  // Backgrounding the app can dismiss the alert (Android) or the alert can
+  // fail to present when triggered too early in launch (iOS) — either way the
+  // app behind it stays fully usable. Re-show it on every return to the
+  // foreground while issues are present.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => {
       if (state === 'active' && triggeredIssues.size > 0) {
@@ -176,41 +279,33 @@ export const useSecurityCheck = () => {
     privilegedAccess: handleThreat(securityMessages.privilegedAccess),
     debug: handleThreat(securityMessages.debug),
     simulator: handleThreat(securityMessages.simulator),
-    appIntegrity: handleThreat(securityMessages.appIntegrity),
-    unofficialStore: handleThreat(securityMessages.unofficialStore),
+    //appIntegrity: handleThreat(securityMessages.appIntegrity),
+    // unofficialStore: handleThreat(securityMessages.unofficialStore),
     hooks: handleThreat(securityMessages.hooks),
-    deviceBinding: ignoreThreat(securityMessages.deviceBinding),
-    secureHardwareNotAvailable: handleThreat(
-      securityMessages.secureHardwareNotAvailable,
-    ),
     systemVPN: handleThreat(securityMessages.systemVPN),
-    passcode: handleThreat(securityMessages.passcode),
-    screenshot: () => logger.warn('Screenshot detected'),
-    screenRecording: handleThreat(securityMessages.screenRecording),
-    obfuscationIssues: handleObfuscationIssue,
-    devMode: handleThreat(securityMessages.devMode),
-    adbEnabled: handleThreat(securityMessages.adbEnabled),
-    malware: handleMalware,
     multiInstance: handleThreat(securityMessages.multiInstance),
   };
 
-  if (Platform.OS === 'ios') {
-    actions.deviceID = ignoreThreat(securityMessages.deviceID);
-  }
-
   return useFreeRasp(
     {
-      isProd: IS_PRODUCTION,
+      // Debug builds must stay in Talsec's dev mode even when the app points
+      // at the production backend.
+      isProd: IS_PRODUCTION && !__DEV__,
+      // Everything above reacts in JS, which Frida can hook to swallow the
+      // threat callbacks. This makes the native SDK kill the app when it sees
+      // its callbacks being suppressed (Android only).
+      killOnBypass: IS_PRODUCTION && !__DEV__,
       androidConfig: {
-        packageName: ANDROID_PACKAGE_NAME,
-        certificateHashes: SIGN_IN_CERTIFICATE_HASHES,
-        malwareConfig: FREERASP_MALWARE_CONFIG,
+        packageName: org.androidPackage,
+        certificateHashes: (!IS_PRODUCTION || __DEV__)
+          ? [...org.signInCertHashes, org.debugSignInCertHash]
+          : org.signInCertHashes,
       },
       iosConfig: {
-        appBundleId: IOS_PACKAGE_NAME,
-        appTeamId: IOS_TEAM_ID,
+        appBundleId: org.iosBundleId,
+        appTeamId: org.iosTeamId,
       },
-      watcherMail: SUPPORTMAIL,
+      watcherMail: org.supportEmail,
     },
     actions,
   );

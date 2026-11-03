@@ -23,12 +23,4 @@ class RNWindowSecurityModule(reactContext: ReactApplicationContext) :
       activity.setSecureWindow(enabled)
     }
   }
-
-  @ReactMethod
-  fun setTapjackingProtection(enabled: Boolean) {
-    val activity = reactApplicationContext.currentActivity as? MainActivity
-    activity?.runOnUiThread {
-      activity.setTapjackingProtection(enabled)
-    }
-  }
 }

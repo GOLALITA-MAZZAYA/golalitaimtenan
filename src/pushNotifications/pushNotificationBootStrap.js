@@ -1,59 +1,46 @@
 // src/pushNotifications/pushNotificationBootStrap.js
 import messaging from '@react-native-firebase/messaging';
-import notifee from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { NOTIFICATION_DEFAULT_CHANNEL_ID } from './config';
+import store from '../redux/store';
+import authApi from '../redux/auth/auth-api';
 // handleNotificationClick подключим в другом месте, здесь он не нужен напрямую
 // import { handleNotificationClick } from './notificationClickHandler';
 
 messaging().onTokenRefresh(async token => {
   try {
     await AsyncStorage.setItem('deviceToken', token);
-    // здесь при желании можно дернуть апи и обновить токен на сервере
     console.log('[Push] Token refreshed:', token);
+
+    // Only a logged-in session has a userId to attach the token to; a
+    // refresh while logged out is already covered by login() reading
+    // deviceToken from AsyncStorage on the next sign-in.
+    const { token: authToken, userId } = store.getState().authReducer;
+    if (authToken && userId) {
+      await authApi.updateProfile(userId, {
+        params: {
+          token: authToken,
+          update_vals: JSON.stringify({
+            device_id: token,
+            expo_token: token,
+            device_token: token,
+          }),
+        },
+      });
+    }
   } catch (e) {
-    console.log('[Push] Error saving device token', e);
+    console.log('[Push] Error saving refreshed device token', e);
   }
 });
 
-messaging().onMessage(async remoteMessage => {
-  console.log('[Push] FCM onMessage (foreground):', remoteMessage?.data);
+// Foreground display is handled in usePushNotifications.js's own onMessage
+// listener — a second one here duplicated every notification (two separate
+// notifee entries per push, and downstream double click-tracking).
 
-  // Если сообщение уже было "сделано" нашим приложением (локальное),
-  // не создаём второе уведомление
-  if (remoteMessage?.data?.sendedFromApp === 'true') {
-    return;
-  }
-
-  const data = remoteMessage?.data || {};
-
-  try {
-    await notifee.displayNotification({
-      title: data.title || '',
-      body: data.body || '',
-      data: {
-        ...data,
-        sendedFromApp: 'true', // помечаем, что это локальное уведомление от приложения
-      },
-      android: {
-        channelId: NOTIFICATION_DEFAULT_CHANNEL_ID,
-        pressAction: { id: 'default' },
-        smallIcon: 'ic_notification',
-        color: '#8D1B3D',
-      },
-    });
-  } catch (e) {
-    console.log('[Push] Error displaying notification with notifee', e);
-  }
-});
-
-// Required by index.js AppRegistry.registerHeadlessTask('RNFirebaseBackgroundMessage').
-// Android invokes this for messages while backgrounded/killed.
+// Required by index.js's AppRegistry.registerHeadlessTask('RNFirebaseBackgroundMessage', ...)
+// — Android invokes this for messages received while the app is backgrounded
+// or killed. Must be registered for background/killed delivery to work at
+// all; a missing/undefined handler throws when Android tries to invoke it.
 export const firebaseBackgroundMessage = async remoteMessage => {
-  // No-op handler so the headless task does not crash on undefined.
-  if (__DEV__) {
-    // eslint-disable-next-line no-console
-    console.log('[Push] Background/killed message handled:', remoteMessage?.data);
-  }
+  console.log('[Push] Background/killed message handled:', remoteMessage?.data);
 };

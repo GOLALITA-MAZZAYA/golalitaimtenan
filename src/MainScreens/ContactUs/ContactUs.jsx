@@ -6,14 +6,13 @@ import { BALOO_REGULAR, BALOO_SEMIBOLD } from '../../redux/types';
 import { TypographyText } from '../../components/Typography';
 import { useTheme } from '../../components/ThemeProvider';
 import { connect } from 'react-redux';
-import { contactUs } from '../../redux/auth/auth-thunks';
 import { useTranslation } from 'react-i18next';
 import CallSvg from '../../assets/callf.svg';
 import MailSvg from '../../assets/mailf.svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { isRTL } from '../../../utils';
-import { CONTACT_EMAILS } from '../../constants';
 import Header from '../../components/Header';
+import { org } from '../../org/config';
 
 const ContactUs = () => {
   const { t } = useTranslation();
@@ -62,6 +61,7 @@ const ContactUs = () => {
             title.map(i => {
               return (
                 <View
+                  key={i}
                   style={[
                     styles.infoItemValueContainer,
                     {
@@ -110,27 +110,25 @@ const ContactUs = () => {
           </View>
         </View>
 
-        <View style={[styles.valuesWrapper, { flexDirection: 'column' }]}>
+        <View style={styles.emailWrapper}>
           {emails &&
-            emails.map((email, index) => {
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.infoItemValueContainer,
-                    { borderColor: mainColor, marginBottom: 10 },
-                  ]}
-                >
-                  <TypographyText
-                    textColor={mainColor}
-                    size={19}
-                    font={BALOO_REGULAR}
-                    title={email}
-                    onPress={() => Linking.openURL(`mailto:${email}`)}
-                  />
-                </View>
-              );
-            })}
+            emails.map((email, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.infoItemValueContainer,
+                  { borderColor: mainColor, marginBottom: 10 },
+                ]}
+              >
+                <TypographyText
+                  textColor={mainColor}
+                  size={19}
+                  font={BALOO_REGULAR}
+                  title={email}
+                  onPress={() => Linking.openURL(`mailto:${email}`)}
+                />
+              </View>
+            ))}
         </View>
       </View>
     );
@@ -149,12 +147,9 @@ const ContactUs = () => {
 
           <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.infoWrapper}>
-              {renderInfo(t('ContactUs.callCenter'), [
-                '0097441410399',
-                '0097441410398',
-              ])}
+              {renderInfo(t('ContactUs.callCenter'), org.supportMobile)}
 
-              {renderInfoEmail(t('ContactUs.email'), CONTACT_EMAILS)}
+              {renderInfoEmail(t('ContactUs.email'), org.contactEmails)}
             </View>
           </KeyboardAwareScrollView>
         </SafeAreaView>
@@ -212,4 +207,4 @@ const mapStateToProps = state => ({
   user: state.authReducer.user,
 });
 
-export default connect(mapStateToProps, { contactUs })(ContactUs);
+export default connect(mapStateToProps)(ContactUs);

@@ -1,79 +1,83 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { useFormikContext } from 'formik';
-import { useSelector } from 'react-redux';
-import { useTranslation } from 'react-i18next';
-import FormikTags from '../../../../../components/Formik/FormikTags';
-import { getMergedSubCategoriesForCategory } from '../../../../../api/categories';
-import { convertCategoriesToOptions } from '../../utils';
-import { getFlexDirection } from '../../../../../../utils';
-import { colors } from '../../../../../components/colors';
-import { useTheme } from '../../../../../components/ThemeProvider';
+import React, { useEffect, useMemo, useState } from "react";
+import { useFormikContext } from "formik";
+import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
+import FormikTags from "../../../../../components/Formik/FormikTags";
+import {
+  getChildCategoriesById,
+  getSubCategoriesByParentId,
+} from "../../../../../api/categories";
+import { convertCategoriesToOptions } from "../../utils";
+import { getFlexDirection } from "../../../../../../utils";
+
+const fetchSubCategoriesForCategory = async (id, categoriesType) => {
+  const [ownSubCategories, children] = await Promise.all([
+    getSubCategoriesByParentId(id).catch(() => []),
+    getChildCategoriesById(id, categoriesType).catch(() => []),
+  ]);
+
+  // This picker (../../utils's getAllCategories) only ever offers
+  // parent-level categories — /parent/category/v2 never returns a
+  // `children` field, so its "if (item.children)" branch never fires.
+  // Sub-categories can live on the selected category itself or on any of
+  // its children, so look up both and merge.
+  const childSubCategoryLists = await Promise.all(
+    (children || [])
+      .filter((child) => child.id)
+      .map((child) => getSubCategoriesByParentId(child.id).catch(() => []))
+  );
+
+  return [...ownSubCategories, ...childSubCategoryLists.flat()];
+};
 
 const SubCategoriesTags = () => {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const { isDark } = useTheme();
   const { values, setFieldValue } = useFormikContext();
   const categoriesType = useSelector(
-    state => state.merchantReducer.categoriesType,
+    (state) => state.merchantReducer.categoriesType
   );
 
   const categoryIds = Array.isArray(values.category_id)
     ? values.category_id
-    : typeof values.category_id === 'number'
-      ? [values.category_id]
-      : [];
-  const categoryIdsKey = categoryIds.join(',');
+    : [];
+  const categoryIdsKey = categoryIds.join(",");
 
   const [subCategories, setSubCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Changing main category always resets subcategory selection.
-    setFieldValue('sub_category_id', []);
-    setSubCategories([]);
-
     if (!categoryIds.length) {
-      setLoading(false);
+      setSubCategories([]);
+      setFieldValue("sub_category_id", []);
       return;
     }
 
     let isCancelled = false;
-    setLoading(true);
 
     Promise.all(
-      categoryIds.map(id =>
-        getMergedSubCategoriesForCategory(id, categoriesType)
-          .then(result => result.subCategories || [])
-          .catch(() => []),
-      ),
-    )
-      .then(results => {
-        if (isCancelled) {
-          return;
-        }
+      categoryIds.map((id) => fetchSubCategoriesForCategory(id, categoriesType))
+    ).then((results) => {
+      if (isCancelled) return;
 
-        const fetched = Array.from(
-          new Map(
-            results
-              .flat()
-              .filter(item => item?.id)
-              .map(item => [item.id, item]),
-          ).values(),
-        );
-        setSubCategories(fetched);
-      })
-      .catch(() => {
-        if (!isCancelled) {
-          setSubCategories([]);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setLoading(false);
-        }
-      });
+      const fetched = Array.from(
+        new Map(results.flat().map((item) => [item.id, item])).values()
+      );
+      setSubCategories(fetched);
+
+      // Prune against the freshly fetched list, not the (still empty)
+      // `options` memo — pruning off that instead would wipe a sub-category
+      // selection carried in from a previously applied filter on every
+      // mount, before this fetch has even had a chance to resolve.
+      const validIds = new Set(fetched.map((item) => item.id));
+      const selected = Array.isArray(values.sub_category_id)
+        ? values.sub_category_id
+        : [];
+      const filtered = selected.filter((id) => validIds.has(id));
+
+      if (filtered.length !== selected.length) {
+        setFieldValue("sub_category_id", filtered);
+      }
+    });
 
     return () => {
       isCancelled = true;
@@ -82,30 +86,17 @@ const SubCategoriesTags = () => {
   }, [categoryIdsKey, categoriesType]);
 
   const options = useMemo(
-    () => convertCategoriesToOptions(subCategories, language) || [],
-    [subCategories, language],
+    () => convertCategoriesToOptions(subCategories, language),
+    [subCategories, language]
   );
 
-  if (!categoryIds.length) {
-    return null;
-  }
-
-  if (loading) {
-    return (
-      <View style={{ marginTop: 16, alignItems: 'flex-start' }}>
-        <ActivityIndicator
-          color={isDark ? colors.mainDarkMode : colors.darkBlue}
-        />
-      </View>
-    );
-  }
+  if (!options.length) return null;
 
   return (
     <FormikTags
       data={options}
       name="sub_category_id"
-      addLabel={t('Merchants.addSubCategory')}
-      allowEmpty
+      addLabel={t("Merchants.addSubCategory")}
       wrapperStyle={{
         flex: 1,
         ...getFlexDirection(),

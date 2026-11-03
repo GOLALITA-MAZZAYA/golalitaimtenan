@@ -8,7 +8,7 @@ import ComplaintModal from './ComplaintModal';
 import { colors } from '../../../../../components/colors';
 import { sized } from '../../../../../Svg';
 
-const ComplaintBtn = ({ merchantDetails }) => {
+const ComplaintBtn = ({ merchantDetails, compact = false }) => {
   const { isDark } = useTheme();
   const { t } = useTranslation();
   const isArabic = isRTL();
@@ -17,7 +17,17 @@ const ComplaintBtn = ({ merchantDetails }) => {
   const [isComplaintModalVisible, setIsComplaintModalVisible] = useState(false);
 
   const btnColor = isDark ? colors.mainDarkMode : colors.darkBlue;
-  const ComplaintIcon = sized(ContactUsSvg, 16, 16, btnColor);
+  const ComplaintIcon = sized(
+    ContactUsSvg,
+    compact ? 12 : 15,
+    compact ? 12 : 15,
+    btnColor,
+  );
+
+  const merchantId =
+    merchantDetails?.merchant_id ||
+    merchantDetails?.id ||
+    merchantDetails?.partner_id?.[0];
 
   return (
     <>
@@ -26,26 +36,33 @@ const ComplaintBtn = ({ merchantDetails }) => {
         icon={<ComplaintIcon />}
         onPress={() => {
           const merchantName = isArabic
-            ? merchantDetails.merchant_name_arabic ||
-              merchantDetails.merchant_name
-            : merchantDetails.merchant_name;
+            ? merchantDetails?.merchant_name_arabic ||
+              merchantDetails?.merchant_name
+            : merchantDetails?.merchant_name;
 
           setComplaintData({
             merchant_name: merchantName,
-            merchant_id: merchantDetails.id,
+            merchant_id: merchantId,
           });
 
           setIsComplaintModalVisible(true);
         }}
         textStyle={{
           color: btnColor,
-          fontSize: 11,
-          marginLeft: 4,
+          fontSize: compact ? 11 : 12,
+          marginLeft: compact ? 4 : 6,
         }}
         wrapperStyle={{
-          borderColor: btnColor,
-          paddingHorizontal: 10,
-          marginLeft: 16,
+          borderColor: isDark
+            ? 'rgba(255, 221, 0, 0.4)'
+            : 'rgba(10, 37, 64, 0.18)',
+          backgroundColor: isDark
+            ? 'rgba(255, 221, 0, 0.08)'
+            : 'rgba(10, 37, 64, 0.04)',
+          paddingHorizontal: compact ? 10 : 14,
+          paddingVertical: compact ? 4 : 7,
+          borderRadius: 20,
+          ...(compact && { marginTop: 10 }),
         }}
       />
 

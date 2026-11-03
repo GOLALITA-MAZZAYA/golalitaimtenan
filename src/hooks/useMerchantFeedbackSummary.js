@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { getMerchantFeedbackSummary } from '../api/merchants';
 
+// Shared per-merchant cache so the banner badge and the rating summary card
+// make one request and update together after the user submits a rating.
+// entry: { status: 'loading' | 'success' | 'error', data, inFlight }
 const cache = new Map();
 const listeners = new Map();
 
@@ -24,6 +27,7 @@ const load = merchantId => {
     })
     .catch(err => {
       console.log('Feedback summary error:', err?.message);
+      // Keep showing the last good summary if a refresh fails.
       setEntry(merchantId, {
         status: previousData ? 'success' : 'error',
         data: previousData,
@@ -52,6 +56,8 @@ const useMerchantFeedbackSummary = merchantId => {
     const current = cache.get(merchantId);
     setLocalEntry(current);
 
+    // The first subscriber on a screen visit refetches so new ratings and
+    // complaints show up; later subscribers reuse that request.
     if (!current?.inFlight && merchantListeners.size === 1) {
       load(merchantId);
     }

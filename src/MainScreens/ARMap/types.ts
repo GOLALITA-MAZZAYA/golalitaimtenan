@@ -8,6 +8,14 @@ export type Merchant = {
   have_offers: boolean;
   local: boolean;
   global: boolean;
+  // Present on API responses that back the AR screens (nearby-merchant
+  // search) but not on every Merchant consumer in the app, so optional
+  // rather than widening every other call site's expectations.
+  x_arabic_name?: string | null;
+  arabic_category_name?: string | null;
+  category?: string | null;
+  partner_latitude?: number | null;
+  partner_longitude?: number | null;
 };
 export type RootStackParamList = {
   ARList: undefined;

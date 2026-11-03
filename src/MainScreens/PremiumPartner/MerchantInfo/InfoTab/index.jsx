@@ -1,150 +1,124 @@
-import { Linking, StyleSheet } from 'react-native';
-import { useState } from 'react';
-import CommonButton from '../../common/CommonButton';
-import { View } from 'react-native';
+import React, { useState } from 'react';
+import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { colors } from '../../../../components/colors';
-import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../components/ThemeProvider';
-import CallSvg from '../../../../assets/call.svg';
-import HTMLRenderer from '../../../../components/HTMLRenderer';
-import ContactUsSvg from '../../../../assets/contact_us.svg';
-import { sized } from '../../../../Svg';
-import { TypographyText } from '../../../../components/Typography';
-import { TouchableOpacity } from 'react-native';
 import TermsAndConditions from './TermsAndConditions';
 import ContractBtn from './ContractBtn';
-import ComplaintModal from '../../../ComplaintForm/ComplaintModal';
 import ComplaintBtn from './ComplaintBtn';
+import MapViewBtn from './MapViewBtn';
 import RateBtn from './RateBtn';
 import RatingSummary from './RatingSummary';
 import WeeklyHours from './WeeklyHours';
-import useIsGuest from '../../../../hooks/useIsGuest';
+import { TypographyText } from '../../../../components/Typography';
+import { BALOO_2, BALOO_SEMIBOLD } from '../../../../redux/types';
+import { isRTL } from '../../../../../utils';
+import { useTranslation } from 'react-i18next';
+import CallSvg from '../../../../assets/loyaltyPoints/partners/phone.svg';
+import EmailSvg from '../../../../assets/mailf.svg';
+import PlanetSvg from '../../../../assets/planet.svg';
+import InstructionSvg from '../../../../assets/loyaltyPoints/instruction.svg';
+import LocationSvg from '../../../../assets/location.svg';
+import { sized } from '../../../../Svg';
 import trackActivity from '../../../../api/activityTracker';
-import { BALOO_SEMIBOLD } from '../../../../redux/types';
+
+const PhoneIcon = sized(CallSvg, 18, 18);
+const TimeIcon = sized(InstructionSvg, 18, 18);
+const MailIcon = sized(EmailSvg, 18, 18);
+const WebIcon = sized(PlanetSvg, 18, 18);
+const PinIcon = sized(LocationSvg, 18, 18);
 
 const InfoTab = ({ merchantDetails }) => {
-  const { t, i18n } = useTranslation();
-  const { isDark } = useTheme()
-  const isGuest = useIsGuest();
+  const { isDark } = useTheme();
+  const { t } = useTranslation();
+  const isArabic = isRTL();
+  const backgroundColor = isDark ? colors.darkModeBackground : colors.white;
+  const iconColor = isDark ? colors.mainDarkMode : colors.darkBlue;
 
-  const [isComplaintModalVisible, setIsComplaintModalVisible] = useState(false);
-  const [complaintData, setComplaintData] = useState({});
-  const isArabic = i18n.language === 'ar';
-  const merchantId = merchantDetails?.id ?? merchantDetails?.merchant_id;
+  const merchantId =
+    merchantDetails?.merchant_id ||
+    merchantDetails?.id ||
+    merchantDetails?.partner_id?.[0];
+
   const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
   const [isRateModalVisible, setIsRateModalVisible] = useState(false);
+  // null = loading, true = weekly timetable shown, false = fall back to open_from/open_till
   const [hasTimetable, setHasTimetable] = useState(null);
 
-  const backgroundColor = isDark ? colors.navyBlue : '#fff';
-  const btnColor = isDark ? colors.mainDarkMode : colors.darkBlue;
+  const address = isArabic
+    ? `${merchantDetails.x_arabic_name || ''} ${merchantDetails.x_street_ar ? `${merchantDetails.x_street_ar}, ` : ''}${merchantDetails.x_city_ar ? `${merchantDetails.x_city_ar}, ` : ''}${merchantDetails.x_country_ar || ''}`
+    : merchantDetails.address;
 
-  const CallIcon = sized(CallSvg, 16, 16, btnColor);
-  const ComplaintIcon = sized(ContactUsSvg, 16, 16, btnColor);
+  const hasHours = merchantDetails.open_from && merchantDetails.open_till;
 
-  const renderInfo = (title, value, onPress, isHtml) => {
-    if (!value) {
-      return null;
-    }
+  const cleanWebsite = merchantDetails.website
+    ? merchantDetails.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
+    : null;
 
-    if (onPress) {
-      return (
-        <TouchableOpacity style={styles.infoItem} onPress={onPress}>
-          <View style={styles.infoItemTitleWrapper}>
-            <View
-              style={[
-                styles.infoItemTitle,
-                { backgroundColor: isDark ? colors.navyBlue : '#fff' },
-              ]}
-            >
-              <TypographyText
-                textColor={btnColor}
-                size={15}
-                style={{ fontWeight: '700' }}
-                title={title}
-              />
-            </View>
-          </View>
-
-          {!!value && (
-            <TypographyText
-              textColor={isDark ? colors.white : colors.darkBlue}
-              size={18}
-              title={value}
-              style={styles.infoItemValue}
-            />
-          )}
-        </TouchableOpacity>
-      );
-    }
-
-    if (isHtml) {
-      return (
-        <View style={styles.infoItem}>
-          <View style={styles.infoItemTitleWrapper}>
-            <View
-              style={[
-                styles.infoItemTitle,
-                { backgroundColor: isDark ? colors.navyBlue : '#fff' },
-              ]}
-            >
-              <TypographyText
-                textColor={btnColor}
-                size={15}
-                style={{ fontWeight: '700' }}
-                title={title}
-              />
-            </View>
-          </View>
-
-          <HTMLRenderer
-            value={
-              isArabic
-                ? merchantDetails.x_terms_condition_arabic_new
-                : merchantDetails.x_terms_condition_new
-            }
-          />
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.infoItem}>
-        <View style={styles.infoItemTitleWrapper}>
-          <View
-            style={[
-              styles.infoItemTitle,
-              { backgroundColor: isDark ? colors.navyBlue : '#fff' },
-            ]}
-          >
-            <TypographyText
-              textColor={btnColor}
-              size={16}
-              style={{ fontWeight: '700' }}
-              title={title}
-            />
-          </View>
-        </View>
-
-        {!!value && (
-          <TypographyText
-            textColor={isDark ? colors.white : colors.darkBlue}
-            size={14}
-            title={value}
-            style={styles.infoItemValue}
-          />
-        )}
-      </View>
-    );
-  };
+  const detailsList = [
+    merchantDetails.phone && {
+      key: 'phone',
+      title: t('Merchants.phone') || 'Phone',
+      value: merchantDetails.phone,
+      icon: <PhoneIcon color={iconColor} />,
+      onPress: () => {
+        trackActivity('merchant_detail_link_click', {
+          merchant_id: merchantId,
+          page_name: 'merchant_detail',
+          metadata: { link_type: 'phone', link_value: merchantDetails.phone, source: 'info_tab' },
+        });
+        Linking.openURL(`tel:${merchantDetails.phone}`);
+      },
+    },
+    hasTimetable !== false && { key: 'weeklyHours', custom: true },
+    hasTimetable === false && hasHours && {
+      key: 'hours',
+      title: t('ProductPage.workingHours') || 'Working hours',
+      value: `${merchantDetails.open_from} - ${merchantDetails.open_till}`,
+      icon: <TimeIcon color={iconColor} />,
+    },
+    merchantDetails.email && {
+      key: 'email',
+      title: t('ProductPage.email') || 'Email',
+      value: merchantDetails.email,
+      icon: <MailIcon color={iconColor} />,
+      onPress: () => {
+        trackActivity('merchant_detail_link_click', {
+          merchant_id: merchantId,
+          page_name: 'merchant_detail',
+          metadata: { link_type: 'email', link_value: merchantDetails.email, source: 'info_tab' },
+        });
+        Linking.openURL(`mailto:${merchantDetails.email}`);
+      },
+    },
+    merchantDetails.website && {
+      key: 'website',
+      title: t('ProductPage.website') || 'Website',
+      value: cleanWebsite,
+      icon: <WebIcon color={iconColor} />,
+      onPress: () => {
+        trackActivity('page_visit', {
+          merchant_id: merchantId,
+          page_name: 'merchant_website',
+          metadata: { link_type: 'website', link_value: merchantDetails.website, source: 'info_tab' },
+        });
+        Linking.openURL(merchantDetails.website);
+      },
+    },
+    address && {
+      key: 'address',
+      title: t('ProductPage.address') || 'Address',
+      value: address,
+      icon: <PinIcon color={iconColor} />,
+    },
+  ].filter(Boolean);
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { backgroundColor }]}>
+      {/* Top Action Pills (Rate, Complaint & Contract) */}
       <View
         style={[
-          styles.controllBtns,
-          {
-            backgroundColor,
-          },
+          styles.actionsRow,
+          { flexDirection: isArabic ? 'row-reverse' : 'row' },
         ]}
       >
         <RateBtn
@@ -154,107 +128,96 @@ const InfoTab = ({ merchantDetails }) => {
           onClose={() => setIsRateModalVisible(false)}
           onSubmitted={() => setSummaryRefreshKey(key => key + 1)}
         />
-
-        <CommonButton
-          disabled={!merchantDetails?.phone}
-          text={t('Merchants.phone')}
-          icon={<CallIcon />}
-          onPress={() => {
-            trackActivity('merchant_detail_link_click', {
-              merchant_id: merchantId,
-              page_name: 'merchant_detail',
-              metadata: {
-                link_type: 'phone',
-                link_value: merchantDetails.phone,
-                source: 'info_tab',
-              },
-            });
-            Linking.openURL(`tel:${merchantDetails.phone}`);
-          }}
-          textStyle={{
-            color: btnColor,
-            fontSize: 11,
-            marginLeft: 4,
-          }}
-          wrapperStyle={{
-            borderColor: btnColor,
-            paddingHorizontal: 10,
-            marginLeft: 16,
-          }}
-        />
-
-        <ContractBtn merchantId={merchantDetails.id} />
-
-        {isGuest ? null : <ComplaintBtn merchantDetails={merchantDetails} />}
+        <ComplaintBtn merchantDetails={merchantDetails} />
+        <ContractBtn merchantId={merchantId} />
       </View>
-      <WeeklyHours
-        merchantId={merchantId}
-        onLoaded={setHasTimetable}
+
+      {/* Terms and Conditions (if any) */}
+      <TermsAndConditions merchantId={merchantId} />
+
+      {/* Clean Spacious Details List */}
+      <View style={styles.listContainer}>
+        {detailsList.map((item, index) => {
+          const isLast = index === detailsList.length - 1;
+          const isClickable = !!item.onPress;
+
+          if (item.custom) {
+            return (
+              <WeeklyHours
+                key={item.key}
+                merchantId={merchantId}
+                isLast={isLast}
+                onLoaded={setHasTimetable}
+              />
+            );
+          }
+
+          return (
+            <TouchableOpacity
+              key={item.key}
+              activeOpacity={isClickable ? 0.7 : 1}
+              onPress={item.onPress}
+              disabled={!isClickable}
+              style={[
+                styles.rowItem,
+                {
+                  flexDirection: isArabic ? 'row-reverse' : 'row',
+                  borderBottomColor: isDark
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.06)',
+                  borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
+                },
+              ]}
+            >
+              <View style={styles.iconBox}>
+                {item.icon}
+              </View>
+
+              <View
+                style={[
+                  styles.textBox,
+                  {
+                    alignItems: isArabic ? 'flex-end' : 'flex-start',
+                    marginRight: isArabic ? 16 : 0,
+                    marginLeft: isArabic ? 0 : 16,
+                  },
+                ]}
+              >
+                <TypographyText
+                  title={item.title}
+                  textColor={isDark ? '#8E8E93' : '#6B7280'}
+                  font={BALOO_2}
+                  size={12}
+                  style={styles.label}
+                />
+                <TypographyText
+                  title={item.value}
+                  textColor={isDark ? '#FFFFFF' : '#111827'}
+                  font={BALOO_2}
+                  size={15}
+                  style={styles.value}
+                />
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Map Preview Banner */}
+      <MapViewBtn
+        style={styles.mapBlock}
+        merchantLatitude={merchantDetails.partner_latitude}
+        merchantLongitude={merchantDetails.partner_longitude}
       />
 
-      {hasTimetable === false &&
-        !!merchantDetails.open_from &&
-        !!merchantDetails.open_till &&
-        renderInfo(
-          t('ProductPage.workingHours'),
-          `${merchantDetails.open_from} - ${merchantDetails.open_till}`,
-        )}
-
-      <TermsAndConditions
-        title={t('ProductPage.terms')}
-        merchantId={merchantDetails.id}
-      />
-
-      {renderInfo(
-        t('ProductPage.address'),
-        isArabic
-          ? `${merchantDetails.x_arabic_name || ''}${merchantDetails.x_street_ar
-            ? `${merchantDetails.x_street_ar}`
-            : ''
-          }${merchantDetails.x_city_ar ? `,\n${merchantDetails.x_city_ar}` : ''
-          }${merchantDetails.x_country_ar
-            ? `, ${merchantDetails.x_country_ar}`
-            : ''
-          }`
-          : merchantDetails.address,
-      )}
-
-      {renderInfo(t('ProductPage.email'), merchantDetails.email, () => {
-        trackActivity('merchant_detail_link_click', {
-          merchant_id: merchantId,
-          page_name: 'merchant_detail',
-          metadata: {
-            link_type: 'email',
-            link_value: merchantDetails.email,
-            source: 'info_tab',
-          },
-        });
-        Linking.openURL(`mailto:${merchantDetails.email}`);
-      })}
-
-      {renderInfo(t('ProductPage.website'), merchantDetails.website, () => {
-        trackActivity('page_visit', {
-          merchant_id: merchantId,
-          page_name: 'merchant_website',
-          metadata: {
-            link_type: 'website',
-            link_value: merchantDetails.website,
-            source: 'info_tab',
-          },
-        });
-        Linking.openURL(merchantDetails.website);
-      })}
-
+      {/* Customer Ratings & Reviews */}
       <View style={styles.reviewsSection}>
         <TypographyText
-          title={t('MerchantFeedback.ratingsAndReviews')}
-          textColor={isDark ? colors.white : colors.darkBlue}
+          title={t('MerchantFeedback.ratingsAndReviews', 'Ratings & Reviews')}
+          textColor={isDark ? colors.white : '#111827'}
           font={BALOO_SEMIBOLD}
           size={16}
-          style={[
-            styles.sectionTitle,
-            { textAlign: isArabic ? 'right' : 'left' },
-          ]}
+          style={[styles.sectionTitle, { textAlign: isArabic ? 'right' : 'left' }]}
         />
         <RatingSummary
           merchantId={merchantId}
@@ -263,12 +226,6 @@ const InfoTab = ({ merchantDetails }) => {
           onRatePress={() => setIsRateModalVisible(true)}
         />
       </View>
-
-      <ComplaintModal
-        visible={isComplaintModalVisible}
-        onClose={() => setIsComplaintModalVisible(false)}
-        merchantData={complaintData}
-      />
     </View>
   );
 };
@@ -277,29 +234,48 @@ const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
     flexGrow: 1,
-    marginTop: 20
+    marginTop: 12,
   },
-  controllBtns: {
+  actionsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
   },
-  infoItem: {
-    marginTop: 40,
+  listContainer: {
+    marginTop: 4,
   },
-  infoItemTitleWrapper: {
-    width: '100%',
+  rowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
   },
-  infoItemTitle: {
-    borderRadius: 10,
+  iconBox: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textBox: {
+    flex: 1,
+  },
+  label: {
+    fontWeight: '500',
+    marginBottom: 2,
+    textTransform: 'capitalize',
+  },
+  value: {
+    fontWeight: '600',
+    lineHeight: 22,
+  },
+  mapBlock: {
+    marginTop: 18,
   },
   reviewsSection: {
-    marginTop: 28,
+    marginTop: 20,
     marginBottom: 10,
   },
   sectionTitle: {
     marginBottom: 4,
-  },
-  infoItemValue: {
-    marginTop: 3,
   },
 });
 

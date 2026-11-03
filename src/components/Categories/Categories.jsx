@@ -1,4 +1,5 @@
-import { StyleSheet, View, Image, FlatList } from 'react-native';
+import { StyleSheet, View, FlatList } from 'react-native';
+import Image from "../AppImage";
 import { useTranslation } from 'react-i18next';
 import { TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +14,7 @@ import { getParentCategories } from '../../../../redux/merchant/merchant-thunks'
 import ListNoData from '../../../../components/ListNoData';
 import { setCategoriesType } from '../../../../redux/merchant/merchant-actions';
 import useUpdateEffect from '../../../../hooks/useUpdateEffect';
-import { pickCategoryImage } from '../../utils/rewriteAssetUrl';
+import TintedSvg from '../TintedSvg';
 
 const IMAGE_SIZE = 70;
 
@@ -130,18 +131,26 @@ const Categories = () => {
       <FlatList
         style={styles.list}
         data={!loading ? parentCategories : []}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={true}
         numColumns={3}
         contentContainerStyle={styles.contentContainerStyle}
         showsVerticalScrollIndicator={false}
         keyExtractor={item => item.name}
         ListEmptyComponent={!loading ? <ListNoData /> : <FullScreenLoader />}
         renderItem={({ item }) => {
-          const source =
-            item.id === 'vouchers'
-              ? require('../../assets/vouchers.png')
-              : {
-                  uri: pickCategoryImage(item),
-                };
+          const uri = item.id === 'vouchers'
+            ? null
+            : item.x_image_url_2 || item.image3 || item.x_gif_image || item.x_image_url_3 || item.image_url;
+          const source = item.id === 'vouchers'
+            ? require('../../assets/vouchers.png')
+            : {
+                uri: uri || undefined,
+              };
+          const isSvg = typeof uri === 'string' && uri.toLowerCase().endsWith('.svg');
+          const tint = isDark ? colors.mainDarkMode : colors.darkBlue;
 
           return (
             <TouchableOpacity
@@ -158,16 +167,21 @@ const Categories = () => {
                   },
                 ]}
               >
-                <Image
-                  style={[
-                    styles.categoryImage,
-                    {
-                      tintColor: isDark ? colors.mainDarkMode : colors.darkBlue,
-                    },
-                  ]}
-                  source={source}
-                  tintColor={isDark ? colors.mainDarkMode : colors.darkBlue}
-                />
+                {isSvg ? (
+                  <TintedSvg
+                    uri={uri}
+                    width={45}
+                    height={45}
+                    color={tint}
+                  />
+                ) : (
+                  <Image
+                    style={styles.categoryImage}
+                    source={source}
+                    tintColor={tint}
+                    contentFit="contain"
+                  />
+                )}
               </View>
               <TypographyText
                 textColor={isDark ? colors.white : '#000'}
@@ -235,7 +249,6 @@ const styles = StyleSheet.create({
     width: IMAGE_SIZE,
     height: IMAGE_SIZE,
     borderRadius: 32,
-    resizeMode: 'contain',
   },
   contentContainerStyle: { flexGrow: 1, paddingBottom: 60 },
 });

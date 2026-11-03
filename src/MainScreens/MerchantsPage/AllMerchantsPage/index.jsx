@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -12,100 +6,52 @@ import {
   FlatList,
   ScrollView,
   TouchableOpacity,
-  Image,
-  Text,
+  TextInput,
 } from "react-native";
 
 import { colors } from "../../../components/colors";
 import { mainStyles, SCREEN_HEIGHT } from "../../../styles/mainStyles";
-import { connect, useSelector } from "react-redux";
+import { connect } from "react-redux";
+import { showMessage } from "react-native-flash-message";
 import {
   getMerchantList,
   toggleFavourites,
 } from "../../../redux/merchant/merchant-thunks";
 import { useTranslation } from "react-i18next";
-import { setMerchants } from "../../../redux/merchant/merchant-actions";
 import MainLayout from "../../../components/MainLayout";
 import { useTheme } from "../../../components/ThemeProvider";
 import Header from "../../../components/Header";
 import { getFavouriteMerchantsList } from "../../../redux/favouriteMerchants/favourite-merchants-thunks";
-import { navigationRef, goBackOrHome } from "../../../Navigation/RootNavigation";
+import { useNavigation } from "@react-navigation/native";
 import MerchantsList from "../components/MerchantList";
 import ListNoData from "../../../components/ListNoData";
 import { getUserLocationThunk } from "../../../redux/global/global-thunks";
-import { isRTL } from "../../../../utils";
+import HotelsListCard from "./HotelsListCard";
+import { getTextAlign, isRTL } from "../../../../utils";
+import { handleMerchantCardPress } from "../helpers";
 import { getHeaderBtnString, getOfferFilters } from "./helpers";
 import OfferFilterBar from "./OfferFilterBar";
 import {
-  flattenAvailableFilters,
   getCategoryAvailableFilters,
-  getMergedSubCategoriesForCategory,
+  getScopedAvailableFilters,
+  getSubCategoriesByParentId,
+  isOffersEnabled,
 } from "../../../api/categories";
 import { TypographyText } from "../../../components/Typography";
-import { BALOO_SEMIBOLD } from "../../../redux/types";
-import { rewriteAssetUrl } from "../../../utils/rewriteAssetUrl";
-import { showMessage } from "react-native-flash-message";
+import { BALOO_2 } from "../../../redux/types";
+import AppImage from "../../../components/AppImage";
+import TintedSvg from "../../../components/TintedSvg";
+import SearchSvg from "../../../assets/search.svg";
+import CloseSvg from "../../../assets/close.svg";
 
-const ITEM_HEIGHT = 200;
-
-// Match Golalita / Masrif field order. Do not invent partner.category
-// fallbacks — cuisine rows from /sub/category/v2 use image_icon, and a fake
-// /go/api/image/{id}/... URI leaves an empty circle (truthy uri, broken load).
-const getSubCategoryUri = (item) => {
-  if (!item) return null;
-
-  const candidates = [
-    item.image_icon,
-    item.x_image_url_2,
-    item.image_url,
-    typeof item.image3 === "string" ? item.image3 : null,
-    item.x_gif_image,
-    item.x_image_url_3,
-    item.x_image_url_4,
-    item.image,
-    item.image_128,
-    item.image_medium,
-    item.icon,
-    item.banner_image,
-    item.x_image_url,
-  ].filter((value) => typeof value === "string" && value.trim());
-
-  return candidates[0] ? rewriteAssetUrl(candidates[0]) : null;
-};
-
-const resolveCategoryId = (...candidates) => {
-  for (const value of candidates) {
-    if (Array.isArray(value)) {
-      if (value.length === 1 && value[0] != null && value[0] !== '') {
-        return Number(value[0]) || value[0];
-      }
-      continue;
-    }
-    if (value != null && value !== '') {
-      return Number(value) || value;
-    }
-  }
-  return null;
-};
-
-const normalizeIdList = value => {
-  if (Array.isArray(value)) {
-    return value
-      .map(id => (id == null || id === '' ? null : Number(id) || id))
-      .filter(id => id != null && id !== '');
-  }
-  if (value == null || value === '') {
-    return [];
-  }
-  return [Number(value) || value];
-};
+const SEARCH_DEBOUNCE_MS = 500;
 
 const MerchantsPage = ({
   route,
-  merchants = [],
+  merchants,
   isMerchantsLoading,
   getMerchantList,
-  favouriteMerchants = [],
+  favouriteMerchants,
   toggleFavourites,
   getFavouriteMerchantsList,
   getUserLocationThunk,
@@ -113,152 +59,103 @@ const MerchantsPage = ({
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const categoriesType = useSelector(
-    state => state.merchantReducer.categoriesType,
-  );
+  const navigation = useNavigation();
 
   const listRef = useRef(null);
   const canGetMoreDataRef = useRef(true);
+  const isFetchingMoreRef = useRef(false);
   const visibleIdsRef = useRef(new Set());
 
   const isRtl = isRTL();
   const params = route?.params;
 
   const parentCategoryName = params?.parentCategoryName;
-  const filters = useMemo(() => {
-    const base = params?.filters || {};
-    if (
-      base.category_id == null &&
-      params?.selectedCategoryId != null &&
-      !Array.isArray(params?.selectedCategoryId)
-    ) {
-      return { ...base, category_id: params.selectedCategoryId };
-    }
-    return base;
-  }, [params?.filters, params?.selectedCategoryId]);
-
-  // Prefer filters.category_id; fall back to route parentCategoryId so chips
-  // stay available after applying filters from the filter screen.
-  const categoryId = useMemo(
-    () =>
-      resolveCategoryId(
-        filters?.category_id,
-        params?.parentCategoryId,
-        params?.selectedCategoryId,
-      ),
-    [
-      filters?.category_id,
-      params?.parentCategoryId,
-      params?.selectedCategoryId,
-    ],
-  );
-
-  const filterSubCategoryIds = useMemo(
-    () => normalizeIdList(filters?.sub_category_id),
-    // Stable compare so new [] refs from route merges don't reset chip taps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(normalizeIdList(filters?.sub_category_id))],
-  );
+  const filters = params?.filters;
+  const categoryId = filters?.category_id;
 
   const [subCategories, setSubCategories] = useState([]);
-  const [selectedSubCategoryIds, setSelectedSubCategoryIds] = useState(
-    () => filterSubCategoryIds,
-  );
+  const [selectedSubCategoryIds, setSelectedSubCategoryIds] = useState([]);
   const [sortOrder, setSortOrder] = useState(null);
   const [selectedFilterIds, setSelectedFilterIds] = useState([]);
-  const [availableFiltersPayload, setAvailableFiltersPayload] = useState(null);
-  const [availableFiltersLoading, setAvailableFiltersLoading] = useState(false);
-  // Coordinates captured when Nearest was turned on, or null when off.
-  // Captured once so GPS updates don't keep reloading the list.
+  // Raw /category/available_filters result for the opened category.
+  const [filtersResult, setFiltersResult] = useState(null);
+  // Starts as loading for a single category, so the filter/sort bar is not
+  // shown before we know whether offers are switched on (show_offers).
+  const [filtersLoading, setFiltersLoading] = useState(
+    !!categoryId && !Array.isArray(categoryId)
+  );
+  // The coordinates captured when Nearest was turned on, or null when it is
+  // off. Captured once so GPS updates don't keep reloading the list.
   const [nearestLocation, setNearestLocation] = useState(null);
+  // Text in the search box, and the trimmed value actually sent to the API
+  // (updated after a short pause in typing, or right away on submit).
+  const [searchText, setSearchText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const isHotel = merchants?.[0]?.category_id === 185;
+  // The screen is reused across categories, so start each one with an empty
+  // search.
+  useEffect(() => {
+    setSearchText("");
+    setSearchQuery("");
+  }, [categoryId]);
+
+  useEffect(() => {
+    const next = searchText.trim();
+    if (next === searchQuery) return;
+
+    const timer = setTimeout(() => setSearchQuery(next), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchText, searchQuery]);
+
+  const submitSearch = useCallback(() => {
+    setSearchQuery(searchText.trim());
+  }, [searchText]);
+
+  const clearSearch = useCallback(() => {
+    setSearchText("");
+    setSearchQuery("");
+  }, []);
+
 
   const title = parentCategoryName
     ? parentCategoryName
     : t("Drawer.allMerchants");
 
-  const handleFavouritePress = (merchant) => {
-    toggleFavourites(merchant.merchant_id);
-  };
-
   const favouriteMap = useMemo(() => {
     const map = new Set();
-    (favouriteMerchants || []).forEach((m) => map.add(m.merchant_id));
+    favouriteMerchants.forEach((m) => map.add(m.merchant_id));
     return map;
   }, [favouriteMerchants]);
 
   useEffect(() => {
-    if (!(favouriteMerchants || []).length) {
+    if (!favouriteMerchants.length) {
       getFavouriteMerchantsList();
     }
 
     getUserLocationThunk();
   }, []);
 
-  // Keep chip selection in sync with filters applied from the filter screen.
   useEffect(() => {
-    setSelectedSubCategoryIds(filterSubCategoryIds);
-  }, [filterSubCategoryIds, categoryId]);
+    setSelectedSubCategoryIds([]);
 
-  useEffect(() => {
-    if (!categoryId) {
+    // Only a single category tapped from the category list has one clear
+    // parent_category_id to look sub-categories up by. When category_id is
+    // an array (multi-category browse from the Search filters screen),
+    // there's no single category to scope this row to, so skip it — that
+    // screen already offers its own multi-select sub-category picker.
+    if (!categoryId || Array.isArray(categoryId)) {
       setSubCategories([]);
       return;
     }
 
     let isCancelled = false;
 
-    // Same merge as the filters screen (own sub-cats + each child's sub-cats),
-    // so applied subcategory chips are actually present in this list.
-    getMergedSubCategoriesForCategory(categoryId, categoriesType)
-      .then(({ subCategories: data }) => {
-        if (!isCancelled) {
-          setSubCategories(Array.isArray(data) ? data : []);
-        }
+    getSubCategoriesByParentId(categoryId)
+      .then((data) => {
+        if (!isCancelled) setSubCategories(Array.isArray(data) ? data : []);
       })
       .catch(() => {
-        if (!isCancelled) {
-          setSubCategories([]);
-        }
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [categoryId, categoriesType]);
-
-  // Load category offer filters once per category; chip list is narrowed
-  // client-side when subcategory chips are selected.
-  useEffect(() => {
-
-
-    if (!categoryId) {
-      setAvailableFiltersPayload(null);
-      setAvailableFiltersLoading(false);
-      return;
-    }
-
-    let isCancelled = false;
-    setAvailableFiltersPayload(null);
-    setAvailableFiltersLoading(true);
-
-    getCategoryAvailableFilters(categoryId)
-      .then((result) => {
-        if (!isCancelled) {
-          setAvailableFiltersPayload(result);
-        }
-      })
-      .catch((err) => {
-        console.log(err,'get available categories error')
-        if (!isCancelled) {
-          setAvailableFiltersPayload(null);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setAvailableFiltersLoading(false);
-        }
+        if (!isCancelled) setSubCategories([]);
       });
 
     return () => {
@@ -266,90 +163,146 @@ const MerchantsPage = ({
     };
   }, [categoryId]);
 
+  useEffect(() => {
+    setSelectedFilterIds([]);
+    setFiltersResult(null);
+
+    // Filters are configured per category, so there is nothing to load for
+    // All Merchants or a multi-category browse.
+    if (!categoryId || Array.isArray(categoryId)) {
+      setFiltersLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setFiltersLoading(true);
+
+    getCategoryAvailableFilters(categoryId)
+      .then((result) => {
+        if (!isCancelled) setFiltersResult(result);
+      })
+      .catch(() => {
+        if (!isCancelled) setFiltersResult(null);
+      })
+      .finally(() => {
+        if (!isCancelled) setFiltersLoading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [categoryId]);
+
+  // Picking sub-category chips narrows the filters to those children.
   const availableFilters = useMemo(
-    () =>
-      flattenAvailableFilters(availableFiltersPayload, {
-        childCategoryIds: selectedSubCategoryIds,
-      }),
-    [availableFiltersPayload, selectedSubCategoryIds],
+    () => getScopedAvailableFilters(filtersResult, selectedSubCategoryIds),
+    [filtersResult, selectedSubCategoryIds]
   );
 
-  // Drop selections that are no longer in the visible chip set (e.g. after
-  // changing subcategory chips or switching category).
+  // The backend can switch offers off for a category (show_offers: false);
+  // then the whole filter/sort bar is hidden. Without a result (no single
+  // category, or the request failed) Sort stays available on its own.
+  const offersHidden =
+    !!filtersResult && !isOffersEnabled(filtersResult, selectedSubCategoryIds);
+
+  // The Filter button also needs at least one configured filter.
+  const showFilters = availableFilters.length > 0;
+
+  // Categories without offers should not keep stale filter/sort params.
   useEffect(() => {
-    const validIds = new Set(availableFilters.map((item) => String(item.id)));
+    if (!offersHidden) return;
+
+    setSelectedFilterIds([]);
+    setSortOrder(null);
+    setNearestLocation(null);
+  }, [offersHidden]);
+
+  // Drop picks that are no longer offered after the scope changes.
+  useEffect(() => {
     setSelectedFilterIds((prev) => {
-      const next = prev.filter((id) => validIds.has(String(id)));
+      const next = prev.filter((id) =>
+        availableFilters.some((filter) => filter.id === id)
+      );
       return next.length === prev.length ? prev : next;
     });
   }, [availableFilters]);
 
   const activeFilters = useMemo(() => {
+    const selectedFilters = availableFilters.filter((filter) =>
+      selectedFilterIds.includes(filter.id)
+    );
+
     const offerFilters = getOfferFilters({
-      filterIds: selectedFilterIds,
+      selectedFilters,
       sortOrder,
       nearestLocation,
     });
 
-    // Match Golalita: omit empty sub_category_id so Nearby (user_lat/user_long)
-    // is not sent alongside an empty array that can break backend sorting.
-    if (!selectedSubCategoryIds.length && !Object.keys(offerFilters).length) {
-      return {
-        ...filters,
-        ...(categoryId != null ? { category_id: categoryId } : {}),
-      };
+    if (
+      !selectedSubCategoryIds.length &&
+      !Object.keys(offerFilters).length &&
+      !searchQuery
+    ) {
+      return filters;
     }
 
+    // Keeps the category filters, so the search only looks inside this
+    // category.
     return {
       ...filters,
+      ...(searchQuery ? { merchant_name: searchQuery } : {}),
       ...(selectedSubCategoryIds.length
         ? { sub_category_id: selectedSubCategoryIds }
         : {}),
-      ...(categoryId != null ? { category_id: categoryId } : {}),
       ...offerFilters,
     };
   }, [
     filters,
     selectedSubCategoryIds,
-    categoryId,
     selectedFilterIds,
+    availableFilters,
     sortOrder,
     nearestLocation,
+    searchQuery,
   ]);
 
-  const subCategoryOptions = useMemo(
-    () =>
-      subCategories.map((item) => {
-        // Odoo Char fields are often `false` when empty — never pass that to Text.
-        const name =
-          (typeof item?.name === "string" && item.name) ||
-          (typeof item?.display_name === "string" && item.display_name) ||
-          "";
-        const nameAr =
-          (typeof item?.x_name_arabic === "string" && item.x_name_arabic) ||
-          name;
+  const subCategoryOptions = useMemo(() => {
+    const getSubCategoryUri = (item) => {
+      if (!item) return null;
+      return (
+        item.image_icon ||
+        item.x_image_url_2 ||
+        item.image_url ||
+        item.image3 ||
+        item.x_gif_image ||
+        item.x_image_url_3 ||
+        item.x_image_url_4 ||
+        item.image ||
+        item.image_128 ||
+        item.image_medium ||
+        item.icon ||
+        item.banner_image ||
+        item.x_image_url ||
+        null
+      );
+    };
 
-        return {
-          value: item.id,
-          label: name,
-          label_arabic: nameAr,
-          uri: getSubCategoryUri(item),
-        };
-      }),
-    [subCategories]
-  );
+    return subCategories.map((subCategory) => ({
+      value: subCategory.id,
+      label: subCategory.name,
+      label_arabic: subCategory.x_name_arabic || subCategory.name,
+      uri: getSubCategoryUri(subCategory),
+    }));
+  }, [subCategories]);
 
   const toggleSubCategory = useCallback((id) => {
-    const normalizedId = Number(id) || id;
     setSelectedSubCategoryIds((prev) =>
-      prev.some(item => String(item) === String(normalizedId))
-        ? prev.filter((item) => String(item) !== String(normalizedId))
-        : [...prev, normalizedId]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   }, []);
 
   const applyOfferFilters = useCallback(({ filterIds }) => {
-    setSelectedFilterIds(Array.isArray(filterIds) ? filterIds : []);
+    setSelectedFilterIds(filterIds);
   }, []);
 
   const pendingNearestRef = useRef(false);
@@ -381,7 +334,7 @@ const MerchantsPage = ({
         longitude: userLocation.longitude,
       });
     },
-    [userLocation, getUserLocationThunk, t],
+    [userLocation, getUserLocationThunk, t]
   );
 
   // If the user chose Nearest before GPS was ready, apply it once location lands.
@@ -403,13 +356,19 @@ const MerchantsPage = ({
 
   useEffect(() => {
     canGetMoreDataRef.current = true;
+    isFetchingMoreRef.current = false;
+
+    // This screen is reused across category navigations (navigation.navigate,
+    // not push), so a scroll offset from a previous visit can otherwise
+    // survive into freshly (and often shorter) filtered data, leaving blank
+    // space above wherever that stale offset now lands.
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
 
     getMerchantList({
       page: 1,
       filters: activeFilters,
       onGetData: (dataLength, limit) => {
-        if (dataLength !== limit) {
+        if (!dataLength || dataLength < limit) {
           canGetMoreDataRef.current = false;
         }
       },
@@ -418,19 +377,28 @@ const MerchantsPage = ({
 
   const data = useMemo(() => {
     const list = Array.isArray(merchants) ? merchants : [];
-    return list.filter(merchant => merchant.x_moi_show);
+    return list.filter((merchant) => merchant.x_moi_show);
   }, [merchants]);
 
   const fetchMoreData = () => {
-    if (isMerchantsLoading || !canGetMoreDataRef.current) return;
+    if (
+      isMerchantsLoading ||
+      isFetchingMoreRef.current ||
+      !canGetMoreDataRef.current
+    ) {
+      return;
+    }
+
+    isFetchingMoreRef.current = true;
 
     getMerchantList({
       page: "next",
       filters: { ...activeFilters },
       onGetData: (dataLength, limit) => {
-        if (dataLength !== limit) {
+        if (!dataLength || dataLength < limit) {
           canGetMoreDataRef.current = false;
         }
+        isFetchingMoreRef.current = false;
       },
     });
   };
@@ -449,140 +417,229 @@ const MerchantsPage = ({
     ({ item: merchant }) => {
       const isFavorite = favouriteMap.has(merchant.merchant_id);
 
+      if (merchant?.category_id === 185) {
+        return (
+          <HotelsListCard
+            merchant={merchant}
+            uri={merchant?.banners?.[0]?.banner_image}
+            description={
+              isRtl ? merchant?.x_arabic_name : merchant.merchant_name
+            }
+            rating={merchant.rating}
+            onPress={() => handleMerchantCardPress(merchant)}
+            merchantId={merchant.merchant_id}
+            isFavorite={isFavorite}
+            onPressFavourite={() => toggleFavourites(merchant.merchant_id)}
+          />
+        );
+      }
+
       return (
         <MerchantsList
           merchant={merchant}
-          onPressFavourite={() => handleFavouritePress(merchant)}
+          onPressFavourite={toggleFavourites}
           isFavorite={isFavorite}
         />
       );
     },
-    [favouriteMap, isRtl]
+    [favouriteMap, isRtl, toggleFavourites]
   );
 
   const keyExtractor = useCallback(
-    (item) => item.merchant_id.toString(),
+    (item) => String(item.merchant_id ?? item.id),
     []
   );
 
-  const getItemLayout = useCallback((data, index) => ({
-    length: ITEM_HEIGHT,
-    offset: ITEM_HEIGHT * index,
-    index,
-  }), []);
-
-  const renderCategoryChips = () => {
-    if (!subCategoryOptions.length) return null;
-
-    return (
-      <ScrollView
-        horizontal
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.subCategoryScrollContent}
+  // Search, sub-categories and the filter/sort bar scroll away with the
+  // list instead of staying pinned above it.
+  const listHeader = (
+    <>
+      <View
         style={[
-          styles.subCategoryTabs,
-          { flexDirection: isRtl ? "row-reverse" : "row" },
+          styles.searchWrapper,
+          {
+            flexDirection: isRtl ? "row-reverse" : "row",
+            backgroundColor: isDark ? "rgba(255, 255, 255, 0.06)" : "#F4F4F5",
+            borderColor: isDark
+              ? "rgba(255, 255, 255, 0.08)"
+              : "rgba(0, 0, 0, 0.06)",
+          },
         ]}
       >
-        {subCategoryOptions.map((option) => {
-          const isSelected = selectedSubCategoryIds.some(
-            id => String(id) === String(option.value),
-          );
-          const rawLabel = isRtl ? option.label_arabic : option.label;
-          const label =
-            typeof rawLabel === "string" && rawLabel
-              ? isRtl
-                ? rawLabel
-                : rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1)
-              : "";
-          const isSvg =
-            typeof option.uri === "string" &&
-            option.uri.toLowerCase().endsWith(".svg");
+        <SearchSvg
+          width={18}
+          height={18}
+          color={isDark ? colors.mainDarkMode : "#6B7280"}
+        />
+        <TextInput
+          value={searchText}
+          onChangeText={setSearchText}
+          onSubmitEditing={submitSearch}
+          returnKeyType="search"
+          autoCorrect={false}
+          autoCapitalize="none"
+          placeholder={t("Merchants.searchPlaceholder")}
+          placeholderTextColor={isDark ? "#71717A" : "#9CA3AF"}
+          style={[
+            styles.searchInput,
+            getTextAlign(),
+            { color: isDark ? colors.white : "#111827" },
+          ]}
+        />
+        {searchText.length > 0 && (
+          <TouchableOpacity
+            onPress={clearSearch}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <CloseSvg
+              width={18}
+              height={18}
+              color={isDark ? colors.white : "#6B7280"}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
 
-          // Selection via chip background/border only — do not tint icons.
-          // Cuisine images are full-color; tintColor flattens them to solid blobs.
-          const imageBackgroundColor = isDark
-            ? colors.navyBlue
-            : isSelected
-              ? colors.darkBlue
-              : "#E8F4F9";
-          const placeholderColor = isDark
-            ? colors.mainDarkMode
-            : isSelected
-              ? colors.white
-              : colors.darkBlue;
-          const titleColor = isSelected
-            ? isDark
-              ? colors.mainDarkMode
-              : colors.darkBlue
-            : isDark
-              ? "#D1D5DB"
-              : "#374151";
+      {subCategoryOptions.length > 0 && (
+        <ScrollView
+          horizontal
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.subCategoryScrollContent}
+          style={[
+            styles.subCategoryTabs,
+            { flexDirection: isRtl ? "row-reverse" : "row" },
+          ]}
+        >
+          {subCategoryOptions.map((option) => {
+            const isSelected = selectedSubCategoryIds.includes(option.value);
+            const label = isRtl
+              ? option.label_arabic
+              : typeof option.label === "string" && option.label
+              ? option.label.charAt(0).toUpperCase() + option.label.slice(1)
+              : option.label;
+            const isSvg =
+              typeof option.uri === "string" &&
+              option.uri.toLowerCase().endsWith(".svg");
 
-          return (
-            <TouchableOpacity
-              key={option.value}
-              activeOpacity={0.75}
-              onPress={() => toggleSubCategory(option.value)}
-              style={[
-                styles.subCategoryItem,
-                {
-                  marginLeft: isRtl ? 10 : 0,
-                  marginRight: isRtl ? 0 : 10,
-                },
-              ]}
-            >
-              <View
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.75}
+                onPress={() => toggleSubCategory(option.value)}
                 style={[
-                  styles.subCategoryImageWrapper,
+                  styles.subCategoryItem,
                   {
-                    backgroundColor: imageBackgroundColor,
-                    borderColor: isDark
-                      ? isSelected
-                        ? colors.mainDarkMode
-                        : "transparent"
-                      : "transparent",
-                    borderWidth: isDark && isSelected ? 2 : 0,
+                    marginLeft: isRtl ? 10 : 0,
+                    marginRight: isRtl ? 0 : 10,
                   },
                 ]}
               >
-                {option.uri && !isSvg ? (
-                  <Image
-                    source={{ uri: option.uri }}
-                    style={styles.subCategoryImage}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <TypographyText
-                    font={BALOO_SEMIBOLD}
-                    size={22}
-                    textColor={placeholderColor}
-                    title={label ? label.charAt(0).toUpperCase() : ""}
-                  />
-                )}
-              </View>
+                <View
+                  style={[
+                    styles.subCategoryImageWrapper,
+                    {
+                      backgroundColor: isDark
+                        ? isSelected
+                          ? "rgba(215, 188, 118, 0.18)"
+                          : "#1C1C1E"
+                        : isSelected
+                        ? "rgba(162, 148, 117, 0.12)"
+                        : "#F5F5F7",
+                      borderColor: isSelected
+                        ? isDark
+                          ? colors.mainDarkMode
+                          : colors.darkBlue
+                        : isDark
+                        ? "rgba(255, 255, 255, 0.08)"
+                        : "rgba(0, 0, 0, 0.06)",
+                      borderWidth: isSelected ? 2 : 1,
+                    },
+                  ]}
+                >
+                  {option.uri ? (
+                    isSvg ? (
+                      <TintedSvg
+                        uri={option.uri}
+                        width={44}
+                        height={44}
+                        color={
+                          isSelected
+                            ? isDark
+                              ? colors.mainDarkMode
+                              : colors.darkBlue
+                            : isDark
+                            ? colors.white
+                            : "#1C1C1E"
+                        }
+                      />
+                    ) : (
+                      <AppImage
+                        source={{ uri: option.uri }}
+                        style={styles.subCategoryImage}
+                        contentFit="contain"
+                        transition={200}
+                      />
+                    )
+                  ) : (
+                    <TypographyText
+                      font={BALOO_2}
+                      size={22}
+                      textColor={
+                        isSelected
+                          ? isDark
+                            ? colors.mainDarkMode
+                            : colors.darkBlue
+                          : isDark
+                          ? colors.white
+                          : "#1C1C1E"
+                      }
+                      title={label ? label.charAt(0).toUpperCase() : ""}
+                    />
+                  )}
+                </View>
 
-              {/* Plain Text: TypographyText + fontWeight on custom fonts can
-                  render blank on iOS; horizontal ScrollView also needs enough
-                  height for the label (see subCategoryTabs.minHeight). */}
-              <Text
-                style={[
-                  styles.subCategoryText,
-                  { color: titleColor, fontFamily: BALOO_SEMIBOLD },
-                ]}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.85}
-              >
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    );
-  };
+                <TypographyText
+                  font={BALOO_2}
+                  textColor={
+                    isSelected
+                      ? isDark
+                        ? colors.mainDarkMode
+                        : colors.darkBlue
+                      : isDark
+                      ? "#D1D5DB"
+                      : "#374151"
+                  }
+                  title={label}
+                  size={12}
+                  style={[
+                    styles.subCategoryText,
+                    isSelected && styles.activeSubCategoryText,
+                  ]}
+                  numberOfLines={2}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.85}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {!filtersLoading && !offersHidden && (
+        <OfferFilterBar
+          availableFilters={availableFilters}
+          filterIds={selectedFilterIds}
+          filtersLoading={filtersLoading}
+          showFilters={showFilters}
+          sortOrder={sortOrder}
+          isNearest={!!nearestLocation}
+          onApplyFilters={applyOfferFilters}
+          onApplySort={applySort}
+        />
+      )}
+    </>
+  );
 
   return (
     <MainLayout
@@ -592,16 +649,20 @@ const MerchantsPage = ({
           label={title}
           style={styles.header}
           isHome={true}
-          btns={getHeaderBtnString(isHotel)}
+          btns={getHeaderBtnString()}
           additionalBtnsProps={{
             back: {
-              onPress: () => goBackOrHome(navigationRef.current),
+              onPress: () => {
+                if (!parentCategoryName) {
+                  navigation.navigate("Main");
+                  return;
+                }
+                navigation.goBack();
+              },
             },
             filter: {
               params: {
-                filters: activeFilters || {},
-                parentCategoryName,
-                parentCategoryId: categoryId ?? params?.parentCategoryId,
+                filters: params?.filters || {},
               },
             },
           }}
@@ -610,41 +671,32 @@ const MerchantsPage = ({
       headerHeight={50}
       contentStyle={styles.contentStyle}
       style={{
-        backgroundColor: isDark ? colors.darkBlue : colors.white,
+        backgroundColor: isDark ? colors.darkModeBackground : colors.white,
       }}
     >
-      {renderCategoryChips()}
-
-      {!isHotel && (
-        <OfferFilterBar
-          filterIds={selectedFilterIds}
-          availableFilters={availableFilters}
-          filtersLoading={availableFiltersLoading}
-          sortOrder={sortOrder}
-          isNearest={!!nearestLocation}
-          onApplyFilters={applyOfferFilters}
-          onApplySort={applySort}
-        />
-      )}
-
       <FlatList
         ref={listRef}
+        style={styles.merchantsList}
         data={data}
+        ListHeaderComponent={listHeader}
+        extraData={data}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        bounces={false}
         contentContainerStyle={styles.contentContainerStyle}
         onEndReached={fetchMoreData}
         onEndReachedThreshold={0.4}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         initialNumToRender={10}
-        maxToRenderPerBatch={10}
+        maxToRenderPerBatch={5}
         windowSize={10}
         removeClippedSubviews={true}
-        getItemLayout={getItemLayout}
         ListFooterComponent={
-          isMerchantsLoading ? (
+          isMerchantsLoading && data.length > 0 ? (
             <View style={[mainStyles.centeredRow, styles.loaderWrapper]}>
               <ActivityIndicator
                 size="large"
@@ -654,8 +706,15 @@ const MerchantsPage = ({
           ) : null
         }
         ListEmptyComponent={
-          !isMerchantsLoading && (
+          !isMerchantsLoading ? (
             <ListNoData text={t("Merchants.listNoData")} />
+          ) : (
+            <View style={[mainStyles.centeredRow, styles.loaderWrapper]}>
+              <ActivityIndicator
+                size="large"
+                color={isDark ? colors.mainDarkMode : colors.darkBlue}
+              />
+            </View>
           )
         }
       />
@@ -675,29 +734,20 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
     flexGrow: 1,
   },
-  header: {
-    paddingRight: 20,
-    paddingLeft: 20,
-  },
-  // Horizontal ScrollView often measures height from the image only and
-  // clips the title underneath — reserve space for icon + 2-line label.
   subCategoryTabs: {
     flexGrow: 0,
     marginTop: 2,
     marginBottom: 12,
-    minHeight: 118,
   },
   subCategoryScrollContent: {
     paddingVertical: 4,
     paddingHorizontal: 2,
     alignItems: "flex-start",
-    minHeight: 114,
   },
   subCategoryItem: {
     alignItems: "center",
     justifyContent: "flex-start",
     width: 80,
-    minHeight: 110,
   },
   subCategoryImageWrapper: {
     width: 72,
@@ -714,11 +764,31 @@ const styles = StyleSheet.create({
   },
   subCategoryText: {
     marginTop: 6,
+    fontWeight: "500",
     textAlign: "center",
     width: "100%",
-    fontSize: 12,
     lineHeight: 16,
-    // Do not set fontWeight with a custom fontFamily on iOS — text disappears.
+  },
+  activeSubCategoryText: {
+    fontWeight: "700",
+  },
+  merchantsList: {
+    flex: 1,
+  },
+  searchWrapper: {
+    alignItems: "center",
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    marginTop: 4,
+    marginBottom: 12,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    paddingVertical: 0,
   },
 });
 
@@ -733,7 +803,6 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, {
   getMerchantList,
-  setMerchants,
   toggleFavourites,
   getFavouriteMerchantsList,
   getUserLocationThunk,

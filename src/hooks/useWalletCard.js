@@ -1,89 +1,90 @@
 import { Linking, Platform } from "react-native";
 import { getBase64PkpassFile, reportWalletEvent } from "../api/wallet";
 import { WalletPasses } from "react-native-wallet-passes";
+import { org } from "../org/config";
 
 const isIos = Platform.OS === "ios";
 const isAndroid = Platform.OS === "android";
-const Brand = Platform.constants?.Brand;
-const Manufacturer = Platform.constants?.Manufacturer;
+const Brand = Platform.constants.Brand;
+const Manufacturer = Platform.constants.Manufacturer;
 
 const useWalletCard = () => {
   const addCard = async (base64EncodedPass) => {
-    const result = await WalletPasses.addPass(
-      base64EncodedPass,
-      "com.golalitaimtenanrewards.fileprovider"
-    );
+    // iOS: only base64. Android needs the FileProvider authority.
+    const result = isAndroid
+      ? await WalletPasses.addPass(
+          base64EncodedPass,
+          `${org.androidPackage}.fileprovider`
+        )
+      : await WalletPasses.addPass(base64EncodedPass);
 
     return result;
   };
 
   const navigateToStoreAndroid = async () => {
     const playMarketAppUrl = "market://details?id=io.walletpasses.android";
+
     const canOpenPlayMarketApp = await Linking.canOpenURL(playMarketAppUrl);
 
     if (canOpenPlayMarketApp) {
       await Linking.openURL(playMarketAppUrl);
+
       return;
     }
 
     const playMarketUrl =
       "https://play.google.com/store/apps/details?id=io.walletpasses.android";
+
     const canOpenPlayMarketURL = await Linking.canOpenURL(playMarketUrl);
 
     if (canOpenPlayMarketURL) {
       await Linking.openURL(playMarketUrl);
+
       return;
     }
 
-    throw "err";
+    throw new Error("Cannot open Google Play Store to install WalletPasses");
   };
 
   const navigateToHuaweiAppGallery = async () => {
-    const playMarketAppUrl =
+    const huaweiUrl =
       "https://appgallery.cloud.huawei.com/ag/n/app/C102754379?locale=en_GB&source=appshare&subsource=C102754379&shareTo=com.android.bluetooth&shareFrom=appmarket&shareIds=7206081f16e242c783d37bada6e588af_com.android.bluetooth&callType=SHARE";
 
-    const canOpenPlayMarketApp = await Linking.canOpenURL(playMarketAppUrl);
+    const canOpen = await Linking.canOpenURL(huaweiUrl);
 
-    if (canOpenPlayMarketApp) {
-      await Linking.openURL(playMarketAppUrl);
+    if (canOpen) {
+      await Linking.openURL(huaweiUrl);
 
       return;
     }
 
-    const playMarketUrl =
-      "https://appgallery.cloud.huawei.com/ag/n/app/C102754379?locale=en_GB&source=appshare&subsource=C102754379&shareTo=com.android.bluetooth&shareFrom=appmarket&shareIds=7206081f16e242c783d37bada6e588af_com.android.bluetooth&callType=SHARE";
-
-    const canOpenPlayMarketURL = await Linking.canOpenURL(playMarketUrl);
-
-    if (canOpenPlayMarketURL) {
-      await Linking.openURL(playMarketUrl);
-
-      return;
-    }
-
-    throw "err";
+    throw new Error("Cannot open Huawei AppGallery to install WalletPasses");
   };
 
   const navigateToStoreIOS = async () => {
     const playStoreAppUrl =
       "itms-apps://apps.apple.com/id/app/apple-wallet/id1160481993";
+
     const canOpenPlayStoreApp = await Linking.canOpenURL(playStoreAppUrl);
 
     if (canOpenPlayStoreApp) {
       await Linking.openURL(playStoreAppUrl);
+
       return;
     }
 
     const playStoreUrl =
       "https://apps.apple.com/us/app/apple-wallet/id1160481993";
+
     const canOpenPlayStoreURL = await Linking.canOpenURL(playStoreUrl);
 
     if (canOpenPlayStoreURL) {
       await Linking.openURL(playStoreUrl);
+
       return;
     }
 
-    throw "err";
+    throw new Error("Cannot open Apple App Store to install Apple Wallet");
   };
 
   const addCardToWallet = async (data) => {
@@ -104,7 +105,7 @@ const useWalletCard = () => {
         return;
       }
 
-      throw "err";
+      throw new Error("Cannot add pass: unsupported platform");
     }
 
     const {
@@ -117,17 +118,22 @@ const useWalletCard = () => {
 
     const platform = isAndroid ? "GOOGLE" : "APPLE";
     const organisation =
-      data.organisation || data.organisationAndroid || organizationName || null;
-    const resolvedOrganizationId = organizationId || data.organizationId || null;
+      data.organisation ||
+      data.organisationAndroid ||
+      organizationName ||
+      null;
+    const resolvedOrganizationId =
+      organizationId || data.organizationId || null;
 
-    // Handle Android differently - use saveUrl to open Google Wallet
+    // Android: open Google Wallet via saveUrl returned by the backend
     if (isAndroid) {
       if (walletData?.saveUrl) {
         const canOpen = await Linking.canOpenURL(walletData.saveUrl);
 
         if (canOpen) {
-          // CRITICAL: Report INSTALL before opening Google Wallet.
-          // Opening Google Wallet backgrounds the app and aborts in-flight axios requests.
+          // Report INSTALL *before* leaving the app. Opening Google Wallet
+          // backgrounds RN and often cancels in-flight axios — which is why
+          // iOS (stays in-process) got events and Android did not, same account.
           const installResult = await reportWalletEvent({
             eventType: "INSTALL",
             platform,
@@ -140,6 +146,9 @@ const useWalletCard = () => {
             appUserId: data.appUserId,
             userEmail: data.userEmail,
           });
+          if (!installResult?.ok) {
+            console.log("INSTALL report did not succeed", installResult);
+          }
 
           await Linking.openURL(walletData.saveUrl);
           return { opened: true, installResult };
@@ -151,25 +160,27 @@ const useWalletCard = () => {
       }
     }
 
-    // iOS flow - use base64 pkpass data
+    // iOS: use base64 pkpass data
     if (typeof walletData !== "string") {
       throw new Error("Invalid pkpass data received from server");
     }
 
     const res = await addCard(walletData);
 
-    // iOS: report INSTALL after adding pass to Apple Wallet
-    void reportWalletEvent({
-      eventType: "INSTALL",
-      platform,
-      serialNumber,
-      campaignId,
-      organizationId: resolvedOrganizationId,
-      organisation,
-      barcode: data.barcode,
-      appUserId: data.appUserId,
-      userEmail: data.userEmail,
-    });
+    // addPass returns false when the pass is already in Wallet — don't count it as a new install.
+    if (res) {
+      void reportWalletEvent({
+        eventType: "INSTALL",
+        platform,
+        serialNumber,
+        campaignId,
+        organizationId: resolvedOrganizationId,
+        organisation,
+        barcode: data.barcode,
+        appUserId: data.appUserId,
+        userEmail: data.userEmail,
+      });
+    }
 
     return res;
   };

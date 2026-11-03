@@ -14,6 +14,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
+import { getToken } from '../../../utils/secureStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { userSelector } from '../../../redux/auth/auth-selectors';
 import authApi from '../../../redux/auth/auth-api';
@@ -30,7 +31,6 @@ import { BALOO_MEDIUM } from '../../../redux/types';
 import { useTheme } from '../../../components/ThemeProvider';
 import CommonButton from '../../../components/CommonButton/CommonButton';
 import Header from '../../../components/Header';
-import { getAuthToken } from '../../../utils/tokenStorage';
 
 const ProfileEmailVerification = ({ route, navigation }) => {
   let params = route.params;
@@ -93,7 +93,7 @@ const ProfileEmailVerification = ({ route, navigation }) => {
 
       setLoading(true);
 
-      const token = await getAuthToken();
+      const token = await getToken();
 
       console.log(userId, 'userID');
 

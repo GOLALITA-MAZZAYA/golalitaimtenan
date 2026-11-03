@@ -5,14 +5,14 @@ import CloseSvg from '../../../../assets/close-new.svg';
 import {isRTL} from "../../../../../utils";
 import {colors} from "../../../colors";
 
-const ModalTitle = ({title , onPress}) => {
+const ModalTitle = ({title , onPress, dismissable = true}) => {
     const isRtl = isRTL();
 
     return (
 
         <View style={[styles.wrapper, {flexDirection: isRtl ? 'row-reverse': 'row'}]}>
 
-            <TypographyText 
+            <TypographyText
               font={BALOO_2}
               title={title}
               textColor={colors.loyaltyTextMainTitle}
@@ -20,10 +20,11 @@ const ModalTitle = ({title , onPress}) => {
               style={styles.title}
             />
 
-
-            <TouchableOpacity onPress={onPress} style={[styles.closeBtn, {backgroundColor: colors.loyaltyCardBackground}]}>
-               <CloseSvg color={colors.loyaltyTextMainTitle}/>
-            </TouchableOpacity>
+            {dismissable && (
+              <TouchableOpacity onPress={onPress} style={[styles.closeBtn, {backgroundColor: colors.loyaltyCardBackground}]}>
+                 <CloseSvg color={colors.loyaltyTextMainTitle}/>
+              </TouchableOpacity>
+            )}
 
         </View>
 

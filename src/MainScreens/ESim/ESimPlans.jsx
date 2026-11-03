@@ -22,7 +22,7 @@ import { checkoutEsim, getEsimPackages, getEsimReturnUrl } from '../../api/esim'
 import { formatPlanLabel, formatPrice, getDestinationDisplayName, rememberEsimCheckout } from './esimUtils';
 import { sized } from '../../Svg';
 import InfoSvg from '../../assets/info.svg';
-import { isRTL } from '../../../utils';
+import { org } from '../../org/config';
 
 const ESimPlans = ({ navigation, route }) => {
   const { t, i18n } = useTranslation();
@@ -101,7 +101,7 @@ const ESimPlans = ({ navigation, route }) => {
     setSheetVisible(true);
   };
 
-  const payWithSkipCash = async () => {
+  const payWithGateway = async () => {
     if (!selected) {
       return;
     }
@@ -208,7 +208,7 @@ const ESimPlans = ({ navigation, route }) => {
       <View
         style={[
           styles.tabs,
-          { flexDirection: isRTL() ? 'row-reverse' : 'row' },
+          { backgroundColor: isDark ? '#1C1C1E' : '#E5E7EB' },
         ]}
       >
         {[
@@ -221,8 +221,9 @@ const ESimPlans = ({ navigation, route }) => {
               key={item.value}
               style={[
                 styles.tab,
-                active &&
-                  (isDark ? styles.tabActiveDark : styles.tabActiveLight),
+                active && {
+                  backgroundColor: isDark ? colors.mainDarkMode : colors.darkBlue,
+                },
               ]}
               onPress={() => setTab(item.value)}
             >
@@ -233,11 +234,11 @@ const ESimPlans = ({ navigation, route }) => {
                 textColor={
                   active
                     ? isDark
-                      ? colors.mainDarkModeText
+                      ? colors.black
                       : colors.white
                     : isDark
-                    ? colors.white
-                    : colors.darkBlue
+                    ? '#8E8E93'
+                    : '#6B7280'
                 }
                 style={active ? { fontWeight: '700' } : undefined}
               />
@@ -317,7 +318,7 @@ const ESimPlans = ({ navigation, route }) => {
             ]}
           >
             <TypographyText
-              title={t('ESim.skipCash')}
+              title={org.paymentGatewayName}
               size={16}
               font={LUSAIL_REGULAR}
               textColor={isDark ? colors.white : colors.black}
@@ -339,7 +340,7 @@ const ESimPlans = ({ navigation, route }) => {
               <CommonButton
                 label={t('ESim.pay')}
                 loading={paying}
-                onPress={payWithSkipCash}
+                onPress={payWithGateway}
               />
             </View>
           </View>
@@ -362,21 +363,15 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
-    alignItems: 'center',
+    borderRadius: 20,
+    padding: 3,
     marginBottom: 8,
     marginHorizontal: 16,
   },
   tab: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 10,
-  },
-  tabActiveLight: {
-    backgroundColor: colors.darkBlue,
-  },
-  tabActiveDark: {
-    backgroundColor: colors.mainDarkMode,
+    borderRadius: 17,
   },
   list: {
     flex: 1,
@@ -414,9 +409,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   footer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   modal: {
     justifyContent: 'flex-end',

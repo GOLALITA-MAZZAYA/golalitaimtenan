@@ -1,126 +1,99 @@
-import { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useDispatch } from "react-redux";
-import { useNavigation } from "@react-navigation/native";
-import {
-  getInfoBlocksConfig,
-  getInfoBtnsConfig,
-  getOfferTypeInfoBtnsConfig,
-} from "../../config";
-import InfoBlocks from "../InfoBlocks";
-import InfoButtons from "../InfoButtons";
-import OfferTypeInfoButtons from "../OfferTypeInfoButtons";
-import CommonButton from "../../../../../components/CommonButton/CommonButton";
-import { colors } from "../../../../../components/colors";
-import { useTheme } from "../../../../../components/ThemeProvider";
-import { handleMerchantCardPress } from "../../../../MerchantsPage/helpers";
-import { navigateToBookNow } from "../../../helpres";
-import { track } from "../../../../../redux/merchant/merchant-thunks";
-import { getMerchantById } from "../../../../../api/merchants";
-import { isRTL } from "../../../../../../utils";
-import useIsGuest from "../../../../../hooks/useIsGuest";
+import {useTranslation} from "react-i18next"
+import FullScreenImageModal from "../FullScreenImageModal"
+import {StyleSheet, View} from "react-native"
+import {getInfoBlocksConfig, getOfferTypeInfoBtnsConfig} from "../../config"
+import InfoWithTitleBlock from "../../../../../components/InfoWithTitleBlock"
+import {handleMerchantCardPress} from "../../../../MerchantsPage/helpers"
+import {navigateToBookNow} from "../../../helpres"
+import {useState} from "react"
+import OfferTypeInfoButtons from "../OfferTypeInfoButtons"
+import Button from "../../../../../components/Button"
 
-const InfoTab = ({ offer, merchant, isHotel }) => {
-  const { t } = useTranslation();
-  const { isDark } = useTheme();
-  const dispatch = useDispatch();
-  const navigation = useNavigation();
-  const isGuest = useIsGuest();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isArabic = isRTL();
+const InfoTab = ({offer, merchant, isHotel}) => {
+    const {t} = useTranslation();
+    const [selectedImageUrl, setSelectedImageUrl] = useState('');
 
-  const handlePromoPress = useCallback(() => {
-    try {
-      setIsSubmitting(true);
-      dispatch(
-        track(
-          "promocode",
-          offer?.product_id,
-          true,
-          offer?.offer_type_promo_code,
-          async () => {
-            try {
-              await dispatch(
-                track(
-                  "promocode",
-                  offer?.product_id,
-                  false,
-                  offer?.offer_type_promo_code
-                )
-              );
+    const data = getInfoBlocksConfig(offer, isHotel);
 
-              let store_website;
-              if (offer.online_store) {
-                const merchantData = await getMerchantById(offer.merchant_id);
-                store_website = merchantData?.website;
-              }
+    const description = data.find(item => item.header);
+    const restInfoBlocks = data.filter(item => !item.header)
 
-              navigation.navigate("merchant-code-confirmation", {
-                merchantName: isArabic
-                  ? offer?.merchant_name_arabic
-                  : offer?.merchant_name,
-                offerName: isArabic ? offer?.arabic_name : offer.name,
-                confirmationNumber: offer?.offer_type_promo_code,
-                id: offer?.product_id,
-                promocode: offer?.offer_type_promo_code,
-                store_website,
-                merchant_id: offer?.merchant_id,
-                x_is_support_qr_promo: offer?.x_is_support_qr_promo,
-                qr_code_image_link: offer?.qr_code_image_link,
-                promo_code_description: offer?.promo_code_description,
-              });
-            } catch (e) {
-              console.log(e);
-            } finally {
-              setIsSubmitting(false);
-            }
-          }
-        )
-      );
-    } catch (err) {
-      console.log(err, "error");
-      setIsSubmitting(false);
-    }
-  }, [dispatch, offer, navigation, isArabic]);
 
-  const infoBtnsConfig = getInfoBtnsConfig(offer, isDark);
-  const infoBlocksConfig = getInfoBlocksConfig(offer, isHotel);
-  const offerTypeInfoBtnsConfig = getOfferTypeInfoBtnsConfig(
-    offer,
-    handlePromoPress,
-    isSubmitting
-  );
+    const handleMerchatDetails = () => {
+      handleMerchantCardPress(merchant, offer);
+    };
 
-  return (
-    <>
-      <InfoButtons data={infoBtnsConfig} />
-      {isGuest ? <View /> : <OfferTypeInfoButtons data={offerTypeInfoBtnsConfig} />}
-      <InfoBlocks data={infoBlocksConfig} />
+    const handleBookNowPress = () => {
+      navigateToBookNow(offer, merchant)
+    };
 
-      <CommonButton
-        onPress={() => handleMerchantCardPress(merchant, offer)}
-        label={t("ProductPage.merchantDetails")}
-        textColor={isDark ? colors.mainDarkModeText : colors.white}
-        style={styles.btn}
-      />
+    const btnsConfig = getOfferTypeInfoBtnsConfig(offer);
 
-      {isHotel === "true" && (
-        <CommonButton
-          onPress={() => navigateToBookNow(offer, merchant)}
-          label={t("Merchants.requestReservation")}
-          textColor={isDark ? colors.mainDarkModeText : colors.white}
-          style={styles.btn}
-        />
-      )}
-    </>
-  );
+
+    return (
+        <>
+
+        <View style={{marginTop: 20}}>
+          {!!description && (
+            <InfoWithTitleBlock
+                 title={description.title}
+                 description={description.description}
+                 icon={description.icon}
+                 onPress={description.onPress}
+                 style={{ marginBottom: 10}}
+            />
+          )}
+
+          <View style={styles.columnWrapper}>
+            {restInfoBlocks.map((item, index) => (
+              <InfoWithTitleBlock
+                 key={item.title ?? index}
+                 title={item.title}
+                 description={item.description}
+                 style={{width: '49%', marginBottom: 4}}
+                 icon={item.icon}
+                 onPress={item.onPress}
+                 shortVersion={item.shortVersion}
+                 shortVersionTitle={item.shortVersionTitle}
+              />
+            ))}
+          </View>
+        </View>
+
+            <FullScreenImageModal
+              visible={!!selectedImageUrl}
+              url={selectedImageUrl}
+              onClose={() => setSelectedImageUrl(null)}
+            />
+
+             <Button 
+               text={t("ProductPage.merchantDetails")}
+               onPress={handleMerchatDetails}
+               style={styles.btn}
+             />
+
+              { isHotel === 'true' && <Button 
+                text={t("Merchants.requestReservation")}
+                onPress={handleBookNowPress}
+                style={styles.btn}
+              /> }
+        
+
+            <OfferTypeInfoButtons data={btnsConfig} />
+        </>
+    )
 };
 
 const styles = StyleSheet.create({
-  btn: {
-    marginTop: 20,
+  columnWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
+  btn: {
+    marginTop: 20
+  }
 });
+
 
 export default InfoTab;

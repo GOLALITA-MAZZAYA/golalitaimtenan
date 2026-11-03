@@ -5,6 +5,7 @@ const initialState = {
 
   userLocationLoading: false,
   userLocation: null,
+  locations:[],
   
   marketingPopup: null,
   hasShownMarketingPopup: false,

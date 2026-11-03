@@ -1,239 +1,154 @@
 import { merchantApi } from './merchant-api';
 import {
   setAdvert,
-  setCategories,
   setFavoriteOffers,
-  setInternationalClients,
-  setLocalClients,
   setMerchantDetails,
   setMerchantDetailsLoading,
   setMerchantOffers,
-  setMerchantProducts,
   setMerchants,
   setOffers,
-  setOrganizations,
   setParentCategories,
-  setParentCategoriesByType,
   setParentCategoriesLoading,
-  setPremiumBanners,
-  setPremiumBannersLoading,
-  setPremiumMerchants,
-  setSocialMedia,
-  setTravelCategories,
-  setHasEsimCategory,
 } from './merchant-actions';
-import { CLIENT, PREMIUM, STANDARD } from '../types';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getToken } from '../../utils/secureStorage';
 import { CONTENT_DISABLED } from '../auth/auth-types';
-import authApi from '../auth/auth-api';
 import {
   setIsMerchantsLoading,
   setIsOffersLoading,
 } from '../loaders/loaders-actions';
 import { showMessage } from 'react-native-flash-message';
+import i18next from 'i18next';
 import { logout } from '../auth/auth-thunks';
-import { getOffsetAndLimit, getOffsetAndLimitForOffers } from '../../../utils';
-import { openScreen } from '../../Navigation/RootNavigation';
+import { getOffsetAndLimit } from '../../../utils';
+import { navigate, push } from '../../Navigation/RootNavigation';
 import { setClickedNotificationData } from '../notifications/notifications-actions';
-import axios from 'axios';
 import { getMerchantDisscountForOffers, trackMerchantOpensCount } from '../../api/merchants';
 import { getFavouriteMerchantsList } from '../favouriteMerchants/favourite-merchants-thunks';
-import { ORG_ID, ORG_CODE } from '../../constants';
-import { getAuthToken } from '../../utils/tokenStorage';
-import { isEsimCategory } from '../../MainScreens/ESim/esimUtils';
-import {
-  rewriteAssetUrl,
-  withRewrittenCategoryImages,
-} from '../../utils/rewriteAssetUrl';
-export const getCategories = () => async (dispatch, getState) => {
-  const { workStatus } = getState().authReducer;
-  const token = await getAuthToken();
-  const res = await merchantApi.getCategories({
-    params: {
-      token,
-      fields: "['id','name','image_url', 'x_image_url_2', 'x_name_arabic' ]",
-    },
-  });
+import { org } from '../../org/config';
+import { isEventsTicketsCategory } from '../../config/globalTix';
+import trackActivity from '../../api/activityTracker';
+import { rewriteAssetUrl } from '../../utils/rewriteAssetUrl';
 
-  dispatch(
-    setCategories(workStatus === CONTENT_DISABLED ? [] : res.data.result),
-  );
-};
+const PARENT_CATEGORY_FIELDS =
+  "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image', 'x_country_code', 'x_if_have_child_cat']";
 
-const getSubCategoriesFunc = async (parentCategories, type, country) => {
-  const newCategories = [];
-
-  const token = await getAuthToken();
-
-  const getSubCategories = async id => {
-    return new Promise(async resolve => {
-      const res = await merchantApi.getParentCategoriesById({
-        params: {
-          token,
-          type,
-          country,
-          parent_id: id,
-          org_id: ORG_ID,
-        },
-      });
-
-      resolve(res.data.result);
-    });
-  };
-
-  let i = 0;
-
-  for (let item of parentCategories) {
-    if (item.id) {
-      const subCategories = await getSubCategories(item.id);
-
-      newCategories.push({ ...item, children: subCategories });
-    } else {
-      newCategories.push({ ...item, children: [] });
-    }
-
-    i++;
+const toParentCategoryList = result => {
+  if (Array.isArray(result)) {
+    return result;
   }
-
-  return newCategories;
-};
-
-const getSubCategoriesFunc2 = async (parentCategories, token) => {
-  const getSubCategories = async (id, token) => {
-    return new Promise(async resolve => {
-      const res = await merchantApi.getParentCategoriesById({
-        params: {
-          token,
-          parent_id: id,
-        },
-      });
-
-      resolve(res.data.result);
-    });
-  };
-
-  const getSubCategoriesForOneCategory = async (newCategories, token) => {
-    let i = 0;
-
-    for (let item of newCategories) {
-      const subCategories = await getSubCategories(item.id, token);
-
-      newCategories[i].items = subCategories.map(item => ({
-        title: item.name,
-        id: item.id,
-      }));
-
-      if (subCategories.length) {
-        await getSubCategoriesForOneCategory(newCategories[i].items, token);
-      }
-
-      i++;
+  if (Array.isArray(result?.data)) {
+    return result.data;
+  }
+  if (result && typeof result === 'object' && !result.error) {
+    const values = Object.values(result);
+    if (
+      values.length > 0 &&
+      values.every(item => item && typeof item === 'object' && item.id != null)
+    ) {
+      return values;
     }
-
-    return newCategories;
-  };
-
-  const newCategories = await getSubCategoriesForOneCategory(
-    parentCategories,
-    token,
-  );
-
-  return newCategories;
+  }
+  return [];
 };
+
+const isRootCategory = item => {
+  const parent = item.parent_id;
+  if (!parent || parent === false) {
+    return true;
+  }
+  if (Array.isArray(parent)) {
+    return !parent[0];
+  }
+  return false;
+};
+
+const CATEGORY_IMAGE_KEYS = [
+  'x_image_url_2',
+  'image_url',
+  'x_image_url_3',
+  'x_image_url_4',
+  'x_gif_image',
+  'image3',
+];
+
+const withRewrittenCategoryImages = categories =>
+  categories.map(item => {
+    const next = { ...item };
+    CATEGORY_IMAGE_KEYS.forEach(key => {
+      if (next[key]) {
+        next[key] = rewriteAssetUrl(next[key]);
+      }
+    });
+    // Search/v2 often leave x_image_url_2 as Odoo's empty camera PNG.
+    // x_image3 is the actual category icon on both gcptest and www.
+    if (!next.x_image_url_3 && next.id != null) {
+      next.x_image_url_3 = `https://${org.baseUrl}/go/api/image/${next.id}/x_image3/partner.category`;
+    }
+    return next;
+  });
 
 export const getParentCategories = type => async (dispatch, getState) => {
   try {
-    const { parentCategoriesByType } = getState().merchantReducer;
-    const hasCache = Array.isArray(parentCategoriesByType?.[type]);
-
-    // Only block the UI when we have nothing to show for this tab.
-    if (!hasCache) {
-      dispatch(setParentCategoriesLoading(true));
+    const token = getState().authReducer.token || (await getToken());
+    if (!token) {
+      return;
     }
 
-    const token = await getAuthToken();
+    dispatch(setParentCategoriesLoading(true));
 
-    const params = {
+    const v2Params = {
       token,
-      fields:
-        "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image', 'x_country_code', 'x_if_have_child_cat']",
+      fields: PARENT_CATEGORY_FIELDS,
       type,
-      org_id: ORG_ID,
+      org_id: org.id,
     };
 
-    const res = await merchantApi.getParentCategories({
-      params,
+    const v2Res = await merchantApi.getParentCategories({
+      params: v2Params,
     });
+    let categories = toParentCategoryList(v2Res.data?.result);
 
-    const list = withRewrittenCategoryImages(
-      Array.isArray(res.data?.result) ? res.data.result : [],
+    // TEMP [EventsTickets] debug — remove after diagnosing live.
+    console.log(
+      `[EventsTickets] fetch type=${type} org=${org.id} base=${org.baseUrl} v2Count=${categories.length}`,
+      categories.length ? '' : JSON.stringify(v2Res.data)?.slice(0, 500),
     );
-    const responseHasEsim = list.some(isEsimCategory);
 
-    // Keep eSIM on the home grid whenever the API returns it (Local and Global).
-    // Country screens use the same flag so they only inject eSIM when home shows it.
-    dispatch(setHasEsimCategory(responseHasEsim));
-    dispatch(setParentCategoriesByType(type, list));
-    dispatch(setParentCategories(list));
+    // gcptest /parent/category/v2 currently returns { error: "Failed to fetch categories" }.
+    // Last resort: older search endpoint.
+    if (!categories.length) {
+      const searchRes = await merchantApi.getCategories({
+        params: {
+          token,
+          fields: PARENT_CATEGORY_FIELDS,
+        },
+      });
+      const roots = toParentCategoryList(searchRes.data?.result).filter(
+        isRootCategory,
+      );
+      if (roots.length) {
+        categories = roots;
+      }
+    }
+
+    // TEMP [EventsTickets] debug — remove after diagnosing live.
+    console.log(
+      `[EventsTickets] final type=${type} count=${categories.length} hasEventsTickets=${categories.some(isEventsTicketsCategory)}`,
+    );
+    console.log(
+      '[EventsTickets] categories:',
+      categories.map(c => `${c.id} | ${c.name} | ${c.x_name_arabic || ''} | cc=${c.x_country_code || ''}`),
+    );
+
+    dispatch(setParentCategories(withRewrittenCategoryImages(categories)));
   } catch (err) {
-    console.log(err, 'get parrent categories error');
+    console.log('[EventsTickets] fetch error', type, err?.message, err?.response?.status);
   } finally {
     dispatch(setParentCategoriesLoading(false));
   }
 };
-
-export const getTravelSubCategories = () => async dispatch => {
-  const token = await getAuthToken();
-
-  const res = await merchantApi.getParentCategoriesById({
-    params: {
-      token,
-      parent_id: 60,
-    },
-  });
-
-  const parentCategories =
-    res.data.result?.map(item => ({
-      title: item.name,
-      ...item,
-    })) || [];
-
-  const newCategories = await getSubCategoriesFunc2(parentCategories, token);
-
-  dispatch(setTravelCategories(newCategories));
-};
-
-export const getPremiumBanners =
-  ({ page }) =>
-    async (dispatch, getState) => {
-      setPremiumBannersLoading(true);
-
-      const { premiumBannersPage } = getState().merchantReducer;
-      const pageVal = page === 'next' ? premiumBannersPage + 1 : page;
-      const concat = !page || pageVal === 1 ? false : true;
-
-      const token = await getAuthToken();
-
-      const userRes = await authApi.getUserBanners({
-        params: {
-          token,
-          ...getOffsetAndLimit(pageVal),
-        },
-      });
-
-      const banners = userRes.data.result;
-
-      const sortedBanners = (banners || [])
-        .map(b => ({
-          ...b,
-          banner_image: rewriteAssetUrl(b.banner_image),
-          image_url: rewriteAssetUrl(b.image_url),
-        }))
-        .sort((a, b) => (a.x_sequence > b.x_sequence ? 1 : -1));
-
-      dispatch(setPremiumBanners({ data: sortedBanners, concat, page: pageVal }));
-    };
 
 // Every fresh list load (anything but a "next" page) starts a new generation.
 // A response from an older generation is dropped: without this, a next-page
@@ -250,19 +165,22 @@ export const getMerchantList =
       const generation = merchantListGeneration;
       const isStale = () => generation !== merchantListGeneration;
 
-      dispatch(setIsMerchantsLoading(true));
-
       try {
+        dispatch(setIsMerchantsLoading(true));
+
         if (page === 1) {
           dispatch(setMerchants({ data: [] }));
         }
 
         const { workStatus } = getState().authReducer;
-        const token = await getAuthToken();
+        const token = await getToken();
         const isWorkStatusDisabled = workStatus === CONTENT_DISABLED;
 
         if (isWorkStatusDisabled) {
-          dispatch(setMerchants({ data: [] }));
+          if (!isStale()) {
+            dispatch(setMerchants({ data: [] }));
+            onGetData?.(0, getOffsetAndLimit(1).limit);
+          }
           return;
         }
 
@@ -274,378 +192,165 @@ export const getMerchantList =
           token,
           ...filters,
           ...getOffsetAndLimit(pageVal),
-          x_org_linked: ORG_CODE,
+          x_org_linked: org.code,
         };
 
         const merchantsRes = await merchantApi.getAllMerchant({
           params,
         });
 
+        const merchantsData = Array.isArray(merchantsRes?.data?.result)
+          ? merchantsRes.data.result
+          : [];
+
         if (isStale()) {
           return;
         }
 
-        const merchantsData = (
-          Array.isArray(merchantsRes.data?.result)
-            ? merchantsRes.data.result
-            : []
-        ).map(m => ({
-          ...m,
-          merchant_logo: rewriteAssetUrl(m.merchant_logo),
-          image_url: rewriteAssetUrl(m.image_url),
-          banner_image: rewriteAssetUrl(m.banner_image),
-        }));
-
+        // Stop pagination when the page is short/empty (same rule as QLM).
         onGetData?.(merchantsData.length, params.limit);
 
         const data = transform ? transform(merchantsData) : merchantsData;
-        const nextData = Array.isArray(data) ? data : [];
 
         const concat = !page || pageVal === 1 ? false : true;
 
-        dispatch(setMerchants({ data: nextData, concat, page: pageVal }));
+        dispatch(setMerchants({ data, concat, page: pageVal }));
       } catch (err) {
-        console.log(err, 'getMerchantList error');
-        if (page === 1 && !isStale()) {
-          dispatch(setMerchants({ data: [] }));
+        console.error('[MerchantList] /user/category/merchant/lists ERROR:', err);
+        // Avoid infinite onEndReached retries when the request fails.
+        if (!isStale()) {
+          onGetData?.(0, getOffsetAndLimit(1).limit);
         }
       } finally {
+        // A newer load owns the loading flag once this one is stale.
         if (!isStale()) {
           dispatch(setIsMerchantsLoading(false));
         }
       }
     };
 
-export const getMerchants =
-  (type, category_id, isSkip, mapRef, setPressedItem) =>
-    async (dispatch, getState) => {
-      const { workStatus } = getState().authReducer;
-      const token = await getAuthToken();
-      let res;
-      if (type === CLIENT || type === PREMIUM || type === STANDARD) {
-        if (!isSkip) dispatch(setIsMerchantsLoading(true));
+export const getMerchantDetailsWithoutNavigate = (merchant_id) => async (dispatch) => {
+  try {
+    dispatch(setMerchantDetailsLoading(true));
 
-        res = await merchantApi.getMerchant({
-          params: {
-            token,
-            domain: `[['go_entity', '=', 'merchant'] 
-        ${type ? `, ['merchant_type', '=', '${type}']` : ''}]`,
-            fields:
-              "['id','name','image_url', 'partner_latitude', 'partner_longitude', 'x_online_store']",
-          },
-        });
+    const token = await getToken();
 
-        dispatch(
-          setPremiumMerchants(
-            workStatus === CONTENT_DISABLED ? [] : res.data.result,
-          ),
-        );
-      } else {
-        if (!isSkip) {
-          dispatch(setIsMerchantsLoading(true));
-          // dispatch(setMerchants({ data: [], concat: false, page: 1 }));
-        }
+    const res = await merchantApi.getMerchantDetails({
+      params: {
+        token,
+        merchant_id,
+      },
+    });
 
-        if (!setPressedItem) {
-          res = await authApi.getUserData({
-            params: {
-              token,
-            },
-          });
 
-          const data =
-            workStatus === CONTENT_DISABLED
-              ? []
-              : res.data.result.banners.sort((a, b) =>
-                a.x_sequence > b.x_sequence ? 1 : -1,
-              );
 
-          dispatch(setPremiumBanners({ data }));
-        }
+    const ribbon_text = await getMerchantDisscountForOffers(merchant_id);
 
-        res = await merchantApi.getAllMerchant({
-          params: { token, category_id },
-        });
-        // if (!isSkip) dispatch(setIsMerchantsLoading(false));
+    res.data.result.ribbon_text = ribbon_text;
 
-        dispatch(
-          setMerchants({
-            data:
-              workStatus === CONTENT_DISABLED
-                ? []
-                : res.data.result.sort((a, b) =>
-                  a.x_sequence > b.x_sequence ? 1 : -1,
-                ),
-            concat: false,
-            page: 1,
-          }),
-        );
+    await trackMerchantOpensCount(merchant_id);
+    trackActivity('merchant_details_visit', { merchant_id, page_name: 'merchant_detail' });
 
-        if (!isSkip) dispatch(setIsMerchantsLoading(false));
-
-        if (mapRef) {
-          mapRef.current?.animateToRegion({
-            latitude: res.data.result[0].partner_latitude - 0.004,
-            longitude: res.data.result[0].partner_longitude,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
-          });
-          if (setPressedItem) setPressedItem(res.data.result[0]);
-        }
-      }
-    };
+    dispatch(setMerchantDetails({ ...res.data.result, id: merchant_id }));
+  } catch (err) {
+  } finally {
+    dispatch(setMerchantDetailsLoading(false));
+  }
+}
 
 export const getMerchantDetails =
-  (
-    merchant_id,
-    navigation,
-    t,
-    title,
-    isOrganization,
-    isOnlineStore,
-    isB1G1,
-    _options = {},
-  ) =>
+  (merchant_id, navigation, t, title, isOrganization, isOnlineStore, isB1G1, restaurantId) =>
     async (dispatch, getState) => {
-      dispatch(setMerchantDetailsLoading(true));
-
-      const { workStatus } = getState().authReducer;
-      const token = await getAuthToken();
-
-      let res;
-
-      if (isOrganization) {
-        res = await merchantApi.getOrganizationDetails({
-          params: {
-            token,
-            org_id: merchant_id,
-          },
-        });
-      } else {
-        res = await merchantApi.getMerchantDetails({
-          params: {
-            token,
-            merchant_id,
-          },
-        });
-
-        const ribbon_text = await getMerchantDisscountForOffers(merchant_id);
-
-        res.data.result.ribbon_text = ribbon_text;
-      }
-
-      dispatch(
-        setMerchantDetails(
-          workStatus === CONTENT_DISABLED
-            ? []
-            : {
-              ...res.data.result,
-              id: merchant_id,
-              isOrganization,
-              isB1G1,
-              isOnlineStore,
-            },
-        ),
-      );
-
-      const { clickedNotification } = getState().notificationsReducer;
-
-      if (clickedNotification) {
-        dispatch(setClickedNotificationData(null));
-      }
-
-      const merchantParams = {
-        screen: 'merchant-info',
-        params: {
-          title,
-          isOrganization,
-          isOnlineStore,
-          isB1G1,
-          merchantId: merchant_id,
-        },
-      };
-
-      // Always push onto MainStack so Home / list stay underneath for back.
-      openScreen('merchant', merchantParams);
-
-      await trackMerchantOpensCount(merchant_id);
-
-      dispatch(setMerchantDetailsLoading(false));
-
-    };
-
-const getNewMerchantIdsToGroupe = (offers, oldMerchantIds) => {
-  const idsObj = { ...oldMerchantIds };
-
-  offers.forEach((item) => idsObj[item.merchant_id] = true);
-
-  return idsObj
-};
-
-const removeDuplicateOffers = (offers, merchantIdSet) => {
-  const seen = new Set(merchantIdSet);
-  const result = [];
-
-  for (const offer of offers) {
-    const id = String(offer.merchant_id);
-
-    if (!seen.has(id)) {
-      seen.add(id);
-      result.push(offer);
-    }
-  }
-
-  return { offers: result, nextMerchantIds: seen };
-};
-
-
-export const getGroupedByMerchantOffers =
-  ({ page, onGetData, params = {} }) =>
-    async (dispatch, getState) => {
-      dispatch(setIsOffersLoading(true));
-
       try {
-        if (page === 1) {
-          dispatch(
-            setOffers({
-              data: [],
-              page: 1,
-              concat: false,
-              merchantIdsToGroup: {},
-            })
-          );
+        dispatch(setMerchantDetailsLoading(true));
+
+        const { workStatus } = getState().authReducer;
+        const token = await getToken();
+
+        let res;
+
+        if (isOrganization) {
+          res = await merchantApi.getOrganizationDetails({
+            params: {
+              token,
+              org_id: merchant_id,
+            },
+          });
+        } else {
+          res = await merchantApi.getMerchantDetails({
+            params: {
+              token,
+              merchant_id,
+            },
+          });
+
+          const ribbon_text = await getMerchantDisscountForOffers(merchant_id);
+
+          res.data.result.ribbon_text = ribbon_text;
         }
 
-        const { token } = getState().authReducer;
-        const { offersPage, merchantIdsToGroup } =
-          getState().merchantReducer;
+        if (res.data.result.error) {
+          const apiError = res.data.result.error;
 
-        const pageVal =
-          typeof page === "number" ? page : offersPage + 1;
-
-        const offsetAndLimit = getOffsetAndLimitForOffers(
-          pageVal,
-          10
-        );
-
-        const res = await merchantApi.getNewOffers({
-          params: { token, ...offsetAndLimit, ...params },
-        });
-
-        const newOffers = res.data.result ?? [];
-
-        // No more data from API
-        if (!newOffers.length) {
-          onGetData?.(0, offsetAndLimit.limit);
+          showMessage({
+            message: typeof apiError === "string" && apiError ? apiError : i18next.t("General.error"),
+            type: "danger",
+          });
           return;
         }
-
-        const merchantIdSet = new Set(
-          Object.keys(merchantIdsToGroup)
-        );
-
-        const { offers: groupedOffers, nextMerchantIds } =
-          removeDuplicateOffers(newOffers, merchantIdSet);
-
-        // All offers were duplicates
-        if (!groupedOffers.length) {
-          onGetData?.(newOffers.length, offsetAndLimit.limit);
-
-          // No more pages → stop
-          if (newOffers.length < offsetAndLimit.limit) {
-            return;
-          }
-
-          // Try next page
-          dispatch(
-            getGroupedByMerchantOffers({
-              page: pageVal + 1,
-              onGetData,
-            })
-          );
-          return;
-        }
-
-        onGetData?.(newOffers.length, offsetAndLimit.limit);
 
         dispatch(
-          setOffers({
-            data: groupedOffers,
-            page: pageVal,
-            concat: true,
-            merchantIdsToGroup: Object.fromEntries(
-              [...nextMerchantIds].map((id) => [id, true])
-            ),
-          })
+          setMerchantDetails(
+            workStatus === CONTENT_DISABLED
+              ? []
+              : {
+                ...res.data.result,
+                id: merchant_id,
+                isOrganization,
+                isB1G1,
+                isOnlineStore,
+              },
+          ),
         );
-      } catch (error) {
-        console.error("getGroupedByMerchantOffers error:", error);
+
+        const { clickedNotification } = getState().notificationsReducer;
+
+        if (clickedNotification) {
+          dispatch(setClickedNotificationData(null));
+        }
+
+        if (navigation?.navigate) {
+          navigation.navigate('merchant', {
+            screen: 'merchant-info',
+            params: {
+              title,
+              isOrganization,
+              isOnlineStore,
+              isB1G1,
+              restaurantId,
+            },
+          });
+        } else {
+          navigate('merchant', {
+            screen: 'merchant-info',
+            params: {
+              title,
+              isOrganization,
+              isOnlineStore,
+              isB1G1,
+              restaurantId,
+            },
+          });
+        }
+
+        await trackMerchantOpensCount(merchant_id);
+        trackActivity('merchant_details_visit', { merchant_id, page_name: 'merchant_detail' });
+      } catch (err) {
       } finally {
-        dispatch(setIsOffersLoading(false));
+        dispatch(setMerchantDetailsLoading(false));
       }
     };
 
-
-
-
-
-/**
- * Normalize offers API result when show_total_count wraps the list.
- * total_count may sit on result OR on data next to result (Golalita/QLM).
- * Never treat the current page length as the list total.
- */
-const normalizeOffersResponse = (raw, responseData) => {
-  const pickTotal = (...candidates) => {
-    for (const value of candidates) {
-      if (value === undefined || value === null || value === '') {
-        continue;
-      }
-      const n = Number(value);
-      if (Number.isFinite(n) && n >= 0) {
-        return n;
-      }
-    }
-    return 0;
-  };
-
-  if (Array.isArray(raw)) {
-    return {
-      offers: raw,
-      totalCount: pickTotal(
-        responseData?.total_count,
-        responseData?.totalCount,
-      ),
-    };
-  }
-
-  if (raw && typeof raw === 'object') {
-    const offers = Array.isArray(raw.offers)
-      ? raw.offers
-      : Array.isArray(raw.data)
-        ? raw.data
-        : Array.isArray(raw.records)
-          ? raw.records
-          : Array.isArray(raw.items)
-            ? raw.items
-            : Array.isArray(raw.result)
-              ? raw.result
-              : [];
-
-    return {
-      offers,
-      totalCount: pickTotal(
-        raw.total_count,
-        raw.totalCount,
-        raw.total,
-        raw.count,
-        responseData?.total_count,
-        responseData?.totalCount,
-      ),
-    };
-  }
-
-  return { offers: [], totalCount: 0 };
-};
 
 export const getOffers =
   ({
@@ -653,23 +358,23 @@ export const getOffers =
     merchant_category_id,
     page,
     params: additionalRequestParams = {},
-    useFiltersApi = false,
     onGetData,
   }) =>
     async (dispatch, getState) => {
-      dispatch(setIsOffersLoading(true));
-
       try {
+        dispatch(setIsOffersLoading(true));
+
         if (page === 1) {
           dispatch(
             setOffers({
               data: [],
               page: 1,
               concat: false,
-              totalCount: 0,
             }),
           );
         }
+
+
 
         const { workStatus } = getState().authReducer;
         const { token } = getState().authReducer;
@@ -695,49 +400,48 @@ export const getOffers =
           }
         }
 
-        // Always ask the offers list API for the full total (QLM / Golalita).
-        const params = Object.assign(reqParams, offsetAndLimit, {
-          show_total_count: true,
+        const params = Object.assign(reqParams, offsetAndLimit);
+
+
+        const res = await merchantApi.getNewOffers({
+          params,
         });
-
-        // Keep the full axios response — total_count may sit on result OR
-        // on data next to result. The api/offers helper only returns result
-        // and was dropping the total.
-        const apiCall =
-          params.x_offer_type || useFiltersApi
-            ? merchantApi.getFilteredOffers
-            : merchantApi.getNewOffers;
-
-        const res = await apiCall({ params });
-        const { offers: offersList, totalCount } = normalizeOffersResponse(
-          res?.data?.result,
-          res?.data,
-        );
+        // With show_total_count the backend also returns total_count; the
+        // offers list may then sit under result.data / result.offers.
+        const result = res?.data?.result;
+        const resultData = Array.isArray(result)
+          ? result
+          : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result?.offers)
+              ? result.offers
+              : [];
+        const totalCount = result?.total_count ?? res?.data?.total_count;
+        if (params.show_total_count) {
+          console.log('[getOffers] total_count:', totalCount, 'result keys:',
+            Array.isArray(result) ? 'array' : Object.keys(result || {}));
+        }
 
         if (merchant_id)
           dispatch(
             setMerchantOffers(
-              workStatus === CONTENT_DISABLED ? [] : offersList,
+              workStatus === CONTENT_DISABLED ? [] : resultData,
             ),
           );
         else {
           const concat = !page || pageVal === 1 ? false : true;
-          const safeTotal =
-            workStatus === CONTENT_DISABLED ? 0 : totalCount;
 
-          onGetData?.(offersList.length, params.limit, safeTotal);
+          onGetData?.(resultData.length, params.limit, totalCount);
 
           dispatch(
             setOffers({
-              data: workStatus === CONTENT_DISABLED ? [] : offersList,
+              data: workStatus === CONTENT_DISABLED ? [] : resultData,
               page: pageVal,
               concat,
-              totalCount: safeTotal,
             }),
           );
         }
       } catch (err) {
-        console.log(err, 'getOffers error');
       } finally {
         dispatch(setIsOffersLoading(false));
       }
@@ -752,192 +456,39 @@ export const getOfferById = product_id => async (dispatch, getState) => {
 
     const product = res.data.result?.[0];
 
-    openScreen('ProductPage', { product });
+    push('ProductPage', { product });
   } catch (err) {
-    console.log(err, 'get offer by id error');
   } finally {
     dispatch(setClickedNotificationData(null));
   }
 };
 
-export const getProducts =
-  ({ merchant_id, page }) =>
-    async (dispatch, getState) => {
-      const { workStatus } = getState().authReducer;
-      const { token } = getState().authReducer;
-
-      const params = {
-        token,
-        fields:
-          "['name', 'lst_price', 'default_code','description', 'barcode', 'image_url']",
-        domain: `[['merchant_id', '=', ${merchant_id}]]`,
-      };
-
-      let pageVal = page;
-
-      if (pageVal) {
-        if (pageVal === 1) {
-          params = { ...params, ...getOffsetAndLimit(1) };
-        }
-
-        if (page === 'next') {
-          const { merchantProductsPage } = getState().merchantReducer;
-
-          pageVal = merchantProductsPage + 1;
-          params = { ...params, ...getOffsetAndLimit(pageVal) };
-        }
-      }
-
-      const res = await merchantApi.getProducts({
-        params,
-      });
-
-      dispatch(
-        setMerchantProducts({
-          merchantProducts:
-            workStatus === CONTENT_DISABLED ? [] : res.data.result,
-          merchantProductsPage: pageVal,
-        }),
-      );
-    };
-
 export const getFavoriteOffers =
   (isHideLoading, selectedCategory, isVouchers) =>
     async (dispatch, getState) => {
-      const { workStatus } = getState().authReducer;
-      const { token } = getState().authReducer;
-      let body = { token, merchant_category_id: selectedCategory };
-      if (isVouchers) {
-        body = { ...body, is_voucher: 'True' };
-      } else {
-        body = { ...body, is_save: 'True' };
-      }
-      if (!isHideLoading) dispatch(setIsOffersLoading(true));
-
-      const res = await merchantApi.getFavoriteOffers({
-        params: body,
-      });
-
-      if (!isHideLoading) dispatch(setIsOffersLoading(false));
-      dispatch(
-        setFavoriteOffers(workStatus === CONTENT_DISABLED ? [] : res.data.result),
-      );
-    };
-
-export const getLocalClients = () => async (dispatch, getState) => {
-  const token = await getAuthToken();
-  try {
-    const res = await merchantApi.getMerchant({
-      params: {
-        token: token,
-        domain: "[ ['local_client', '=', True]]",
-        fields: "['id','name','image_url','x_sequence', 'create_date']",
-        ...getOffsetAndLimit(1),
-      },
-    });
-
-    dispatch(
-      setLocalClients(
-        res.data.result.sort((a, b) =>
-          new Date(a.create_date) > new Date(b.create_date) ? -1 : 1,
-        ),
-      ),
-    );
-  } catch (e) {
-    console.log(e);
-  }
-};
-export const getInternationalClients = () => async (dispatch, getState) => {
-  const token = await getAuthToken();
-  try {
-    const res = await merchantApi.getMerchant({
-      params: {
-        token: token,
-        domain: "[ ['int_client', '=', True]]",
-        fields: "['id','name','image_url','x_sequence', 'create_date']",
-      },
-    });
-    dispatch(
-      setInternationalClients(
-        res.data.result.sort((a, b) => (a.x_sequence > b.x_sequence ? 1 : -1)),
-      ),
-    );
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-export const getOrganizations =
-  ({ transform }) =>
-    async (dispatch, getState) => {
-      const { token } = getState().authReducer;
       try {
-        dispatch(setIsMerchantsLoading(true));
-        const res = await merchantApi.getOrganizations({
-          params: {
-            token,
-          },
+        const { workStatus } = getState().authReducer;
+        const { token } = getState().authReducer;
+        let body = { token, merchant_category_id: selectedCategory };
+        if (isVouchers) {
+          body = { ...body, is_voucher: 'True' };
+        } else {
+          body = { ...body, is_save: 'True' };
+        }
+        if (!isHideLoading) dispatch(setIsOffersLoading(true));
+
+        const res = await merchantApi.getFavoriteOffers({
+          params: body,
         });
 
-        const data = res.data.result
-          .map(d => ({
-            ...d,
-            merchant_logo: d.org_logo,
-            banner_image: d.org_banner,
-            merchant_id: d.org_id,
-            merchant_name: d.org_name,
-            name: d.org_name,
-            isOrganization: true,
-          }))
-          .sort((a, b) => (a.x_sequence > b.x_sequence ? 1 : -1));
-
-        dispatch(setOrganizations(transform ? transform(data) : data));
-        dispatch(setIsMerchantsLoading(false));
-      } catch (e) {
-        console.log(e);
+        dispatch(
+          setFavoriteOffers(workStatus === CONTENT_DISABLED ? [] : res.data.result),
+        );
+      } catch (err) {
+      } finally {
+        if (!isHideLoading) dispatch(setIsOffersLoading(false));
       }
     };
-
-export const bookNow =
-  (body, t, setIsSuccessBook) => async (dispatch, getState) => {
-    const { token } = getState().authReducer;
-    console.log("bookNow body", JSON.stringify({
-      params: {
-        ...body,
-        token,
-      },
-    }))
-    try {
-      const res = await axios.post(
-        'https://golalitatwffer.com/api/go/sendinblue_email/V2',
-        {
-          params: {
-            ...body,
-            token,
-          },
-        },
-      );
-
-      console.log(res.data, 'res');
-
-      if (res.data?.result?.success) {
-        showMessage({
-          message: t('Profile.submitSuccess'),
-          type: 'success',
-        });
-
-        setIsSuccessBook(true);
-      } else {
-        showMessage({
-          message: t('Login.somethingWrong'),
-          type: 'success',
-        });
-      }
-    } catch (e) {
-      console.log(e.message, 'error');
-      console.log(e);
-    }
-  };
 
 export const deleteAccount = () => async (dispatch, getState) => {
   const { token } = getState().authReducer;
@@ -947,9 +498,13 @@ export const deleteAccount = () => async (dispatch, getState) => {
         token,
       },
     });
+
     dispatch(logout());
   } catch (e) {
-    console.log(e);
+    showMessage({
+      message: i18next.t('General.error'),
+      type: 'danger',
+    });
   }
 };
 
@@ -960,21 +515,18 @@ const filterAdvertSlot = items =>
         !item.is_sjc &&
         (Platform.OS === 'android' ? item.x_android : item.x_ios),
     )
-    .sort((a, b) => a.sequence - b.sequence)
-    .map(item => ({
-      ...item,
-      banner_image: rewriteAssetUrl(item.banner_image),
-      image_url: rewriteAssetUrl(item.image_url),
-    }));
+    .sort((a, b) => a.sequence - b.sequence);
 
 // Home screen banners are Qatar-only; Global country screens fetch their own
 // via getCountryBanners below.
 export const getAdvert = () => async (dispatch, getState) => {
   const { token } = getState().authReducer;
   try {
+
     const res = await merchantApi.getAdvert({
       params: { token, country: 'QA' },
     });
+
 
     dispatch(
       setAdvert({
@@ -984,9 +536,8 @@ export const getAdvert = () => async (dispatch, getState) => {
       }),
     );
   } catch (e) {
-    console.log(e, 'getAdvert error');
-    // Home gates on !!advert — set empty slots so a banner failure
-    // does not leave the screen on an infinite loader.
+    // Home waits on !!advert — set empty slots so a failed banner call
+    // doesn't leave the screen on an endless loader.
     dispatch(setAdvert({ ad_1: [], ad_2: [], ad_3: [] }));
   }
 };
@@ -1001,7 +552,6 @@ export const getCountryBanners = countryCode => async (dispatch, getState) => {
     });
     return filterAdvertSlot(res.data?.result?.ad_1);
   } catch (e) {
-    console.log(e, 'getCountryBanners error');
     return [];
   }
 };
@@ -1016,21 +566,6 @@ export const trackBanner = body => async (dispatch, getState) => {
       },
     });
   } catch (e) {
-    console.log(e);
-  }
-};
-
-export const getSocialMedia = () => async (dispatch, getState) => {
-  const { token } = getState().authReducer;
-  try {
-    const res = await merchantApi.getSocialMedia({
-      params: {
-        token,
-      },
-    });
-    dispatch(setSocialMedia(res.data.result[0]));
-  } catch (e) {
-    console.log(e);
   }
 };
 
@@ -1042,7 +577,6 @@ export const saveOffer =
     const is_save =
       favoriteOffers?.find?.(o => o?.id === offer_id) !== undefined;
 
-    console.log(!is_save, offer_id, '!is_save');
 
     try {
       let body = { token, product_id: offer_id };
@@ -1069,7 +603,10 @@ export const saveOffer =
       }
       dispatch(getFavoriteOffers(true));
     } catch (e) {
-      console.log(e);
+      showMessage({
+        message: t('General.error'),
+        type: 'danger',
+      });
     }
   };
 
@@ -1102,11 +639,14 @@ export const toggleFavourites = merchant_id => async (dispatch, getState) => {
 
     dispatch(getFavouriteMerchantsList(true));
   } catch (e) {
-    console.log(e);
+    showMessage({
+      message: i18next.t('General.error'),
+      type: 'danger',
+    });
   }
 };
 
-export const redeem = (body, t, navigation) => async (dispatch, getState) => {
+export const redeem = (body, t) => async (dispatch, getState) => {
   const { token, user } = getState().authReducer;
   const userId = await AsyncStorage.getItem('userId');
 
@@ -1133,12 +673,13 @@ export const redeem = (body, t, navigation) => async (dispatch, getState) => {
 
       dispatch(track('b1g1', body.product_id, false, body.merchant_code));
 
-      if (navigation) {
-        navigation.navigate('offer-apply-code-confirmation', {
+      navigate('AllOffers', {
+        screen: 'offer-apply-code-confirmation',
+        params: {
           product_id: body.product_id,
           merchant_id: body.merchant_id,
-        });
-      }
+        },
+      });
     } else {
 
       const errroMsg =
@@ -1152,7 +693,10 @@ export const redeem = (body, t, navigation) => async (dispatch, getState) => {
       });
     }
   } catch (e) {
-    console.log(e);
+    showMessage({
+      message: t('General.error'),
+      type: 'danger',
+    });
   }
 };
 
@@ -1178,14 +722,12 @@ export const track =
         };
         if (isSendEmail) {
           const res = await merchantApi.sendEmail(body);
-          console.log('send email', res.data);
           onFinishCallBack?.();
         } else {
           const res = await merchantApi.track(body);
-          console.log('track', res.data);
           onFinishCallBack?.();
         }
       } catch (e) {
-        console.log(e);
       }
     };
+

@@ -15,47 +15,34 @@ const MerchantListHeader = ({ style, isHome }) => {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
-  const isInsideMerchantsStack = () =>
-    !!navigation.getState?.()?.routeNames?.includes("merchants-filters");
-
-  // From Home (Main) we must go through MainStack "merchants".
-  // From inside MerchantsNavigator, navigate to the nested screen directly.
-  const openMerchantsScreen = (screen, params) => {
-    if (isInsideMerchantsStack()) {
-      navigation.navigate(screen, params);
-      return;
-    }
-
-    navigation.navigate("merchants", {
-      screen,
-      params,
-    });
-  };
-
   const handleTextChange = (text) => {
     setSearch(text);
   };
 
   const handleSearchPress = () => {
-    const query = search;
-
-    if (query.length > 0) {
-      trackActivity("search", {
-        search_query: query,
-        page_name: "search",
-        metadata: { search_source: "home_quick_search" },
+    if (search.length > 0) {
+      trackActivity('search', {
+        search_query: search,
+        page_name: 'search',
+        metadata: { search_source: 'home_quick_search' },
       });
     }
 
     setSearch("");
 
-    if (query.length === 0) {
-      openMerchantsScreen("merchants-filters", {
-        filters: { merchant_name: query },
+    if (search.length == 0) {
+      navigation.navigate("merchants", {
+        screen: "merchants-filters",
+        params: {
+          filters: { merchant_name: search },
+        },
       });
     } else {
-      openMerchantsScreen("merchants-list", {
-        filters: { merchant_name: query },
+      navigation.navigate("merchants", {
+        screen: "merchants-list",
+        params: {
+          filters: { merchant_name: search },
+        },
       });
     }
   };
@@ -65,7 +52,9 @@ const MerchantListHeader = ({ style, isHome }) => {
       navigation.openDrawer();
     } else {
       setSearch("");
-      openMerchantsScreen("merchants-filters");
+      navigation.navigate("merchants", {
+        screen: "merchants-filters",
+      });
     }
   };
 
@@ -74,30 +63,47 @@ const MerchantListHeader = ({ style, isHome }) => {
       style={[
         styles.wrapper,
         {
-          backgroundColor: isDark ? "#444444" : "#FAFAFA",
+          backgroundColor: isDark ? "#1C1C1E" : "#F5F5F7",
+          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
           flexDirection: isRTL() ? "row-reverse" : "row",
         },
         style,
       ]}
     >
       <TouchableOpacity
-        style={[styles.filtersBlock, { borderWidth: isDark ? 1 : 0 }]}
+        style={[
+          styles.filtersBlock,
+          {
+            backgroundColor: isDark ? "rgba(255, 255, 255, 0.06)" : "#E5E7EB",
+          },
+        ]}
         onPress={handleFilterPress}
+        activeOpacity={0.7}
       >
-        <Burger color={isDark ? colors.white : "#202226"} />
+        <Burger color={isDark ? colors.white : "#202226"} width={18} height={18} />
       </TouchableOpacity>
       <View style={styles.inputBlock}>
         <TextInput
           value={search}
           onChangeText={handleTextChange}
           style={[styles.input, getTextAlign()]}
-          placeholderTextColor={"rgba(255,255,255,0.5)"}
+          placeholderTextColor={isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"}
           color={isDark ? colors.white : "#202226"}
           placeholder={t("Merchants.searchPlaceholder")}
         />
       </View>
-      <TouchableOpacity style={styles.searchBlock} onPress={handleSearchPress}>
-        <SearchSvg color={isDark ? colors.mainDarkMode : "#202226"} />
+      <TouchableOpacity
+        style={[
+          styles.searchBlock,
+          {
+            marginLeft: isRTL() ? 4 : 0,
+            marginRight: isRTL() ? 0 : 4,
+          },
+        ]}
+        onPress={handleSearchPress}
+        activeOpacity={0.7}
+      >
+        <SearchSvg color={isDark ? colors.mainDarkMode : "#202226"} width={20} height={20} />
       </TouchableOpacity>
     </View>
   );
@@ -105,29 +111,33 @@ const MerchantListHeader = ({ style, isHome }) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    height: 56,
-    borderRadius: 25,
-    backgroundColor: "#444444",
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
     alignItems: "center",
+    paddingHorizontal: 6,
   },
   filtersBlock: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderColor: "white",
-    borderWidth: 1,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 10,
   },
   inputBlock: {
     flex: 1,
+    paddingHorizontal: 8,
   },
   searchBlock: {
-    marginHorizontal: 20,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    fontSize: 14,
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import { connect } from "react-redux";
 import { colors } from "../colors";
 import { getMerchantDetails } from "../../redux/merchant/merchant-thunks";
@@ -20,6 +20,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import Portal from "../Portal";
 import { useTheme } from "../ThemeProvider";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CloseIcon = sized(CloseSvg, 14);
 
@@ -34,12 +35,13 @@ const NotificationModal = ({
   const { t } = useTranslation();
   const bottomSheetModalRef = useRef(null);
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const isModalShowed = useRef(null);
 
-  const notifications = Array.isArray(messageNotifications)
-    ? messageNotifications.filter((d) => d.imp_notification === true)
-    : [];
+  const notifications = (messageNotifications ?? []).filter(
+    (d) => d.imp_notification === true
+  );
 
   const isVisibleVar =
     isVisible &&
@@ -54,8 +56,7 @@ const NotificationModal = ({
   }, []);
 
   const handleClosePress = () => {
-    setIsNotificationModal(false);
-    bottomSheetModalRef.current?.dismiss();
+    setIsNotificationModal(null);
   };
 
   useEffect(() => {
@@ -70,16 +71,16 @@ const NotificationModal = ({
   }, [isVisibleVar]);
 
   useEffect(() => {
-    if (!isVisibleVar && !!isModalShowed.current) {
-      // dismiss() clears the modal BackHandler; close() can leave it armed
-      // so the next Android back press exits the app from merchant-info.
-      bottomSheetModalRef.current?.dismiss();
-      isModalShowed.current = false;
+    if (!isVisibleVar) {
+      bottomSheetModalRef?.current?.dismiss();
     }
   }, [isVisibleVar]);
 
   // variables
-  const snapPoints = useMemo(() => ["75%"], []);
+  const maxDynamicContentSize = useMemo(
+    () => Dimensions.get("window").height * 0.75,
+    []
+  );
 
   const handleSheetChanges = useCallback((index) => {
     console.log("handleSheetChanges", index);
@@ -88,11 +89,12 @@ const NotificationModal = ({
   return (
     <Portal name="home-notifications-modal">
       <BottomSheetModalProvider key="home-notifications-modal">
-        <View style={styles.container} pointerEvents="box-none">
+        <View style={styles.container}>
           <BottomSheetModal
             key="home-notifications-modal"
             ref={bottomSheetModalRef}
-            snapPoints={snapPoints}
+            enableDynamicSizing={true}
+            maxDynamicContentSize={maxDynamicContentSize}
             onChange={handleSheetChanges}
             backgroundStyle={{
               backgroundColor: isDark ? colors.navyBlue : colors.white,
@@ -120,10 +122,16 @@ const NotificationModal = ({
             <BottomSheetFlatList
               showsVerticalScrollIndicator={false}
               data={notifications}
-              contentContainerStyle={styles.contentContainerStyle}
-              renderItem={({ item }) => (
-                <NotificationItem item={item} onPress={handleClosePress} />
-              )}
+              keyExtractor={(item, index) => String(item.notification_id ?? index)}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={10}
+              removeClippedSubviews={true}
+              contentContainerStyle={[
+                styles.contentContainerStyle,
+                { paddingBottom: 40 + insets.bottom },
+              ]}
+              renderItem={({ item }) => <NotificationItem item={item} />}
               ListEmptyComponent={() => {
                 return <ActivityIndicator />;
               }}
@@ -152,10 +160,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   contentContainerStyle: {
-    flexGrow: 1,
     paddingHorizontal: 20,
     marginTop: 20,
-    paddingBottom: 60,
   },
   notificationModal__close: {},
 });

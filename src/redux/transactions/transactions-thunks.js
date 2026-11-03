@@ -2,70 +2,12 @@ import { transactionsApi } from "./transactions-api";
 import {
   setFamilyMembers,
   setFamilyMembersLoading,
-  setTransactions,
-  setTransactionsHistory,
-  setTransactionsHistoryError,
-  setTransactionsHistoryLoading,
 } from "./transactions-actions";
 import { getUserData } from "../auth/auth-thunks";
 import { CONTENT_DISABLED } from "../auth/auth-types";
 import { showMessage } from "react-native-flash-message";
 import i18n from "../../languages";
 
-export const getTransactions = () => async (dispatch, getState) => {
-  const { workStatus } = getState().authReducer;
-  const { token } = getState().authReducer;
-  const res = await transactionsApi.getTransactions({
-    params: { token },
-  });
-
-  dispatch(
-    setTransactions(workStatus === CONTENT_DISABLED ? [] : res.data.result)
-  );
-};
-
-export const getTransactionsHistory = () => async (dispatch, getState) => {
-  dispatch(setTransactionsHistoryLoading(true));
-
-  try {
-    const { token } = getState().authReducer;
-
-    const res = await transactionsApi.getTransactionsHistory({
-      params: { token },
-    });
-
-    if (!res.data?.result) {
-      throw "err";
-    }
-    const data = res.data.result;
-
-    data.transactions_by_merchant = data.transactions_by_merchant.map(
-      (item) => {
-        const category = data.transactions_by_category.find(
-          (category) => category.merchant_category_id === item.category_id
-        );
-
-        return {
-          ...item,
-          categoryIcon: category?.merchant_category_logo || undefined,
-          categoryName: category?.category || "",
-        };
-      }
-    );
-
-    data.transactions_by_merchant = [
-      ...data.transactions_by_merchant,
-      ...data.transactions_by_merchant,
-      ...data.transactions_by_merchant,
-    ];
-
-    dispatch(setTransactionsHistory(data));
-  } catch (err) {
-    dispatch(setTransactionsHistoryError(true));
-  } finally {
-    dispatch(setTransactionsHistoryLoading(false));
-  }
-};
 
 export const getFamilyMembers = () => async (dispatch, getState) => {
   const { workStatus } = getState().authReducer;
@@ -95,26 +37,7 @@ export const getFamilyMembers = () => async (dispatch, getState) => {
   }
 };
 
-export const transferAmount =
-  ({ points, phone }, setFieldError, setIsSubmitSend, setIsSuccessSend) =>
-    async (dispatch, getState) => {
-      const { token } = getState().authReducer;
-      const res = await transactionsApi.transferAmount({
-        params: {
-          token,
-          points,
-          phone,
-        },
-      });
-      if (res.data.result.error) {
-        setFieldError("member", "User not found");
-        setIsSubmitSend(false);
-      } else {
-        dispatch(getUserData(token));
-        setIsSubmitSend(false);
-        setIsSuccessSend(true);
-      }
-    };
+
 
 export const addFamilyMember =
   (body, navigation, onError) => async (dispatch, getState) => {
@@ -138,6 +61,10 @@ export const addFamilyMember =
       navigation.goBack();
     } catch (e) {
       console.log(e);
+      showMessage({
+        type: "danger",
+        message: i18n.t("General.error"),
+      });
     }
   };
 
@@ -168,7 +95,7 @@ export const deleteFamilyMember =
         message,
       });
 
-      console.log(e, "delete family member error");
+      console.log(error, "delete family member error");
     }
   };
 
@@ -187,5 +114,9 @@ export const editFamilyMember =
       navigation.goBack();
     } catch (e) {
       console.log(e);
+      showMessage({
+        type: "danger",
+        message: i18n.t("General.error"),
+      });
     }
   };

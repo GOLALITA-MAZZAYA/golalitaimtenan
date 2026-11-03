@@ -1,6 +1,5 @@
 import i18next from "i18next";
-import { Linking, PermissionsAndroid, Platform } from "react-native";
-import Geocoder from "react-native-geocoding";
+import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation from "react-native-geolocation-service";
 
 export const requestLocationPermission = async () => {
@@ -40,99 +39,6 @@ export const getCurrentLocation = () => {
   });
 };
 
-const transformAddressComponents = (json) => {
-  const adressComponents = json?.results?.[0]?.address_components;
-
-  if (!adressComponents?.length) {
-    return null;
-  }
-
-  const getNameByFieldType = (type) => {
-    return adressComponents.find((item) => item.types.includes(type))
-      ?.long_name;
-  };
-
-  return {
-    city: getNameByFieldType("locality"),
-    region: getNameByFieldType("administrative_area_level_1"),
-    country: getNameByFieldType("country"),
-    postalCode: getNameByFieldType("postal_code"),
-    streetNumber: getNameByFieldType("street_number"),
-    street: getNameByFieldType("route"),
-    formatted_address: json?.results?.[0]?.formatted_address,
-    latitude: json?.results?.[0]?.geometry?.location?.lat,
-    longitude: json?.results?.[0]?.geometry?.location?.lng,
-  };
-};
-
-export const getAddresFromCoordinates = async (lat, lng) => {
-  const json = await Geocoder.from({
-    lat,
-    lng,
-  });
-
-  return transformAddressComponents(json);
-};
-
-export const transformLocationDataFromBackend = (locations) => {
-  return locations.map((item) => ({
-    city: item.location_name,
-    region: item.zone,
-    streetNumber: item.street_number,
-    street: "",
-    formatted_address: `${item.location_name}, ${item.street_number}, ${item.building_number}, ${item.apartment_number}`,
-    latitude: item.latitude,
-    longitude: item.longitude,
-    country: "",
-    pastalCode: "",
-    apartment_number: item.apartment_number,
-    building_number: item.building_number,
-    floor: item.floor,
-    customer: item.customer,
-    customer_id: item.customer_id,
-    id: item.location_id,
-  }));
-};
-
-export const getAddressFromName = async (name) => {
-  const json = await Geocoder.from(name);
-
-  return transformAddressComponents(json);
-};
-
-export const getDistance = (lat1, lon1, lat2, lon2) => {
-  const toRad = (value) => (value * Math.PI) / 180;
-
-  const r = 6371; // Earth's radius in kilometers
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = r * c; // Distance in kilometers
-
-  return d;
-};
-
-export const getTranslationForOfferType = (offerType) => {
-  switch (offerType) {
-    case "b1g1":
-      return i18next.t("AllOffers.b1g1Type");
-    case "promocode":
-      return i18next.t("AllOffers.promocodeType");
-    case "discount":
-      return i18next.t("AllOffers.discountType");
-    case "giftcard":
-      return i18next.t("AllOffers.giftcardType");
-    default:
-      return "";
-  }
-};
-
 export const toEnglishNumber = (strNum) => {
   var ar = "٠١٢٣٤٥٦٧٨٩".split("");
   var en = "0123456789".split("");
@@ -140,6 +46,23 @@ export const toEnglishNumber = (strNum) => {
   strNum = strNum.replace(/[^\d]/g, "");
   return strNum;
 };
+
+export function daysLeftUntil(dateString) {
+  if(!dateString){
+    return ''
+  }
+  const today = new Date();
+  const targetDate = new Date(dateString);
+
+  // Normalize both dates to midnight to avoid timezone/time issues
+  today.setHours(0, 0, 0, 0);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const diffInMs = targetDate - today;
+
+  return Math.ceil(diffInMs / msPerDay);
+}
 
 
 const getUserLocation = async () => {
@@ -189,3 +112,45 @@ const getUserLocation = async () => {
 
 export default getUserLocation;
 
+export const requestCameraPermission = async () => {
+  if (Platform.OS === 'android') {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  }
+  return true;
+};
+
+export const confirmAction = ({
+  title = "Confirm",
+  message = "Are you sure?",
+  cancelText = 'Cancel',
+  okText = 'Ok',
+  onConfirm,
+  onCancel,
+}) => {
+  Alert.alert(
+    title,
+    message,
+    [
+      { text: cancelText, style: "cancel", onPress: onCancel },
+      { text: okText, onPress: onConfirm },
+    ],
+    { cancelable: true }
+  );
+};
+
+export const cleanObject = (obj) => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, value]) => value)
+  );
+};
+
+export function removeEmptyFields(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([_, value]) => value !== null && value !== undefined && value !== ''
+    )
+  );
+}

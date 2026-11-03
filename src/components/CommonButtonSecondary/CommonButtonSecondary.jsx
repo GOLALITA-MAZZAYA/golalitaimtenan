@@ -25,6 +25,9 @@ const CommonButtonSecondary = ({
     <View
       style={[
         styles.button,
+        {
+          borderColor: isDark ? colors.mainDarkMode : colors.darkBlue,
+        },
         style,
         isError && {
           backgroundColor: colors.lightGrey,
@@ -57,7 +60,7 @@ const CommonButtonSecondary = ({
           textColor={textColor || colors.white}
           size={18}
           font={BALOO_SEMIBOLD}
-          style={{ marginTop: 5, width: '100%', textAlign: 'center' }}
+          style={{ marginTop: 5 }}
         />
 
         {loading && (

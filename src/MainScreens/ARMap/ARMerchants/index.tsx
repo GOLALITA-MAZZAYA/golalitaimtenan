@@ -1,5 +1,12 @@
 // src/components/AR/screens/ARMapScreen.tsx
-import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  memo,
+} from 'react';
 import {
   View,
   Text,
@@ -35,7 +42,6 @@ import CompassHeading from 'react-native-compass-heading';
 import { getMerchantsByCoordinates } from '../../../api/merchants';
 import MerchantModal from '../../MapPage/components/MerchantModal';
 import Header from '../../../components/Header';
-import { goBackOrHome } from '../../../Navigation/RootNavigation';
 import { SCREEN_HEIGHT } from '../../../styles/mainStyles';
 import { SCREEN_WIDTH } from '@gorhom/bottom-sheet';
 import { colors } from '../../../components/colors';
@@ -45,8 +51,7 @@ import {
   disableScreenshotProtection,
   enableScreenshotProtection,
 } from '../../../utils/screenshotProtection';
-import { setSecureWindow, setTapjackingProtection } from '../../../utils/windowSecurity';
-import { getLocalizedValue } from '../../../../utils';
+import { setSecureWindow } from '../../../utils/windowSecurity';
 
 /** ---------- ассеты ---------- */
 const Vector = require('../img/Vector.png');
@@ -104,7 +109,7 @@ const curveOffset = (rel: number) => 14 * (Math.abs(rel) / (FOV / 2));
 /** ---------- стрелка ---------- */
 const ArrowIcon = ({
   size = 34,
-  fill = '#DDBD6B',
+  fill = '#FFB000',
   stroke = '#202020',
 }: {
   size?: number;
@@ -170,14 +175,12 @@ type MiniMapProps = {
   coords: LatLng;
   nearest5: Merchant[];
   headingRotate: RNAnimated.AnimatedInterpolation<string | number>;
-  isArabic: boolean;
 };
 
 const MiniMap = memo(function MiniMap({
   coords,
   nearest5,
   headingRotate,
-  isArabic,
 }: MiniMapProps) {
   const mapRef = useRef<MapView | null>(null);
 
@@ -240,12 +243,21 @@ const MiniMap = memo(function MiniMap({
         </Marker>
 
         {/* Стрелка курса — платф. поведение */}
+        {/* tracksViewChanges=false: the arrow's content never changes, only
+        its rotation (driven by a native RNAnimated.Value with
+        useNativeDriver + renderToHardwareTextureAndroid, i.e. a native-layer
+        transform, not a content redraw). Leaving this true forced
+        react-native-maps to re-snapshot the marker into a new GPU texture on
+        every native animation frame indefinitely — 60/sec, exhausting
+        texture memory ("Texture can't be extended any further" native
+        errors) and the render pressure behind the "Maximum update depth
+        exceeded" warnings on this screen. */}
         <Marker
           coordinate={coords}
           anchor={{ x: 0.5, y: 0.5 }}
           flat
           zIndex={6}
-          tracksViewChanges={true}
+          tracksViewChanges={false}
         >
           <RNAnimated.View
             collapsable={false}
@@ -261,6 +273,81 @@ const MiniMap = memo(function MiniMap({
 });
 
 /** ============================================================
+ *  КАРТОЧКА МЕРЧАНТА
+ *  ============================================================ */
+type MerchantCardProps = {
+  merchant: Merchant;
+  top: number;
+  opacity: number;
+  translateX: number;
+  isArabic: boolean;
+  onPress: (m: Merchant) => void;
+};
+
+const DISTANCE_TEXT_STYLE = { color: 'white', fontSize: 12, marginLeft: 8 };
+
+// Memoized on primitive props (top/opacity/translateX): the layout tick
+// recomputes `raw` — and therefore these values — as often as every ~80ms,
+// but while heading and merchant data are stable the computed values for a
+// given card are usually identical from one tick to the next. Without this,
+// every card's full subtree (Image, Text, Distance, etc.) fully
+// re-rendered on every tick regardless of whether anything about it
+// actually changed.
+const MerchantCard = memo(function MerchantCard({
+  merchant: m,
+  top,
+  opacity,
+  translateX,
+  isArabic,
+  onPress,
+}: MerchantCardProps) {
+  return (
+    <View
+      style={[
+        styles.cardWrap,
+        { top, opacity, transform: [{ translateX }] },
+      ]}
+      pointerEvents={opacity > 0.25 ? 'auto' : 'none'}
+    >
+      <TouchableOpacity activeOpacity={0.9} onPress={() => onPress(m)}>
+        <View style={styles.card}>
+          <Image
+            source={ComponentIcon}
+            style={styles.leftIcon}
+            resizeMode="contain"
+          />
+          <View style={styles.textCol}>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {isArabic ? m.x_arabic_name : m.merchant_name}
+            </Text>
+            <View style={styles.categoryWrapper}>
+              <TypographyText
+                style={styles.cardSub}
+                numberOfLines={1}
+                title={`${`${isArabic ? m.arabic_category_name : m.category}` || '—'}`}
+              />
+              <Distance
+                latitude={m.partner_latitude}
+                longitude={m.partner_longitude}
+                textStyle={DISTANCE_TEXT_STYLE}
+              />
+            </View>
+          </View>
+          <View style={styles.divider} />
+          <View hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+            <Image
+              source={Vector}
+              style={styles.rightIcon}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+});
+
+/** ============================================================
  *  ЭКРАН
  *  ============================================================ */
 export default function ARMapScreen({ route }: any) {
@@ -268,7 +355,7 @@ export default function ARMapScreen({ route }: any) {
   const radius: number | undefined | null = route?.params?.radius;
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Камера
   const isFocused = useIsFocused();
@@ -279,6 +366,7 @@ export default function ARMapScreen({ route }: any) {
   // Гео/данные
   const [locOk, setLocOk] = useState(false);
   const [coords, setCoords] = useState<LatLng | null>(null);
+  const coordsRef = useRef<LatLng | null>(null);
   const [merchantsLoading, setMerchantsLoading] = useState(false);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
 
@@ -288,25 +376,35 @@ export default function ARMapScreen({ route }: any) {
   const lastAnimatedRef = useRef(0);
   const animBusyRef = useRef(false);
   const animTargetRef = useRef(0);
+  // animBusyRef alone only blocks a new animation while a prior one is
+  // still running — as soon as one finishes (as fast as ~30ms), the very
+  // next sensor event can immediately start another. On real devices the
+  // OS mostly honors the requested 100ms sensor interval so this rarely
+  // matters, but the emulator's simulated orientation provider can fire
+  // much faster, and starting a new RNAnimated.timing() on the same node
+  // that rapidly floods RN's Animated internals with scheduleUpdate calls
+  // faster than they can flush — the source of "Maximum update depth
+  // exceeded" warnings traced into createAnimatedPropsHook.js. This ref
+  // adds an explicit floor on how often a new animation may start.
+  const lastAnimStartRef = useRef(0);
+  const MIN_ANIM_START_INTERVAL_MS = 50;
 
   const lastCompassTs = useRef(0);
   const [headingTick, setHeadingTick] = useState(0);
 
   const permAskedRef = useRef(false);
   const geoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isArabic = i18n.language === 'ar';
 
   /** ---------- выбранный мерчант ---------- */
   const [selectedMerchant, setSelectedMerchant] =
     useState<ModalMerchant | null>(null);
 
-  // Close the merchant bottom sheet when this screen loses focus, since its
-  // Portal renders at the app root and would otherwise keep showing on top
-  // of whatever screen is navigated to next.
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => setSelectedMerchant(null);
-    }, []),
-  );
+  // Stable reference so MerchantCard's memo isn't broken by a fresh
+  // closure on every render (same reasoning as the headingRotate fix).
+  const handleSelectMerchant = useCallback((m: Merchant) => {
+    setSelectedMerchant(m as ModalMerchant);
+  }, []);
 
   /** permissions */
   useEffect(() => {
@@ -343,11 +441,23 @@ export default function ARMapScreen({ route }: any) {
     return Platform.OS === 'android' ? Math.max(30, base - 20) : base;
   };
 
-  const headingRotate = headingAnim.interpolate({
-    inputRange: [-7200, 7200],
-    outputRange: ['-7200deg', '7200deg'],
-    extrapolate: 'extend',
-  });
+  // Memoized: headingAnim.interpolate() returns a new AnimatedInterpolation
+  // object on every call. Without memoizing, headingRotate got a fresh
+  // reference on every render and was passed straight into MiniMap (a
+  // React.memo'd component) — the new reference broke memo's shallow
+  // comparison every time, forcing MiniMap (and its native MapView) to
+  // re-render on every single parent render. Under the heading ticker's
+  // sustained render pressure that cascaded into both the "Maximum update
+  // depth exceeded" warning and native map texture-allocation errors.
+  const headingRotate = useMemo(
+    () =>
+      headingAnim.interpolate({
+        inputRange: [-7200, 7200],
+        outputRange: ['-7200deg', '7200deg'],
+        extrapolate: 'extend',
+      }),
+    [headingAnim],
+  );
 
   const SMOOTHING_IOS = 0.6;
   const SMOOTHING_ANDROID = 0.25;
@@ -364,9 +474,7 @@ export default function ARMapScreen({ route }: any) {
         radius,
       );
 
-      console.log(data, 'new merchants');
-
-      setMerchants(data || []);
+      setMerchants(data);
     } catch (err) {
       console.log(err, 'get merchants error');
     } finally {
@@ -380,28 +488,37 @@ export default function ARMapScreen({ route }: any) {
     }
   }, [coords?.latitude, coords?.longitude, categoryId, radius]);
 
-  /** UI тикер — same as MinistryOfSports */
+  /** UI тикер — throttled to ~12/sec: marker repositioning doesn't need
+   * 60fps precision, and re-rendering the whole screen every single frame
+   * was the excessive-update pressure behind intermittent "Maximum update
+   * depth exceeded" warnings on this screen. */
   useEffect(() => {
     if (!isFocused) return;
-    const iv = setInterval(() => {
-      setHeadingTick(x => (x + 1) & 0xffff);
-    }, 50);
-    return () => clearInterval(iv);
+    const TICK_INTERVAL_MS = 80;
+    let frameId: number;
+    let lastTick = 0;
+    const tick = (now: number) => {
+      if (now - lastTick >= TICK_INTERVAL_MS) {
+        lastTick = now;
+        setHeadingTick(x => (x + 1) & 0xffff);
+      }
+      frameId = requestAnimationFrame(tick);
+    };
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
   }, [isFocused]);
 
-  /** Allow camera preview + card presses on Android (secure window / tapjacking) */
+  /** Allow camera preview on Android (secure window) */
   useFocusEffect(
     React.useCallback(() => {
       if (Platform.OS === 'android') {
         setSecureWindow(false);
-        setTapjackingProtection(false);
         disableScreenshotProtection().catch(() => {});
       }
 
       return () => {
         if (Platform.OS === 'android') {
           setSecureWindow(true);
-          setTapjackingProtection(true);
           enableScreenshotProtection().catch(() => {});
         }
       };
@@ -438,7 +555,12 @@ export default function ARMapScreen({ route }: any) {
         headingDegCont.current = next;
         animTargetRef.current = next;
 
-        if (!animBusyRef.current) {
+        const now = Date.now();
+        if (
+          !animBusyRef.current &&
+          now - lastAnimStartRef.current >= MIN_ANIM_START_INTERVAL_MS
+        ) {
+          lastAnimStartRef.current = now;
           const from = lastAnimatedRef.current,
             to = animTargetRef.current;
           const delta = Math.abs(to - from);
@@ -468,7 +590,12 @@ export default function ARMapScreen({ route }: any) {
             headingDegCont.current = next;
             animTargetRef.current = next;
 
-            if (!animBusyRef.current) {
+            const now = Date.now();
+            if (
+              !animBusyRef.current &&
+              now - lastAnimStartRef.current >= MIN_ANIM_START_INTERVAL_MS
+            ) {
+              lastAnimStartRef.current = now;
               const from = lastAnimatedRef.current,
                 to = animTargetRef.current;
               const delta = Math.abs(to - from);
@@ -522,6 +649,21 @@ export default function ARMapScreen({ route }: any) {
       return;
     }
 
+    // Minimum lat/lng delta before a refreshed GPS reading counts as
+    // "moved" (~5m). setCoords() below only fires past this threshold —
+    // GEO_POLL_MS's setInterval keeps calling getOnce() every 60s for as
+    // long as the screen is mounted (this effect only runs once, since
+    // coords isn't a dependency, by design — that's what lets it survive
+    // the first setCoords() without tearing the interval down). Without
+    // this guard, every 60s tick called setCoords() with a brand-new
+    // object even when the position was unchanged (e.g. standing still, or
+    // a static emulator location), which broke MiniMap's React.memo (coords
+    // is passed straight through as a prop) and re-fired its own
+    // useEffect(() => animateCamera(...), [coords]) for no reason — part of
+    // the render pressure behind the "Maximum update depth exceeded"
+    // warnings on this screen.
+    const MEANINGFUL_MOVE_DEG = 0.00005;
+
     const getOnce = () =>
       Geolocation.getCurrentPosition(
         (p: GeoPosition) => {
@@ -530,7 +672,16 @@ export default function ARMapScreen({ route }: any) {
             longitude: p.coords.longitude,
           };
 
-          //setCoords({ latitude: 25.3917154, longitude: 51.5200267 });
+          const prev = coordsRef.current;
+          const moved =
+            !prev ||
+            Math.abs(prev.latitude - next.latitude) > MEANINGFUL_MOVE_DEG ||
+            Math.abs(prev.longitude - next.longitude) > MEANINGFUL_MOVE_DEG;
+
+          if (!moved) return;
+
+          coordsRef.current = next;
+          // setCoords({ latitude: 25.286106, longitude: 51.534817 });
           setCoords(next);
 
           const course = bearingBetween(
@@ -546,12 +697,25 @@ export default function ARMapScreen({ route }: any) {
           headingDegCont.current = n;
           animTargetRef.current = n;
 
+          // Unlike the FOP/iOS-fallback paths, this one never checked or set
+          // animBusyRef — it could start a second RNAnimated.timing() on the
+          // same headingAnim node while a compass-driven one was still
+          // in-flight. Two overlapping animations registered on the same
+          // node is exactly the kind of state RN's Animated internals don't
+          // handle cleanly (repeated scheduleUpdate churn -> "Maximum
+          // update depth exceeded"). stopAnimation() first guarantees a
+          // clean handoff, and participating in animBusyRef stops the
+          // compass paths from starting their own overlapping one right
+          // after.
+          headingAnim.stopAnimation();
+          animBusyRef.current = true;
           RNAnimated.timing(headingAnim, {
             toValue: n,
             duration: 80,
             easing: Easing.linear,
             useNativeDriver: true,
           }).start(() => {
+            animBusyRef.current = false;
             lastAnimatedRef.current = n;
           });
         },
@@ -572,7 +736,7 @@ export default function ARMapScreen({ route }: any) {
   const nearest5: Merchant[] = useMemo(() => {
     if (!coords) return [];
 
-    const withDist = merchants?.filter(hasCoords).map(m => ({
+    const withDist = merchants.filter(hasCoords).map(m => ({
       m,
       d: '',
     }));
@@ -587,6 +751,11 @@ export default function ARMapScreen({ route }: any) {
 
     const OFFSCREEN = CARD_W;
 
+    // Quantize heading for card layout so sensor noise/hand tremor doesn't
+    // shift cards by sub-degree amounts on every 20ms tick — a moving touch
+    // target cancels the Android touch responder before onPress fires.
+    const headingForLayout = Math.round(normDeg(headingDegCont.current) / 2) * 2;
+
     const items = nearest5
       .filter(hasCoords)
       .map(m => {
@@ -596,7 +765,7 @@ export default function ARMapScreen({ route }: any) {
           m.partner_latitude,
           m.partner_longitude,
         );
-        const rel = ((brg - normDeg(headingDegCont.current) + 540) % 360) - 180;
+        const rel = ((brg - headingForLayout + 540) % 360) - 180;
         const inFov = Math.abs(rel) <= FOV / 2;
         const x = (rel / (FOV / 2)) * (SPAN + OFFSCREEN);
         return { m, rel, inFov, x };
@@ -623,7 +792,7 @@ export default function ARMapScreen({ route }: any) {
         additionalBtnsProps={{
           back: {
             btnColor: colors.white,
-            onPress: () => goBackOrHome(navigation),
+            onPress: () => navigation.navigate('Main'),
           },
         }}
       />
@@ -633,10 +802,10 @@ export default function ARMapScreen({ route }: any) {
         activeOpacity={0.9}
         onPress={() => navigation.navigate('ARCategories')}
       >
-        <FilterIcon size={20} color={colors.mainDarkMode} />
+        <FilterIcon size={20} color="#FFB000" />
       </TouchableOpacity>
 
-      {/* Camera + cards — same structure as MinistryOfSports (works on Android) */}
+      {/* Камера фоном */}
       {deviceReady ? (
         <Camera
           style={styles.fill}
@@ -650,91 +819,54 @@ export default function ARMapScreen({ route }: any) {
         <View style={styles.fill} />
       )}
 
-      {(!deviceReady || merchantsLoading) && (
+      {merchantsLoading && (
         <View style={styles.center}>
           <Text style={styles.loadingText}>{t('General.loading')}</Text>
         </View>
       )}
 
-      {deviceReady && !locOk && (
+      {!locOk && (
         <View style={styles.center}>
           <Text style={styles.loadingText}>{t('General.noGeolocation')}</Text>
         </View>
       )}
 
-      {deviceReady && locOk && !coords && (
+      {locOk && !coords && (
         <View style={styles.center}>
           <Text style={styles.loadingText}>{t('General.loading')}</Text>
         </View>
       )}
 
-      {deviceReady && locOk && coords && !merchantsLoading && !raw?.length && (
+      {locOk && coords && !merchantsLoading && !raw?.length && (
         <View style={styles.center}>
           <Text style={styles.loadingText}>{t('ar.noMerchantsFound')}</Text>
         </View>
       )}
 
-      {deviceReady &&
-        locOk &&
+      {/* Карточки */}
+      {locOk &&
         coords &&
-        raw.map(({ m, rel, x }) => {
+        raw.map(({ m, rel, x, inFov }) => {
           const top =
             CARD_TOP +
             laneIndexFor(m.merchant_id, raw) * LANE_STEP -
             curveOffset(rel);
 
+          const absRel = Math.abs(rel);
+
+          let opacity = 1;
+          if (!inFov) opacity = absRel <= 150 ? 1 - (absRel - 90) / 60 : 0;
+
           return (
-            <View
+            <MerchantCard
               key={m.merchant_id}
-              style={[
-                styles.cardWrap,
-                { top, transform: [{ translateX: x }] },
-              ]}
-            >
-              <TouchableOpacity onPress={() => setSelectedMerchant(m)}>
-                <View style={styles.card}>
-                  <Image
-                    source={ComponentIcon}
-                    style={styles.leftIcon}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.textCol}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {getLocalizedValue(m.x_arabic_name, m.merchant_name)}
-                    </Text>
-                    <View style={styles.categoryWrapper}>
-                      <TypographyText
-                        style={styles.cardSub}
-                        numberOfLines={1}
-                        title={
-                          getLocalizedValue(
-                            m.arabic_category_name,
-                            m.category || m.category_name,
-                          ) || '—'
-                        }
-                      />
-                      <Distance
-                        latitude={m.partner_latitude}
-                        longitude={m.partner_longitude}
-                        textStyle={{
-                          color: 'white',
-                          fontSize: 12,
-                          marginLeft: 8,
-                        }}
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.divider} />
-                  <View>
-                    <Image
-                      source={Vector}
-                      style={styles.rightIcon}
-                      resizeMode="contain"
-                    />
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
+              merchant={m}
+              top={top}
+              opacity={opacity}
+              translateX={x}
+              isArabic={isArabic}
+              onPress={handleSelectMerchant}
+            />
           );
         })}
 
@@ -743,10 +875,10 @@ export default function ARMapScreen({ route }: any) {
           coords={coords}
           nearest5={nearest5}
           headingRotate={headingRotate}
-          isArabic={isArabic}
         />
       )}
 
+      {/* Нижняя шторка */}
       <MerchantModal
         merchant={selectedMerchant}
         setSelectedMerchant={setSelectedMerchant}
@@ -821,8 +953,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 10,
     left: SCREEN_W / 2 - CARD_W / 2,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 16,
   },
 
   card: {

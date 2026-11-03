@@ -1,7 +1,26 @@
+import { Linking } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../ThemeProvider";
 import { colors } from "../colors";
 import HTMLView from "react-native-htmlview";
+
+const ALLOWED_LINK_SCHEMES = ["http:", "https:", "mailto:", "tel:"];
+
+// react-native-htmlview's default onLinkPress is a bare Linking.openURL(url)
+// with no scheme check — a server-supplied javascript:/intent:/file: link
+// would be opened unvalidated. Only allow known-safe schemes (or schemeless
+// relative links, left to Linking to reject).
+export const handleSafeLinkPress = url => {
+  const match = typeof url === "string" && /^([a-zA-Z][a-zA-Z\d+.-]*:)/.exec(url.trim());
+  const scheme = match ? match[1].toLowerCase() : null;
+
+  if (scheme && !ALLOWED_LINK_SCHEMES.includes(scheme)) {
+    console.warn("[HTMLRenderer] Blocked link with disallowed scheme:", url);
+    return;
+  }
+
+  Linking.openURL(url);
+};
 
 export const getHtmlStyleSheet = (isDark, language, color) => {
   const styles = {
@@ -61,6 +80,7 @@ const HTMLRenderer = ({ value, color, ...restProps }) => {
           color: textColor,
         },
       }}
+      onLinkPress={handleSafeLinkPress}
       {...restProps}
     />
   );

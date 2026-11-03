@@ -1,23 +1,20 @@
 import { useEffect } from 'react';
 import { StyleSheet, Modal, Image } from 'react-native';
 import BootSplash from 'react-native-bootsplash';
-import { WINDOW_WIDTH } from '../../styles/mainStyles';
+import { SCREEN_HEIGHT, WINDOW_WIDTH } from '../../styles/mainStyles';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { splash } from '../../org/assets';
 
 const SplashScreenModal = ({ isVisible }) => {
   useEffect(() => {
     BootSplash.hide();
   }, []);
 
-  const logo = require('../../assets/golalita.gif');
+  const logo = splash;
 
   return (
     <Modal animationType="none" transparent={false} visible={isVisible}>
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.main}>
           <Image source={logo} style={styles.image} resizeMode="stretch" />
-        </SafeAreaView>
-      </SafeAreaProvider>
     </Modal>
   );
 };
@@ -28,7 +25,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: WINDOW_WIDTH,
-    height: '100%',
+    height: SCREEN_HEIGHT
   },
 });
 

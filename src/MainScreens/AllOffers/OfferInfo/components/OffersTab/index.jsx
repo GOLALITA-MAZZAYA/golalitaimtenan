@@ -7,16 +7,10 @@ import { useTheme } from "../../../../../components/ThemeProvider";
 import { BALOO_SEMIBOLD } from "../../../../../redux/types";
 import { colors } from "../../../../../components/colors";
 import { TypographyText } from "../../../../../components/Typography";
-import CardWithNesetedItems from "../../../../../components/OfferCardWithNestedItems";
+import CardWithNesetedItems from "../../../../../components/CardWithNestedItems";
 import { saveOffer } from "../../../../../redux/merchant/merchant-thunks";
-import {
-  getAllOffersByMeerchantId,
-  getOffers,
-} from "../../../../../api/merchants";
-import {
-  getOffersForNestedItemsCard,
-  navigateTopProductPage,
-} from "../../../helpres";
+import { getAllOffersByMeerchantId } from "../../../../../api/merchants";
+import { navigateTopProductPage } from "../../../helpres";
 import { getCacheBustedUri, getStringDate, isRTL } from "../../../../../../utils";
 
 const OffersTab = ({
@@ -65,64 +59,10 @@ const OffersTab = ({
         );
       };
 
-      const inlineOffers = [
-        ...(Array.isArray(merchant?.offer_products)
-          ? merchant.offer_products
-          : []),
-        ...(Array.isArray(merchant?.products) ? merchant.products : []),
-      ];
-
-      if (inlineOffers.length > 0) {
-        const filtered = filterOffers(
-          inlineOffers.map((item) => ({
-            ...item,
-            uri: item.image_url || item.uri,
-            value: item.list_price ?? item.value,
-          }))
-        );
-        setInternalData(filtered);
-        return;
-      }
-
-      try {
-        const res = await getAllOffersByMeerchantId(mId);
-        const filtered = filterOffers(res);
-        if (filtered.length > 0) {
-          setInternalData(filtered);
-          return;
-        }
-      } catch (e) {
-        console.log("[OffersTab] getAllOffersByMeerchantId error:", e);
-      }
-
-      try {
-        const res2 = await getOffers(mId);
-        if (Array.isArray(res2) && res2.length > 0) {
-          const mapped = res2.map((item) => ({
-            ...item,
-            uri: item.image_url || item.uri,
-            value: item.list_price ?? item.value,
-          }));
-          const filtered = filterOffers(mapped);
-          setInternalData(filtered);
-          return;
-        }
-      } catch (e) {
-        console.log("[OffersTab] getOffers error:", e);
-      }
-
-      if (merchant?.is_hotel || merchant?.is_business_hotel) {
-        try {
-          const hotelOffers = await getOffersForNestedItemsCard(merchant, "all");
-          const filtered = filterOffers(hotelOffers);
-          setInternalData(filtered);
-          return;
-        } catch (e) {
-          console.log("[OffersTab] hotel offers error:", e);
-        }
-      }
-
-      setInternalData([]);
+      // Offers are sourced only from /user/offers/v3
+      const res = await getAllOffersByMeerchantId(mId);
+      const filtered = filterOffers(res);
+      setInternalData(filtered);
     } catch (err) {
       console.log("[OffersTab] fetchMerchantOffers error:", err);
       setInternalData([]);

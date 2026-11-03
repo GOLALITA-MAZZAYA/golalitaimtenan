@@ -1,21 +1,18 @@
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import React from 'react';
-import { View } from 'react-native';
-import { MainStackScreen } from './MainStack';
-import CustomDrawerContent from '../components/CustomDrawer/CustomDrawerContent';
-import { SCREEN_WIDTH } from '../styles/mainStyles';
-import { isRTL } from '../../utils';
-import { colors } from '../components/colors';
-import { useTheme } from '../components/ThemeProvider';
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import React from "react";
+import { View } from "react-native";
+import { TabsScreen } from "./TabScreen";
+import CustomDrawerContent from "../components/CustomDrawer/CustomDrawerContent";
+import { SCREEN_WIDTH } from "../styles/mainStyles";
+import { isRTL } from "../../utils";
+import { colors } from "../components/colors";
+import { useTheme } from "../components/ThemeProvider";
 
 const { Navigator, Screen } = createDrawerNavigator();
 
-/**
- * Authorized app shell.
- * Drawer → MainStack (no empty Tabs wrapper).
- */
+
 export const DrawerNavigator = () => {
-  const { isDark } = useTheme();
+  const isDark = useTheme();
 
   return (
     <View
@@ -31,12 +28,13 @@ export const DrawerNavigator = () => {
             width: SCREEN_WIDTH,
             paddingHorizontal: 0,
           },
-          drawerPosition: isRTL() ? 'right' : 'left',
+          drawerPosition: isRTL() ? "right" : "left",
         }}
         drawerContent={CustomDrawerContent}
       >
-        <Screen name="Home" component={MainStackScreen} />
+        <Screen name="Home" component={TabsScreen} />
       </Navigator>
+
     </View>
   );
 };

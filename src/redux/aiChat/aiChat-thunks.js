@@ -1,11 +1,6 @@
 import { showMessage } from "react-native-flash-message";
 import i18next from "i18next";
 import aiChatApi, { getAiChatToken, clearAiChatToken } from "../../api/aiChat";
-import { getAuthToken } from "../../utils/tokenStorage";
-import {
-  getCurrentLocation,
-  requestLocationPermission,
-} from "../../helpers";
 import {
   addAiChatMessage,
   setAiChatHistoryLoading,
@@ -13,46 +8,16 @@ import {
   setAiChatSending,
 } from "./aiChat-actions";
 
-const toFiniteNumber = (value) => {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
+// TEMP: hardcode Qatar coords until live GPS is wired for AI chat.
+const TEMP_AI_CHAT_LOCATION = {
+  latitude: 25.286106,
+  longitude: 51.534817,
 };
 
-const coordsFrom = (source) => {
-  const latitude = toFiniteNumber(
-    source?.latitude ?? source?.coords?.latitude
-  );
-  const longitude = toFiniteNumber(
-    source?.longitude ?? source?.coords?.longitude
-  );
-
-  if (latitude == null || longitude == null) {
-    return null;
-  }
-
-  return { latitude, longitude };
-};
-
-// Prefer live GPS; fall back to cached redux coords. Chat still sends if
-// location is unavailable (params simply omit latitude/longitude).
-const resolveAiChatLocation = async (getState) => {
-  try {
-    const status = await requestLocationPermission();
-
-    if (status === "granted") {
-      const position = await getCurrentLocation();
-      const live = coordsFrom(position?.coords ?? position);
-      if (live) {
-        return live;
-      }
-    }
-  } catch (e) {
-    console.log(e, "resolveAiChatLocation GPS error");
-  }
-
-  return coordsFrom(getState().globalReducer.userLocation);
-};
-
+// Shapes confirmed against Golalita_AI_Chat_Mobile_API_Guide.md:
+// - GET history item:  { id, role, message, intent, createdAt }
+// - POST chat reply:    { reply, intent, issue_id } - no id/createdAt/role,
+//   since it's not a stored-item lookup, just the fresh AI response.
 const normalizeHistoryMessage = (raw) => ({
   id: raw.id,
   role: raw.role,
@@ -69,12 +34,10 @@ const buildLocalMessage = ({ role, text, intent = null }) => ({
   createdAt: new Date().toISOString(),
 });
 
-const resolveMobileToken = async (getState) => {
-  const fromStore = getState().authReducer.token;
-  if (fromStore) return fromStore;
-  return getAuthToken();
-};
-
+// 401 means the cached AI JWT is missing/expired server-side even though our
+// local expiry math said otherwise - drop it so the next call re-exchanges.
+// 429 gets a friendlier message than the generic one; everything else shows
+// the server's own error.message when present.
 const describeAiChatError = async (e) => {
   const status = e.response?.status;
 
@@ -87,29 +50,14 @@ const describeAiChatError = async (e) => {
   return e.response?.data?.error?.message || i18next.t("General.error");
 };
 
-// One retry after 401: clears a stale AI JWT (e.g. from apex→www redirect
-// stripping Authorization) then re-exchanges the mobile session token.
-const withAiChatAuthRetry = async (getState, request) => {
-  const mobileToken = await resolveMobileToken(getState);
-  try {
-    const aiToken = await getAiChatToken(mobileToken);
-    return await request(aiToken);
-  } catch (e) {
-    if (e.response?.status !== 401) throw e;
-    await clearAiChatToken();
-    const freshToken = await getAiChatToken(mobileToken);
-    return request(freshToken);
-  }
-};
-
 export const getAiChatHistory =
   (limit = 50) =>
   async (dispatch, getState) => {
     try {
       dispatch(setAiChatHistoryLoading(true));
-      const res = await withAiChatAuthRetry(getState, (aiToken) =>
-        aiChatApi.getHistory(aiToken, limit)
-      );
+      const { token: mobileToken } = getState().authReducer;
+      const aiToken = await getAiChatToken(mobileToken);
+      const res = await aiChatApi.getHistory(aiToken, limit);
       const list = res.data?.data ?? [];
 
       dispatch(
@@ -133,9 +81,12 @@ export const sendAiChatMessage = (message) => async (dispatch, getState) => {
 
   try {
     dispatch(setAiChatSending(true));
-    const location = await resolveAiChatLocation(getState);
-    const res = await withAiChatAuthRetry(getState, (aiToken) =>
-      aiChatApi.sendMessage(trimmed, aiToken, location)
+    const { token: mobileToken } = getState().authReducer;
+    const aiToken = await getAiChatToken(mobileToken);
+    const res = await aiChatApi.sendMessage(
+      trimmed,
+      aiToken,
+      TEMP_AI_CHAT_LOCATION
     );
     const { reply, intent } = res.data?.data ?? {};
 
@@ -156,9 +107,9 @@ export const sendAiChatMessage = (message) => async (dispatch, getState) => {
 
 export const clearAiChatHistory = () => async (dispatch, getState) => {
   try {
-    await withAiChatAuthRetry(getState, (aiToken) =>
-      aiChatApi.clearHistory(aiToken)
-    );
+    const { token: mobileToken } = getState().authReducer;
+    const aiToken = await getAiChatToken(mobileToken);
+    await aiChatApi.clearHistory(aiToken);
     dispatch(setAiChatMessages([]));
   } catch (e) {
     console.log(e, "clearAiChatHistory error");

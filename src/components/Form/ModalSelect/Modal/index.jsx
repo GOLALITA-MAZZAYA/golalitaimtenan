@@ -30,12 +30,17 @@ const Modal = props => {
     onSubmit,
     renderSelect,
     renderHeader,
+    renderSubHeader,
     renderFooter,
     renderTitle,
     defaultValue: propsValue,
     single,
     shouldCloseModal,
-    modalKeyName
+    modalKeyName,
+    autoOpen,
+    dismissable = true,
+    onDismiss,
+    numColumns = 1,
   } = props;
   const [visible, setVisible] = useState(false);
   const [value, setValue] = useState([]);
@@ -47,6 +52,7 @@ const Modal = props => {
   console.log(options,'options')
   // ref
   const bottomSheetModalRef = useRef(null);
+  const hasAutoOpenedRef = useRef(false);
 
   // variables
   const snapPoints = useMemo(() => ['1%','100%'], []);
@@ -59,6 +65,25 @@ const Modal = props => {
   const handlePresentModalclose = useCallback(() => {
     bottomSheetModalRef.current?.close();
   }, []);
+
+  const handleTitleClosePress = () => {
+    handlePresentModalclose();
+    onDismiss?.();
+  };
+
+  // BottomSheetModal is mounted lazily inside <Portal>, which registers its
+  // children via an effect and only mounts them on a later re-render of
+  // PortalProvider. A useEffect here would race that and find the ref still
+  // null, so autoOpen is triggered from the ref callback itself instead,
+  // firing exactly when the real node attaches, however long that takes.
+  const setBottomSheetModalRef = useCallback(node => {
+    bottomSheetModalRef.current = node;
+
+    if (node && autoOpen && !hasAutoOpenedRef.current) {
+      hasAutoOpenedRef.current = true;
+      requestAnimationFrame(() => node.present());
+    }
+  }, [autoOpen]);
 
   const handleSheetChanges = useCallback(index => {
     if (!index) {
@@ -84,6 +109,14 @@ const Modal = props => {
     const item = options.find(o => o.value === value);
 
     onSubmit(value, item);
+  };
+
+  const handleClearPress = () => {
+    handlePresentModalclose();
+    setVisible(false);
+    setValue(single ? undefined : []);
+
+    onSubmit(undefined, undefined, { cleared: true });
   };
 
   const handleClosePress = () => {
@@ -132,7 +165,7 @@ const Modal = props => {
           : value?.includes(option.value);
 
         const onItemPress = () => {
-           setValue(option.value)
+           setValue(single && active ? undefined : option.value)
         }
 
         return renderItem?.({
@@ -142,9 +175,15 @@ const Modal = props => {
                }) 
       }}
       data={updatedOptions}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      removeClippedSubviews={true}
       keyExtractor={item => {
         return String(item.value);
       }}
+      numColumns={numColumns}
+      columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
       showsVerticalScrollIndicator={false}
     />
   );
@@ -162,9 +201,10 @@ const Modal = props => {
           <View style={styles.container}>
             <BottomSheetModal
               key={modalKeyName}
-              ref={bottomSheetModalRef}
+              ref={setBottomSheetModalRef}
               index={1}
               snapPoints={snapPoints}
+              enableDynamicSizing={false}
               enablePanDownToClose={false}
               onChange={handleSheetChanges}
               backgroundStyle={{
@@ -172,13 +212,15 @@ const Modal = props => {
               }}
               topInset={0}
             >
-              {renderTitle?.({onPress: handlePresentModalclose})}
+              {renderTitle?.({onPress: handleTitleClosePress, dismissable})}
+
+              {renderSubHeader?.()}
 
               {renderHeader?.({onChangeText: handleSearchChange})}
 
               {renderBody()}
 
-              {renderFooter({onSubmit: onOk})}
+              {renderFooter({onSubmit: onOk, onClear: handleClearPress})}
             </BottomSheetModal>
           </View>
         </BottomSheetModalProvider>
@@ -205,6 +247,9 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  columnWrapper: {
+    justifyContent: 'flex-start',
   },
   info: {
     marginTop: 5,

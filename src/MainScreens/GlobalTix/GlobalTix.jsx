@@ -458,6 +458,7 @@ const GlobalTix = ({ navigation, route }) => {
   }
 
 
+
   // Get header label from route params or fallback to "GlobalTix"
   const getHeaderLabel = () => {
     return route?.params?.parentCategoryName || "GlobalTix";

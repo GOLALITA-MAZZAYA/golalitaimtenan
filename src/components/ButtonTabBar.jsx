@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { sized } from '../Svg';
 import { TypographyText } from './Typography';
@@ -10,60 +10,53 @@ import { mainStyles } from '../styles/mainStyles';
 import { useTheme } from './ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import ProfileSvg from '../assets/Profile.svg';
-import {
-  goHome,
-  openTab,
-  navigationRef,
-  getActiveTabRouteName,
-} from '../Navigation/RootNavigation';
+import { navigate } from '../Navigation/RootNavigation';
 import AnimatedIcon from './AnimatedIcon';
-import useIsGuest from '../hooks/useIsGuest';
-import { showMessage } from 'react-native-flash-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { NO_TAB_BAR_ROUTES } from '../Navigation/MainStack';
 
-const HomeIcon = sized(HomeSvg, 28, 30);
-const CardIcon = sized(CardSvg, 28, 30);
-const ProfileIcon = sized(ProfileSvg, 30, 28);
+const HomeIcon = sized(HomeSvg, 26, 27);
+const CardIcon = sized(CardSvg, 28, 23);
+const ProfileIcon = sized(ProfileSvg, 24, 27);
 
-/**
- * App bottom bar overlay (not a real Tabs navigator).
- * Subscribes to navigation state so the selected icon stays in sync.
- */
-export const ButtonTabBar = () => {
+export let ButtonTabBar = ({ state }) => {
   const { t } = useTranslation();
-  const isGuest = useIsGuest();
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState(() => getActiveTabRouteName());
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const syncActiveTab = () => {
-      setActiveTab(getActiveTabRouteName());
-    };
+  const focusedRoute = state.routes[state.index];
+  const currentRouteName = getFocusedRouteNameFromRoute(focusedRoute) || 'Main';
 
-    syncActiveTab();
-
-    if (!navigationRef.isReady()) {
-      return undefined;
-    }
-
-    const unsubscribe = navigationRef.addListener('state', syncActiveTab);
-    return unsubscribe;
-  }, []);
+  if (NO_TAB_BAR_ROUTES.includes(currentRouteName)) {
+    return null;
+  }
 
   const activeColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const passiveColor = isDark ? 'white' : 'black';
 
-  const getColor = screenName =>
-    activeTab === screenName ? activeColor : passiveColor;
+  const getColor = screenName => {
+    return currentRouteName === screenName ? activeColor : passiveColor;
+  };
 
   return (
     <View style={styles.TabView__wrapper}>
       <View
         style={[
           styles.TabView,
-          { backgroundColor: isDark ? '#2E2E2E' : '#fff' },
+          {
+            backgroundColor: isDark ? '#1C1C1E' : '#fff',
+            borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          },
         ]}
       >
-        <TouchableOpacity style={styles.TabView__item} onPress={() => goHome()}>
+        <TouchableOpacity
+          style={styles.TabView__item}
+          onPress={() => {
+            navigate('Main');
+          }}
+        >
           <View style={styles.iconWrapper}>
             <HomeIcon color={getColor('Main')} />
           </View>
@@ -72,35 +65,38 @@ export const ButtonTabBar = () => {
             size={13}
             font={LUSAIL_REGULAR}
             title={t('TabBar.home')}
-            style={{ color: getColor('Main') }}
+            style={{
+              color: getColor('Main'),
+              marginTop: 4,
+              fontWeight: '600',
+            }}
           />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.TabView__item}
-          onPress={() => openTab('MapPage')}
+          onPress={() => navigate('MapPage')}
         >
-          <AnimatedIcon color={getColor('MapPage')} />
+          <View style={styles.iconWrapper}>
+            <AnimatedIcon color={getColor('MapPage')} />
+          </View>
           <TypographyText
             textColor={colors.lightGrey}
             size={13}
             font={LUSAIL_REGULAR}
             title={t('TabBar.map')}
-            style={{ color: getColor('MapPage') }}
+            style={{
+              color: getColor('MapPage'),
+              marginTop: 4,
+              fontWeight: '600',
+            }}
           />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.TabView__item}
           onPress={() => {
-            if (isGuest) {
-              showMessage({
-                type: 'warning',
-                message: t('Drawer.notForGuest'),
-              });
-              return;
-            }
-            openTab('card');
+            navigate('card');
           }}
         >
           <View style={styles.iconWrapper}>
@@ -111,13 +107,19 @@ export const ButtonTabBar = () => {
             size={13}
             font={LUSAIL_REGULAR}
             title={t('TabBar.card')}
-            style={{ color: getColor('card') }}
+            style={{
+              color: getColor('card'),
+              marginTop: 4,
+              fontWeight: '600',
+            }}
           />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.TabView__item}
-          onPress={() => openTab('Profile')}
+          onPress={() => {
+            navigate('Profile');
+          }}
         >
           <View style={styles.iconWrapper}>
             <ProfileIcon color={getColor('Profile')} />
@@ -127,7 +129,11 @@ export const ButtonTabBar = () => {
             size={13}
             font={LUSAIL_REGULAR}
             title={t('TabBar.profile')}
-            style={{ color: getColor('Profile') }}
+            style={{
+              color: getColor('Profile'),
+              marginTop: 4,
+              fontWeight: '600',
+            }}
           />
         </TouchableOpacity>
       </View>
@@ -136,26 +142,29 @@ export const ButtonTabBar = () => {
 };
 
 const styles = StyleSheet.create({
-  TabView__wrapper: {
-    backgroundColor: 'transparent',
-  },
+  TabView__wrapper: {},
   TabView: {
     ...mainStyles.shadow,
     backgroundColor: '#FFFFFF',
-    height: 65,
     paddingHorizontal: Platform.OS === 'ios' ? 20 : 10,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 21 : 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    zIndex: -1,
   },
   TabView__item: {
-    width: '25%',
+    width: '22%',
     alignItems: 'center',
   },
   iconWrapper: {
     position: 'relative',
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
+
+export default ButtonTabBar;

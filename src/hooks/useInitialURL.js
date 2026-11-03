@@ -63,8 +63,8 @@ const useInitialURL = () => {
       setToken(parseUrl(event.url));
     };
 
-    Linking?.addEventListener('url', handleUrl);
-    return () => Linking?.removeEventListener?.('url', handleUrl);
+    const sub = Linking?.addEventListener('url', handleUrl);
+    return () => sub?.remove();
   }, [parseUrl]);
 
   return { url, token, processing, resetUrlData };

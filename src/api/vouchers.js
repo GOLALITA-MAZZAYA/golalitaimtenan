@@ -1,12 +1,14 @@
+import { getToken } from '../utils/secureStorage';
 import instance from "../redux/instance";
-import { getAuthToken } from '../utils/tokenStorage';
+import { org } from "../org/config";
 
-export const getVouchers = async () => {
-  const token = await getAuthToken();
+export const getVouchers = async (orgType = org.code) => {
+  const token = await getToken();
 
   const res = await instance.post("user/voucher/list", {
     params: {
       token,
+      x_org_type: orgType,
     },
   });
 
@@ -17,13 +19,14 @@ export const getVouchers = async () => {
   return res.data.result;
 };
 
-export const getVoucherStatus = async (code) => {
-  const token = await getAuthToken();
+export const getVoucherCategoriesList = async (country, x_org_type) => {
+  const token = await getToken();
 
-  const res = await instance.post("user/voucher/payment_status", {
+  const res = await instance.post("voucher/category/list", {
     params: {
       token,
-      code,
+      country,
+      x_org_type,
     },
   });
 
@@ -31,27 +34,12 @@ export const getVoucherStatus = async (code) => {
     throw new Error();
   }
 
-  return res.data.result;
+  return res.data.result.categories;
 };
 
-export const getPurchasedVouchers = async () => {
-  const token = await getAuthToken();
-
-  const res = await instance.post("user/voucher/purchase/list", {
-    params: {
-      token,
-    },
-  });
-
-  if (!res.data.result) {
-    throw new Error();
-  }
-
-  return res.data.result;
-};
 
 export const getFavouriteVouchers = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("user/voucher/save/list", {
     params: {
@@ -67,7 +55,7 @@ export const getFavouriteVouchers = async () => {
 };
 
 export const saveVoucher = async (code) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("user/voucher/save", {
     params: {
@@ -84,7 +72,7 @@ export const saveVoucher = async (code) => {
 };
 
 export const unsaveVoucher = async (code) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("user/voucher/unsave", {
     params: {
@@ -100,25 +88,10 @@ export const unsaveVoucher = async (code) => {
   return res.data.result;
 };
 
-export const getVoucher = async (code) => {
-  const token = await getAuthToken();
 
-  const res = await instance.post("user/voucher/details", {
-    params: {
-      token,
-      code,
-    },
-  });
-
-  if (!res.data.result) {
-    throw new Error();
-  }
-
-  return res.data.result;
-};
 
 export const applyVoucher = async (code) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("user/voucher/apply", {
     params: {
@@ -135,7 +108,7 @@ export const applyVoucher = async (code) => {
 };
 
 export const purchaseVoucher = async (code, quantity, priceWithDiscount) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("user/voucher/purchase", {
     params: {

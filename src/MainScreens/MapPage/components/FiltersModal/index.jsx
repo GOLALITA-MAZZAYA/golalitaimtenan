@@ -16,7 +16,7 @@ import { sized } from '../../../../Svg';
 const FiltersModal = ({ onGetFilters, filters }) => {
   const { isDark } = useTheme();
   const bottomSheetModalRef = useRef(null);
-  const snapPoints = useMemo(() => ['1%', '65%'], []);
+  const snapPoints = useMemo(() => ['65%', '90%'], []);
   const name = 'map-filters';
   const CloseIcon = sized(CloseSvg, 16, 16, isDark ? '#fff' : '#312B3E');
 
@@ -29,7 +29,7 @@ const FiltersModal = ({ onGetFilters, filters }) => {
   };
 
   const handleSheetChanges = index => {
-    if (!index) {
+    if (index === -1) {
       bottomSheetModalRef.current?.close();
     }
   };
@@ -49,14 +49,13 @@ const FiltersModal = ({ onGetFilters, filters }) => {
             <BottomSheetModal
               key={name}
               ref={bottomSheetModalRef}
-              index={1}
+              index={0}
               snapPoints={snapPoints}
               enablePanDownToClose={true}
               onChange={handleSheetChanges}
               backgroundStyle={{
                 backgroundColor: isDark ? colors.darkBlue : colors.white,
               }}
-              topInset={250}
             >
               <BottomSheetView>
                 <View style={{ flex: 1 }}>

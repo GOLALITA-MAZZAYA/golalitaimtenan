@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -6,31 +6,30 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-} from 'react-native';
-import Geolocation from 'react-native-geolocation-service';
-import { colors } from '../../components/colors';
-import { TypographyText } from '../../components/Typography';
-import CommonHeader from '../../components/CommonHeader/CommonHeader';
-import { mainStyles } from '../../styles/mainStyles';
-import { useTheme } from '../../components/ThemeProvider';
-import { connect } from 'react-redux';
+} from "react-native";
+import Geolocation from "react-native-geolocation-service";
+import { colors } from "../../components/colors";
+import { TypographyText } from "../../components/Typography";
+import CommonHeader from "../../components/CommonHeader/CommonHeader";
+import { mainStyles } from "../../styles/mainStyles";
+import { useTheme } from "../../components/ThemeProvider";
+import { connect } from "react-redux";
 import {
   getOffers,
   saveOffer,
   getFavoriteOffers,
-} from '../../redux/merchant/merchant-thunks';
-import { useTranslation } from 'react-i18next';
-import { B1G1, DISCOUNT, PROMOCODE, LUSAIL_REGULAR } from '../../redux/types';
-import ListNoData from '../../components/ListNoData';
-import CardWithNesetedItems from '../../components/OfferCardWithNestedItems';
-import { getDescription, handleOfferCardPress } from './helpres';
-import { getLocalizedValue, getStringDate, isRTL } from '../../../utils';
-import { requestLocationPermission } from '../../helpers';
-import { getProductCategoryTypes } from '../../api/offers';
+} from "../../redux/merchant/merchant-thunks";
+import { useTranslation } from "react-i18next";
+import { B1G1, DISCOUNT, PROMOCODE, LUSAIL_REGULAR } from "../../redux/types";
+import ListNoData from "../../components/ListNoData";
+import CardWithNesetedItems from "../../components/OfferCardWithNestedItems";
+import { getDescription, handleOfferCardPress } from "./helpres";
+import { getCacheBustedUri, getStringDate, isRTL } from "../../../utils";
+import { requestLocationPermission } from "../../helpers";
+import { getProductCategoryTypes } from "../../api/offers";
 
 const AllOffers = ({
   offers,
-  offersTotalCount,
   isOffersLoading,
   getOffers,
   saveOffer,
@@ -45,35 +44,31 @@ const AllOffers = ({
   // True once GPS succeeded, failed, or permission was denied — so Nearby
   // does not fire an unsorted request that can race past the sorted one.
   const [locationReady, setLocationReady] = useState(false);
-  const [sortBy, setSortBy] = useState('nearby'); // "nearby" | "alphabetical"
+  const [sortBy, setSortBy] = useState("nearby"); // "nearby" | "alphabetical"
   const [categoryTypes, setCategoryTypes] = useState([]);
   const canGetMoreDataRef = useRef(true);
   const language = i18n.language;
-  const isArabic = language === 'ar';
+  const isArabic = language === "ar";
   const [isReady, setIsReady] = useState(false);
+  const [totalCount, setTotalCount] = useState(null);
 
+  // Original offer type categories (untouched)
   const categories = [
-    { id: null, name: t('AllOffers.allOffers') },
-    { id: DISCOUNT, name: t('AllOffers.discount') },
-    { id: B1G1, name: t('AllOffers.b1g1Free') },
-    { id: PROMOCODE, name: t('AllOffers.promocode') },
+    { id: null, name: t("AllOffers.allOffers") },
+    { id: DISCOUNT, name: t("AllOffers.exclusive") },
+    { id: B1G1, name: t("AllOffers.b1g1Free") },
+    { id: PROMOCODE, name: t("AllOffers.promocode") },
   ];
 
   const filterCategoryTypes = useMemo(() => {
-    if (!categoryTypes || categoryTypes.length === 0) {
-      return [];
-    }
-
+    if (!categoryTypes || categoryTypes.length === 0) return [];
     return [
-      {
-        id: null,
-        name: t('AllOffers.allTags', 'All'),
-        name_ar: 'الكل',
-      },
+      { id: null, name: t("AllOffers.allTags", "All"), name_ar: "الكل" },
       ...categoryTypes,
     ];
   }, [categoryTypes, t]);
 
+  // Fetch dynamic category types (Popular, New, Best Seller...) in background
   useEffect(() => {
     let isMounted = true;
 
@@ -84,7 +79,6 @@ const AllOffers = ({
           setCategoryTypes(types);
         }
       } catch (e) {
-        console.log('Error loading category types:', e);
       }
     })();
 
@@ -97,15 +91,16 @@ const AllOffers = ({
     getFavoriteOffers(false, null);
   }, []);
 
+  // Request location silently; mark ready on success, error, or deny.
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
       try {
         const status = await requestLocationPermission();
-        if (status === 'granted' && isMounted) {
+        if (status === "granted" && isMounted) {
           Geolocation.getCurrentPosition(
-            pos => {
+            (pos) => {
               if (isMounted && pos?.coords) {
                 setUserLocation({
                   user_lat: pos.coords.latitude,
@@ -121,7 +116,7 @@ const AllOffers = ({
                 setLocationReady(true);
               }
             },
-            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
           );
         } else if (isMounted) {
           setLocationReady(true);
@@ -138,41 +133,41 @@ const AllOffers = ({
     };
   }, []);
 
-  const handleFavouritePress = item => {
+  const handleFavouritePress = (item) => {
     saveOffer(item.id, t);
   };
 
-  // Only the server's offer_count; no label when it is 0 or missing (QLM).
-  const getOfferCountLabel = item => {
+  // Only the server's offer_count; no label when it is 0 or missing.
+  const getOfferCountLabel = (item) => {
     const count = Number(item?.offer_count) || 0;
 
     if (count <= 0) {
-      return '';
+      return "";
     }
 
     if (isArabic) {
       return `${count} عروض`;
     }
-    return `${count} ${count === 1 ? 'Offer' : 'Offers'}`;
+    return `${count} ${count === 1 ? "Offer" : "Offers"}`;
   };
 
   const renderItem = ({ item }) => {
-    const isFavorite = favoriteOffers?.some(offer => offer.id === item.id);
+    const isFavorite = favoriteOffers?.some((offer) => offer.id === item.id);
+    const isArabic = language === "ar";
     const hasValidDistance =
       item.distance_km != null &&
       item.distance_km < 999999 &&
       !!item.distance_display;
-
     return (
       <CardWithNesetedItems
         parentProps={{
           onPress: () => handleOfferCardPress(item, true),
           onPressFavourite: () => handleFavouritePress(item),
-          uri: item.merchant_logo || item.image_url,
-          name: getLocalizedValue(item.x_arabic_name, item.name),
+          uri: getCacheBustedUri(item.merchant_logo || item.image_url),
+          name: isArabic ? item.x_arabic_name || item.name : item.name,
           description: getDescription(item),
           endDate: item.end_date
-            ? getStringDate(item.end_date.split(' ')[0])
+            ? getStringDate(item.end_date.split(" ")[0])
             : null,
           isSaved: isFavorite,
           distance: hasValidDistance ? item.distance_display : null,
@@ -182,38 +177,33 @@ const AllOffers = ({
     );
   };
 
-  const keyExtractor = (item, index) =>
-    item.id ? item.id.toString() : index.toString();
+  const keyExtractor = (_, index) => index.toString();
 
-  const getFilterParams = () => ({
-    ...(selectedFilter ? { x_offer_type: selectedFilter } : {}),
-    ...(selectedCategoryType
-      ? { category_type_id: selectedCategoryType }
-      : {}),
-    ...(sortBy === 'alphabetical' ? { sort_by: 'name' } : {}),
-  });
-
-  const getLocationParams = () =>
-    sortBy === 'nearby' && userLocation
-      ? {
-          user_lat: userLocation.user_lat,
-          user_long: userLocation.user_long,
-        }
-      : {};
+  const getFilterParams = () => {
+    return {
+      ...(selectedFilter ? { x_offer_type: selectedFilter } : {}),
+      ...(selectedCategoryType ? { category_type_id: selectedCategoryType } : {}),
+      ...(sortBy === "alphabetical" ? { sort_by: "name" } : {}),
+    };
+  };
 
   const fetchMoreData = () => {
     if (!isReady || isOffersLoading || !canGetMoreDataRef.current) {
       return;
     }
 
-    const params = { ...getFilterParams(), ...getLocationParams() };
+    const filterParams = getFilterParams();
+    const locationParams =
+      sortBy === "nearby" && userLocation
+        ? { user_lat: userLocation.user_lat, user_long: userLocation.user_long }
+        : {};
+    const params = { ...filterParams, ...locationParams, show_total_count: true };
 
     getOffers({
       merchant_id: null,
       merchant_category_id: null,
-      page: 'next',
+      page: "next",
       params,
-      useFiltersApi: true,
       onGetData: (dataLength, limit) => {
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
@@ -224,63 +214,70 @@ const AllOffers = ({
 
   useEffect(() => {
     // Wait for GPS resolution before Nearby so the first response is sorted.
-    if (sortBy === 'nearby' && !locationReady) {
+    if (sortBy === "nearby" && !locationReady) {
       return;
     }
 
-    const params = { ...getFilterParams(), ...getLocationParams() };
+    const filterParams = getFilterParams();
+    const locationParams =
+      sortBy === "nearby" && userLocation
+        ? { user_lat: userLocation.user_lat, user_long: userLocation.user_long }
+        : {};
+    const params = { ...filterParams, ...locationParams, show_total_count: true };
 
     canGetMoreDataRef.current = true;
     setIsReady(false);
+    setTotalCount(null);
 
     getOffers({
       merchant_id: null,
       merchant_category_id: null,
       page: 1,
       params,
-      useFiltersApi: true,
-      onGetData: (dataLength, limit) => {
+      onGetData: (dataLength, limit, total) => {
         setIsReady(true);
+        setTotalCount(Number.isFinite(Number(total)) ? Number(total) : null);
 
         if (dataLength !== limit) {
           canGetMoreDataRef.current = false;
         }
       },
-    }).catch(() => {
-      setIsReady(true);
     });
   }, [selectedFilter, selectedCategoryType, userLocation, sortBy, locationReady]);
 
-  const loaderColor = isDark ? colors.mainDarkMode : colors.darkBlue;
-  const screenBg = isDark ? colors.darkBlue : colors.white;
+  const loaderColor = isDark ? colors.white : colors.mainDarkModeText;
 
   return (
     <View
       style={{
-        backgroundColor: screenBg,
+        backgroundColor: isDark ? "#000000" : colors.white,
         ...styles.wrapper,
       }}
     >
       <SafeAreaView
-        style={[styles.safeAreaWrapper, { backgroundColor: screenBg }]}
+        style={[
+          styles.safeAreaWrapper,
+          { backgroundColor: isDark ? "#000000" : colors.white },
+        ]}
       >
         <CommonHeader
           isWhite={isDark}
-          label={t('AllOffers.title')}
-          style={{ backgroundColor: isDark ? colors.darkBlue : undefined }}
+          label={t("TabBar.allOffersHeader", "Short term offers")}
+          style={{ backgroundColor: isDark ? "#000000" : undefined }}
         />
 
+        {/* Previous Filter Component - Untouched */}
         <View
           style={[
             styles.tabsContainer,
             {
-              backgroundColor: isDark ? '#444444' : colors.transparent,
+              backgroundColor: isDark ? "#444444" : colors.transparent,
               borderColor: isDark ? colors.transparent : colors.grey,
-              flexDirection: isRTL() ? 'row-reverse' : 'row',
+              flexDirection: isRTL() ? "row-reverse" : "row",
             },
           ]}
         >
-          {categories.map(item => {
+          {categories.map((item) => {
             const isActive = selectedFilter === item.id;
 
             return (
@@ -303,7 +300,7 @@ const AllOffers = ({
                   title={item.name}
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  style={{ fontWeight: '700' }}
+                  style={{ fontWeight: "700" }}
                   textColor={
                     isActive
                       ? isDark
@@ -311,7 +308,7 @@ const AllOffers = ({
                         : colors.white
                       : isDark
                         ? colors.white
-                        : '#999CAD'
+                        : "#999CAD"
                   }
                 />
               </TouchableOpacity>
@@ -319,15 +316,16 @@ const AllOffers = ({
           })}
         </View>
 
+        {/* Secondary Category Types Row (Popular, New, Best Seller...) */}
         {filterCategoryTypes.length > 0 && (
           <View style={styles.subCategoryWrapper}>
             <FlatList
-              key={isRTL() ? 'rtl-category-chips' : 'ltr-category-chips'}
+              key={isRTL() ? "rtl-category-chips" : "ltr-category-chips"}
               horizontal
               inverted={isRTL()}
               showsHorizontalScrollIndicator={false}
               data={filterCategoryTypes}
-              keyExtractor={cat => String(cat.id ?? 'all')}
+              keyExtractor={(cat) => String(cat.id ?? "all")}
               contentContainerStyle={styles.subCategoryContainer}
               ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
               renderItem={({ item: cat }) => {
@@ -335,6 +333,7 @@ const AllOffers = ({
 
                 return (
                   <TouchableOpacity
+                    key={String(cat.id ?? "all")}
                     activeOpacity={0.8}
                     onPress={() => setSelectedCategoryType(cat.id)}
                     style={[
@@ -345,13 +344,13 @@ const AllOffers = ({
                             ? colors.darkModeBackground
                             : colors.darkBlue
                           : isDark
-                            ? '#1E1E1E'
-                            : '#F5F5F5',
+                            ? "#1E1E1E"
+                            : "#F5F5F5",
                         borderColor: isActive
                           ? colors.transparent
                           : isDark
-                            ? '#333333'
-                            : '#E5E7EB',
+                            ? "#333333"
+                            : "#E5E7EB",
                       },
                     ]}
                   >
@@ -359,7 +358,7 @@ const AllOffers = ({
                       size={12}
                       font={LUSAIL_REGULAR}
                       title={isArabic ? cat.name_ar || cat.name : cat.name}
-                      style={{ fontWeight: '600' }}
+                      style={{ fontWeight: "600" }}
                       textColor={
                         isActive
                           ? isDark
@@ -367,7 +366,7 @@ const AllOffers = ({
                             : colors.white
                           : isDark
                             ? colors.white
-                            : '#999CAD'
+                            : "#999CAD"
                       }
                     />
                   </TouchableOpacity>
@@ -377,11 +376,12 @@ const AllOffers = ({
           </View>
         )}
 
+        {/* Sort Controls Row */}
         <View
           style={[
             styles.sortBar,
             {
-              flexDirection: isRTL() ? 'row-reverse' : 'row',
+              flexDirection: isRTL() ? "row-reverse" : "row",
             },
           ]}
         >
@@ -389,76 +389,82 @@ const AllOffers = ({
             size={13}
             font={LUSAIL_REGULAR}
             title={
-              offersTotalCount > 0
+              totalCount > 0
                 ? isRTL()
-                  ? `${offersTotalCount} عروض`
-                  : `${offersTotalCount} ${
-                      offersTotalCount === 1 ? 'Offer' : 'Offers'
-                    }`
-                : ''
+                  ? `${totalCount} عروض`
+                  : `${totalCount} ${totalCount === 1 ? "Offer" : "Offers"}`
+                : ""
             }
-            textColor={isDark ? 'rgba(255, 255, 255, 0.6)' : '#71717A'}
-            style={{ fontWeight: '600' }}
+            textColor={isDark ? "rgba(255, 255, 255, 0.6)" : "#71717A"}
+            style={{ fontWeight: "600" }}
           />
 
           <View
             style={[
               styles.sortCapsule,
               {
-                backgroundColor: isDark ? colors.navyBlue : '#F4F4F5',
+                backgroundColor: isDark ? "#1C1C1E" : "#F4F4F5",
                 borderColor: isDark
-                  ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(0, 0, 0, 0.05)',
-                flexDirection: isRTL() ? 'row-reverse' : 'row',
+                  ? "rgba(255, 255, 255, 0.08)"
+                  : "rgba(0, 0, 0, 0.05)",
+                flexDirection: isRTL() ? "row-reverse" : "row",
               },
             ]}
           >
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => setSortBy('nearby')}
+              onPress={() => setSortBy("nearby")}
               style={[
                 styles.sortSegment,
-                sortBy === 'nearby' && {
-                  backgroundColor: colors.darkBlue,
+                sortBy === "nearby" && {
+                  backgroundColor: isDark
+                    ? colors.mainDarkMode
+                    : colors.darkBlue,
                 },
               ]}
             >
               <TypographyText
                 size={11}
                 font={LUSAIL_REGULAR}
-                title={t('AllOffers.nearby')}
-                style={{ fontWeight: '700' }}
+                title={t("AllOffers.nearby", "Nearby")}
+                style={{ fontWeight: "700" }}
                 textColor={
-                  sortBy === 'nearby'
-                    ? colors.white
+                  sortBy === "nearby"
+                    ? isDark
+                      ? "#000000"
+                      : "#FFFFFF"
                     : isDark
-                      ? '#A1A1AA'
-                      : '#71717A'
+                      ? "#A1A1AA"
+                      : "#71717A"
                 }
               />
             </TouchableOpacity>
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => setSortBy('alphabetical')}
+              onPress={() => setSortBy("alphabetical")}
               style={[
                 styles.sortSegment,
-                sortBy === 'alphabetical' && {
-                  backgroundColor: colors.darkBlue,
+                sortBy === "alphabetical" && {
+                  backgroundColor: isDark
+                    ? colors.mainDarkMode
+                    : colors.darkBlue,
                 },
               ]}
             >
               <TypographyText
                 size={11}
                 font={LUSAIL_REGULAR}
-                title={t('AllOffers.alphabetical')}
-                style={{ fontWeight: '700' }}
+                title={t("AllOffers.alphabetical", "A - Z")}
+                style={{ fontWeight: "700" }}
                 textColor={
-                  sortBy === 'alphabetical'
-                    ? colors.white
+                  sortBy === "alphabetical"
+                    ? isDark
+                      ? "#000000"
+                      : "#FFFFFF"
                     : isDark
-                      ? '#A1A1AA'
-                      : '#71717A'
+                      ? "#A1A1AA"
+                      : "#71717A"
                 }
               />
             </TouchableOpacity>
@@ -471,7 +477,7 @@ const AllOffers = ({
           keyExtractor={keyExtractor}
           maxToRenderPerBatch={10}
           windowSize={10}
-          removeClippedSubviews
+          removeClippedSubviews={true}
           onEndReachedThreshold={0.4}
           onEndReached={fetchMoreData}
           contentContainerStyle={styles.contentContainerStyle}
@@ -479,16 +485,16 @@ const AllOffers = ({
           ListFooterComponent={() =>
             isOffersLoading && !!offers?.length ? (
               <View style={[mainStyles.centeredRow, { marginTop: 30 }]}>
-                <ActivityIndicator size="large" color={loaderColor} />
+                <ActivityIndicator size={"large"} color={loaderColor} />
               </View>
             ) : null
           }
           style={styles.list}
           ListEmptyComponent={
             isReady && !isOffersLoading && !offers.length ? (
-              <ListNoData text={t('AllOffers.noOffersFound')} />
+              <ListNoData text={t("AllOffers.noOffersFound")} />
             ) : (
-              <ActivityIndicator size="large" color={loaderColor} />
+              <ActivityIndicator size={"large"} color={loaderColor} />
             )
           }
         />
@@ -517,40 +523,40 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 18,
     padding: 4,
-    alignItems: 'center',
+    alignItems: "center",
   },
   tabItem: {
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 4,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   subCategoryWrapper: {
     marginBottom: 14,
   },
   subCategoryContainer: {
     paddingHorizontal: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   subCategoryChip: {
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   sortBar: {
     paddingHorizontal: 16,
     marginBottom: 10,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   sortCapsule: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 3,
     borderRadius: 20,
     borderWidth: 1,
@@ -559,15 +565,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   offers: state.merchantReducer.offers,
-  offersTotalCount: state.merchantReducer.offersTotalCount,
   isOffersLoading: state.loadersReducer.isOffersLoading,
+  categories: state.merchantReducer.categories,
   favoriteOffers: state.merchantReducer.favoriteOffers,
 });
 

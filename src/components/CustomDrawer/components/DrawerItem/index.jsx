@@ -8,6 +8,7 @@ import { LUSAIL_REGULAR } from "../../../../redux/types";
 import ArrowSvg from "../../../../assets/arrow_right.svg";
 import { isRTL } from "../../../../../utils";
 import { useTranslation } from "react-i18next";
+import { colors as appColors } from "../../../colors";
 
 const LinkPressable = ({
   children,
@@ -60,14 +61,16 @@ export default function DrawerItem(props) {
     ...rest
   } = props;
 
-  const { borderRadius = 4 } = StyleSheet.flatten({});
+  const { borderRadius = 10 } = StyleSheet.flatten({});
   const color = focused ? activeTintColor : inactiveTintColor;
   const backgroundColor = focused
     ? activeBackgroundColor
     : inactiveBackgroundColor;
 
-  const iconNode = icon ? icon({ size: 24, focused, color }) : null;
-  const textColor = isDark ? "white" : "#343434";
+  const iconNode = icon ? icon({ size: 20, focused, color }) : null;
+  const textColor = isDark ? "#FFFFFF" : "#1C1C1E";
+  const accentColor = isDark ? appColors.mainDarkMode : appColors.darkBlue;
+  const iconBadgeColor = Color(accentColor).alpha(0.12).rgb().string();
 
   return (
     <View
@@ -78,7 +81,7 @@ export default function DrawerItem(props) {
         {
           borderRadius,
           backgroundColor,
-          borderBottomColor: isDark ? "#2F2F2F" : "#E6E6E6",
+          borderBottomColor: isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.05)",
         },
       ]}
     >
@@ -94,7 +97,9 @@ export default function DrawerItem(props) {
         pressOpacity={pressOpacity}
         to={to}
       >
-        {iconNode}
+        <View style={[styles.iconBadge, { backgroundColor: iconBadgeColor }]}>
+          {iconNode}
+        </View>
         <View
           style={[
             styles.label,
@@ -103,16 +108,15 @@ export default function DrawerItem(props) {
         >
           <TypographyText
             textColor={textColor}
-            size={18}
+            size={15}
             font={LUSAIL_REGULAR}
             title={title}
-            style={[styles.itemText]}
+            style={[styles.itemText, { fontWeight: "600" }]}
           />
 
           <View
             style={[
               styles.langWrapper,
-
               {
                 flexDirection: isRTL() ? "row-reverse" : "row",
                 justifyContent: "center",
@@ -121,30 +125,42 @@ export default function DrawerItem(props) {
             ]}
           >
             {!!languages && (
-              <TypographyText
-                textColor={textColor}
-                size={15}
-                font={LUSAIL_REGULAR}
-                title={lang == "ar" ? "English" : "عربي"}
-                style={styles.itemText}
-              />
+              <View
+                style={[
+                  styles.languageChip,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : "#E5E7EB",
+                  },
+                ]}
+              >
+                <TypographyText
+                  textColor={isDark ? "#D1D5DB" : "#4B5563"}
+                  size={13}
+                  font={LUSAIL_REGULAR}
+                  title={lang == "ar" ? "English" : "عربي"}
+                  style={styles.langText}
+                />
+              </View>
             )}
 
             {counts != undefined && (
               <View style={styles.itemCount}>
                 <TypographyText
-                  textColor={isDark ? "white" : "white"}
-                  size={14}
+                  textColor={"#FFFFFF"}
+                  size={12}
                   font={LUSAIL_REGULAR}
                   title={counts}
-                  style={{}}
+                  style={{ fontWeight: "700" }}
                 />
               </View>
             )}
 
             <ArrowSvg
-              color="#838383"
-              height={20}
+              color={isDark ? "#71717A" : "#9CA3AF"}
+              height={18}
+              width={18}
               style={{ transform: [{ rotate: isRTL() ? "180deg" : "0deg" }] }}
             />
           </View>
@@ -156,14 +172,21 @@ export default function DrawerItem(props) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 6,
     overflow: "hidden",
     borderBottomWidth: 1,
   },
   wrapper: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 4,
+  },
+  iconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     flexDirection: "row",
@@ -171,24 +194,32 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flex: 1,
   },
-  button: {
-    display: "flex",
-  },
   itemText: {
-    marginLeft: 15,
-    marginRight: 15,
+    marginLeft: 14,
+    marginRight: 14,
   },
   itemCount: {
-    backgroundColor: "red",
-    padding: 2,
-    minWidth: 24,
-    borderRadius: 26,
-    marginHorizontal: 10,
-    padding: 3,
+    backgroundColor: "#EF4444",
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    marginHorizontal: 8,
+    paddingHorizontal: 6,
     alignItems: "center",
     justifyContent: "center",
   },
   langWrapper: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  languageChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  langText: {
+    fontWeight: "600",
   },
 });

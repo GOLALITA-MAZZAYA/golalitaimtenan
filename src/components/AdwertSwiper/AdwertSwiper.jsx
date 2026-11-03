@@ -2,7 +2,7 @@ import BannerSwiper from "../BannerSwiper";
 
 const AdwertSwiper = (props) => {
   const { isDark, data, onBannerPress, style } = props;
-
+  console.log("AdwertSwiper props:", props)
   return (
     <BannerSwiper
       banners={data}

@@ -3,8 +3,11 @@ import CompassSvg from '../../assets/compass.svg';
 import { useTheme } from '../ThemeProvider';
 import { useEffect } from 'react';
 import { colors } from '../colors';
+import { sized } from '../../Svg';
 
 const animation = new Animated.Value(0);
+
+const CompassIcon = sized(CompassSvg, 24, 23);
 
 const Icon = ({ color }) => {
   const { isDark } = useTheme();
@@ -15,18 +18,22 @@ const Icon = ({ color }) => {
   return (
     <View
       style={{
-        width: 25,
+        width: 30,
         justifyContent: 'center',
         alignItems: 'center',
       }}
     >
       <View
         style={{
+          width: 30,
+          height: 30,
+          justifyContent: 'center',
+          alignItems: 'center',
           backgroundColor: color ? color : backgroundColor,
-          borderRadius: 22,
+          borderRadius: 15,
         }}
       >
-        <CompassSvg color={iconColor} />
+        <CompassIcon color={iconColor} />
       </View>
     </View>
   );
@@ -44,7 +51,7 @@ const AnimatedIcon = ({ animated = true, color }) => {
         Animated.timing(animation, {
           toValue: 1,
           duration: 2000,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
       ).start();
     }

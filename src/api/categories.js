@@ -1,122 +1,109 @@
+import { getToken } from '../utils/secureStorage';
 import instance from '../redux/instance';
 import { merchantApi } from '../redux/merchant/merchant-api';
-import { ORG_ID } from '../constants';
-import { getAuthToken } from '../utils/tokenStorage';
+import { org } from '../org/config';
 
-const normalizeCategoryList = payload => {
-  if (Array.isArray(payload)) {
-    return payload;
-  }
-
-  if (payload?.error) {
-    throw new Error(
-      typeof payload.error === 'string'
-        ? payload.error
-        : payload.error?.message || 'Category request failed',
-    );
-  }
-
-  if (Array.isArray(payload?.data)) {
-    return payload.data;
-  }
-
-  if (Array.isArray(payload?.categories)) {
-    return payload.categories;
-  }
-
-  if (Array.isArray(payload?.items)) {
-    return payload.items;
-  }
-
-  return [];
-};
-
-export const getChildCategoriesById = async (parent_id, type, country) => {
-  const token = await getAuthToken();
-
+export const getChildCategoriesById = async (parent_id, type) => {
+  const token = await getToken();
+  console.log("getChildCategoriesById params:", {
+    token,
+    parent_id,
+    org_id: org.id,
+    type,
+  })
   const res = await instance.post('/child/category/v2', {
     params: {
       token,
       parent_id,
-      org_id: ORG_ID,
+      org_id: org.id,
       type,
-      country,
     },
   });
 
-  return normalizeCategoryList(res.data?.result ?? res.data);
+  console.log("getChildCategoriesById res:", res.data)
+  if (!res.data.result) {
+    throw new Error();
+  }
+
+  return res.data.result;
+};
+
+const getSubCategoriesFunc = async (parentCategories, type, country) => {
+  const token = await getToken();
+
+  const getSubCategories = async id => {
+    const res = await merchantApi.getParentCategoriesById({
+      params: {
+        token,
+        parent_id: id,
+        type,
+        //country,
+        org_id: org.id,
+      },
+    });
+
+    return res.data.result;
+  };
+
+  const results = await Promise.all(
+    parentCategories.filter(item => item.id).map(item => getSubCategories(item.id))
+  );
+
+  return results.flat();
 };
 
 export const getSubCategoriesByParentId = async parent_category_id => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
+  console.log("getSubCategoriesByParentId params:", {
+    params: {
+      token,
+      parent_category_id,
+    },
+  })
   const res = await instance.post('/sub/category/v2', {
     params: {
       token,
       parent_category_id,
     },
   });
+  console.log("getSubCategoriesByParentId res:", res.data)
+  if (!res.data.result) {
+    throw new Error();
+  }
 
-  return normalizeCategoryList(res.data?.result ?? res.data);
-};
-
-/** Own sub-cats + each child's sub-cats (used by filter SubCategoriesTags). */
-export const getMergedSubCategoriesForCategory = async (
-  categoryId,
-  categoriesType,
-) => {
-  const [ownSubCategories, children] = await Promise.all([
-    getSubCategoriesByParentId(categoryId).catch(() => []),
-    getChildCategoriesById(categoryId, categoriesType).catch(() => []),
-  ]);
-
-  const childSubCategoryLists = await Promise.all(
-    (children || [])
-      .filter(child => child?.id)
-      .map(child => getSubCategoriesByParentId(child.id).catch(() => [])),
-  );
-
-  const merged = [...ownSubCategories, ...childSubCategoryLists.flat()];
-
-  return {
-    subCategories: Array.from(
-      new Map(
-        merged.filter(item => item?.id).map(item => [item.id, item]),
-      ).values(),
-    ),
-    children: Array.isArray(children) ? children : [],
-  };
+  return res.data.result;
 };
 
 export const getAllCategories = async type => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const params = {
     token,
     fields:
       "['id','name','parent_id', 'x_name_arabic', 'x_image_url_2', 'image_url', 'x_image_url_3', 'x_image_url_4', 'x_gif_image', 'x_country_code', 'x_if_have_child_cat']",
     type,
-    org_id: ORG_ID,
+    //country,
+    org_id: org.id,
   };
 
   const res = await merchantApi.getParentCategories({
     params,
   });
 
-  return normalizeCategoryList(res.data?.result ?? res.data);
+  const parentCategories = Array.isArray(res.data?.result) ? res.data.result : [];
+
+  const newCategories = await getSubCategoriesFunc(parentCategories, type);
+
+  return [...parentCategories, ...newCategories];
 };
 
-/**
- * Offer filters configured for a partner category (parent or child).
- * Parent responses nest filters under child_categories; child responses
- * expose available_filters on the root result.
- */
+// Offer filters for a category (go_filters_on_off module). A parent category
+// returns filters per child under child_categories; a leaf category returns
+// available_filters directly. Errors arrive with HTTP 200 inside result.
 export const getCategoryAvailableFilters = async category_id => {
-  if (category_id == null || category_id === '') {
-    return null;
-  }
+  const token = await getToken();
 
-  const token = await getAuthToken();
   const res = await merchantApi.getCategoryAvailableFilters({
     params: {
       token,
@@ -124,82 +111,67 @@ export const getCategoryAvailableFilters = async category_id => {
     },
   });
 
-  console.log(res.data.result,'available filters')
+  const result = res.data?.result;
 
-  const result = res.data?.result ?? res.data;
-
-  if (!result || result.status === 'error' || result.error) {
-    throw new Error(
-      typeof result?.error === 'string'
-        ? result.error
-        : result?.error?.message || 'Failed to load offer filters',
-    );
+  if (!result || result.status !== 'success') {
+    throw new Error(result?.error || 'Failed to load offer filters');
   }
 
   return result;
 };
 
-const collectFilterRows = (filters = []) =>
-  (Array.isArray(filters) ? filters : []).filter(item => item?.id != null);
+// The children whose filters apply: the selected sub-categories, or every
+// child when none is selected.
+const getScopedChildren = (result, childCategoryIds) => {
+  const children = Array.isArray(result?.child_categories)
+    ? result.child_categories
+    : [];
 
-/**
- * Flatten + de-dupe filters for the filter sheet.
- * When childCategoryIds is set, only those children's filters are included
- * (falls back to all children if none of the ids match).
- */
-export const flattenAvailableFilters = (
-  result,
-  { childCategoryIds } = {},
-) => {
-  if (!result) {
-    return [];
+  if (!childCategoryIds?.length) {
+    return children;
   }
 
-  let rows = [];
-
-  if (result.is_parent && Array.isArray(result.child_categories)) {
-    const children = result.child_categories;
-    const selected = Array.isArray(childCategoryIds)
-      ? childCategoryIds.map(id => String(id))
-      : [];
-    const matched = selected.length
-      ? children.filter(child =>
-          selected.includes(String(child.child_category_id)),
-        )
-      : [];
-    const source = matched.length ? matched : children;
-
-    for (const child of source) {
-      rows.push(...collectFilterRows(child.available_filters));
-    }
-  } else {
-    rows = collectFilterRows(result.available_filters);
-  }
-
-  const byId = new Map();
-  for (const row of rows) {
-    if (!byId.has(row.id)) {
-      byId.set(row.id, row);
-    }
-  }
-
-  return Array.from(byId.values()).sort(
-    (a, b) => (a.sequence ?? 0) - (b.sequence ?? 0),
+  const selected = childCategoryIds.map(String);
+  return children.filter(child =>
+    selected.includes(String(child.child_category_id)),
   );
 };
 
-export const getAvailableFilterLabel = (filter, useArabic) => {
-  if (!filter) {
-    return '';
+// Whether offer filters should be offered at all for the current scope.
+export const isOffersEnabled = (result, childCategoryIds) => {
+  if (!result || result.show_offers === false) {
+    return false;
   }
 
-  if (useArabic) {
-    const arabic =
-      typeof filter.name_arabic === 'string' ? filter.name_arabic.trim() : '';
-    if (arabic) {
-      return arabic;
+  if (!result.is_parent) {
+    return true;
+  }
+
+  return getScopedChildren(result, childCategoryIds).some(
+    child => child.show_offers !== false,
+  );
+};
+
+// One de-duplicated, sequence-ordered list of filters for the current scope.
+export const getScopedAvailableFilters = (result, childCategoryIds) => {
+  if (!isOffersEnabled(result, childCategoryIds)) {
+    return [];
+  }
+
+  const rows = result.is_parent
+    ? getScopedChildren(result, childCategoryIds)
+        .filter(child => child.show_offers !== false)
+        .flatMap(child => child.available_filters || [])
+    : result.available_filters || [];
+
+  const byId = new Map();
+  rows.forEach(row => {
+    if (row?.id != null && !byId.has(row.id)) {
+      byId.set(row.id, row);
     }
-  }
+  });
 
-  return typeof filter.name === 'string' ? filter.name : '';
+  return [...byId.values()].sort(
+    (a, b) => (a.sequence ?? 0) - (b.sequence ?? 0),
+  );
 };

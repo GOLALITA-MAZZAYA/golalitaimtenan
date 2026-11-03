@@ -1,6 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+import { GOLALITA_COMPANY_ORGANIZATION_ID } from "../org/config";
 
 // Wallet dashboard API (pass generation + events)
 export const WALLET_DASHBOARD_API_URL = (
@@ -13,17 +14,13 @@ export const PASS_API_URL =
   process.env.WALLET_PASS_API_URL ||
   `${WALLET_DASHBOARD_API_URL}/wallet/pass`;
 
-/**
- * Dashboard Organization.id for Imtenan (admin panel on
- * wallet-api.golalitatwffer.com).
- * Override with WALLET_ORGANIZATION_ID at build time only if needed.
- */
-export const IMTENAN_ORGANIZATION_ID = 11;
-export const APP_ORGANIZATION_ID = IMTENAN_ORGANIZATION_ID;
+
+// GOLALITA_COMPANY_ORGANIZATION_ID lives in org/config.
+// Override with WALLET_ORGANIZATION_ID at build time only if needed.
 
 export const WALLET_ORGANIZATION_ID = Number(
-  process.env.WALLET_ORGANIZATION_ID || APP_ORGANIZATION_ID
-) || APP_ORGANIZATION_ID;
+  process.env.WALLET_ORGANIZATION_ID || GOLALITA_COMPANY_ORGANIZATION_ID
+) || GOLALITA_COMPANY_ORGANIZATION_ID;
 
 const DEVICE_ID_KEY = "wallet-dashboard-device-id";
 
@@ -69,15 +66,50 @@ export const getBase64PkpassFile = async (data) => {
 export async function getOrCreateWalletDeviceId() {
   let id = await AsyncStorage.getItem(DEVICE_ID_KEY);
   if (!id) {
-    id = `rn-${Platform.OS}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    id = `rn-${Platform.OS}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}`;
     await AsyncStorage.setItem(DEVICE_ID_KEY, id);
   }
   return id;
 }
 
 /**
- * Report pass lifecycle events (INSTALL, REMOVE, REDEEM) to Wallet Dashboard.
- * Best-effort; never throws to callers so pass download/open isn't blocked.
+ * Show migrate modal when this appUserId has no WalletPass in Contabo.
+ * POST /api/wallet/pass-migration-status
+ */
+export async function fetchWalletMigrationStatus({
+  appUserId,
+  organizationId,
+}) {
+  const body = {
+    appUserId: appUserId != null ? String(appUserId).trim() : undefined,
+    organizationId: organizationId || WALLET_ORGANIZATION_ID || undefined,
+  };
+
+  try {
+    const res = await axios.post(
+      `${WALLET_DASHBOARD_API_URL}/wallet/pass-migration-status`,
+      body,
+      { timeout: 15000 }
+    );
+    return res.data;
+  } catch (err) {
+    console.log(
+      "fetchWalletMigrationStatus failed",
+      err.response?.status,
+      err.response?.data || err.message
+    );
+    return {
+      ok: false,
+      needsMigration: false,
+      error: err.message,
+    };
+  }
+}
+
+/**
+ * Report INSTALL / REMOVE / REDEEM to Wallet Dashboard (source of truth).
  */
 export async function reportWalletEvent({
   eventType,
@@ -97,12 +129,17 @@ export async function reportWalletEvent({
   }
 
   const deviceId = await getOrCreateWalletDeviceId();
-  const orgName = (organisation && String(organisation).trim()) || undefined;
+  const orgName =
+    (organisation && String(organisation).trim()) ||
+    undefined;
   const normalizedUserId =
-    appUserId != null && String(appUserId).trim() ? String(appUserId).trim() : undefined;
+    appUserId != null && String(appUserId).trim()
+      ? String(appUserId).trim()
+      : undefined;
   const normalizedEmail =
-    userEmail && String(userEmail).trim() ? String(userEmail).trim().toLowerCase() : undefined;
-
+    userEmail && String(userEmail).trim()
+      ? String(userEmail).trim().toLowerCase()
+      : undefined;
   const body = {
     eventType,
     platform,
@@ -117,6 +154,17 @@ export async function reportWalletEvent({
     userEmail: normalizedEmail,
   };
 
+  console.log("reportWalletEvent body", {
+    eventType,
+    platform,
+    serialNumber,
+    campaignId: body.campaignId ?? null,
+    organizationId: body.organizationId ?? null,
+    organisation: body.organisation ?? null,
+    appUserId: body.appUserId ?? null,
+    userEmail: body.userEmail ?? null,
+  });
+
   try {
     const res = await axios.post(`${WALLET_DASHBOARD_API_URL}/wallet/events`, body, {
       timeout: 15000,
@@ -124,7 +172,11 @@ export async function reportWalletEvent({
     console.log("reportWalletEvent ok", res.data);
     return res.data;
   } catch (err) {
-    console.log("reportWalletEvent failed", err.response?.status, err.message);
+    console.log(
+      "reportWalletEvent failed",
+      err.response?.status,
+      err.response?.data || err.message
+    );
     return { ok: false, error: err.message, details: err.response?.data };
   }
 }

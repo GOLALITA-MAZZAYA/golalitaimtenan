@@ -103,7 +103,7 @@ const Notification = ({
           )}
           <View style={styles.descriptionWrapper}>
             <TypographyText
-              textColor={isDark ? colors.white : colors.black}
+              textColor={isDark ? colors.mainDarkMode : colors.black}
               size={14}
               font={BALOO_SEMIBOLD}
               title={getTitle(
@@ -113,7 +113,7 @@ const Notification = ({
               numberOfLines={2}
             />
             <TypographyText
-              textColor={colors.grey}
+              textColor={colors.textSecondary}
               size={14}
               font={BALOO_REGULAR}
               title={descriptionText}
@@ -124,7 +124,7 @@ const Notification = ({
         </View>
         <View style={styles.dateWrapper}>
           <TypographyText
-            textColor={colors.grey}
+            textColor={colors.textSecondary}
             size={12}
             font={BALOO_REGULAR}
             title={notification.date}

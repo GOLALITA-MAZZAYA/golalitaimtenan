@@ -1,44 +1,33 @@
+import { org } from '../org/config';
+
 export const linking = {
-  prefixes: ['golalitaimtenanrewards://'],
+  prefixes: [org.urlScheme],
   config: {
     screens: {
-      // Drawer → MainStack (TabsBar shell removed)
-      Home: {
+      // "Main" wraps DrawerNavigator as a screen of the persistent root
+      // Stack (see Root.jsx) — Home is now one level deeper than before.
+      Main: {
         screens: {
-          Main: 'home',
-          Charities: 'charities',
-          myVouchers: {
-            path: 'vouchers',
+          Home: {
             screens: {
-              'myVouchers-list': 'list',
+              TabsBar: {
+                screens: {
+                  Charities: "charities",
+                  Main: "home",
+                  loyaltyPoints: {
+                      screens: {
+                         "restaurant-skipcache-payment-status": "restaurant-payment-result",
+                         "clinics-appointment-payment-status": "clinic-payment-result",
+                         "saloons-appointment-payment-status": "saloon-payment-result"
+                      }
+                  }
+                },
+              },
             },
           },
-          AllOffers: {
-            path: 'offers',
-            screens: {
-              'offers-list': '',
-              'offer-info': 'info',
-            },
-          },
-          merchant: {
-            path: 'merchant',
-            screens: {
-              'merchant-info': 'info',
-            },
-          },
-          ARMap: {
-            path: 'ar',
-            screens: {
-              ARHowToUse: 'howto',
-              ARMerchants: 'merchants',
-            },
-          },
-          MapPage: 'map',
-          Notifications: 'notifications',
-          card: 'card',
-          Profile: 'profile',
         },
       },
     },
   },
 };
+

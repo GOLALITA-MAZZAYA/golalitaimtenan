@@ -54,6 +54,8 @@ export const logger = {
   info: (...args) => write('info', args),
   warn: (...args) => write('warn', args),
   error: (...args) => write('error', args),
+  api: (method, path, status, durationMs) =>
+    write('info', [`[API] ${method} ${path} — ${status} — ${durationMs}ms`]),
 };
 
 export default logger;

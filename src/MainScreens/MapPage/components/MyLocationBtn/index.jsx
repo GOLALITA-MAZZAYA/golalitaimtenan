@@ -25,10 +25,14 @@ const MyLocationBtn = ({ moveMapToPosition }) => {
 
       console.log(data, 'data afetr requesting permission');
 
+      if (!data.location) {
+        return;
+      }
+
       const lalitude = data.location.latitude;
       const longitude = data.location.longitude;
 
-      if (lalitude & longitude) {
+      if (lalitude && longitude) {
         moveMapToPosition(lalitude, longitude);
       }
     } catch (err) {

@@ -4,44 +4,76 @@ import {useState} from "react";
 import {StyleSheet, View} from "react-native";
 import {TypographyText} from "../../../../components/Typography";
 import Slider from "@react-native-community/slider";
+import RightArrowSvg from '../../../../assets/loyaltyPoints/rightArrow.svg';
+import {isRTL} from "../../../../../utils";
+import {BALOO_2} from "../../../../redux/types";
+import {useTranslation} from "react-i18next";
 
-const minimumValue = 10000;
-const maximumValue = 100000;
+const minimumValue = 100;
+const maximumValue = 10000;
 const step = 50;
 
 const AmountSlider = ({onChange}) => {
     const [value, setValue] = useState(`${minimumValue}`);
-    const {isDark} = useTheme();
+    const isRtl = isRTL();
+    const {t} = useTranslation();
 
 
-    const valueColor = isDark ? colors.white: colors.darkBlue;
-    const maximumTrackTintColor = isDark ? colors.mainDarkMode : colors.darkBlue;
-    const thumbTintColor = isDark ? colors.white : colors.darkBlue;
+    const maximumTrackTintColor = colors.loyaltyPrimary;
+    const thumbTintColor = colors.loyaltySecondary;
 
     return (
       <View style={styles.wrapper} >
 
-      <View style={styles.valuesBlock}>
-          <TypographyText
-            textColor={valueColor}
-            title={minimumValue}
-            style={styles.title}
-           />
+      <View style={[styles.pointsInfo,{flexDirection: isRtl ? 'row-reverse': 'row'}]}>
 
+        <View style={styles.infoBlock}>
           <TypographyText
-            textColor={valueColor}
-            title={value}
+            textColor={colors.loyaltyTextMainTitle}
+            title={`${value}`}
+            style={styles.pointsInfoText}
+            size={26}
+            font={BALOO_2}
+           />
+           <TypographyText
+            textColor={colors.loyaltyTextSecondary}
+            title={t('LoyaltyPartners.points')}
             style={styles.amountValueText}
+            font={BALOO_2}
            />
-
-
-          <TypographyText
-            textColor={valueColor}
-            title={maximumValue}
-            style={styles.title}
-           />        
 
         </View>
+
+        <View style={[styles.arrowWrapper,{backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder}]}>
+          <RightArrowSvg color={colors.loyaltyPrimary}/>
+        </View>
+
+        <View style={styles.infoBlock}>
+          <TypographyText
+            textColor={colors.loyaltyPrimary}
+            title={`${value}`}
+            style={styles.pointsInfoText}
+            size={26}
+            font={BALOO_2}
+           />
+           <TypographyText
+            textColor={colors.loyaltyPrimary}
+            title={t('LoyaltyPartners.partnerPoints')}
+            style={styles.amountValueText}
+            font={BALOO_2}
+           />
+
+        </View>
+
+      </View>
+        
+         <TypographyText
+            textColor={colors.loyaltyPrimary}
+            title={t('LoyaltyPartners.pointsLabel')}
+            style={styles.sliderTitle}
+            size={16}
+            font={BALOO_2}
+          />
 
         <Slider
               minimumValue={minimumValue}
@@ -50,8 +82,29 @@ const AmountSlider = ({onChange}) => {
               onValueChange={setValue}
               onSlidingComplete={onChange}
               maximumTrackTintColor={maximumTrackTintColor}
+              minimumTrackTintColor={colors.loyaltySecondary}
               thumbTintColor={thumbTintColor}
         />
+
+         <View style={styles.valuesBlock}>
+
+          <TypographyText
+            textColor={colors.loyaltyPrimary}
+            title={`${minimumValue}`}
+            style={styles.startValue}
+            font={BALOO_2}
+            size={20}
+           />
+
+          <TypographyText
+            textColor={colors.loyaltyTextSecondary}
+            title={`${maximumValue}`}
+            style={styles.endValue}
+            font={BALOO_2}
+            size={20}
+           />        
+
+        </View>
 
      </View>
 
@@ -60,15 +113,46 @@ const AmountSlider = ({onChange}) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginTop: 30
+    marginTop: 35
   },
   valuesBlock: {
     width:'100%',
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    marginTop: 10
   },
   amountValueText: {
     textAlign: 'center'
+  },
+  arrowWrapper: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 28
+  },
+  pointsInfo: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  pointsInfoText: {
+    fontWeight: '700'
+  },
+  infoBlock: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  sliderTitle:{
+    marginHorizontal: 5,
+    marginTop: 33
+  },
+  startValue: {
+    fontWeight: '700'
+  },
+  endValue: {
+    
   }
 })
 

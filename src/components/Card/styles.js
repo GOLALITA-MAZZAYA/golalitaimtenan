@@ -3,7 +3,6 @@ import { SCREEN_WIDTH } from '../../styles/mainStyles';
 
 const styles = StyleSheet.create({
   wrapper: {
-    flex: 1,
     overflow: 'hidden',
     borderRadius: 8,
     justifyContent: 'center',
@@ -13,7 +12,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 17,
     paddingVertical: 15,
     width: SCREEN_WIDTH - 40,
-    flex: 1,
+    height: 200,
     justifyContent: 'flex-end',
     borderRadius: 8,
     overflow: 'hidden',

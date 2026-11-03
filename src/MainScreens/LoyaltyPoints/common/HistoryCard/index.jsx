@@ -1,21 +1,12 @@
-import {Image, StyleSheet, View} from "react-native";
-import {useTheme} from "../../../../components/ThemeProvider";
+import { memo } from "react";
+import { StyleSheet, View} from "react-native";
 import {colors} from "../../../../components/colors";
 import {TypographyText} from "../../../../components/Typography";
 import OkSvg from '../../../../assets/loyaltyPoints/ok.svg'
-import {isRTL} from "../../../../../utils";
 import {BALOO_REGULAR, BALOO_SEMIBOLD} from "../../../../redux/types";
 
 
-const HistoryCard = ({title, description, value, index}) => {
-    const {isDark} = useTheme();
-    
-    const isGift = value > 0;
-    const valueString =  `${isGift ? '-' :' +'}${value}`;
-
-   
-    const isRtl = isRTL();
-
+const HistoryCard = memo(({title, description, value, index}) => {
     return (
       <View style={[styles.wrapper,
          {marginTop: index ? 25: 0},
@@ -52,7 +43,7 @@ const HistoryCard = ({title, description, value, index}) => {
         <View style={styles.rightBlock}>
         <View style={styles.valueWrapper}>
               <TypographyText
-                title={valueString}
+                title={value}
                 textColor={
                  colors.loyaltyTextPrimary
                 }
@@ -77,7 +68,7 @@ const HistoryCard = ({title, description, value, index}) => {
          
       </View>
     )
-};
+});
 
 const styles = StyleSheet.create({
     wrapper: {

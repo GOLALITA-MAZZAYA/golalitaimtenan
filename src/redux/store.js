@@ -11,9 +11,10 @@ import { giftcardsReducer } from "./giftCards/giftcards-reducer";
 import { favouriteMerchantsReducer } from "./favouriteMerchants/favourite-merchants-reducer";
 import { globalReducer } from "./global/global-reducer";
 import { globalTixReducer } from "./globalTix/globalTix-reducer";
-import { globalTixCartReducer } from "./globalTix/globalTix-cart-reducer";
-import { cartReducer } from "./cart/cart-reducer";
+import { restaurantReducer } from './restaurant/restaurant-reducer';
+import { loyaltyReducer } from "./loyalty/loyalty-reducer";
 import { aiChatReducer } from "./aiChat/aiChat-reducer";
+import { discountCardReducer } from "./discountCard/discountCard-reducer";
 
 let reducers = combineReducers({
   authReducer,
@@ -26,9 +27,10 @@ let reducers = combineReducers({
   favouriteMerchantsReducer,
   globalReducer,
   globalTix: globalTixReducer,
-  globalTixCart: globalTixCartReducer,
-  cartReducer,
+  restaurantReducer,
+  loyaltyReducer,
   aiChatReducer,
+  discountCardReducer,
 });
 
 let store = createStore(reducers, applyMiddleware(thunk));

@@ -7,39 +7,45 @@ import { logger } from '../utils/logger';
 // calls this before Redux has finished rehydrating the auth token from
 // storage — the token check below would otherwise silently drop the very
 // event we most want to capture. Give hydration a brief window to finish.
-const waitForToken = (timeoutMs = 4000) =>
-  new Promise(resolve => {
-    const existing = store.getState().authReducer.token;
-    if (existing) {
-      resolve(existing);
-      return;
-    }
+const waitForToken = (timeoutMs = 4000) => new Promise(resolve => {
+  const existing = store.getState().authReducer.token;
+  if (existing) {
+    resolve(existing);
+    return;
+  }
 
-    const timer = setTimeout(() => {
+  const timer = setTimeout(() => {
+    unsubscribe();
+    resolve(store.getState().authReducer.token || null);
+  }, timeoutMs);
+
+  const unsubscribe = store.subscribe(() => {
+    const { token } = store.getState().authReducer;
+    if (token) {
+      clearTimeout(timer);
       unsubscribe();
-      resolve(store.getState().authReducer.token || null);
-    }, timeoutMs);
-
-    const unsubscribe = store.subscribe(() => {
-      const { token } = store.getState().authReducer;
-      if (token) {
-        clearTimeout(timer);
-        unsubscribe();
-        resolve(token);
-      }
-    });
+      resolve(token);
+    }
   });
+});
 
-// Fire-and-forget wrapper around POST /user/activity/track.
-// Never throws — tracking failures must not surface to the user or block
-// the action that triggered them. Guests (no token) are skipped.
+// Fire-and-forget wrapper around POST /user/activity/track (see
+// Golalita_User_Activity_Tracker_API_Mobile_Guide.docx). Never throws —
+// tracking failures must not surface to the user or block the action that
+// triggered them. Guests (no token) are skipped: the endpoint requires a
+// logged-in user token.
 const trackActivity = async (event_type, options = {}) => {
+  console.log('[Push][debug] trackActivity called:', event_type, options);
   try {
     let { token } = store.getState().authReducer;
     if (!token) {
+      console.log('[Push][debug] trackActivity: no token yet, waiting for auth hydration...');
       token = await waitForToken();
+      console.log('[Push][debug] trackActivity: waitForToken resolved with', token ? 'a token' : 'null (timed out)');
     }
     if (!token) return;
+
+    const currentCountry = store.getState().globalReducer?.currentCountry;
 
     const {
       reference,
@@ -61,6 +67,7 @@ const trackActivity = async (event_type, options = {}) => {
       device_type: Platform.OS,
     };
 
+    if (currentCountry?.code) params.country = currentCountry.code;
     if (reference != null) params.reference = String(reference);
     if (page_name) params.page_name = page_name;
     if (merchant_id != null) params.merchant_id = merchant_id;
@@ -72,7 +79,7 @@ const trackActivity = async (event_type, options = {}) => {
     if (latitude != null) params.latitude = latitude;
     if (longitude != null) params.longitude = longitude;
     if (metadata && Object.keys(metadata).length) params.metadata = metadata;
-
+    console.log("trackActivity params:", params)
     const res = await instance.post('/user/activity/track', {
       jsonrpc: '2.0',
       params,

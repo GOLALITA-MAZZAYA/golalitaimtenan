@@ -1,51 +1,59 @@
-import {FlatList, StyleSheet} from "react-native";
-import MainLayout from "../../../components/MainLayout"
+import { FlatList, StyleSheet } from "react-native";
+import { useMemo } from "react";
+import MainLayout from "../../../components/MainLayout";
 import Header from "../../../components/Header";
-import CardsList from "../common/CardsList";
-import {CATEGORIES, getCategories} from "./config";
-import {useTranslation} from "react-i18next";
-import ListCard from "../common/ListCard";
-import {useTheme} from "../../../components/ThemeProvider";
+import { getCategories } from "./config";
+import { useTranslation } from "react-i18next";
+import RedeemGridCard from "../common/RedeemGridCard";
+import { useTheme } from "../../../components/ThemeProvider";
+import useLoyaltyCategoriesVisibility from "../../../hooks/useLoyaltyCategoriesVisibility";
 
 const LoyaltyPointsRedeemCategories = () => {
-  const {t} = useTranslation();
-  const {isDark} = useTheme();
+  const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const { isCategoryVisible } = useLoyaltyCategoriesVisibility();
 
-  const data = getCategories(isDark);
-
+  const data = useMemo(
+    () => getCategories(isDark).filter(item => isCategoryVisible(item.categoryKey)),
+    [isDark, isCategoryVisible],
+  );
 
   return (
-        <MainLayout
-        outsideScroll={true}
-        headerChildren={
-          <Header label={t('LoyaltyMain.redeem')} btns={['back']} />
-        }
-        headerHeight={50}
-        contentStyle={styles.contentStyle}
-      >
-
-       <FlatList 
-         data={data}
-         renderItem={({item}) => (
-             <ListCard {...item} isDark={isDark} style={styles.card}/>
-         )}
-       />
-      </MainLayout>
-  )
+    <MainLayout
+      outsideScroll={true}
+      headerChildren={
+        <Header label={t('LoyaltyMain.redeem')} btns={['back']} />
+      }
+      headerHeight={50}
+      contentStyle={styles.contentStyle}
+    >
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item.categoryKey}
+        numColumns={3}
+        columnWrapperStyle={styles.columnWrapperStyle}
+        contentContainerStyle={styles.contentContainerStyle}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <RedeemGridCard {...item} isDark={isDark} />
+        )}
+      />
+    </MainLayout>
+  );
 };
 
 const styles = StyleSheet.create({
-contentStyle: {
-  flexGrow: 1,
-  paddingHorizontal: 20
-},
-banners: {
-  alignSelf: 'center',
-  marginBottom: 20
-},
-card: {
-  marginTop: 12
-}
+  contentStyle: {
+    flexGrow: 1,
+    paddingHorizontal: 12,
+  },
+  columnWrapperStyle: {
+    justifyContent: 'flex-start',
+  },
+  contentContainerStyle: {
+    paddingTop: 16,
+    paddingBottom: 150,
+  },
 });
 
 export default LoyaltyPointsRedeemCategories;

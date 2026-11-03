@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Image,
   Keyboard,
   Platform,
   SafeAreaView,
@@ -9,11 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Image from "../../components/AppImage";
 import { colors } from '../../components/colors';
 import { sized } from '../../Svg';
 import styles from './styles';
 import CameraSvg from '../../assets/camera.svg';
-import { mainStyles, SCREEN_HEIGHT } from '../../styles/mainStyles';
+import { mainStyles } from '../../styles/mainStyles';
 import Input from '../../components/Input/Input';
 import CommonButton from '../../components/CommonButton/CommonButton';
 import CommonButtonSecondary from '../../components/CommonButtonSecondary/CommonButtonSecondary';
@@ -22,14 +22,13 @@ import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { useTheme } from '../../components/ThemeProvider';
 import { connect, useDispatch } from 'react-redux';
 import { Formik } from 'formik';
-import { updateProfile, validate_code } from '../../redux/auth/auth-thunks';
+import { updateProfile } from '../../redux/auth/auth-thunks';
 import EditSvg from '../../assets/profile_edit.svg';
 import { useTranslation } from 'react-i18next';
 import { LUSAIL_REGULAR, VERSION } from '../../redux/types';
 import { TypographyText } from '../../components/Typography';
 import { deleteAccount } from '../../redux/merchant/merchant-thunks';
 import TopCircleShadow from '../../components/TopCircleShadow';
-import useIsGuest from '../../hooks/useIsGuest';
 
 import {
   request,
@@ -43,7 +42,6 @@ import { setProfileLoading } from '../../redux/auth/auth-actions';
 import { showMessage } from 'react-native-flash-message';
 import { useValidation } from '../../hooks/useValidation';
 import useIsMumayz from '../../hooks/useIsMumayz';
-import { verifyRegisterCode } from '../../redux/auth/auth-thunks';
 
 const CameraIcon = sized(CameraSvg, 36, 32);
 const EditIcon = sized(EditSvg, 31);
@@ -71,7 +69,6 @@ const Profile = ({
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const { isDark } = useTheme();
-  const isGuest = useIsGuest();
   const [isDialogWindow, setIsDialogWindow] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [image, setImage] = useState(null);
@@ -82,6 +79,44 @@ const Profile = ({
   const { getProfileScreenValidationSchema } = useValidation();
 
   const validation = getProfileScreenValidationSchema();
+
+  // useEffect(() => {
+  //   (async () => {
+  //     let permissions = [PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE];
+
+  //     if (Platform.OS === 'android') {
+  //       if (Platform.Version >= 33) {
+  //         permissions.push(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+  //       } else {
+  //         permissions.push(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
+  //       }
+
+  //       try {
+  //         let statuses = await checkMultiple(permissions);
+
+  //         console.log(statuses, 'status');
+
+  //         let notGrantedPermissions = Object.entries(statuses)
+  //           .filter(item => item[1] !== 'granted')
+  //           .map(item => item[0]);
+
+  //         if (notGrantedPermissions.length) {
+  //           statuses = await requestMultiple(notGrantedPermissions);
+
+  //           notGrantedPermissions = Object.entries(statuses)
+  //             .filter(item => item[1] !== 'granted')
+  //             .map(item => item[0]);
+  //         }
+
+  //         console.log(notGrantedPermissions, 'not granted');
+
+  //         if (notGrantedPermissions.length) {
+  //           alert('Sorry, we need camera roll permissions to make this work!');
+  //         }
+  //       } catch (err) {}
+  //     }
+  //   })();
+  // }, []);
 
   const pickImage = async () => {
     // Dismiss the action sheet first — iOS cannot present the picker over RN Modal.
@@ -288,7 +323,7 @@ const Profile = ({
         {({ values, handleChange, handleSubmit, errors, submitCount }) => {
           errors = submitCount > 0 ? errors : {};
           return (
-            <SafeAreaView>
+            <SafeAreaView style={{ flex: 1 }}>
               <TopCircleShadow />
               <Header
                 label={t('Profile.myProfile')}
@@ -331,18 +366,11 @@ const Profile = ({
                 }}
               />
 
-              <ScrollView style={{ height: SCREEN_HEIGHT - 100 }}>
+              <ScrollView style={{ flex: 1 }}>
                 <View style={mainStyles.p20}>
                   <View style={mainStyles.centeredRow}>
-                    <TouchableOpacity
-                      activeOpacity={image !== null || user.photo ? 1 : 0.7}
-                      onPress={() => {
-                        if (!(image !== null || user.photo))
-                          setIsDialogWindow(true);
-                      }}
-                      style={styles.changePhoto}
-                    >
-                      {image !== null || user.photo ? (
+                    {image !== null || user.photo ? (
+                      <View style={styles.changePhoto}>
                         <Image
                           style={{
                             width: '100%',
@@ -358,18 +386,21 @@ const Profile = ({
                               : user.photo,
                           }}
                         />
-                      ) : (
-                        <CameraIcon />
-                      )}
-                      {(image !== null || user.photo) && (
                         <TouchableOpacity
                           onPress={() => setIsDialogWindow(true)}
                           style={styles.changePhoto__icon}
                         >
-                          <EditIcon />
+                          <EditIcon color={isDark ? colors.mainDarkMode : colors.darkBlue} />
                         </TouchableOpacity>
-                      )}
-                    </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => setIsDialogWindow(true)}
+                        style={styles.changePhoto}
+                      >
+                        <CameraIcon />
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <TypographyText
                     title={`v ${VERSION}`}
@@ -431,7 +462,6 @@ const Profile = ({
                       onSubmitEditing={Keyboard.dismiss}
                       error={errors.phone}
                       disableInputRtl
-                      showLabel
                     // onPressNotVerified={() =>
                     //   verifyHandler(validation, values, "phone")
                     // }
@@ -440,7 +470,7 @@ const Profile = ({
 
                   {!isMumayaz && (
                     <>
-                      {!isGuest && (<CommonButton
+                      <CommonButton
                         onPress={handleSubmit}
                         label={t('Profile.updateProfile')}
                         style={{ marginVertical: 27 }}
@@ -448,9 +478,9 @@ const Profile = ({
                           isDark ? colors.mainDarkModeText : colors.white
                         }
                         loading={profileLoading}
-                      />)}
+                      />
 
-                      {!isGuest && (<CommonButtonSecondary
+                      <CommonButtonSecondary
                         onPress={() => navigation.navigate('ChangePassword')}
                         label={t('Profile.changePassword')}
                         style={{
@@ -464,8 +494,7 @@ const Profile = ({
                         }
                         loading={profileLoading}
                       />
-                      )}
-                      {!isGuest && (<TouchableOpacity
+                      <TouchableOpacity
                         disabled={profileLoading}
                         onPress={() => {
                           Alert.alert(
@@ -497,7 +526,7 @@ const Profile = ({
                           font={LUSAIL_REGULAR}
                           style={{ marginTop: 5, fontWeight: '700' }}
                         />
-                      </TouchableOpacity>)}
+                      </TouchableOpacity>
                     </>
                   )}
                 </View>
@@ -518,6 +547,4 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps, {
   updateProfile,
   deleteAccount,
-  validate_code,
-  verifyRegisterCode,
 })(Profile);

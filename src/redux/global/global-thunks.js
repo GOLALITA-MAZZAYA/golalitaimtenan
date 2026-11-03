@@ -18,8 +18,6 @@ export const getCountries = () => async (dispatch) => {
 };
 
 export const getUserLocationThunk = () => async (dispatch, getState) => {
-  // Keep a cached fix so Nearest can apply immediately, and so a failed
-  // re-fetch does not wipe a good location with null.
   if (getState().globalReducer.userLocation) {
     return;
   }
@@ -44,6 +42,7 @@ const getActivePopups = (response) =>
     (item) => item && item.active !== false,
   );
 
+// Home's Local side is always Qatar (see getAdvert in merchant-thunks.js).
 const HOME_COUNTRY_CODE = 'QA';
 
 const targetsCountry = (item, code) =>
@@ -51,13 +50,15 @@ const targetsCountry = (item, code) =>
 
 export const getMarketingPopupThunk = () => async (dispatch, getState) => {
   const { hasShownMarketingPopup } = getState().globalReducer;
-
+  
   if (hasShownMarketingPopup) {
     return;
   }
 
   try {
     const response = await getMarketingPopup({ country: HOME_COUNTRY_CODE });
+    // Keep Qatar popups and ones with no country restriction; drop any
+    // targeted at another country.
     const popups = getActivePopups(response).filter(
       (item) =>
         !(item.country_codes || []).length ||
@@ -70,10 +71,15 @@ export const getMarketingPopupThunk = () => async (dispatch, getState) => {
   } catch (e) {
     console.log("get marketing popup error:", e);
   } finally {
+    // Set flag to true so we don't try to fetch and show it again this session.
+    // Also on failure: MainScreen waits on this flag before rendering.
     dispatch(setHasShownMarketingPopup(true));
   }
 };
 
+// Popups for one Global country screen (e.g. K.S.A). Returned rather than
+// stored so they don't mix with the Home screen's popups. The API also sends
+// popups with no country restriction, so keep only the ones targeting it.
 export const getCountryMarketingPopups = (countryCode) => async () => {
   try {
     const code = String(countryCode).toUpperCase();

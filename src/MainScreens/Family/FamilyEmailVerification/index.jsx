@@ -14,7 +14,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { CodeField, Cursor } from "react-native-confirmation-code-field";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import authApi from "../../../redux/auth/auth-api";
 import { transactionsApi } from "../../../redux/transactions/transactions-api";
 import { getFamilyMembers } from "../../../redux/transactions/transactions-thunks";
@@ -30,39 +30,59 @@ import { BALOO_MEDIUM } from "../../../redux/types";
 import { useTheme } from "../../../components/ThemeProvider";
 import CommonButton from "../../../components/CommonButton/CommonButton";
 import Header from "../../../components/Header";
-import { getAuthToken } from "../../../utils/tokenStorage";
+import { getToken } from "../../../utils/secureStorage";
+
+const RESEND_COOLDOWN_SECONDS = 30;
 
 const FamilyEmailVerification = ({ route, navigation }) => {
   const params = route.params;
   const { isDark } = useTheme();
   const { t } = useTranslation();
+  const reduxToken = useSelector((state) => state.authReducer.token);
   const [loading, setLoading] = useState(false);
   const randomCode = useRef(Math.floor(1000 + Math.random() * 9000));
+  const [resendIn, setResendIn] = useState(0);
+  const [sending, setSending] = useState(false);
   const dispatch = useDispatch();
 
-  const sendVerificationCode = async () => {
+  const sendVerificationCode = async (isResend = false) => {
+    // Each send issues a fresh code so an older email can't be reused.
+    randomCode.current = Math.floor(1000 + Math.random() * 9000);
+    setSending(true);
     try {
-      return authApi.validate_code({
+      await authApi.validate_code({
         params: {
-          email: params.email,
+          email: params?.email,
           validate_code: randomCode.current,
           method: "email",
         },
       });
+      setResendIn(RESEND_COOLDOWN_SECONDS);
+      if (isResend) {
+        showMessage({ type: "success", message: t("Login.codeResent") });
+      }
     } catch (err) {
       showMessage({
         type: "danger",
         message: t("General.error"),
       });
+    } finally {
+      setSending(false);
     }
   };
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
 
   const checkIfCodeValid = (codeFromInput) =>
     +randomCode.current === +codeFromInput;
 
   const saveFamilyMember = async () => {
     const { isEdit, ...body } = params;
-    const token = await getAuthToken();
+    const token = reduxToken || (await getToken());
 
     return isEdit
       ? transactionsApi.editFamilyMember({ params: { token, ...body } })
@@ -83,7 +103,7 @@ const FamilyEmailVerification = ({ route, navigation }) => {
       const res = await saveFamilyMember();
 
       const errorMessage =
-        res.data?.error?.data?.message || res?.data?.result?.error;
+        res?.data?.error?.data?.message || res?.data?.result?.error;
 
       if (errorMessage) {
         showMessage({
@@ -102,7 +122,8 @@ const FamilyEmailVerification = ({ route, navigation }) => {
         type: "success",
       });
 
-      navigation.pop(2);
+      // Returns to the existing Family screen, dropping the form and this screen.
+      navigation.navigate("Family");
     } catch (error) {
       showMessage({
         type: "danger",
@@ -193,6 +214,7 @@ const FamilyEmailVerification = ({ route, navigation }) => {
                                   backgroundColor: isDark
                                     ? colors.transparent
                                     : colors.white,
+                                  color: isDark ? colors.white : "#312B3E",
                                 },
                               ]}
                             >
@@ -215,6 +237,28 @@ const FamilyEmailVerification = ({ route, navigation }) => {
                         label={t("Login.verify")}
                         loading={loading}
                       />
+                      <TouchableOpacity
+                        onPress={() => sendVerificationCode(true)}
+                        disabled={sending || resendIn > 0}
+                        style={styles.resend}
+                      >
+                        <TypographyText
+                          title={
+                            resendIn > 0
+                              ? `${t("Login.resendCode")} (${resendIn}s)`
+                              : t("Login.resendCode")
+                          }
+                          textColor={
+                            sending || resendIn > 0
+                              ? colors.darkGrey
+                              : isDark
+                                ? colors.mainDarkMode
+                                : colors.darkBlue
+                          }
+                          size={16}
+                          font={BALOO_MEDIUM}
+                        />
+                      </TouchableOpacity>
                     </>
                   );
                 }}
@@ -228,6 +272,11 @@ const FamilyEmailVerification = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  resend: {
+    alignSelf: "center",
+    marginTop: 20,
+    padding: 8,
+  },
   codeWrapper: {
     marginBottom: 80,
     paddingHorizontal: 30,

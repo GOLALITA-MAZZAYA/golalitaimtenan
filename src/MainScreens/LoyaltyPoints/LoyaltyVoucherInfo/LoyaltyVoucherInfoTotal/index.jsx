@@ -1,15 +1,13 @@
 import { StyleSheet, View } from "react-native";
-import { BALOO_BOLD, BALOO_REGULAR } from "../../../../redux/types";
-import { useTheme } from "../../../../components/ThemeProvider";
+import { BALOO_2 } from "../../../../redux/types";
 import { TypographyText } from "../../../../components/Typography";
 import { colors } from "../../../../components/colors";
 import { useTranslation } from "react-i18next";
 
 const LoyaltyVoucherInfoTotal = (props) => {
-  const { isDark } = useTheme();
   const { t } = useTranslation();
 
-  const { amount = 0, deliveryCharge, bankCharge, style, total, cash, pointsEarn=0 } = props;
+  const { amount = 0, deliveryCharge, bankCharge, style, total, cash } = props;
 
   const renderValue = (item) => {
     if (!item.value) {
@@ -20,15 +18,17 @@ const LoyaltyVoucherInfoTotal = (props) => {
       <View style={styles.itemWrapper} key={item.title}>
         <TypographyText
           title={item.title}
-          textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+          textColor={item.isTotal ? colors.loyaltyTextMainTitle: colors.loyaltyTextSecondary}
           size={16}
-          font={item.isTotal ? BALOO_BOLD : BALOO_REGULAR}
+          font={BALOO_2}
+          style={{fontWeight: item.isTotal ? '600': '400'}}
         />
         <TypographyText
           title={item.value}
-          textColor={isDark ? 'white' : colors.darkBlue}
+          textColor={item.isTotal ? colors.loyaltyTextMainTitle: colors.loyaltyTextMainTitle}
           size={16}
-          font={item.isTotal ? BALOO_BOLD : BALOO_REGULAR}
+          font={BALOO_2}
+          style={{fontWeight: item.isTotal ? '600': '400'}}
         />
       </View>
     );
@@ -38,11 +38,6 @@ const LoyaltyVoucherInfoTotal = (props) => {
 
   if (!cash) {
     config = [
-      {
-        title: t("Vouchers.pointsEarn"),
-        value: pointsEarn,
-        visible: true,
-      },
       {
         title: t("Vouchers.price"),
         value: `${amount?.toFixed(2)} QAR`,
@@ -74,32 +69,30 @@ const LoyaltyVoucherInfoTotal = (props) => {
     ];
   }
 
-  const totalConfig = {
-    title: t("Vouchers.orderTotal"),
-    value: `${total.toFixed(2)} QAR`,
-    isTotal: true,
-  };
-
   const filteredConfig = config.filter((item) => item.visible);
 
   return (
-    <View style={style}>
+    <View style={[style,styles.mainWrapper,{backgroundColor: colors.loyaltyCardBackground, borderColor: colors.loyaltyMainBorder}]}>
       <View style={styles.wrapper}>{filteredConfig.map(renderValue)}</View>
-      {renderValue(totalConfig)}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainWrapper: {
+    padding: 20,
+    borderWidth: 1,
+    borderRadius: 40,
+    
+  },
   wrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.darkBlue,
+    paddingBottom: 10
   },
   itemWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 2,
+    marginTop: 10
   },
 });
 

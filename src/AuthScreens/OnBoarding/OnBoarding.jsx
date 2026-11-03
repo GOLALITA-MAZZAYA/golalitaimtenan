@@ -7,10 +7,10 @@ import {
   StatusBar,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Swiper from "react-native-swiper";
+import Carousel from "react-native-reanimated-carousel";
 import { styles } from "./styles";
 import { sized } from "../../Svg";
-import { mainStyles, SCREEN_WIDTH } from "../../styles/mainStyles";
+import { mainStyles, SCREEN_WIDTH, SCREEN_HEIGHT } from "../../styles/mainStyles";
 import { TypographyText } from "../../components/Typography";
 import { colors } from "../../components/colors";
 import { LUSAIL_REGULAR } from "../../redux/types";
@@ -18,6 +18,8 @@ import BackSvg from "../../assets/back.svg";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../components/ThemeProvider";
 import { getConfig } from "./config";
+import { org } from "../../org/config";
+import { logo } from "../../org/assets";
 import CommonButton from "../../components/CommonButton/CommonButton";
 import i18next from "i18next";
 import { getIfEverLoggedIn } from "../../api/asyncStorage";
@@ -27,6 +29,11 @@ const OnBoarding = ({ navigation }) => {
   const { t, i18n } = useTranslation();
   const [isSkip, setIsSkip] = useState(false);
   const [isFirstSlide, setIsFirstSlide] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [carouselLayout, setCarouselLayout] = useState({
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  });
 
   const swiperRef = useRef();
 
@@ -35,7 +42,7 @@ const OnBoarding = ({ navigation }) => {
   const iconsAndTextColor = isDark ? colors.mainDarkMode : colors.darkBlue;
   const backgroundColor = isDark ? colors.darkBlue : colors.bg;
 
-  const logoIcon = require("../../../assets/logo.png");
+  const logoIcon = logo;
 
   const BackIcon = sized(BackSvg, 13, 24, iconsAndTextColor);
 
@@ -77,7 +84,7 @@ const OnBoarding = ({ navigation }) => {
   }, [isSkip]);
 
   const handleBackPress = () => {
-    swiperRef.current.scrollBy(-1);
+    swiperRef.current.prev();
   };
 
   return (
@@ -101,19 +108,26 @@ const OnBoarding = ({ navigation }) => {
           style={{ fontWeight: "700" }}
         />
       </TouchableOpacity>
-      <Swiper
-        ref={swiperRef}
-        onIndexChanged={handleIndexChange}
-        loop={false}
-        dot={<View style={styles.dot} />}
-        activeDot={
-          <View style={[styles.dot, { backgroundColor: iconsAndTextColor }]} />
-        }
-        style={styles.wrapper}
-        autoplay={!isFirstSlide}
-        autoplayTimeout={3}
+      <View
+        style={{ flex: 1 }}
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          setCarouselLayout({ width, height });
+        }}
       >
-        {swiperData.map((item, index) => {
+        <Carousel
+          ref={swiperRef}
+          width={carouselLayout.width}
+          height={carouselLayout.height}
+          data={swiperData}
+          loop={false}
+          autoPlay={!isFirstSlide}
+          autoPlayInterval={3000}
+          onSnapToItem={(index) => {
+            setActiveIndex(index);
+            handleIndexChange(index);
+          }}
+          renderItem={({ item, index }) => {
           if (!index) {
             return (
               <TouchableOpacity
@@ -149,7 +163,7 @@ const OnBoarding = ({ navigation }) => {
                     />
                   </View>
                   <TypographyText
-                    title={t("OnBoarding.welcomeTo")}
+                    title={t("OnBoarding.welcomeTo", { appName: org.displayName })}
                     textColor={iconsAndTextColor}
                     size={24}
                     font={LUSAIL_REGULAR}
@@ -193,7 +207,7 @@ const OnBoarding = ({ navigation }) => {
                     onPress={() => {
                       i18next.changeLanguage("en");
 
-                      swiperRef.current.scrollBy(1);
+                      swiperRef.current.next();
                     }}
                   />
                   <CommonButton
@@ -224,7 +238,7 @@ const OnBoarding = ({ navigation }) => {
                     }}
                     onPress={() => {
                       i18next.changeLanguage("ar");
-                      swiperRef.current.scrollBy(1);
+                      swiperRef.current.next();
                     }}
                   />
                 </View>
@@ -240,8 +254,25 @@ const OnBoarding = ({ navigation }) => {
               style={localStyles.swiperImage}
             />
           );
-        })}
-      </Swiper>
+        }}
+        />
+
+        {swiperData.length > 1 && (
+        <View style={styles.paginationWrapper} pointerEvents="none">
+          {swiperData.map((item, index) => (
+            <View
+              key={item.key}
+              style={[
+                styles.dot,
+                index === activeIndex && {
+                  backgroundColor: iconsAndTextColor,
+                },
+              ]}
+            />
+          ))}
+        </View>
+        )}
+      </View>
     </View>
   );
 };

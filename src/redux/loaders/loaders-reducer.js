@@ -7,7 +7,7 @@ import {
 
 const initialState = {
   isMerchantsLoading: false,
-  isOffersLoading: false,
+  isOffersLoading: true,
   isNotificationsSettingsLoading: false,
 };
 

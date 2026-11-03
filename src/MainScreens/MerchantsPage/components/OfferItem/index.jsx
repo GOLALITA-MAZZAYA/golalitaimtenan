@@ -1,4 +1,4 @@
-import { Image } from 'react-native';
+import Image from "../../../../components/AppImage";
 import { View } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { StyleSheet } from 'react-native';
@@ -18,15 +18,13 @@ import { useTranslation } from 'react-i18next';
 import { saveOffer } from '../../../../redux/merchant/merchant-thunks';
 import FullScreenLoader from '../../../../components/Loaders/FullScreenLoader';
 import HeartSvg from '../../../../assets/heart.svg';
-import { getLocalizedValue, getStringDate } from '../../../../../utils';
 import { sized } from '../../../../Svg';
 import ArrowSvg from '../../../../assets/arrow_right.svg';
-import CalendarSvg from '../../../../assets/calendar.svg';
 
-const IMAGE_SIZE = 76;
+const IMAGE_SIZE = 66;
 
 const OfferItem = ({ merchant, isB1G1 }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
@@ -34,7 +32,6 @@ const OfferItem = ({ merchant, isB1G1 }) => {
   const dispatch = useDispatch();
 
   const ArrowIconBig = sized(ArrowSvg, 22, 22, '#E32251');
-  const CalendarIconSmall = sized(CalendarSvg, 12, 12);
 
   const favoriteOffers = useSelector(
     state => state.merchantReducer.favoriteOffers,
@@ -46,10 +43,9 @@ const OfferItem = ({ merchant, isB1G1 }) => {
       // merchant.merchant_id = merchant.id;
       const data = await getOffersForNestedItemsCard(merchant, isB1G1 && 'all');
 
-      setData(data || []);
+      setData(data);
     } catch (err) {
       console.log(err.message, 'get offers error');
-      setData([]);
     } finally {
       setLoading(false);
     }
@@ -92,20 +88,17 @@ const OfferItem = ({ merchant, isB1G1 }) => {
           ? `${t('Merchants.discount')} ${item.x_offer_type_discount}%`
           : '';
 
-      const expiryDate = item.end_date
-        ? getStringDate(item.end_date.split(" ")[0])
-        : null;
-
-      const textColor = isDark ? colors.mainDarkModeText : colors.darkBlue;
-      const backgroundColor = isDark ? colors.mainDarkMode : 'transparent';
-
       return (
         <TouchableOpacity
+          activeOpacity={0.8}
           onPress={() => navigateTopProductPage(item, merchant)}
           style={[
             styles.row,
             styles.childWrapper,
-            { borderColor: textColor, backgroundColor },
+            {
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F5F5F7',
+            },
           ]}
           key={i}
         >
@@ -114,10 +107,10 @@ const OfferItem = ({ merchant, isB1G1 }) => {
           <View style={styles.childInfoWrapper}>
             <View style={styles.row}>
               <TypographyText
-                textColor={textColor}
+                textColor={isDark ? '#FFFFFF' : '#111827'}
                 size={14}
                 font={BALOO_SEMIBOLD}
-                title={getLocalizedValue(item.x_arabic_name, item.name)}
+                title={language === 'ar' ? item.x_arabic_name : item.name}
                 style={styles.name}
                 numberOfLines={2}
               />
@@ -126,15 +119,16 @@ const OfferItem = ({ merchant, isB1G1 }) => {
                 onPress={() => dispatch(saveOffer(item.id, t))}
                 style={{ paddingLeft: 5 }}
               >
-                <HeartSvg color={isLiked ? '#E32251' : '#DDDFE4'} />
+                <HeartSvg color={isLiked ? '#E32251' : (isDark ? '#52525B' : '#DDDFE4')} />
               </TouchableOpacity>
             </View>
-            <View style={[styles.row, { marginTop: 6 }]}>
+            <View style={[styles.row, { marginTop: 10 }]}>
               {!!price && (
                 <TypographyText
                   size={14}
                   font={BALOO_SEMIBOLD}
                   title={price}
+                  textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
                   style={styles.valueText}
                 />
               )}
@@ -146,7 +140,7 @@ const OfferItem = ({ merchant, isB1G1 }) => {
                 >
                   <TypographyText
                     textColor={
-                      isDark ? colors.mainDarkModeText : colors.darkBlue
+                      isDark ? colors.mainDarkMode : colors.darkBlue
                     }
                     size={14}
                     font={BALOO_SEMIBOLD}
@@ -158,18 +152,6 @@ const OfferItem = ({ merchant, isB1G1 }) => {
                 </TouchableOpacity>
               )}
             </View>
-
-            {!!expiryDate && expiryDate !== '...' && (
-              <View style={[styles.row, { justifyContent: 'flex-start', marginTop: 6 }]}>
-                <CalendarIconSmall color={isDark ? '#DDBD6B' : '#a29475'} style={{ marginRight: 4 }} />
-                <TypographyText
-                  textColor={isDark ? '#DDBD6B' : '#a29475'}
-                  size={11}
-                  font={BALOO_SEMIBOLD}
-                  title={`${t('validTill')} ${expiryDate}`}
-                />
-              </View>
-            )}
           </View>
         </TouchableOpacity>
       );

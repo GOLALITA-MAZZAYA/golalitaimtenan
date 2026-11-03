@@ -8,17 +8,11 @@ const initialContext = {
 const TabsContext = createContext(initialContext);
 
 export default function TabsProvider({ children, onTabChange, defaultActiveTab }) {
-  const [activeTab, setActiveTab] = useState("Second");
+  const [activeTab, setActiveTab] = useState(defaultActiveTab || "Second");
 
   useEffect(() => {
     onTabChange?.(activeTab);
   }, [activeTab]);
-
-  useEffect(() => {
-    if(defaultActiveTab){
-     setActiveTab(defaultActiveTab)
-    }
-  },[])
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>

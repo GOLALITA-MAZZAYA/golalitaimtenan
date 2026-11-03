@@ -233,9 +233,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   footer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
 });
 

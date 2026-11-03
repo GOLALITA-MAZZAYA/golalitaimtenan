@@ -328,7 +328,7 @@ const ESimOrderStatus = ({ navigation, route }) => {
                             : 'rgba(0,0,0,0.08)'
                           : isDark
                           ? 'rgba(221,189,107,0.2)'
-                          : 'rgba(148,0,55,0.1)',
+                          : 'rgba(162, 148, 117, 0.15)',
                     },
                   ]}
                 >

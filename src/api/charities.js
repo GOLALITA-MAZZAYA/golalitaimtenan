@@ -1,8 +1,9 @@
+import { getToken } from '../utils/secureStorage';
 import instance from "../redux/instance";
-import { getAuthToken } from '../utils/tokenStorage';
+import { org } from '../org/config';
 
 export const charityAmountInitiate = async (data) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const params = {
     token,
@@ -10,8 +11,8 @@ export const charityAmountInitiate = async (data) => {
     "currency": "QAR",
     "description": "Charity donation for Ramadan campaign",
     "callback_url": "https://www.golalita.com/payment/callback",
-    "return_url": "golalitaimtenanrewards://charities",
-    "cancel_url": "golalitaimtenanrewards://charities"
+    "return_url": `${org.urlScheme}charities`,
+    "cancel_url": `${org.urlScheme}charities`
   };
 
   const res = await instance.post("/user/amount/charity/initiate", {
@@ -19,14 +20,14 @@ export const charityAmountInitiate = async (data) => {
   });
 
   if (!res.data.result) {
-    throw new Error();
+    throw new Error();  
   }
 
   return res.data.result;
 };
 
 export const charityVerify = async (transaction_id) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const params = {
     token,

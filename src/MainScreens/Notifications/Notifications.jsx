@@ -71,6 +71,11 @@ const Notifications = ({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentContainerStyle}
           data={messageNotifications}
+          keyExtractor={(item, index) => String(item.notification_id ?? index)}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          removeClippedSubviews={true}
           renderItem={({ item, index }) => (
             <Notification
               key={index}
@@ -82,7 +87,7 @@ const Notifications = ({
             <View style={styles.noData}>
               <TypographyText
                 title={t("General.noData")}
-                textColor={colors.darkBlue}
+                textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
                 size={18}
                 font={BALOO_SEMIBOLD}
               />

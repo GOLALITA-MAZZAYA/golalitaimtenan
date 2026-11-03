@@ -1,22 +1,25 @@
+import { getToken } from '../utils/secureStorage';
 import instance from "../redux/instance";
 import axios from "axios";
 import store from "../redux/store";
-import { BASE_URL } from "../constants";
-import { getAuthToken } from '../utils/tokenStorage';
+import { org } from "../org/config";
 
 export const CARDMOOLA_BASE_URL = "https://api.business.cardmoola.com";
 
 export const getGiftCardCountries = async () => {
-  const token = await getAuthToken();
-
-  const res = await instance.post("/ugo2gift.country/search", {
+  const token = await getToken();
+  let a = {
     params: {
       token,
       fields:
-        "['id','name','code', 'currency_name','x_arabic_name','x_flag_image', 'currency_code', 'timezone', 'mobile_number_formats', 'mobile_number_regex', 'detail_url' ]",
+        "['id','name','code','currency_name','x_arabic_name','x_flag_image','currency_code','timezone','mobile_number_formats','mobile_number_regex','detail_url','is_ugo2gift_currency','forex_conversion_rate','forex_rate_updated_at','forex_currency_id']",
     },
-  });
+  }
+  console.log("getGiftCardCountries params:", JSON.stringify(a))
+  const res = await instance.post("/ugo2gift.country/search", a);
+  console.log(JSON.stringify(res.data), "getGiftCardCountries stringify res:")
 
+  console.log(res.data, "getGiftCardCountries res:")
   if (!res.data.result) {
     throw new Error();
   }
@@ -24,13 +27,14 @@ export const getGiftCardCountries = async () => {
   return res.data.result;
 };
 
-export const getGiftCardById = async (reference_id) => {
-  const token = await getAuthToken();
+export const getGiftCardById = async (reference_id, orgType = org.code) => {
+  const token = await getToken();
 
   const res = await instance.post("user/ugo2gift/search/id", {
     params: {
       token,
       reference_id,
+      x_org_type: orgType,
     },
   });
 
@@ -41,16 +45,18 @@ export const getGiftCardById = async (reference_id) => {
   return res.data.result;
 };
 
-export const getGiftCardCategories = async () => {
-  const token = await getAuthToken();
-
-  const res = await instance.post("ugo2gift.category/search", {
+export const getGiftCardCategories = async (orgType = org.code) => {
+  const token = await getToken();
+  let body = {
     params: {
       token,
-      fields: "['id','name', 'category_id']",
+      domain: `[('x_org_type', 'in', ['${orgType}', False])]`,
+      fields: "['id', 'name', 'category_id', 'x_sequence', 'x_org_type','image']",
     },
-  });
-
+  }
+  console.log("getGiftCardCategories body:", JSON.stringify(body))
+  const res = await instance.post("ugo2gift.category/search", body);
+  console.log("getGiftCardCategories res:", res.data)
   if (!res.data.result) {
     throw new Error();
   }
@@ -59,7 +65,7 @@ export const getGiftCardCategories = async () => {
 };
 
 export const createGiftCardOrder = async (body) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const params = {
     token,
@@ -81,12 +87,12 @@ export const createGiftCardOrder = async (body) => {
 };
 
 export const getGiftCardAmount = async (giftCardId) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
   const res = await instance.post("ugo2gift.denomination/search", {
     params: {
       token,
-      domain: `[ ['brand_id', '=', ${giftCardId}], ['is_active', '=', True] ]`,
+      domain: `[ ['brand_id', '=', ${giftCardId}],['is_active','=',True]]`,
       fields: "['amount','min_amount', 'max_amount', 'currency', 'brand_id']",
     },
   });
@@ -99,15 +105,16 @@ export const getGiftCardAmount = async (giftCardId) => {
 };
 
 export const getGiftCards = async (body) => {
-  const token = await getAuthToken();
-
-  const res = await instance.post("/ugo2gift.brand/search", {
+  const token = await getToken();
+  let a = {
     params: {
       token,
       ...body,
     },
-  });
-
+  }
+  console.log("getGiftCards params a:", JSON.stringify(a))
+  const res = await instance.post("/ugo2gift.brand/search", a);
+  console.log("getGiftCards res:", JSON.stringify(res.data))
   if (!res.data.result) {
     throw new Error();
   }
@@ -115,13 +122,14 @@ export const getGiftCards = async (body) => {
   return res.data.result;
 };
 
-export const getPurchasedGiftCards = async (customer_id) => {
-  const token = await getAuthToken();
+export const getPurchasedGiftCards = async (customer_id, orgType = org.code) => {
+  const token = await getToken();
 
   const res = await instance.post("user/ugo2gift/bought/list", {
     params: {
       token,
       customer_id,
+      x_org_type: orgType,
     },
   });
 
@@ -199,10 +207,10 @@ export const getCardmolaGiftCardById = async (encodedId, token) => {
 };
 
 export const requestGiftCardPayment = async (data) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await axios.post(
-    `https://${BASE_URL}/cardmola/payment/request`,
+  const res = await instance.post(
+    `https://${org.baseUrl}/cardmola/payment/request`,
     {
       params: {
         ...data,
@@ -235,10 +243,10 @@ export const getCardmolaCountries = async () => {
 };
 
 export const checkCardmolaPaymentById = async (encodedId) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await axios.post(
-    `https://${BASE_URL}/go/api/user/cardmoola/search/id`,
+  const res = await instance.post(
+    `https://${org.baseUrl}/go/api/user/cardmoola/search/id`,
     {
       params: {
         token,
@@ -255,19 +263,23 @@ export const checkCardmolaPaymentById = async (encodedId) => {
 };
 
 export const checkGlobalTixPaymentStatus = async (recordRefNumber, referenceNumber) => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await axios.post(
-    `https://${BASE_URL}/go/api/globaltix/payment/status`,
+  console.log('[GlobalTix][checkGlobalTixPaymentStatus] POST /go/api/globaltix/payment/status params:', {
+    record_ref_number: referenceNumber,
+  });
+
+  const res = await instance.post(
+    `https://${org.baseUrl}/go/api/globaltix/payment/status`,
     {
       params: {
         token,
-        record_ref_number: recordRefNumber,
-        referenceNumber: referenceNumber,
+        record_ref_number: referenceNumber,
+        // referenceNumber: referenceNumber,
       },
     }
   );
-  console.log(res.data.result, "res.data.result");
+  console.log('[GlobalTix][checkGlobalTixPaymentStatus] response:', JSON.stringify(res.data, null, 2));
   if (!res.data?.result) {
     throw new Error("check globaltix payment error");
   }
@@ -297,10 +309,10 @@ export const getCardmoolaCategories = async (country) => {
 };
 
 export const getCardmolaCurrencies = async () => {
-  const token = await getAuthToken();
+  const token = await getToken();
 
-  const res = await axios.post(
-    `https://${BASE_URL}/go/api/res.currency/search`,
+  const res = await instance.post(
+    `https://${org.baseUrl}/go/api/res.currency/search`,
     {
       params: {
         token,
@@ -312,6 +324,29 @@ export const getCardmolaCurrencies = async () => {
 
   if (!res.data.result) {
     throw new Error("get currencies error error");
+  }
+
+  return res.data.result;
+};
+
+export const getForexCurrencies = async () => {
+  const token = await getToken();
+  let payload = {
+    params: {
+      token,
+      domain: "[]",
+      fields:
+        "['id','name','code','is_ugo2gift_currency','forex_conversion_rate','base_currency','rate_updated_at','active']",
+    },
+  }
+  const res = await instance.post(
+    `https://${org.baseUrl}/go/api/go.forex.currency/search`,
+    payload
+  );
+
+  console.log(res.data, "getForexCurrencies res:", res.data)
+  if (!res.data.result) {
+    throw new Error("get forex currencies error");
   }
 
   return res.data.result;

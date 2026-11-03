@@ -20,7 +20,7 @@ import { TypographyText } from '../../../../../../components/Typography';
 import CommonButton from '../../../../../../components/CommonButton/CommonButton';
 import ModalInfo from '../../../../../../components/ModalInfo/ModalInfo';
 import { colors } from '../../../../../../components/colors';
-import { BALOO_REGULAR, BALOO_SEMIBOLD } from '../../../../../../redux/types';
+import { BALOO_2, BALOO_SEMIBOLD } from '../../../../../../redux/types';
 import { isRTL } from '../../../../../../../utils';
 import { sized } from '../../../../../../Svg';
 import CloseSvg from '../../../../../../assets/close.svg';
@@ -226,7 +226,7 @@ const RateModal = ({
                 <TypographyText
                   title={merchantName}
                   textColor={mutedColor}
-                  font={BALOO_REGULAR}
+                  font={BALOO_2}
                   size={13}
                   numberOfLines={1}
                   style={styles.merchantName}
@@ -337,7 +337,7 @@ const RateModal = ({
               <TypographyText
                 title={`${comment.length}/${MAX_COMMENT_LENGTH}`}
                 textColor={mutedColor}
-                font={BALOO_REGULAR}
+                font={BALOO_2}
                 size={11}
               />
             </View>
@@ -349,7 +349,7 @@ const RateModal = ({
               <TypographyText
                 title={error}
                 textColor="#FF406E"
-                font={BALOO_REGULAR}
+                font={BALOO_2}
                 size={13}
                 style={styles.error}
               />

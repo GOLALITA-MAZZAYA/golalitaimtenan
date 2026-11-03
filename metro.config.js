@@ -5,7 +5,8 @@
  * @format
  */
 
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { getDefaultConfig } = require('expo/metro-config');
+const { mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
@@ -30,10 +31,11 @@ const config = {
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
+    // Expo's default blockList is already an array — flatten, don't nest.
     blockList: [
-      defaultConfig.resolver.blockList,
+      ...[].concat(defaultConfig.resolver.blockList || []),
       /node_modules\/.*\/node_modules\/react-native-svg\/.*/,
-    ].filter(Boolean),
+    ],
     extraNodeModules: {
       'react-native-svg': path.resolve(__dirname, 'node_modules/react-native-svg'),
     },

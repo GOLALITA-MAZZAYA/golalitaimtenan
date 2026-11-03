@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Text, Modal } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Text, Modal } from 'react-native';
+import Image from "../../components/AppImage";
 import { useSelector, useDispatch } from 'react-redux';
 import { TypographyText } from '../../components/Typography';
 import { BALOO_SEMIBOLD, BALOO_REGULAR } from '../../redux/types';
@@ -12,6 +12,8 @@ import MainLayout from '../../components/MainLayout';
 import Header from '../../components/Header';
 import { SCREEN_HEIGHT } from '../../styles/mainStyles';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getToken } from '../../utils/secureStorage';
 import {
   globalTixCartItemsSelector,
   globalTixCartTotalPriceSelector,
@@ -35,8 +37,16 @@ import store from '../../redux/store';
 import { translateText } from '../../utils/translationService';
 import { getTicketSellingPrice } from '../../utils/globalTixPricing';
 import { GLOBALTIX_CONFIG } from '../../config/globalTix';
-import { BASE_URL } from '../../constants';
-import { getAuthToken } from '../../utils/tokenStorage';
+import { org } from '../../org/config';
+
+// Pure helpers — no component state, hoisted so they aren't recreated every render.
+const formatCurrency = (amount) => {
+  return Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+const generateImageUrl = (imagePath) => {
+  return `https://product-image.globaltix.com/stg-gtImage/${imagePath}`;
+};
 
 const GlobalTixCartScreen = ({ navigation }) => {
   const { isDark } = useTheme();
@@ -53,11 +63,13 @@ const GlobalTixCartScreen = ({ navigation }) => {
     return parseFloat(Number(amount || 0).toFixed(2));
   };
 
-  // Calculate bank charge and final amount with proper decimal formatting
-  const bankCharge = formatMonetaryValue(getCommission(totalPrice || 0));
-  const finalAmount = formatMonetaryValue((totalPrice || 0) + bankCharge);
+  // Calculate bank charge and final amount in integer cents so the
+  // displayed total always equals subtotal + bank charge exactly.
+  const bankCharge = getCommission(totalPrice || 0);
+  const finalAmount =
+    (Math.round((totalPrice || 0) * 100) + Math.round(bankCharge * 100)) / 100;
 
-  const cartItemsArray = Object.values(cartItems);
+  const cartItemsArray = useMemo(() => Object.values(cartItems), [cartItems]);
 
 
 
@@ -74,7 +86,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
     remarks: ''
   });
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CREDIT_CARD');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CREDIT');
   const [selectedItems, setSelectedItems] = useState({});
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
@@ -94,10 +106,6 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const [translatedTicketNames, setTranslatedTicketNames] = useState({});
   const [translatedOptionNames, setTranslatedOptionNames] = useState({});
 
-  // Format currency for QAR
-  const formatCurrency = (amount) => {
-    return Number(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  };
 
   // Parse phone number to extract country code and number
   const parsePhoneNumber = (phone) => {
@@ -129,20 +137,15 @@ const GlobalTixCartScreen = ({ navigation }) => {
     };
   };
 
-  // Generate image URL
-  const generateImageUrl = (imagePath) => {
-    return `https://product-image.globaltix.com/stg-gtImage/${imagePath}`;
-  };
-
-  const handleRemoveItem = (productId, optionId, ticketTypeId) => {
+  const handleRemoveItem = useCallback((productId, optionId, ticketTypeId) => {
     dispatch(removeFromGlobalTixCartThunk({
       productId,
       optionId,
       ticketTypeId,
     }));
-  };
+  }, [dispatch]);
 
-  const handleUpdateQuantity = (productId, optionId, ticketTypeId, quantity) => {
+  const handleUpdateQuantity = useCallback((productId, optionId, ticketTypeId, quantity) => {
     if (quantity <= 0) {
       handleRemoveItem(productId, optionId, ticketTypeId);
     } else {
@@ -153,7 +156,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         quantity,
       }));
     }
-  };
+  }, [dispatch, handleRemoveItem]);
 
   const handleClearCart = () => {
     dispatch(clearGlobalTixCartThunk());
@@ -204,7 +207,8 @@ const GlobalTixCartScreen = ({ navigation }) => {
           questionCode: q.questionCode || q.code,
           optionCode: q.optionCode,
           options: q.options || q.optionList || [],
-          optionList: q.optionList || q.options || []
+          optionList: q.optionList || q.options || [],
+          isRequired: q.isRequired !== false // Assume required unless explicitly false
         }));
       }
 
@@ -235,14 +239,14 @@ const GlobalTixCartScreen = ({ navigation }) => {
   };
 
   // Get questions for a specific ticket type
-  const getQuestionsForTicketType = (ticketTypeId) => {
+  const getQuestionsForTicketType = useCallback((ticketTypeId) => {
     return ticketQuestions[ticketTypeId] || [];
-  };
+  }, [ticketQuestions]);
 
   // Get answer for a specific question
-  const getQuestionAnswer = (ticketTypeId, questionId) => {
+  const getQuestionAnswer = useCallback((ticketTypeId, questionId) => {
     return questionAnswers[`${ticketTypeId}_${questionId}`] || '';
-  };
+  }, [questionAnswers]);
 
   // Dynamic question input renderer
   const renderQuestionInput = (question, index) => {
@@ -300,11 +304,18 @@ const GlobalTixCartScreen = ({ navigation }) => {
             }
           ]}
           value={currentAnswer}
-          onChangeText={(text) => handleTempAnswerChange(question.id, text)}
+          onChangeText={(text) => {
+            // Basic auto-formatting for YYYY-MM-DD
+            let formatted = text.replace(/[^0-9]/g, '');
+            if (formatted.length > 4) formatted = formatted.substring(0, 4) + '-' + formatted.substring(4);
+            if (formatted.length > 7) formatted = formatted.substring(0, 7) + '-' + formatted.substring(7, 9);
+            handleTempAnswerChange(question.id, formatted);
+          }}
           placeholder="YYYY-MM-DD"
           placeholderTextColor={isDark ? colors.grey : colors.darkGrey}
           multiline={false}
-          keyboardType="default"
+          keyboardType="numeric"
+          maxLength={10}
         />
       );
     }
@@ -471,7 +482,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
   };
 
   // Modal functions
-  const openQuestionsModal = (ticketTypeId, ticketTypeName) => {
+  const openQuestionsModal = useCallback((ticketTypeId, ticketTypeName) => {
     setCurrentTicketTypeId(ticketTypeId);
     setCurrentTicketTypeName(ticketTypeName);
 
@@ -484,7 +495,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
     setTempAnswers(initialAnswers);
 
     setIsQuestionsModalVisible(true);
-  };
+  }, [getQuestionsForTicketType, getQuestionAnswer]);
 
   const closeQuestionsModal = () => {
     setIsQuestionsModalVisible(false);
@@ -519,8 +530,9 @@ const GlobalTixCartScreen = ({ navigation }) => {
         const optionCurrency = item.option?.currency;
         const markupPercentage = GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE;
 
-        // Calculate selling price with markup (this is what customers pay)
-        const pricing = getTicketSellingPrice(item.ticketType || {}, markupPercentage);
+        // Calculate selling price with markup — for dynamic price products use CEA nett price
+        const ceaData = item.isDynamicPrice && item.ceaNettPrice ? { nettPrice: item.ceaNettPrice, msp: item.ceaMsp } : null;
+        const pricing = getTicketSellingPrice(item.ticketType || {}, markupPercentage, ceaData);
         const sellingPrice = pricing.sellingPrice;
 
         if (sellingPrice > 0 && optionCurrency) {
@@ -544,10 +556,51 @@ const GlobalTixCartScreen = ({ navigation }) => {
     }
   };
 
+  // Re-fetch CEA prices for dynamic products to avoid stale pricing
+  const refreshDynamicPrices = async () => {
+    for (const [, item] of Object.entries(cartItems)) {
+      if (!item.isDynamicPrice || !item.visitDate) continue;
+      try {
+        const resp = await globalTixAPI.checkEventAvailability({
+          ticketTypeID: item.ticketTypeId,
+          dateFrom: item.visitDate,
+          dateTo: item.visitDate,
+        });
+        const slot = Array.isArray(resp.data) && resp.data.length > 0 ? resp.data[0] : null;
+        const freshNettPrice = slot?.nettPrice || null;
+        if (!freshNettPrice || freshNettPrice === item.ceaNettPrice) continue;
+
+        const ceaData = { nettPrice: freshNettPrice };
+        const pricing = getTicketSellingPrice(
+          item.ticketType || {},
+          GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE,
+          ceaData
+        );
+        const optionCurrency = item.option?.currency;
+        let freshQarPrice = item.price;
+        if (pricing.sellingPrice > 0 && optionCurrency) {
+          const converted = await convertToQAR(pricing.sellingPrice, optionCurrency, false);
+          freshQarPrice = parseFloat(converted.replace(/[^\d.]/g, ''));
+        }
+        dispatch(updateGlobalTixCartQuantityThunk({
+          productId: item.productId,
+          optionId: item.optionId,
+          ticketTypeId: item.ticketTypeId,
+          quantity: item.quantity,
+          convertedPrice: freshQarPrice,
+          ceaNettPrice: freshNettPrice,
+        }));
+      } catch (_) {
+        // Non-fatal — keep existing price if refresh fails
+      }
+    }
+  };
+
   // Convert existing items when cart screen loads
   useEffect(() => {
     if (Object.keys(cartItems).length > 0) {
       convertExistingCartItems();
+      refreshDynamicPrices();
     }
   }, []);
 
@@ -656,13 +709,19 @@ const GlobalTixCartScreen = ({ navigation }) => {
     if (cartItemsArray.length > 0) {
       translateNames();
     }
-  }, [cartItemsArray, i18n.language]);
+    // Use stable JSON key to avoid new array reference on every render triggering infinite loop
+  }, [JSON.stringify(cartItems), i18n.language]);
 
   // Confirms a GlobalTix booking after payment success: confirms with GlobalTix,
   // records it locally for "My Bookings", clears the cart, and navigates back.
   const finalizeGlobalTixBooking = async (referenceNumber) => {
     console.log('[GlobalTix][finalizeBooking] START — referenceNumber:', referenceNumber);
     try {
+      console.log('[GlobalTix][finalizeBooking] calling confirmBooking with:', {
+        referenceNumber,
+        remarks: customerInfo.remarks || '',
+      });
+
       const confirmResult = await globalTixAPI.confirmBooking({
         referenceNumber,
         remarks: customerInfo.remarks || '',
@@ -671,6 +730,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
       console.log('[GlobalTix][finalizeBooking] confirmBooking response:', JSON.stringify(confirmResult, null, 2));
 
       if (confirmResult.success) {
+        console.log('[GlobalTix][finalizeBooking] confirmBooking succeeded');
         showMessage({
           message: t("GlobalTix.cart.messages.bookingConfirmed"),
           type: "success",
@@ -681,13 +741,15 @@ const GlobalTixCartScreen = ({ navigation }) => {
           const firstItem = cartItemsArray[0];
           const existingRaw = await AsyncStorage.getItem('globaltix_my_bookings');
           const existing = existingRaw ? JSON.parse(existingRaw) : [];
+          console.log('[GlobalTix][finalizeBooking] existing My Bookings entries:', existing.length);
           if (!existing.some(b => b.referenceNumber === referenceNumber)) {
+            const rawTicketType = firstItem?.ticketTypeName || firstItem?.ticketType;
             const bookingRecord = {
               referenceNumber,
-              productName: firstItem?.product?.name || firstItem?.productName || firstItem?.name || 'GlobalTix Booking',
-              ticketType: firstItem?.ticketType?.name || (typeof firstItem?.ticketTypeName === 'string' ? firstItem.ticketTypeName : null),
+              productName: firstItem?.productName || firstItem?.name || 'GlobalTix Booking',
+              ticketType: typeof rawTicketType === 'string' ? rawTicketType : rawTicketType?.name || null,
               visitDate: firstItem?.visitDate || firstItem?.date || null,
-              isCancellable: firstItem?.option?.isCancellable ?? firstItem?.isCancellable ?? false,
+              isCancellable: firstItem?.isCancellable ?? false,
               status: 'CONFIRMED',
               timestamp: new Date().toISOString(),
               // The actual amount charged, in QAR — GlobalTix's own booking
@@ -699,6 +761,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             console.log('[GlobalTix][finalizeBooking] saving new My Bookings entry:', bookingRecord);
             existing.unshift(bookingRecord);
             await AsyncStorage.setItem('globaltix_my_bookings', JSON.stringify(existing));
+            console.log('[GlobalTix][finalizeBooking] AsyncStorage write complete');
           } else {
             console.log('[GlobalTix][finalizeBooking] referenceNumber already saved, skipping duplicate write');
           }
@@ -722,14 +785,12 @@ const GlobalTixCartScreen = ({ navigation }) => {
       });
     }
 
-    // Clear cart after successful payment (regardless of confirmation result)
+    console.log('[GlobalTix][finalizeBooking] clearing cart and payment data, navigating back in 2s');
     dispatch(clearGlobalTixCartThunk());
-
-    // Clear payment data from Redux
     dispatch(setGlobalTixPaymentData(null));
 
-    // Navigate back or to a success screen
     setTimeout(() => {
+      console.log('[GlobalTix][finalizeBooking] navigation.goBack()');
       navigation.goBack();
     }, 2000);
   };
@@ -742,17 +803,27 @@ const GlobalTixCartScreen = ({ navigation }) => {
 
       async function checkPaymentStatus() {
         const currentPaymentData = paymentData || globalTixPaymentData;
+        console.log('[GlobalTix][checkPaymentStatus] START — currentPaymentData:', currentPaymentData);
 
         if (currentPaymentData && currentPaymentData.referenceNumber) {
           try {
+            console.log('[GlobalTix][checkPaymentStatus] calling checkGlobalTixPaymentStatus with:', {
+              record_ref_number: currentPaymentData.record_ref_number,
+              referenceNumber: currentPaymentData.referenceNumber,
+            });
+
             const data = await checkGlobalTixPaymentStatus(
               currentPaymentData.record_ref_number,
               currentPaymentData.referenceNumber
             );
 
+            console.log('[GlobalTix][checkPaymentStatus] response:', JSON.stringify(data, null, 2));
+
             if (data.payment_status === "Paid" || data.status === "CONFIRMED") {
+              console.log('[GlobalTix][checkPaymentStatus] status = Paid/CONFIRMED — finalizing booking');
               await finalizeGlobalTixBooking(currentPaymentData.referenceNumber);
             } else if (data.payment_status === "Failed" || data.payment_status === "fail" || data.status === "FAILED") {
+              console.warn('[GlobalTix][checkPaymentStatus] status = Failed — releasing booking:', currentPaymentData.referenceNumber);
               // Release the booking when payment fails to free up the slots
               try {
                 const releaseResult = await globalTixAPI.releaseBooking({
@@ -760,6 +831,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
                   // Add any other required release parameters based on GlobalTix API documentation
                 });
 
+                console.log('[GlobalTix][checkPaymentStatus] releaseBooking result:', releaseResult);
                 if (!releaseResult.success) {
                   console.error("Failed to release booking:", releaseResult.error);
                 }
@@ -778,19 +850,18 @@ const GlobalTixCartScreen = ({ navigation }) => {
                 duration: 4000,
               });
             } else {
-              // Don't clear payment data if still processing
+              console.log('[GlobalTix][checkPaymentStatus] status still processing, not clearing payment data:', data.payment_status || data.status);
             }
 
             // Clear local payment data after checking
             setPaymentData(null);
           } catch (err) {
-            console.error("Error checking GlobalTix payment status:", err.message);
-            showMessage({
-              message: `Error checking payment status: ${err.message}`,
-              type: "danger",
-              duration: 3000,
-            });
+            // Payment status endpoint may not be implemented yet on backend — fail silently
+            // to avoid showing confusing error messages to users after a successful payment.
+            console.warn('[GlobalTix][checkPaymentStatus] skipped due to error:', err.message);
           }
+        } else {
+          console.log('[GlobalTix][checkPaymentStatus] no pending payment data — nothing to check');
         }
       }
 
@@ -807,7 +878,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
   const sendBookingToBackend = async (globalTixResponse, ticketDetails, customerInfo, totalPrice, bankCharge, finalAmount, selectedPaymentMethod) => {
     try {
 
-      const token = await getAuthToken();
+      const token = await getToken();
 
       // Validate required data
       if (!token) {
@@ -874,19 +945,19 @@ const GlobalTixCartScreen = ({ navigation }) => {
             "returnUrl": "https://globaltixpaystatus.com/"
           },
           "metadata": {
-            "source": "Golalita App",
+            "source": `${org.displayName} App`,
             "timestamp": new Date().toISOString(),
             "appVersion": "1.0.0"
           }
         }
       };
-      console.log('backendPayload', backendPayload);
+      console.log('[GlobalTix][sendBookingToBackend] POST /go/api/user/payment/request/globaltix payload:', JSON.stringify(backendPayload, null, 2));
       const response = await axios.post(
-        `https://${BASE_URL}/go/api/user/payment/request/globaltix`,
+        `https://${org.baseUrl}/go/api/user/payment/request/globaltix`,
         backendPayload
       );
 
-      console.log('backendPayload response', response.data);
+      console.log('[GlobalTix][sendBookingToBackend] response:', JSON.stringify(response.data, null, 2));
       if (response.data?.error) {
         throw new Error(`Payment processing failed: ${response.data.error}`);
       }
@@ -898,22 +969,57 @@ const GlobalTixCartScreen = ({ navigation }) => {
       const backendResponse = response.data.result;
 
       // Validate that we have the necessary response fields
-      if (!backendResponse.payment_link && !backendResponse.payUrl) {
+      if (!backendResponse.payment_web_link && !backendResponse.payment_link && !backendResponse.payUrl) {
         throw new Error("Payment link generation failed - no payment link in response");
       }
 
+      console.log('[GlobalTix][sendBookingToBackend] resolved backendResponse:', backendResponse);
       return backendResponse;
 
     } catch (error) {
+      console.error('[GlobalTix][sendBookingToBackend] failed:', error.message, error.response?.data || '');
       throw error;
     }
   };
 
   const handleCheckout = async () => {
+    console.log('[GlobalTix][checkout] handleCheckout START', {
+      totalPrice, bankCharge, finalAmount, selectedPaymentMethod, customerInfo,
+    });
 
     // Validate required fields
     if (!customerInfo.lastName || !customerInfo.email || !customerInfo.mobileNumber) {
+      console.warn('[GlobalTix][checkout] blocked — missing required customer fields', {
+        lastName: customerInfo.lastName, email: customerInfo.email, mobileNumber: customerInfo.mobileNumber,
+      });
       Alert.alert(t('General.error'), t('GlobalTix.cart.requiredFields'));
+      return;
+    }
+
+    // Validate Q&A for all items in the cart
+    let hasUnansweredQuestions = false;
+    let firstUnansweredQuestion = null;
+
+    Object.values(cartItems).forEach(item => {
+      const ticketTypeId = item.ticketTypeId;
+      const questions = getQuestionsForTicketType(ticketTypeId);
+
+      questions.forEach(q => {
+        if (q.isRequired) {
+          const answer = getQuestionAnswer(ticketTypeId, q.id);
+          if (!answer || answer.trim() === '') {
+            hasUnansweredQuestions = true;
+            if (!firstUnansweredQuestion) firstUnansweredQuestion = q.question;
+          }
+        }
+      });
+    });
+
+    if (hasUnansweredQuestions) {
+      Alert.alert(
+        t('General.error'),
+        `Please answer all compulsory questions. Missing: "${firstUnansweredQuestion}"`
+      );
       return;
     }
 
@@ -990,17 +1096,37 @@ const GlobalTixCartScreen = ({ navigation }) => {
             };
           });
 
+        // For dynamic price products, send the markup-applied selling price (not raw nett price)
+        let dynamicSellingPrice = null;
+        if (item.isDynamicPrice && item.ceaNettPrice) {
+          const ceaData = { nettPrice: item.ceaNettPrice };
+          const dynamicPricing = getTicketSellingPrice(
+            item.ticketType || {},
+            GLOBALTIX_CONFIG.DEFAULT_MARKUP_PERCENTAGE,
+            ceaData
+          );
+          dynamicSellingPrice = dynamicPricing.sellingPrice > 0 ? dynamicPricing.sellingPrice : null;
+        }
+
         const ticketType = {
-          id: ticketTypeId, // Ensure it's an integer
-          quantity: parseInt(item.quantity), // Ensure it's an integer
-          sellingPrice: null,
-          visitDate: formattedVisitDate, // Use the formatted visit date
+          id: ticketTypeId,
+          quantity: parseInt(item.quantity),
+          sellingPrice: dynamicSellingPrice,
+          visitDate: formattedVisitDate,
           index: index,
           questionList: questionList,
-          event_id: null, // Set event_id to null as per API example
+          event_id: item.eventId || null,
           packageItems: [],
           visitDateSettings: []
         };
+
+        // Include visitTime for timeslot tickets (extracted from the slot's time field)
+        if (item.timeSlot) {
+          const timePart = item.timeSlot.includes('T')
+            ? item.timeSlot.split('T')[1].substring(0, 8)
+            : item.timeSlot;
+          ticketType.visitTime = timePart;
+        }
 
 
         return ticketType;
@@ -1020,7 +1146,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
         ...(selectedPaymentMethod === 'CREDIT_CARD' && { creditCardCurrencyId: null }),
         groupName: undefined,
         groupBooking: false,
-        groupNoOfMember: 1,
+        groupNoOfMember: ticketTypes.reduce((sum, t) => sum + (t.quantity || 1), 0),
         otherInfo: {
           partnerReference: customerInfo.partnerReference || undefined
         },
@@ -1224,7 +1350,10 @@ const GlobalTixCartScreen = ({ navigation }) => {
         }));
 
         try {
-          console.log('Before sendBookingToBackend');
+          console.log('[GlobalTix][checkout] ticketDetails built for backend:', JSON.stringify(ticketDetails, null, 2));
+          console.log('[GlobalTix][checkout] calling sendBookingToBackend with:', JSON.stringify({
+            bookingResponse, ticketDetails, customerInfo, totalPrice, bankCharge, finalAmount, selectedPaymentMethod
+          }, null, 2));
           // Send to backend for payment processing
           const backendResponse = await sendBookingToBackend(
             bookingResponse,
@@ -1235,6 +1364,7 @@ const GlobalTixCartScreen = ({ navigation }) => {
             finalAmount,
             selectedPaymentMethod
           );
+          console.log('[GlobalTix][checkout] sendBookingToBackend response:', JSON.stringify(backendResponse, null, 2));
           // Store payment data for status checking (similar to Cardmola)
           const paymentInfo = {
             record_ref_number: backendResponse.record_ref_number,
@@ -1243,14 +1373,17 @@ const GlobalTixCartScreen = ({ navigation }) => {
             payment_link: backendResponse.payment_link || backendResponse.payUrl,
             state: backendResponse.state
           };
+          console.log('[GlobalTix][checkout] paymentInfo:', paymentInfo);
 
           dispatch(setGlobalTixPaymentData(paymentInfo));
           setPaymentData(paymentInfo);
 
           // Navigate to payment gateway (same pattern as Cardmola)
-          const paymentUrl = backendResponse.payment_link || backendResponse.payUrl;
+          const paymentUrl = backendResponse.payment_web_link || backendResponse.payment_link || backendResponse.payUrl;
+          console.log('[GlobalTix][checkout] resolved paymentUrl:', paymentUrl);
 
           if (paymentUrl) {
+            console.log('[GlobalTix][checkout] navigating to SkipCash payment WebView:', paymentUrl);
             navigation.navigate("Website", {
               url: paymentUrl,
               title: "Payment",
@@ -1297,7 +1430,9 @@ const GlobalTixCartScreen = ({ navigation }) => {
         let userFriendlyMessage = errorMsg;
         let shouldClearCart = false;
 
-        if (errorCode === 'unknown.error') {
+        if (errorCode === 'error.insufficient.balance') {
+          userFriendlyMessage = `We are unable to complete your booking at this time. Please contact ${org.displayName} support team at ${org.supportEmail} for assistance.`;
+        } else if (errorCode === 'unknown.error') {
           userFriendlyMessage = 'The booking request could not be processed. Please check your information and try again.';
         } else if (errorCode === 'validation.error') {
           userFriendlyMessage = 'Please check your booking information and try again.';
@@ -1330,10 +1465,11 @@ const GlobalTixCartScreen = ({ navigation }) => {
       }
 
     } catch (error) {
-      console.log('=== ERROR ===:', error);
+      console.error('[GlobalTix][checkout] handleCheckout FAILED:', error.message, error);
       // Show error alert
       Alert.alert(t('General.error'), `${t("GlobalTix.cart.messages.checkoutError")}: ${error.message}`);
     } finally {
+      console.log('[GlobalTix][checkout] handleCheckout END');
       setLoading(false);
     }
   };
@@ -1341,12 +1477,12 @@ const GlobalTixCartScreen = ({ navigation }) => {
 
 
 
-  const toggleItemSelection = (cartKey) => {
+  const toggleItemSelection = useCallback((cartKey) => {
     setSelectedItems(prev => ({
       ...prev,
       [cartKey]: !prev[cartKey]
     }));
-  };
+  }, []);
 
   const handleRemoveSelectedItems = () => {
     const selectedKeys = Object.keys(selectedItems).filter(key => selectedItems[key]);
@@ -1463,132 +1599,30 @@ const GlobalTixCartScreen = ({ navigation }) => {
             />
           </View>
 
-          {cartItemsArray.map((item, index) => {
+          {cartItemsArray.map((item) => {
             const cartKey = `${item.productId}_${item.optionId}_${item.ticketTypeId}`;
             const isSelected = selectedItems[cartKey] || false;
             const itemTotal = (item.price || 0) * item.quantity;
+            const translatedTicketName = translatedTicketNames[item.ticketType.name] || item.ticketType.name;
+            const translatedOptionName = translatedOptionNames[item.option.name] || item.option.name;
+            const hasQuestions = getQuestionsForTicketType(item.ticketTypeId).length > 0;
 
             return (
-              <View key={index} style={styles.cartItem}>
-                <View style={styles.cartItemHeader}>
-                  <TouchableOpacity
-                    style={styles.checkboxContainer}
-                    onPress={() => toggleItemSelection(cartKey)}
-                  >
-                    <View style={[
-                      styles.checkbox,
-                      { backgroundColor: isSelected ? colors.darkBlue || '#1976D2' : 'transparent' }
-                    ]}>
-                      {isSelected && (
-                        <TypographyText title="✓" size={12} textColor={colors.white} />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-
-                  <View style={styles.productImageContainer}>
-                    <Image
-                      source={{
-                        uri: item.product.image ? generateImageUrl(item.product.image) :
-                          item.product.media?.[0]?.path ? generateImageUrl(item.product.media[0].path) :
-                            'https://via.placeholder.com/80x60'
-                      }}
-                      style={styles.productImage}
-                      resizeMode="cover"
-                    />
-                  </View>
-
-                  <View style={styles.productDetails}>
-                    <TypographyText
-                      title={translatedTicketNames[item.ticketType.name] || item.ticketType.name}
-                      size={16}
-                      font={BALOO_SEMIBOLD}
-                      textColor={isDark ? colors.white : colors.darkBlue}
-                      numberOfLines={2}
-                    />
-                    <TypographyText
-                      title={`${t("GlobalTix.cart.attraction")}: ${translatedOptionNames[item.option.name] || item.option.name}`}
-                      size={12}
-                      textColor={isDark ? colors.lightGrey : colors.grey}
-                      style={styles.attractionInfo}
-                    />
-                    <TypographyText
-                      title={`${t("GlobalTix.cart.validity")}: ${new Date().toLocaleDateString()} - ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}`}
-                      size={12}
-                      textColor={isDark ? colors.lightGrey : colors.grey}
-                      style={styles.validityInfo}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.cartItemFooter}>
-                  <View style={styles.quantitySection}>
-                    <TypographyText
-                      title={t("GlobalTix.cart.ticket")}
-                      size={12}
-                      textColor={isDark ? colors.lightGrey : colors.grey}
-                    />
-                    <View style={styles.quantityControls}>
-                      <TouchableOpacity
-                        style={styles.quantityBtn}
-                        onPress={() => handleUpdateQuantity(
-                          item.productId,
-                          item.optionId,
-                          item.ticketTypeId,
-                          item.quantity - 1
-                        )}
-                      >
-                        <TypographyText title="-" size={16} textColor={colors.white} />
-                      </TouchableOpacity>
-
-                      <TypographyText
-                        title={item.quantity.toString()}
-                        size={16}
-                        font={BALOO_SEMIBOLD}
-                        textColor={isDark ? colors.white : colors.darkBlue}
-                        style={styles.quantity}
-                      />
-
-                      <TouchableOpacity
-                        style={styles.quantityBtn}
-                        onPress={() => handleUpdateQuantity(
-                          item.productId,
-                          item.optionId,
-                          item.ticketTypeId,
-                          item.quantity + 1
-                        )}
-                      >
-                        <TypographyText title="+" size={16} textColor={colors.white} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  <TypographyText
-                    title={formatCurrency(itemTotal)}
-                    size={16}
-                    font={BALOO_SEMIBOLD}
-                    textColor={colors.blue || '#2196F3'}
-                  />
-                </View>
-
-                {/* Questions Button */}
-                {getQuestionsForTicketType(item.ticketTypeId).length > 0 && (
-                  <View style={styles.questionsButtonContainer}>
-                    <TouchableOpacity
-                      style={[
-                        styles.questionsButton,
-                        { backgroundColor: colors.blue || '#2196F3' }
-                      ]}
-                      onPress={() => openQuestionsModal(item.ticketTypeId, translatedTicketNames[item.ticketType.name] || item.ticketType.name)}
-                    >
-                      <TypographyText
-                        title={t("GlobalTix.cart.answerQuestions")}
-                        size={12}
-                        textColor={colors.white}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
+              <CartItemCard
+                key={cartKey}
+                item={item}
+                cartKey={cartKey}
+                isSelected={isSelected}
+                itemTotal={itemTotal}
+                isDark={isDark}
+                translatedTicketName={translatedTicketName}
+                translatedOptionName={translatedOptionName}
+                hasQuestions={hasQuestions}
+                t={t}
+                onToggleSelect={toggleItemSelection}
+                onQuantityChange={handleUpdateQuantity}
+                onOpenQuestions={openQuestionsModal}
+              />
             );
           })}
         </View>
@@ -1958,6 +1992,150 @@ const GlobalTixCartScreen = ({ navigation }) => {
     </MainLayout>
   );
 };
+
+// Memoized so an unrelated re-render of GlobalTixCartScreen (typing in a form
+// field, opening a modal, etc.) doesn't re-render every cart row — only rows
+// whose own props actually changed. Relies on the cart reducer's per-key
+// immutable updates keeping untouched `item` object references stable.
+const CartItemCard = memo(({
+  item,
+  cartKey,
+  isSelected,
+  itemTotal,
+  isDark,
+  translatedTicketName,
+  translatedOptionName,
+  hasQuestions,
+  t,
+  onToggleSelect,
+  onQuantityChange,
+  onOpenQuestions,
+}) => {
+  return (
+    <View style={styles.cartItem}>
+      <View style={styles.cartItemHeader}>
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => onToggleSelect(cartKey)}
+        >
+          <View style={[
+            styles.checkbox,
+            { backgroundColor: isSelected ? colors.darkBlue || '#1976D2' : 'transparent' }
+          ]}>
+            {isSelected && (
+              <TypographyText title="✓" size={12} textColor={colors.white} />
+            )}
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.productImageContainer}>
+          <Image
+            source={{
+              uri: item.product.image ? generateImageUrl(item.product.image) :
+                item.product.media?.[0]?.path ? generateImageUrl(item.product.media[0].path) :
+                  'https://via.placeholder.com/80x60'
+            }}
+            style={styles.productImage}
+            contentFit="cover"
+          />
+        </View>
+
+        <View style={styles.productDetails}>
+          <TypographyText
+            title={translatedTicketName}
+            size={16}
+            font={BALOO_SEMIBOLD}
+            textColor={isDark ? colors.white : colors.darkBlue}
+            numberOfLines={2}
+          />
+          <TypographyText
+            title={`${t("GlobalTix.cart.attraction")}: ${translatedOptionName}`}
+            size={12}
+            textColor={isDark ? colors.lightGrey : colors.grey}
+            style={styles.attractionInfo}
+          />
+          <TypographyText
+            title={item.visitDate
+              ? `${t("GlobalTix.cart.visitDate", "Visit Date")}: ${item.visitDate}${item.timeSlot ? ` @ ${new Date(item.timeSlot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`
+              : `${t("GlobalTix.cart.validity")}: ${new Date().toLocaleDateString()} - ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}`}
+            size={12}
+            textColor={isDark ? colors.lightGrey : colors.grey}
+            style={styles.validityInfo}
+          />
+        </View>
+      </View>
+
+      <View style={styles.cartItemFooter}>
+        <View style={styles.quantitySection}>
+          <TypographyText
+            title={t("GlobalTix.cart.ticket")}
+            size={12}
+            textColor={isDark ? colors.lightGrey : colors.grey}
+          />
+          <View style={styles.quantityControls}>
+            <TouchableOpacity
+              style={styles.quantityBtn}
+              onPress={() => onQuantityChange(
+                item.productId,
+                item.optionId,
+                item.ticketTypeId,
+                item.quantity - 1
+              )}
+            >
+              <TypographyText title="-" size={16} textColor={colors.white} />
+            </TouchableOpacity>
+
+            <TypographyText
+              title={item.quantity.toString()}
+              size={16}
+              font={BALOO_SEMIBOLD}
+              textColor={isDark ? colors.white : colors.darkBlue}
+              style={styles.quantity}
+            />
+
+            <TouchableOpacity
+              style={styles.quantityBtn}
+              onPress={() => onQuantityChange(
+                item.productId,
+                item.optionId,
+                item.ticketTypeId,
+                item.quantity + 1
+              )}
+            >
+              <TypographyText title="+" size={16} textColor={colors.white} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TypographyText
+          title={formatCurrency(itemTotal)}
+          size={16}
+          font={BALOO_SEMIBOLD}
+          textColor={colors.blue || '#2196F3'}
+        />
+      </View>
+
+      {/* Questions Button */}
+      {hasQuestions && (
+        <View style={styles.questionsButtonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.questionsButton,
+              { backgroundColor: colors.blue || '#2196F3' }
+            ]}
+            onPress={() => onOpenQuestions(item.ticketTypeId, translatedTicketName)}
+          >
+            <TypographyText
+              title={t("GlobalTix.cart.answerQuestions")}
+              size={12}
+              textColor={colors.white}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

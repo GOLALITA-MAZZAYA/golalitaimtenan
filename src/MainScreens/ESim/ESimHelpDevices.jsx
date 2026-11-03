@@ -69,13 +69,12 @@ const ESimHelpDevices = () => {
           debounce.current = setTimeout(() => load(text), 350);
         }}
         placeholder={t('ESim.searchDevice')}
-        placeholderTextColor={isDark ? colors.white : colors.lightGrey}
+        placeholderTextColor={isDark ? '#8E8E93' : '#6B7280'}
         style={[
           styles.search,
           {
-            backgroundColor: isDark ? colors.navyBlue : colors.white,
-            borderColor: isDark ? colors.navyBlue : colors.lightGrey,
-            color: isDark ? colors.white : colors.mainDarkModeText,
+            backgroundColor: isDark ? '#1C1C1E' : '#F3F4F6',
+            color: isDark ? colors.white : colors.black,
             textAlign: isRTL() ? 'right' : 'left',
           },
         ]}
@@ -132,7 +131,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 14,
     marginBottom: 12,
-    borderWidth: 1,
   },
   row: {
     flexDirection: 'row',

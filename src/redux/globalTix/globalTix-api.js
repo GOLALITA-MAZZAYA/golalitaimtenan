@@ -14,7 +14,7 @@ const LOGIN_CREDENTIALS = {
 };
 
 // Token storage keys — environment-scoped so switching envs forces a fresh login
-const ENV_SUFFIX = (config.USERNAME || 'default').split('@')[0];
+const ENV_SUFFIX = config.USERNAME.split('@')[0]; // e.g. "r018744-api" or "r014361-api"
 const TOKEN_STORAGE_KEY = `globaltix_access_token_${ENV_SUFFIX}`;
 const TOKEN_EXPIRY_KEY = `globaltix_token_expiry_${ENV_SUFFIX}`;
 
@@ -26,8 +26,8 @@ let refreshPromise = null;
 // ─────────────────────────────────────────────────────────────────────────────
 // Client-side cache (AsyncStorage + in-memory L1)
 //
-// Why: countries/categories never change; products change slowly. Caching
-// these avoids redundant proxy calls on every screen focus / back-nav.
+// Why: countries/categories never change; products change slowly.
+// Caching these avoids redundant proxy calls on every screen focus / back-nav.
 //
 // TTLs:
 //   countries   — 24 h  (list of 240 countries, essentially static)
@@ -87,16 +87,51 @@ export const clearGlobalTixCache = async (scope = 'all') => {
   } catch { }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// eSIM / SIM exclusion
+//
+// The app has a dedicated eSIM section, so connectivity products must not show
+// up under GlobalTix. GlobalTix has no "exclude category" param, so we filter
+// client-side. Most of these products sit in category 3 ("WiFi & SIM Card"),
+// but some eSIMs are filed under "Others"/"Transportation" — hence the name check.
+// ─────────────────────────────────────────────────────────────────────────────
+const SIM_CATEGORY_ID = 3;
+const SIM_CATEGORY_NAME = 'wifi & sim card';
+const SIM_NAME_PATTERN = /\be[\s-]?sims?\b|\bsim[\s-]?cards?\b/i;
+
+export const isSimProduct = (product) =>
+  (product?.category || '').trim().toLowerCase() === SIM_CATEGORY_NAME ||
+  SIM_NAME_PATTERN.test(product?.name || '');
+
+// Returns a copy so the cached (unfiltered) response is never mutated.
+// `rawCount` keeps the pre-filter page length for pagination checks.
+const withoutSimProducts = (result) => {
+  if (!result?.success || !Array.isArray(result.data)) return result;
+  return {
+    ...result,
+    data: result.data.filter(product => !isSimProduct(product)),
+    rawCount: result.data.length,
+  };
+};
+
+const withoutSimCategory = (categories) =>
+  (categories || []).filter(category =>
+    (category.id || category.categoryId) !== SIM_CATEGORY_ID &&
+    (category.name || category.categoryName || '').trim().toLowerCase() !== SIM_CATEGORY_NAME
+  );
+
 // Helper function to get stored token
 const getStoredToken = async () => {
   try {
-    const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
-    const expiry = await AsyncStorage.getItem(TOKEN_EXPIRY_KEY);
-    
+    const [token, expiry] = await Promise.all([
+      AsyncStorage.getItem(TOKEN_STORAGE_KEY),
+      AsyncStorage.getItem(TOKEN_EXPIRY_KEY),
+    ]);
+
     if (token && expiry) {
       const expiryTime = parseInt(expiry);
       const currentTime = Date.now();
-      
+
       // Check if token is still valid (with 5 minute buffer)
       if (currentTime < (expiryTime - 5 * 60 * 1000)) {
         return token;
@@ -112,8 +147,10 @@ const getStoredToken = async () => {
 // Helper function to store token
 const storeToken = async (token, expiry) => {
   try {
-    await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
-    await AsyncStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
+    await AsyncStorage.multiSet([
+      [TOKEN_STORAGE_KEY, token],
+      [TOKEN_EXPIRY_KEY, expiry.toString()],
+    ]);
     currentAccessToken = token;
   } catch (error) {
     console.error('Error storing token:', error);
@@ -123,8 +160,7 @@ const storeToken = async (token, expiry) => {
 // Helper function to clear stored token
 const clearStoredToken = async () => {
   try {
-    await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
-    await AsyncStorage.removeItem(TOKEN_EXPIRY_KEY);
+    await AsyncStorage.multiRemove([TOKEN_STORAGE_KEY, TOKEN_EXPIRY_KEY]);
     currentAccessToken = null;
   } catch (error) {
     console.error('Error clearing stored token:', error);
@@ -150,25 +186,24 @@ const refreshAccessToken = async () => {
         endpoint: '/api/auth/authorize',
         headers: {
           'x-api-agent': LOGIN_CREDENTIALS.agent,
-          'x-api-key': `${LOGIN_CREDENTIALS.agent}/${LOGIN_CREDENTIALS.apiKey}`,
+          'x-api-key': `${LOGIN_CREDENTIALS.agent}/${LOGIN_CREDENTIALS.apiKey}`
         },
         body: { username: LOGIN_CREDENTIALS.username },
       });
 
+      console.log('Login Response ALL:', result);
       console.log('Login Response Success:', result.success);
       console.log('Login Response Data:', result.data ? 'Present' : 'Null');
       console.log('Login Response Error:', result.error || 'None');
 
       // The new API response nests the token under data.data.accessToken
       const responseData = result.data?.data || result.data;
-      const accessToken =
-        responseData?.accessToken || responseData?.access_token;
+      const accessToken = responseData?.accessToken || responseData?.access_token;
 
       if (result.success && accessToken) {
         // Use the expiration field from the response (in seconds)
-        const expiresInSeconds =
-          responseData?.expiration || responseData?.expires_in || 86400;
-        const expiryTime = Date.now() + expiresInSeconds * 1000;
+        const expiresInSeconds = responseData?.expiration || responseData?.expires_in || 86400; // Default to 24 hours if not provided
+        const expiryTime = Date.now() + (expiresInSeconds * 1000);
 
         await storeToken(accessToken, expiryTime);
         console.log('✅ GlobalTix access token refreshed successfully');
@@ -180,10 +215,7 @@ const refreshAccessToken = async () => {
       } else {
         console.error('❌ Token refresh failed - no access token in response');
         console.error('Response:', JSON.stringify(result, null, 2));
-        throw new Error(
-          result.error?.message ||
-            'No access token received from login response',
-        );
+        throw new Error(result.error?.message || 'No access token received from login response');
       }
     } catch (error) {
       console.error('=== Error Refreshing Access Token ===');
@@ -218,34 +250,6 @@ const getCurrentAccessToken = async () => {
 };
 
 // Helper function to make JSON-RPC 2.0 proxy requests
-// Proxy wraps GlobalTix payloads once more: result.data = { data, error, size, success }.
-// Flatten to the shape callers expect (result.data = list/object).
-const unwrapGlobalTixResult = (result) => {
-  if (!result || typeof result !== 'object') {
-    return result;
-  }
-
-  const payload = result.data;
-  const isNestedPayload =
-    payload &&
-    typeof payload === 'object' &&
-    !Array.isArray(payload) &&
-    ('data' in payload || 'success' in payload) &&
-    ('error' in payload || 'size' in payload || 'success' in payload);
-
-  if (!isNestedPayload) {
-    return result;
-  }
-
-  return {
-    ...result,
-    success: result.success !== false && payload.success !== false,
-    data: payload.data,
-    error: payload.error ?? result.error,
-    size: payload.size ?? result.size,
-  };
-};
-
 const makeProxyRequest = async ({ method, endpoint, headers = {}, body = {}, queryParams = {} }) => {
   try {
     // Build endpoint with query parameters for all requests
@@ -275,18 +279,18 @@ const makeProxyRequest = async ({ method, endpoint, headers = {}, body = {}, que
           'Content-Type': 'application/json',
           ...headers,
         },
-        body: method !== 'GET' ? body : {},
+        body: body,
       },
     };
 
-    console.log('=== GlobalTix Proxy Request ===');
-    console.log('Proxy URL:', BASE_URL);
-    console.log('Endpoint:', finalEndpoint);
-    console.log('Method:', method);
-    console.log('Has Auth:', !!headers.Authorization);
-    console.log('Query Params:', Object.keys(queryParams).length > 0 ? queryParams : 'None');
-    console.log('Request Body:', method !== 'GET' && Object.keys(body).length > 0 ? JSON.stringify(body, null, 2) : 'Empty');
-    console.log('Full JSON-RPC Request:', JSON.stringify(requestBody, null, 2));
+    // console.log('=== GlobalTix Proxy Request ===');
+    // console.log('Proxy URL:', BASE_URL);
+    // console.log('Endpoint:', finalEndpoint);
+    // console.log('Method:', method);
+    // console.log('Has Auth:', !!headers.Authorization);
+    // console.log('Query Params:', Object.keys(queryParams).length > 0 ? queryParams : 'None');
+    // console.log('Request Body:', method !== 'GET' && Object.keys(body).length > 0 ? JSON.stringify(body, null, 2) : 'Empty');
+    // console.log('Full JSON-RPC Request:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(BASE_URL, {
       method: 'POST',
@@ -321,15 +325,25 @@ const makeProxyRequest = async ({ method, endpoint, headers = {}, body = {}, que
       throw new Error('No result in JSON-RPC response');
     }
 
-    const result = unwrapGlobalTixResult(jsonRpcResponse.result);
-
-    console.log('Unwrapped Result:', JSON.stringify(result, null, 2));
-    console.log('Result Success:', result.success);
-    console.log('Result Data:', result.data ? 'Present' : 'Null');
-    console.log('Result Error:', result.error || 'None');
+    console.log('Unwrapped Result:', JSON.stringify(jsonRpcResponse.result, null, 2));
+    console.log('Result Success:', jsonRpcResponse.result.success);
+    console.log('Result Data:', jsonRpcResponse.result.data ? 'Present' : 'Null');
+    console.log('Result Error:', jsonRpcResponse.result.error || 'None');
     console.log('=== End Proxy Request ===');
 
-    return result;
+    let finalResult = jsonRpcResponse.result;
+    // The new API wraps responses in an extra data property: { data: { data: [...], success: true } }
+    if (finalResult && finalResult.data && finalResult.data.data !== undefined) {
+      // If the inner wrapper signals failure, bubble up the inner error
+      if (finalResult.data.success === false && finalResult.data.error) {
+        finalResult.success = false;
+        finalResult.error = finalResult.data.error;
+      }
+      finalResult.data = finalResult.data.data;
+    }
+
+    // Return the unwrapped result (which contains success, data, error, size)
+    return finalResult;
   } catch (error) {
     console.error('=== Proxy Request Error ===');
     console.error('Error Message:', error.message);
@@ -373,14 +387,16 @@ export const manualRefreshGlobalTixToken = async () => {
 // Get token information for debugging
 export const getGlobalTixTokenInfo = async () => {
   try {
-    const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
-    const expiry = await AsyncStorage.getItem(TOKEN_EXPIRY_KEY);
-    
+    const [token, expiry] = await Promise.all([
+      AsyncStorage.getItem(TOKEN_STORAGE_KEY),
+      AsyncStorage.getItem(TOKEN_EXPIRY_KEY),
+    ]);
+
     if (token && expiry) {
       const expiryTime = parseInt(expiry);
       const currentTime = Date.now();
       const timeUntilExpiry = expiryTime - currentTime;
-      
+
       return {
         hasToken: true,
         tokenPreview: token.substring(0, 20) + '...',
@@ -389,7 +405,7 @@ export const getGlobalTixTokenInfo = async () => {
         isValid: timeUntilExpiry > (5 * 60 * 1000) // 5 minute buffer
       };
     }
-    
+
     return {
       hasToken: false,
       tokenPreview: null,
@@ -414,28 +430,28 @@ export const getGlobalTixTokenInfo = async () => {
 export const testGlobalTixTokenRefresh = async () => {
   try {
     console.log('=== Testing GlobalTix Token Refresh ===');
-    
+
     // Clear existing token
     await clearStoredToken();
     console.log('Cleared existing token');
-    
+
     // Get token info before refresh
     const beforeInfo = await getGlobalTixTokenInfo();
     console.log('Before refresh:', beforeInfo);
-    
+
     // Refresh token
     const newToken = await refreshAccessToken();
     console.log('New token received:', newToken ? 'Yes' : 'No');
-    
+
     // Get token info after refresh
     const afterInfo = await getGlobalTixTokenInfo();
     console.log('After refresh:', afterInfo);
-    
+
     // Test API call
     console.log('Testing API call...');
     const countries = await globalTixAPI.fetchCountries();
     console.log('API call successful:', countries ? 'Yes' : 'No');
-    
+
     console.log('=== Token Refresh Test Complete ===');
     return {
       success: true,
@@ -452,44 +468,10 @@ export const testGlobalTixTokenRefresh = async () => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// eSIM / SIM exclusion
-//
-// The app has a dedicated eSIM section, so connectivity products must not show
-// up under GlobalTix. GlobalTix has no "exclude category" param, so we filter
-// client-side. Most of these products sit in category 3 ("WiFi & SIM Card"),
-// but some eSIMs are filed under "Others"/"Transportation" — hence the name check.
-// ─────────────────────────────────────────────────────────────────────────────
-const SIM_CATEGORY_ID = 3;
-const SIM_CATEGORY_NAME = 'wifi & sim card';
-const SIM_NAME_PATTERN = /\be[\s-]?sims?\b|\bsim[\s-]?cards?\b/i;
-
-export const isSimProduct = (product) =>
-  (product?.category || '').trim().toLowerCase() === SIM_CATEGORY_NAME ||
-  SIM_NAME_PATTERN.test(product?.name || '');
-
-// Returns a copy so cached (unfiltered) responses are never mutated.
-// `rawCount` keeps the pre-filter page length for pagination checks.
-const withoutSimProducts = (result) => {
-  if (!result?.success || !Array.isArray(result.data)) return result;
-  return {
-    ...result,
-    data: result.data.filter(product => !isSimProduct(product)),
-    rawCount: result.data.length,
-  };
-};
-
-const withoutSimCategory = (categories) =>
-  (categories || []).filter(category =>
-    (category.id || category.categoryId) !== SIM_CATEGORY_ID &&
-    (category.name || category.categoryName || '').trim().toLowerCase() !== SIM_CATEGORY_NAME
-  );
-
 // API Functions
 export const globalTixAPI = {
   // Fetch products — cached 5 min per unique query (country + filters + page)
   fetchProducts: async ({ countryCode, page = 0, categoryIds = '', cityIds = '', searchText = '', lang = 'en', keyword = '' }) => {
-    // Convert arrays to comma-separated strings for API
     const categoryIdsString = Array.isArray(categoryIds) ? categoryIds.join(',') : (categoryIds || '');
     const cityIdsString = Array.isArray(cityIds) ? cityIds.join(',') : (cityIds || '');
 
@@ -505,22 +487,16 @@ export const globalTixAPI = {
     }
 
     const makeRequest = async (isRetry = false) => {
-    try {
+      try {
         const queryParams = {
-        page: page.toString(),
-        categoryIds: categoryIdsString,
-        cityIds: cityIdsString,
-        searchText,
-        keyword: keyword || searchText,
-        lang,
+          page: page.toString(),
+          categoryIds: categoryIdsString,
+          cityIds: cityIdsString,
+          searchText,
+          keyword: keyword || searchText,
+          lang,
         };
-      
-      // Only add countryCode if it's provided
-      if (countryCode) {
-          queryParams.countryCode = countryCode;
-      }
-
-      console.log('GlobalTix API params:', { countryCode, page, categoryIds: categoryIdsString, cityIds: cityIdsString, searchText, keyword, lang });
+        if (countryCode) queryParams.countryCode = countryCode;
 
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
@@ -528,27 +504,23 @@ export const globalTixAPI = {
           endpoint: '/api/product/list',
           headers: authHeaders,
           body: {},
-          queryParams: queryParams,
+          queryParams,
         });
 
-        // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token invalid, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true); // Retry with new token
-          }
-          
-        console.log('GlobalTix API response:', result);
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
 
         if (!isSearch && result.success && result.data) {
           await setCached(CACHE_KEY, result, CACHE_TTL.products);
         }
 
         return withoutSimProducts(result);
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching products:', error);
-      throw new Error(error.message);
-    }
+        throw new Error(error.message);
+      }
     };
 
     return makeRequest();
@@ -557,9 +529,9 @@ export const globalTixAPI = {
   // Fetch product details
   fetchProductDetails: async ({ productId, lang = 'en' }) => {
     console.log("fetchProductDetails started");
-    
+
     const makeRequest = async (isRetry = false) => {
-    try {
+      try {
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
           method: 'POST',
@@ -574,17 +546,17 @@ export const globalTixAPI = {
 
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token invalid, refreshing...');
-            await refreshAccessToken();
+          console.log('Token invalid, refreshing...');
+          await refreshAccessToken();
           return makeRequest(true);
         }
 
         console.log("fetchProductDetails response:", result);
         return result;
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching product details:', error);
-      throw new Error(error.message);
-    }
+        throw new Error(error.message);
+      }
     };
 
     return makeRequest();
@@ -593,7 +565,7 @@ export const globalTixAPI = {
   // Fetch product options
   fetchProductOptions: async ({ productId, lang = 'en' }) => {
     const makeRequest = async (isRetry = false) => {
-    try {
+      try {
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
           method: 'POST',
@@ -608,16 +580,16 @@ export const globalTixAPI = {
 
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token invalid, refreshing...');
-            await refreshAccessToken();
+          console.log('Token invalid, refreshing...');
+          await refreshAccessToken();
           return makeRequest(true);
         }
 
         return result;
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching product options:', error);
-      throw new Error(error.message);
-    }
+        throw new Error(error.message);
+      }
     };
 
     return makeRequest();
@@ -633,7 +605,7 @@ export const globalTixAPI = {
     }
 
     const makeRequest = async (isRetry = false) => {
-    try {
+      try {
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
           method: 'POST',
@@ -642,36 +614,25 @@ export const globalTixAPI = {
           body: {},
         });
 
-        // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token invalid, refreshing...');
-            await refreshAccessToken();
+          await refreshAccessToken();
           return makeRequest(true);
         }
 
-        console.log("fetchCountries data:", result);
-
-        // Transform the response to include cities in a more accessible format
-        if (result.success && Array.isArray(result.data)) {
+        if (result.success && result.data) {
           const transformedData = result.data.map(country => ({
             ...country,
-            // Ensure cities are properly formatted
             cities: country.cities || [],
           }));
-
           await setCached(CACHE_KEY, transformedData, CACHE_TTL.countries);
-
-          return {
-            ...result,
-            data: transformedData,
-          };
+          return { ...result, data: transformedData };
         }
 
         return result;
-    } catch (error) {
-      console.error('Error fetching countries:', error);
-      return { success: false, data: [], error: error.message };
-    }
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+        return { success: false, data: [], error: error.message };
+      }
     };
 
     return makeRequest();
@@ -689,13 +650,7 @@ export const globalTixAPI = {
     const makeRequest = async (isRetry = false) => {
       try {
         const queryParams = { lang };
-        
-        // Only add countryCode if it's provided
-        if (countryCode) {
-          queryParams.countryCode = countryCode;
-        }
-
-        console.log('GlobalTix Categories API params:', queryParams);
+        if (countryCode) queryParams.countryCode = countryCode;
 
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
@@ -703,21 +658,19 @@ export const globalTixAPI = {
           endpoint: '/api/merchantCategory/getAllCategories',
           headers: authHeaders,
           body: {},
-          queryParams: queryParams,
+          queryParams,
         });
 
-        // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token invalid, refreshing...');
-            await refreshAccessToken();
+          await refreshAccessToken();
           return makeRequest(true);
         }
 
-        console.log('GlobalTix Categories API response:', result);
         if (result.success && result.data) {
           await setCached(CACHE_KEY, result.data, CACHE_TTL.categories);
           return { ...result, data: withoutSimCategory(result.data) };
         }
+
         return result;
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -742,15 +695,15 @@ export const globalTixAPI = {
         }
         countries = countriesResponse.data;
       }
-      
+
       // Find the specific country and extract its cities
       const country = countries.find(c => c.code === countryCode);
-      
+
       if (!country || !country.cities) {
         console.log(`No cities found for country: ${countryCode}`);
         return { success: true, data: [] };
       }
-      
+
       // Transform cities to match expected format
       const cities = country.cities.map(city => ({
         id: city.id,
@@ -759,10 +712,10 @@ export const globalTixAPI = {
         countryId: city.countryId,
         timezoneOffset: city.timezoneOffset
       }));
-      
+
       console.log(`GlobalTix Cities: Found ${cities.length} cities for country ${countryCode}`);
       return { success: true, data: cities };
-      
+
     } catch (error) {
       console.error('Error fetching cities:', error);
       return { success: false, data: [], error: error.message };
@@ -778,33 +731,33 @@ export const globalTixAPI = {
         if (!ticketTypeID) {
           throw new Error('ticketTypeID is required');
         }
-        
+
         if (!dateFrom) {
           throw new Error('dateFrom is required');
         }
-        
+
         if (!dateTo) {
           throw new Error('dateTo is required');
         }
-        
+
         // Format dates to YYYY-MM-DD
         const formatDate = (date) => {
           if (typeof date === 'string') return date;
           if (date instanceof Date) return date.toISOString().split('T')[0];
           return date;
         };
-        
+
         const formattedDateFrom = formatDate(dateFrom);
         const formattedDateTo = formatDate(dateTo);
-        
+
         const queryParams = {
           dateFrom: formattedDateFrom,
           dateTo: formattedDateTo,
           ticketTypeID: ticketTypeID.toString()
         };
-        
+
         console.log(`Checking event availability for ticketTypeID: ${ticketTypeID}, dateFrom: ${formattedDateFrom}, dateTo: ${formattedDateTo}`);
-        
+
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
           method: 'POST',
@@ -816,18 +769,18 @@ export const globalTixAPI = {
 
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token expired, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true);
-          }
-          
+          console.log('Token expired, refreshing...');
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
+
         console.log('GlobalTix Event Availability API response:', result);
-        
+
         // Transform response to include more user-friendly information
         if (result.success && result.data && Array.isArray(result.data)) {
           const availableSlots = result.data.filter(slot => slot.available > 0);
           const totalAvailableTickets = availableSlots.reduce((sum, slot) => sum + slot.available, 0);
-          
+
           return {
             ...result,
             meta: {
@@ -841,13 +794,13 @@ export const globalTixAPI = {
             }
           };
         }
-        
+
         return result;
       } catch (error) {
         console.error('Error checking event availability:', error);
-        return { 
-          success: false, 
-          data: null, 
+        return {
+          success: false,
+          data: null,
           error: error.message,
           meta: {
             ticketTypeID,
@@ -868,25 +821,25 @@ export const globalTixAPI = {
         if (!optionIds || !Array.isArray(optionIds) || optionIds.length === 0) {
           throw new Error('optionIds must be a non-empty array');
         }
-        
+
         if (!date) {
           throw new Error('date is required');
         }
-        
+
         // Format date to match API expectation (YYYY-MM-DD with zero-padding)
-        const formattedDate = typeof date === 'string' ? date : 
-          date instanceof Date ? date.toISOString().split('T')[0] : 
-          date;
-        
+        const formattedDate = typeof date === 'string' ? date :
+          date instanceof Date ? date.toISOString().split('T')[0] :
+            date;
+
         const requestBody = {
           optionIds: optionIds,
           date: formattedDate,
           pullAll: pullAll
         };
-        
+
         console.log(`Checking calendar availability for optionIds: ${optionIds.join(',')}, date: ${formattedDate}, pullAll: ${pullAll}`);
         console.log('Request body:', requestBody);
-        
+
         const authHeaders = await getAuthHeaders();
         const result = await makeProxyRequest({
           method: 'POST',
@@ -897,9 +850,9 @@ export const globalTixAPI = {
 
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
-            console.log('Token expired, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true);
+          console.log('Token expired, refreshing...');
+          await refreshAccessToken();
+          return makeRequest(true);
         }
 
         console.log('GlobalTix Calendar Availability API response:', result);
@@ -920,10 +873,10 @@ export const globalTixAPI = {
       const optionIds = optionID ? [optionID] : [ticketTypeID];
       const today = new Date();
       const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-      
+
       console.log(`Legacy checkTicketAvailability called - converting to new API format`);
       console.log(`ticketTypeID: ${ticketTypeID}, optionID: ${optionID}`);
-      
+
       return await globalTixAPI.checkCalendarAvailability({
         optionIds: optionIds,
         date: dateString,
@@ -938,11 +891,11 @@ export const globalTixAPI = {
   // Get image URL
   getImageUrl: (imagePath) => {
     if (!imagePath) return null;
-    
+
     // Try different CDN environments
     const environments = ['live-gtImage', 'stg-gtImage', 'prod-gtImage', 'uat-gtImage'];
     const baseUrl = 'https://product-image.globaltix.com';
-    
+
     return `${baseUrl}/${environments[0]}/${imagePath}`;
   },
 
@@ -951,10 +904,10 @@ export const globalTixAPI = {
     const makeRequest = async (isRetry = false) => {
       try {
         console.log('GlobalTix API: Creating booking...');
-        
+
         const authHeaders = await getAuthHeaders();
         console.log('GlobalTix API: Request body:', JSON.stringify(bookingData, null, 2));
-        
+
         const result = await makeProxyRequest({
           method: 'POST',
           endpoint: '/api/booking/reserve',
@@ -965,10 +918,10 @@ export const globalTixAPI = {
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
           console.log('GlobalTix API: Token expired, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true);
-          }
-          
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
+
         console.log('GlobalTix API: Parsed response:', JSON.stringify(result, null, 2));
         return result;
       } catch (error) {
@@ -985,10 +938,10 @@ export const globalTixAPI = {
     const makeRequest = async (isRetry = false) => {
       try {
         console.log('GlobalTix API: Confirming booking...');
-        
+
         const authHeaders = await getAuthHeaders();
         console.log('GlobalTix API: Request body:', JSON.stringify(confirmationData, null, 2));
-        
+
         const result = await makeProxyRequest({
           method: 'POST',
           endpoint: '/api/booking/confirm',
@@ -999,10 +952,10 @@ export const globalTixAPI = {
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
           console.log('GlobalTix API: Token expired, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true);
-          }
-          
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
+
         console.log('GlobalTix API: Parsed response:', JSON.stringify(result, null, 2));
         return result;
       } catch (error) {
@@ -1019,10 +972,10 @@ export const globalTixAPI = {
     const makeRequest = async (isRetry = false) => {
       try {
         console.log('GlobalTix API: Releasing booking...');
-        
+
         const authHeaders = await getAuthHeaders();
         console.log('GlobalTix API: Request body:', JSON.stringify(releaseData, null, 2));
-        
+
         const result = await makeProxyRequest({
           method: 'POST',
           endpoint: '/api/booking/release',
@@ -1033,10 +986,10 @@ export const globalTixAPI = {
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
           console.log('GlobalTix API: Token expired, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true);
-          }
-          
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
+
         console.log('GlobalTix API: Parsed response:', JSON.stringify(result, null, 2));
         return result;
       } catch (error) {
@@ -1048,7 +1001,7 @@ export const globalTixAPI = {
     return makeRequest();
   },
 
-  // Cancel GlobalTix Booking (used by My Bookings)
+  // Get GlobalTix Booking Details
   cancelBooking: async ({ transactionRef, remarks = 'Customer cancellation' } = {}) => {
     const makeRequest = async (isRetry = false) => {
       try {
@@ -1081,45 +1034,43 @@ export const globalTixAPI = {
     return makeRequest();
   },
 
-  // Get GlobalTix Booking Details
   getBookingDetails: async ({ referenceNumber, partnerReference = null, lang = 'en' } = {}) => {
     const makeRequest = async (isRetry = false) => {
       try {
         console.log('GlobalTix API: Getting booking details...');
-        
+
         if (!referenceNumber) {
           throw new Error('referenceNumber is required');
         }
-        
+
         const authHeaders = await getAuthHeaders();
-        
+
         const queryParams = {
           referenceNumber: referenceNumber,
           lang: lang
         };
-        
+
         // Add partnerReference if provided
         if (partnerReference) {
           queryParams.partnerReference = partnerReference;
         }
-        
+
         console.log('GlobalTix API: Query params:', queryParams);
-        
+
         const result = await makeProxyRequest({
-          method: 'POST',
+          method: 'GET',
           endpoint: '/api/booking/details',
           headers: authHeaders,
-          body: {},
           queryParams: queryParams,
         });
 
         // Check if token is invalid and retry
         if (!result.success && (result.error?.code === 'unauthorized' || result.error?.code === 'forbidden') && !isRetry) {
           console.log('GlobalTix API: Token expired, refreshing...');
-            await refreshAccessToken();
-            return makeRequest(true);
-          }
-          
+          await refreshAccessToken();
+          return makeRequest(true);
+        }
+
         console.log('GlobalTix API: Parsed response:', JSON.stringify(result, null, 2));
         return result;
       } catch (error) {
@@ -1131,3 +1082,5 @@ export const globalTixAPI = {
     return makeRequest();
   },
 };
+
+

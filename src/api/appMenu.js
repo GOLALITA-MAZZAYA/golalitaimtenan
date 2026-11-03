@@ -1,10 +1,10 @@
 import instance from '../redux/instance';
-import { ORG_CODE } from '../constants';
+import { org } from '../org/config';
 
 export const getAppMenuCategories = async () => {
   const res = await instance.post('/public/app/menu_categories', {
     params: {
-      app: ORG_CODE,
+      app: org.code,
     },
   });
   console.log('getAppMenuCategories ress', res.data);

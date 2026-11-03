@@ -1,12 +1,12 @@
 import React, { useRef, useState } from "react";
 import {
-  Image,
   Keyboard,
   Platform,
   SafeAreaView,
   TouchableOpacity,
   View,
 } from "react-native";
+import Image from "../../../components/AppImage";
 import CommonHeader from "../../../components/CommonHeader/CommonHeader";
 import { styles } from "./styles";
 import { sized } from "../../../Svg";
@@ -20,21 +20,18 @@ import CommonButton from "../../../components/CommonButton/CommonButton";
 import * as Yup from "yup";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import {
-  addFamilyMember,
   editFamilyMember,
 } from "../../../redux/transactions/transactions-thunks";
 import { connect } from "react-redux";
 import { colors } from "../../../components/colors";
 import { useTheme } from "../../../components/ThemeProvider";
 import authApi from "../../../redux/auth/auth-api";
-import { showMessage } from "react-native-flash-message";
 
 const CameraIcon = sized(CameraSvg, 36, 32);
 
 const AddFamilyMember = ({
   navigation,
   route,
-  addFamilyMember,
   editFamilyMember,
 }) => {
   let params = route?.params;
@@ -44,10 +41,9 @@ const AddFamilyMember = ({
   const ref_to_input2 = useRef();
   const ref_to_input3 = useRef();
   const ref_to_input4 = useRef();
-
   const pickImage = async () => {
     let data = await launchImageLibrary({
-      mediaType: "photo",
+      mediaTypee: "photo",
       quality: 1,
       includeBase64: true,
     });
@@ -95,8 +91,12 @@ const AddFamilyMember = ({
           }
         }
 
+        const normalizeEmail = (email) =>
+          typeof email === "string" ? email.trim().toLowerCase() : "";
         const isEmailChanged =
-          !params?.isEdit || values.email !== params?.selectedFamily?.email;
+          !params?.isEdit ||
+          normalizeEmail(values.email) !==
+            normalizeEmail(params?.selectedFamily?.email);
 
         if (isEmailChanged) {
           const emailRes = await authApi.checkEmail({
@@ -121,25 +121,18 @@ const AddFamilyMember = ({
           email: values.email,
           image_1920: image,
         };
-
         if (params?.isEdit) {
           body.member_id = params?.selectedFamily?.id;
         }
 
-        if (isEmailChanged) {
+        // Always require OTP when adding a member; for edit only when email changed
+        if (!params?.isEdit || isEmailChanged) {
           navigation.navigate("FamilyEmailVerification", {
             ...body,
-            isEdit: params?.isEdit,
+            isEdit: !!params?.isEdit,
           });
-        } else if (params?.isEdit) {
-          editFamilyMember(body, navigation);
         } else {
-          addFamilyMember(body, navigation, (errMessage) => {
-            showMessage({
-              message: errMessage,
-              type: "danger",
-            });
-          });
+          editFamilyMember(body, navigation);
         }
       }}
     >
@@ -175,6 +168,12 @@ const AddFamilyMember = ({
                         style={styles.photo}
                         source={{ uri: `data:image/png;base64,${image}` }}
                       />
+                    ) : params?.selectedFamily?.image_url &&
+                      params.selectedFamily.image_url !== "false" ? (
+                      <Image
+                        style={styles.photo}
+                        source={{ uri: params.selectedFamily.image_url }}
+                      />
                     ) : (
                       <CameraIcon />
                     )}
@@ -182,7 +181,7 @@ const AddFamilyMember = ({
                 </View>
                 <View style={[mainStyles.p20]}>
                   <Input
-                    label={t("Profile.firstName")}
+                    label={t("Profile.fullName")}
                     value={values.fullName}
                     returnKeyType={"next"}
                     onSubmitEditing={() => ref_to_input2.current.focus()}
@@ -216,6 +215,8 @@ const AddFamilyMember = ({
                     keyboardType={
                       Platform.OS === "ios" ? "default" : "visible-password"
                     }
+                    // secureTextEntry={true}
+
                     secureTextEntry={false}
                     wrapperStyle={styles.input}
                   />
@@ -228,9 +229,10 @@ const AddFamilyMember = ({
                       returnKeyType={"next"}
                       onSubmitEditing={Keyboard.dismiss}
                       onChangeText={handleChange("password")}
+                      autoCapitalize="none"
+                      autoCorrect={false}
                       error={errors.password}
                       wrapperStyle={styles.input}
-                      showLabel
                     />
                     <Input
                       label={t("ContactUs.mobileNumber")}
@@ -240,9 +242,7 @@ const AddFamilyMember = ({
                       onSubmitEditing={Keyboard.dismiss}
                       error={errors.phone}
                       wrapperStyle={[styles.input]}
-                      placeholder={t("Login.yourPhone")}
                       disableInputRtl
-                      showLabel
                     />
                   </View>
                   <CommonButton
@@ -264,7 +264,6 @@ const AddFamilyMember = ({
   );
 };
 
-export default connect(null, {
-  addFamilyMember,
-  editFamilyMember,
-})(AddFamilyMember);
+export default connect(null, { editFamilyMember })(
+  AddFamilyMember
+);

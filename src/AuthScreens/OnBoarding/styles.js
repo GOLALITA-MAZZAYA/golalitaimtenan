@@ -17,6 +17,14 @@ export const styles = StyleSheet.create({
     marginHorizontal: 3,
     marginBottom: 65,
   },
+  paginationWrapper: {
+    position: "absolute",
+    bottom: 25,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
   dot__active: {
     backgroundColor: colors.green,
   },

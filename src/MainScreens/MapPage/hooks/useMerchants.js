@@ -39,7 +39,7 @@ const useMerchants = (
       const latitude = data?.location?.latitude;
       const longitude = data?.location?.longitude;
 
-      if (latitude & longitude) {
+      if (latitude && longitude) {
         setLocation({ latitude, longitude });
       }
     } catch (err) {

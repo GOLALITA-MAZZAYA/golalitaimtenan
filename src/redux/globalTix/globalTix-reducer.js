@@ -5,8 +5,8 @@ import {
   SET_ERROR,
   SET_SELECTED_PRODUCT,
   SET_PRODUCT_OPTIONS,
-  SET_COUNTRIES,
-  SET_CATEGORIES,
+  SET_GLOBALTIX_COUNTRIES,
+  SET_GLOBALTIX_CATEGORIES,
   SET_CITIES,
   SET_FILTERS,
   CLEAR_FILTERS,
@@ -122,10 +122,10 @@ export const globalTixReducer = (state = initialState, action) => {
     case SET_PRODUCT_OPTIONS:
       return { ...state, productOptions: action.options };
       
-    case SET_COUNTRIES:
+    case SET_GLOBALTIX_COUNTRIES:
       return { ...state, countries: action.countries };
-      
-    case SET_CATEGORIES:
+
+    case SET_GLOBALTIX_CATEGORIES:
       return { ...state, categories: action.categories };
       
     case SET_CITIES:
