@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { colors } from '../../../../components/colors';
 import { useTheme } from '../../../../components/ThemeProvider';
@@ -20,6 +20,9 @@ import InstructionSvg from '../../../../assets/loyaltyPoints/instruction.svg';
 import LocationSvg from '../../../../assets/location.svg';
 import { sized } from '../../../../Svg';
 import trackActivity from '../../../../api/activityTracker';
+import useMerchantFeedbackSummary, {
+  refreshMerchantFeedbackSummary,
+} from '../../../../hooks/useMerchantFeedbackSummary';
 
 const PhoneIcon = sized(CallSvg, 18, 18);
 const TimeIcon = sized(InstructionSvg, 18, 18);
@@ -40,6 +43,16 @@ const InfoTab = ({ merchantDetails }) => {
     merchantDetails?.partner_id?.[0];
 
   const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
+  const { summary } = useMerchantFeedbackSummary(merchantId);
+  // Hide the whole Ratings & Reviews section until the merchant has a review.
+  const hasRating = (Number(summary?.total_feedback_count) || 0) > 0;
+
+  // Refetch after a rating is submitted, so the section appears for the first review.
+  useEffect(() => {
+    if (summaryRefreshKey && merchantId) {
+      refreshMerchantFeedbackSummary(merchantId);
+    }
+  }, [summaryRefreshKey, merchantId]);
   const [isRateModalVisible, setIsRateModalVisible] = useState(false);
   // null = loading, true = weekly timetable shown, false = fall back to open_from/open_till
   const [hasTimetable, setHasTimetable] = useState(null);
@@ -211,21 +224,23 @@ const InfoTab = ({ merchantDetails }) => {
       />
 
       {/* Customer Ratings & Reviews */}
-      <View style={styles.reviewsSection}>
-        <TypographyText
-          title={t('MerchantFeedback.ratingsAndReviews', 'Ratings & Reviews')}
-          textColor={isDark ? colors.white : '#111827'}
-          font={BALOO_SEMIBOLD}
-          size={16}
-          style={[styles.sectionTitle, { textAlign: isArabic ? 'right' : 'left' }]}
-        />
-        <RatingSummary
-          merchantId={merchantId}
-          refreshKey={summaryRefreshKey}
-          fallbackRating={merchantDetails?.rating}
-          onRatePress={() => setIsRateModalVisible(true)}
-        />
-      </View>
+      {hasRating && (
+        <View style={styles.reviewsSection}>
+          <TypographyText
+            title={t('MerchantFeedback.ratingsAndReviews', 'Ratings & Reviews')}
+            textColor={isDark ? colors.white : '#111827'}
+            font={BALOO_SEMIBOLD}
+            size={16}
+            style={[styles.sectionTitle, { textAlign: isArabic ? 'right' : 'left' }]}
+          />
+          <RatingSummary
+            merchantId={merchantId}
+            refreshKey={summaryRefreshKey}
+            fallbackRating={merchantDetails?.rating}
+            onRatePress={() => setIsRateModalVisible(true)}
+          />
+        </View>
+      )}
     </View>
   );
 };
