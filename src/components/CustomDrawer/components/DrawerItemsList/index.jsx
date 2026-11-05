@@ -13,7 +13,6 @@ import FamilySvg from '../../../../assets/family.svg';
 import ARSvg from '../../../../assets/aricon.svg';
 import ContactUsSvg from '../../../../assets/contact_us.svg';
 import ScanSvg from '../../../../assets/scan.svg';
-import PlanetSvg from '../../../../assets/planet.svg';
 import PremiumSvg from '../../../../assets/premium2.svg';
 import Gopoint from '../../../../assets/goPoints.svg';
 import MerchantsSvg from '../../../../assets/merchants.svg';
@@ -23,8 +22,6 @@ import { navigate } from '../../../../Navigation/RootNavigation';
 
 import VouchersSvg from '../../../../assets/vouchers.svg';
 import { useTranslation } from 'react-i18next';
-import i18next from 'i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../../colors';
 import {
   getPremiumMerchantsCount,
@@ -51,7 +48,6 @@ const DrawerItemList = ({ routeName }) => {
   const ContactUsIcon = sized(ContactUsSvg, 20, 20, iconColor);
   const GopointIcon = sized(Gopoint, 20, 20, iconColor);
   const PremiumIcon = sized(PremiumSvg, 20, 20, iconColor);
-  const PlanetIcon = sized(PlanetSvg, 20, 20, iconColor);
   const FamilyIcon = sized(FamilySvg, 20, 20, iconColor);
   const AiChatIcon = sized(AiChatSvg, 20, 20, iconColor);
   const DiscountCardsIcon = sized(CardSvg, 20, 20, iconColor);
@@ -164,19 +160,6 @@ const DrawerItemList = ({ routeName }) => {
       icon: () => <SettingsIcon style={styles.iconWrapper} />,
       title: t('Settings.settings'),
       onPress: () => navigate('Settings'),
-    },
-    {
-      screenName: DRAWER_SCREEN_NAMES.LANGUAGE,
-      icon: () => <PlanetIcon style={styles.iconWrapper} />, //routeName === 'ToUser' ? <InfoActiveIcon /> : <InfoIcon />,
-      title: t('Drawer.language'),
-      onPress: () => {
-        const newLang = i18n.language === 'ar' ? 'en' : 'ar';
-
-        i18next.changeLanguage(newLang);
-        AsyncStorage.setItem('lang', newLang);
-      },
-      isActive: false,
-      languages: ['en', 'ar'],
     },
     {
       screenName: DRAWER_SCREEN_NAMES.CONTACT_US,

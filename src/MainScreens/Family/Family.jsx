@@ -133,7 +133,7 @@ const Family = ({
                       />
                     </TouchableOpacity>
 
-                    {familyMembers.map((item, index) => {
+                    {(familyMembers ?? []).map((item, index) => {
                       const hasImage =
                         Boolean(item?.image_url) &&
                         typeof item.image_url === "string" &&

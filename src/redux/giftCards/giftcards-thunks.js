@@ -7,9 +7,17 @@ import {
   setGiftCardsLoading,
 } from "./giftcards-actions";
 
+// Escapes text so it can sit safely inside a quoted string in the Odoo domain.
+const escapeDomainString = (value) =>
+  String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+// Typing in search fires several requests; only the latest one may update the list.
+let latestRequestId = 0;
+
 export const getGiftCards =
-  (categoryId, countryCode) => async (dispatch, getState) => {
+  (categoryId, countryCode, searchText) => async (dispatch, getState) => {
     const { token } = getState().authReducer;
+    const requestId = ++latestRequestId;
 
     try {
       dispatch(setGiftCardsLoading(true));
@@ -23,6 +31,11 @@ export const getGiftCards =
 
       if (categoryId) {
         domainParts.push(`('category_ids.category_id', '=', ${categoryId})`);
+      }
+
+      const search = searchText?.trim();
+      if (search) {
+        domainParts.push(`('name', 'ilike', '${escapeDomainString(search)}')`);
       }
 
       if (countryCode) {
@@ -46,6 +59,10 @@ export const getGiftCards =
 
       //console.log(giftCards, 'gift acrds response"**********')
 
+      if (requestId !== latestRequestId) {
+        return;
+      }
+
       if (!giftCards) {
         throw "get favourtire gift cards error";
       }
@@ -54,9 +71,13 @@ export const getGiftCards =
     } catch (err) {
       console.log(err, "error");
 
-      dispatch(setGiftCards([]));
+      if (requestId === latestRequestId) {
+        dispatch(setGiftCards([]));
+      }
     } finally {
-      dispatch(setGiftCardsLoading(false));
+      if (requestId === latestRequestId) {
+        dispatch(setGiftCardsLoading(false));
+      }
     }
   };
 

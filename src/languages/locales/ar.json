@@ -929,7 +929,8 @@
       "settings": "إعدادات",
       "theme": "سمة",
       "light": "خفيفة",
-      "dark": "مظلم"
+      "dark": "مظلم",
+      "language": "اللغة"
     },
     "Transactions": {
       "transaction": "عملية تجارية",
@@ -1461,6 +1462,8 @@
     },
     "LoyaltyGiftCards": {
       "title": "بطاقات الهدايا",
+      "brandCode": "الرمز",
+      "searchPlaceholder": "ابحث عن بطاقات الهدايا...",
       "countries": "الدول",
       "countriesSearchPlaceholder": "ابحث عن الدول...",
       "categories": "الفئات",

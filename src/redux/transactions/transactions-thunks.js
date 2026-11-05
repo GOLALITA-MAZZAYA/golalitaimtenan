@@ -27,8 +27,10 @@ export const getFamilyMembers = () => async (dispatch, getState) => {
 
     console.log(res.data, "res data");
 
+    // The API can reply with an error object and no `result`; keep the list an array.
+    const members = Array.isArray(res?.data?.result) ? res.data.result : [];
     dispatch(
-      setFamilyMembers(workStatus === CONTENT_DISABLED ? [] : res.data.result)
+      setFamilyMembers(workStatus === CONTENT_DISABLED ? [] : members)
     );
   } catch (e) {
     console.log(e);

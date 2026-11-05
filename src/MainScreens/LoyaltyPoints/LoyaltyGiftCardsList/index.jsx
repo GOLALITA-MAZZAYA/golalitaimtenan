@@ -21,8 +21,10 @@ import { TypographyText } from '../../../components/Typography';
 import GiftCard from './GiftCard';
 import CateogiresSelect from './CategoriesSelect';
 import FullScreenLoader from '../../../components/Loaders/FullScreenLoader';
+import SearchInput from '../../../components/Form/SearchInput';
 
 const DEFAULT_COUNTRY = 'QA';
+const SEARCH_DELAY_MS = 400;
 
 const LoyaltyGiftCardsList = ({
   giftCards,
@@ -41,17 +43,28 @@ const LoyaltyGiftCardsList = ({
   // must still fetch the unfiltered list rather than being mistaken for
   // "the gate hasn't been satisfied yet".
   const [hasAppliedFiltersOnce, setHasAppliedFiltersOnce] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  // Waits until the user stops typing before calling the API.
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const title = t('LoyaltyGiftCards.title');
 
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setDebouncedSearch(searchText.trim()),
+      SEARCH_DELAY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   useEffect(() => {
     if (!hasAppliedFiltersOnce) {
       return;
     }
 
-    getGiftCards(categoryId, selectedCountry);
+    getGiftCards(categoryId, selectedCountry, debouncedSearch);
 
-  }, [selectedCountry, categoryId, hasAppliedFiltersOnce]);
+  }, [selectedCountry, categoryId, hasAppliedFiltersOnce, debouncedSearch]);
 
 
   const handleGiftCardPress = giftCard => {
@@ -73,6 +86,7 @@ const LoyaltyGiftCardsList = ({
           index={index}
           name={item.name}
           tagline={item.tagline}
+          brandCode={item.brand_code}
           imageUrl={item.product_image}
           isDark={isDark}
           key={item.id}
@@ -128,7 +142,17 @@ const LoyaltyGiftCardsList = ({
       style={{ backgroundColor: isDark ? colors.darkBlue : colors.white }}
     >
       <View style={styles.listWrapper}>
+        <SearchInput
+          wrapperStyle={styles.search}
+          value={searchText}
+          onChangeText={setSearchText}
+          onClearPress={() => setSearchText('')}
+          placeholder={t('LoyaltyGiftCards.searchPlaceholder')}
+          autoCorrect={false}
+          returnKeyType="search"
+        />
         <FlatList
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           data={giftCardsLoading ? [] : giftCards}
@@ -164,6 +188,10 @@ const LoyaltyGiftCardsList = ({
 const styles = StyleSheet.create({
   listWrapper: {
     flex: 1
+  },
+  search: {
+    marginTop: 12,
+    marginHorizontal: 20,
   },
   listContainer: {
     paddingBottom: 120,

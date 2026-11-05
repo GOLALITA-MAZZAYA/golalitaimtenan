@@ -913,7 +913,8 @@
       "settings": "Settings",
       "theme": "Theme",
       "light": "Light",
-      "dark": "Dark"
+      "dark": "Dark",
+      "language": "Language"
     },
     "Transactions": {
       "transaction": "Transaction",
@@ -1447,6 +1448,8 @@
     },
     "LoyaltyGiftCards": {
       "title": "Gift Cards",
+      "brandCode": "Code",
+      "searchPlaceholder": "Search gift cards...",
       "countries": "COUNTRIES",
       "countriesSearchPlaceholder": "Search countries...",
       "categories": "CATEGORIES",
