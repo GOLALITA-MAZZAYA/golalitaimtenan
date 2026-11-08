@@ -104,7 +104,16 @@ const NotificationItem = ({ item }) => {
         onLoadEnd={() => setLoading(false)}
       />
       {!!descriptionHtml && (
-        <HTMLRenderer value={descriptionHtml} style={{ marginTop: 10, alignSelf: language === "ar" ? "flex-end" : "flex-start" }} />
+        <HTMLRenderer
+          value={descriptionHtml}
+          style={styles.htmlDescription}
+          textComponentProps={{
+            style: {
+              color: isDark ? colors.white : colors.darkBlue,
+              textAlign: language === "ar" ? "right" : "left",
+            },
+          }}
+        />
       )}
 
       {!descriptionHtml && descriptionText && (
@@ -137,6 +146,13 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 10,
     alignSelf: "flex-start",
+  },
+  // Full width so Android wraps the HTML text instead of clipping it.
+  // Arabic right alignment comes from HTMLRenderer's textAlign styles.
+  htmlDescription: {
+    marginTop: 10,
+    width: "100%",
+    paddingBottom: 2,
   },
   loaderBlock: {
     position: "absolute",
