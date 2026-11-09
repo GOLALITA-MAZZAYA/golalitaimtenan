@@ -65,6 +65,7 @@ const MerchantsPage = ({
   const canGetMoreDataRef = useRef(true);
   const isFetchingMoreRef = useRef(false);
   const visibleIdsRef = useRef(new Set());
+  const subCategoryScrollRef = useRef(null);
 
   const isRtl = isRTL();
   const params = route?.params;
@@ -502,14 +503,21 @@ const MerchantsPage = ({
 
       {subCategoryOptions.length > 0 && (
         <ScrollView
+          ref={subCategoryScrollRef}
           horizontal
           bounces={false}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.subCategoryScrollContent}
-          style={[
-            styles.subCategoryTabs,
+          contentContainerStyle={[
+            styles.subCategoryScrollContent,
             { flexDirection: isRtl ? "row-reverse" : "row" },
           ]}
+          style={styles.subCategoryTabs}
+          // In RTL the first item sits at the far right, so start scrolled to the end
+          onContentSizeChange={() => {
+            if (isRtl) {
+              subCategoryScrollRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
         >
           {subCategoryOptions.map((option) => {
             const isSelected = selectedSubCategoryIds.includes(option.value);

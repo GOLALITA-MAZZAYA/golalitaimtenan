@@ -7,10 +7,10 @@ export const getHeaderBtnString = () => ['back'];
 export const SORT_NEAREST = "nearest";
 export const SORT_ALPHABETICAL = "alphabetical";
 
-// One of these is active at a time. "desc"/"asc" are the sort_order sent with
-// sort_by: "discount"; null keeps the backend's default x_sequence order.
+// At most one of these is active at a time. "desc"/"asc" are the sort_order
+// sent with sort_by: "discount". Nothing selected (null) keeps the backend's
+// default x_sequence order.
 export const SORT_OPTIONS = [
-  { value: null, labelKey: "Merchants.sortDefault" },
   { value: SORT_NEAREST, labelKey: "Merchants.sortNearest" },
   { value: SORT_ALPHABETICAL, labelKey: "Merchants.alphabetical" },
   { value: "desc", labelKey: "Merchants.sortDiscountHigh" },

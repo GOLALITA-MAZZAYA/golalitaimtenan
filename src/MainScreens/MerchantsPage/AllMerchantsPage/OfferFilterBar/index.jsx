@@ -66,9 +66,13 @@ const OfferFilterBar = ({
 
   const filtersCount = filterIds.length;
   const selectedSort = isNearest ? SORT_NEAREST : sortOrder;
-  const sortLabel = t(
-    SORT_OPTIONS.find((option) => option.value === selectedSort).labelKey
+  const selectedSortOption = SORT_OPTIONS.find(
+    (option) => option.value === selectedSort
   );
+  // No sort picked yet: the bar just reads "Sort".
+  const sortButtonLabel = selectedSortOption
+    ? `${t("Merchants.sortLabel")}: ${t(selectedSortOption.labelKey)}`
+    : t("Merchants.sortLabel");
 
   const openFilters = () => {
     setDraftFilterIds(filterIds);
@@ -240,8 +244,8 @@ const OfferFilterBar = ({
             openFilters
           )}
         {renderBarButton(
-          `${t("Merchants.sortLabel")}: ${sortLabel}`,
-          selectedSort !== null,
+          sortButtonLabel,
+          !!selectedSortOption,
           openSort
         )}
       </View>
@@ -295,7 +299,11 @@ const OfferFilterBar = ({
                   String(option.value),
                   t(option.labelKey),
                   draftSort === option.value,
-                  () => setDraftSort(option.value)
+                  // Tapping the selected option again clears the sort.
+                  () =>
+                    setDraftSort((prev) =>
+                      prev === option.value ? null : option.value
+                    )
                 )
               )}
 

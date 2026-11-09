@@ -656,7 +656,7 @@
       "offerTypePoints": "نقاط",
       "offerTypeVip": "VIP",
       "discountUpTo": "حتى {{value}}%",
-      "filterOffers": "تصفية العروض",
+      "filterOffers": "نسبة العروض",
       "sortLabel": "الترتيب",
       "offerTypeLabel": "نوع العرض",
       "filterAnyHint": "تُعرض المتاجر المطابقة لأي من الخيارات التي تحددها.",
