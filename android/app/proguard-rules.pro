@@ -105,6 +105,16 @@
 -keep class com.github.wumke.RNExitApp.** { *; }
 -keep class com.wix.reactnativenotifications.** { *; }
 
+# Added with the Expo / UI update (expo, expo-image, react-native-get-random-values).
+# Expo modules are looked up by reflection from the generated module registry.
+-keep class expo.modules.** { *; }
+-dontwarn expo.modules.**
+-keep class org.linusu.** { *; }
+# expo-image uses Glide
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class * extends com.bumptech.glide.module.AppGlideModule { <init>(...); }
+-dontwarn com.bumptech.glide.**
+
 # FreeRASP / Talsec
 # Do not blanket-keep freeraspreactnative/talsec packages: the SDK ships its own
 # consumer ProGuard rules (including "-repackageclasses 'ts'"). A wildcard -keep
