@@ -18,8 +18,7 @@ import PortalProvider from './src/components/Portal/PortalProvider';
 import { colors } from './src/components/colors';
 
 import './src/languages/index';
-import { useSecurityCheck } from './src/utils/deviceSecurityCheck';
-import { useScreenSecurity } from './src/hooks/useScreenSecurity';
+import { useAppSecurity } from './src/hooks/useAppSecurity';
 import PrivacyOverlay from './src/components/PrivacyOverlay';
 
 import usePushNotifications from './src/pushNotifications/usePushNotifications';
@@ -49,11 +48,9 @@ const App = () => {
   );
 
   usePushNotifications();
-  useSecurityCheck();
-
-  // Protection is unconditional — every screen, from the first frame. The
-  // hook retries internally if the native call fires too early in boot.
-  // useScreenSecurity(true);
+  // All security protections (threat detection + screen-capture blocking).
+  // Do not comment out — debug builds already relax these via __DEV__.
+  useAppSecurity();
 
   const { isReady } = useAppStartup({ user, isAuthorized });
   const { updateModal, setUpdateModal } = useAppUpdateCheck({ isReady, version });

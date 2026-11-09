@@ -47,3 +47,36 @@ vsgfUVaGPPySWxacdBRHv51HE59arZv1R06SRNifNP4dG/yYiExSx1IBrHerjGqo
 eMrsGCb2/ptZ1a5xA6zE0sNcV295uP5oB9HfE9o2X/xYgr2dGDRxCuHNiTBu0Kg8
 XwIDAQAB
 -----END PUBLIC KEY-----`;
+
+// --- freeRASP settings (restored from pre-UI-update release 1.1.6) ---
+// Release builds are R8-obfuscated (android/app/build.gradle); freeRASP
+// treats an unobfuscated release as a hard threat.
+export const ENFORCE_CODE_OBFUSCATION = true;
+
+export const FREERASP_MALWARE_CONFIG = {
+  blacklistedPackageNames: [
+    "com.topjohnwu.magisk",
+    "com.koushikdutta.superuser",
+    "eu.chainfire.supersu",
+    "com.noshufou.android.su",
+    "com.thirdparty.superuser",
+    "com.yellowes.su",
+    "com.kingroot.kinguser",
+    "com.devadvance.rootcloak",
+    "com.formyhm.hideroot",
+    "de.robv.android.xposed.installer",
+    "org.meowcat.edxposed.manager",
+    "io.github.lsposed.manager",
+    "com.saurik.substrate",
+    "com.chelpus.luckypatcher",
+    "com.dimonvideo.luckypatcher",
+  ],
+  suspiciousPermissions: [
+    [
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.READ_PHONE_STATE",
+    ],
+    ["android.permission.SYSTEM_ALERT_WINDOW", "android.permission.READ_SMS"],
+  ],
+  whitelistedInstallationSources: ["com.android.vending"],
+};

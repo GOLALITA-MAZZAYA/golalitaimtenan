@@ -3,7 +3,11 @@ import { Platform, Alert, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFreeRasp } from 'freerasp-react-native';
 import RNExitApp from 'react-native-exit-app';
-import { IS_PRODUCTION } from '../constants';
+import {
+  ENFORCE_CODE_OBFUSCATION,
+  FREERASP_MALWARE_CONFIG,
+  IS_PRODUCTION,
+} from '../constants';
 import { org } from '../org/config';
 import { removeToken } from './secureStorage';
 import logger from './logger';
@@ -23,12 +27,18 @@ const securityMessages = {
   privilegedAccess: 'Root or elevated privileges were detected.',
   debug: 'Debugging tools are enabled.',
   simulator: 'The app is running on an emulator or simulator.',
-  //  appIntegrity: 'App integrity check failed.',
   unofficialStore: 'The app was installed from an unrecognized source.',
   hooks: 'Security hooking was detected.',
+  secureHardwareNotAvailable: 'Secure hardware is unavailable on this device.',
   systemVPN: 'VPN usage is detected.',
+  passcode: 'Device passcode or screen lock is not set.',
+  devMode: 'Developer mode is enabled.',
+  adbEnabled: 'USB debugging (ADB) is enabled.',
+  screenRecording: 'Screen recording was detected.',
   multiInstance: 'App cloning or multi-instance was detected.',
 };
+
+const obfuscationMessage = 'Application code is not properly obfuscated.';
 
 const genericBlockMessage =
   'Security issues were previously detected on this device.';
@@ -37,11 +47,6 @@ const genericBlockMessage =
 // revoked and the block survives relaunches. Soft signals (VPN, no passcode,
 // dev mode, screenshots, ...) keep the existing alert-only behavior so a
 // screenshot or an active VPN never logs a legitimate user out.
-//
-// appIntegrity is deliberately NOT here: it alerts and refuses login for the
-// current launch, but is never persisted. A signing-cert mismatch (new Play
-// key, store re-signing) would otherwise lock real users out until they
-// reinstall; this way a fixed release recovers them on the next launch.
 const hardThreatMessages = new Set([
   securityMessages.privilegedAccess,
   securityMessages.debug,
@@ -49,13 +54,18 @@ const hardThreatMessages = new Set([
   securityMessages.unofficialStore,
   securityMessages.hooks,
   securityMessages.multiInstance,
+  obfuscationMessage,
 ]);
 
-// A debug build always has a debugger attached and usually runs on a
-// simulator, so these two can never be enforced there.
+// A debug build always has a debugger attached, usually runs on a simulator
+// or a phone with developer mode / USB debugging on, and is never obfuscated,
+// so these can never be enforced there.
 const devBuildSignals = new Set([
   securityMessages.debug,
   securityMessages.simulator,
+  securityMessages.devMode,
+  securityMessages.adbEnabled,
+  obfuscationMessage,
 ]);
 
 const showAlert = () => {
@@ -122,7 +132,8 @@ const blockDevice = message => {
 // to authenticate".
 const applyStoredIssues = issues => {
   issues.forEach(issue => {
-    if (issue === securityMessages.appIntegrity) {
+    // Older installs may have this persisted; it's no longer enforced.
+    if (issue === 'App integrity check failed.') {
       return;
     }
     persistedIssues.add(issue);
@@ -187,8 +198,7 @@ const handleThreat = message => () => {
   if (
     !IS_PRODUCTION &&
     (devBuildSignals.has(message) ||
-      message === securityMessages.unofficialStore ||
-      message === securityMessages.appIntegrity)
+      message === securityMessages.unofficialStore)
   ) {
     logger.warn(`[Security] ${message} Ignored in direct device testing build`);
     return;
@@ -205,6 +215,20 @@ const handleThreat = message => () => {
   }
 
   scheduleAlertOnce();
+};
+
+const handleObfuscationIssue = () => {
+  if (!ENFORCE_CODE_OBFUSCATION) {
+    logger.warn('Obfuscation is not enabled for this build');
+    return;
+  }
+
+  handleThreat(obfuscationMessage)();
+};
+
+const handleMalware = () => {
+  // Not surfaced to the user or blocked on — flagged solely for diagnostics.
+  logger.warn('Malware scan flagged apps');
 };
 
 export const useSecurityCheck = () => {
@@ -279,10 +303,21 @@ export const useSecurityCheck = () => {
     privilegedAccess: handleThreat(securityMessages.privilegedAccess),
     debug: handleThreat(securityMessages.debug),
     simulator: handleThreat(securityMessages.simulator),
-    //appIntegrity: handleThreat(securityMessages.appIntegrity),
-    // unofficialStore: handleThreat(securityMessages.unofficialStore),
+    unofficialStore: handleThreat(securityMessages.unofficialStore),
     hooks: handleThreat(securityMessages.hooks),
+    secureHardwareNotAvailable: handleThreat(
+      securityMessages.secureHardwareNotAvailable,
+    ),
     systemVPN: handleThreat(securityMessages.systemVPN),
+    passcode: handleThreat(securityMessages.passcode),
+    // Screenshots are the user capturing their own screen — FLAG_SECURE
+    // (useScreenSecurity) already blocks them where it matters, so just log.
+    screenshot: () => logger.warn('Screenshot detected'),
+    screenRecording: handleThreat(securityMessages.screenRecording),
+    obfuscationIssues: handleObfuscationIssue,
+    devMode: handleThreat(securityMessages.devMode),
+    adbEnabled: handleThreat(securityMessages.adbEnabled),
+    malware: handleMalware,
     multiInstance: handleThreat(securityMessages.multiInstance),
   };
 
@@ -300,6 +335,7 @@ export const useSecurityCheck = () => {
         certificateHashes: (!IS_PRODUCTION || __DEV__)
           ? [...org.signInCertHashes, org.debugSignInCertHash]
           : org.signInCertHashes,
+        malwareConfig: FREERASP_MALWARE_CONFIG,
       },
       iosConfig: {
         appBundleId: org.iosBundleId,
