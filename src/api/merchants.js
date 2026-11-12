@@ -215,7 +215,7 @@ export const saveBill = async params => {
 export const getPremiumMerchants = async () => {
   const token = await getToken();
 
-  const res = await instance.post('/user/merchant/lists/premium', {
+  const res = await instance.post(`/user/merchant/lists/premium/${org.code}`, {
     params: {
       token,
     },
