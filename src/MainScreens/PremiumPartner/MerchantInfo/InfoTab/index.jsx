@@ -20,6 +20,7 @@ import InstructionSvg from '../../../../assets/loyaltyPoints/instruction.svg';
 import LocationSvg from '../../../../assets/location.svg';
 import { sized } from '../../../../Svg';
 import trackActivity from '../../../../api/activityTracker';
+import useIsGuest from '../../../../hooks/useIsGuest';
 import useMerchantFeedbackSummary, {
   refreshMerchantFeedbackSummary,
 } from '../../../../hooks/useMerchantFeedbackSummary';
@@ -33,6 +34,7 @@ const PinIcon = sized(LocationSvg, 18, 18);
 const InfoTab = ({ merchantDetails }) => {
   const { isDark } = useTheme();
   const { t } = useTranslation();
+  const isGuest = useIsGuest();
   const isArabic = isRTL();
   const backgroundColor = isDark ? colors.darkModeBackground : colors.white;
   const iconColor = isDark ? colors.mainDarkMode : colors.darkBlue;
@@ -134,14 +136,16 @@ const InfoTab = ({ merchantDetails }) => {
           { flexDirection: isArabic ? 'row-reverse' : 'row' },
         ]}
       >
-        <RateBtn
-          merchantDetails={merchantDetails}
-          visible={isRateModalVisible}
-          onOpen={() => setIsRateModalVisible(true)}
-          onClose={() => setIsRateModalVisible(false)}
-          onSubmitted={() => setSummaryRefreshKey(key => key + 1)}
-        />
-        <ComplaintBtn merchantDetails={merchantDetails} />
+        {!isGuest && (
+          <RateBtn
+            merchantDetails={merchantDetails}
+            visible={isRateModalVisible}
+            onOpen={() => setIsRateModalVisible(true)}
+            onClose={() => setIsRateModalVisible(false)}
+            onSubmitted={() => setSummaryRefreshKey(key => key + 1)}
+          />
+        )}
+        {!isGuest && <ComplaintBtn merchantDetails={merchantDetails} />}
         <ContractBtn merchantId={merchantId} />
       </View>
 

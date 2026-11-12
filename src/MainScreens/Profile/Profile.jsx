@@ -42,6 +42,7 @@ import { setProfileLoading } from '../../redux/auth/auth-actions';
 import { showMessage } from 'react-native-flash-message';
 import { useValidation } from '../../hooks/useValidation';
 import useIsMumayz from '../../hooks/useIsMumayz';
+import useIsGuest from '../../hooks/useIsGuest';
 
 const CameraIcon = sized(CameraSvg, 36, 32);
 const EditIcon = sized(EditSvg, 31);
@@ -76,6 +77,7 @@ const Profile = ({
   const ref_to_input2 = useRef(null);
   const ref_to_input3 = useRef(null);
   const isMumayaz = useIsMumayz(user?.email);
+  const isGuest = useIsGuest();
   const { getProfileScreenValidationSchema } = useValidation();
 
   const validation = getProfileScreenValidationSchema();
@@ -468,7 +470,7 @@ const Profile = ({
                     />
                   )}
 
-                  {!isMumayaz && (
+                  {!isMumayaz && !isGuest && (
                     <>
                       <CommonButton
                         onPress={handleSubmit}

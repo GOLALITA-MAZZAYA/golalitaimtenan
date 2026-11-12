@@ -19,6 +19,7 @@ import HeartSvg from "../../../../assets/heart.svg";
 import DiscountLabel from "../../../../assets/discountLabel.svg";
 import useMerchantDiscount from "../../../../hooks/useMerchantDiscount";
 import useRoadDistance from "../../../../hooks/useRoadDistance";
+import useIsGuest from "../../../../hooks/useIsGuest";
 import { userLocationSelector } from "../../../../redux/global/global-selectors";
 import { sized } from "../../../../Svg";
 
@@ -43,6 +44,7 @@ const HotelsListCard = ({
   onPressFavourite,
 }) => {
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const isRtl = isRTL();
 
   const userLocation = useSelector(userLocationSelector);
@@ -175,7 +177,7 @@ const HotelsListCard = ({
           )}
 
           {/* Right Floating Favorite */}
-          {!!onPressFavourite && (
+          {!!onPressFavourite && !isGuest && (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={onPressFavourite}

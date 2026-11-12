@@ -28,6 +28,8 @@ import {
 } from '../../../../api/merchants';
 import useDrawerMenuVisibility from '../../../../hooks/useDrawerMenuVisibility';
 import { DRAWER_SCREEN_NAMES } from '../../drawerConfig';
+import { showMessage } from 'react-native-flash-message';
+import useIsGuest from '../../../../hooks/useIsGuest';
 
 // Every drawer item routes through RootNavigation's global navigate() — the
 // same function every other screen/thunk/deep-link in the app uses to reach
@@ -37,6 +39,7 @@ import { DRAWER_SCREEN_NAMES } from '../../drawerConfig';
 const DrawerItemList = ({ routeName }) => {
   const { isDark } = useTheme();
   const isMainUser = useSelector(state => state.authReducer.isMainUser);
+  const isGuest = useIsGuest();
   const { t, i18n } = useTranslation();
   const { loading: menuLoading, isScreenVisible } = useDrawerMenuVisibility();
 
@@ -77,8 +80,17 @@ const DrawerItemList = ({ routeName }) => {
       route: 'Family',
       icon: () => <FamilyIcon style={styles.iconWrapper} />,
       title: t('Drawer.familyMembers'),
-      onPress: () => navigate('Family'),
-      hidden: !isMainUser,
+      onPress: () => {
+        if (isGuest) {
+          showMessage({
+            type: 'warning',
+            message: t('Drawer.notForGuest'),
+          });
+          return;
+        }
+        navigate('Family');
+      },
+      hidden: !isMainUser || isGuest,
     },
     {
       screenName: DRAWER_SCREEN_NAMES.GIFT_CARDS,
@@ -146,6 +158,7 @@ const DrawerItemList = ({ routeName }) => {
       icon: () => <FavoritesIcon style={styles.iconWrapper} />,
       title: t('Favorites.favorites'),
       onPress: () => navigate('favouriteMerchants'),
+      hidden: isGuest,
     },
     {
       screenName: DRAWER_SCREEN_NAMES.MY_BOOKINGS,
@@ -186,6 +199,7 @@ const DrawerItemList = ({ routeName }) => {
     );
   }, [
     isMainUser,
+    isGuest,
     i18n.language,
     isDark,
     isScreenVisible,

@@ -14,6 +14,7 @@ import { getFlexDirection, isRTL } from "../../../utils";
 import { colors } from "../colors";
 import { useTheme } from "../ThemeProvider";
 import { useTranslation } from "react-i18next";
+import useIsGuest from "../../hooks/useIsGuest";
 
 const IMAGE_SIZE = 64;
 
@@ -34,6 +35,7 @@ const CardWithNesetedItems = ({ parentProps }) => {
 
   const { t } = useTranslation();
   const { isDark } = useTheme();
+  const isGuest = useIsGuest();
   const isRtl = isRTL();
 
   const StarIconSmall = useMemo(() => sized(StartIcon, 20, 20), []);
@@ -148,22 +150,26 @@ const CardWithNesetedItems = ({ parentProps }) => {
             },
           ]}
         >
-          <TouchableOpacity
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            activeOpacity={0.7}
-            style={[
-              styles.favoriteButton,
-              {
-                alignSelf: isRtl ? "flex-start" : "flex-end",
-              },
-            ]}
-            onPress={onPressFavourite}
-          >
-            <StarIconSmall
-              color={starColor}
-              fill={isSaved ? starColor : "transparent"}
-            />
-          </TouchableOpacity>
+          {/* The empty View keeps the end date pinned to the bottom of this
+              space-between column when the star is hidden. */}
+          {isGuest ? <View /> : (
+            <TouchableOpacity
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              activeOpacity={0.7}
+              style={[
+                styles.favoriteButton,
+                {
+                  alignSelf: isRtl ? "flex-start" : "flex-end",
+                },
+              ]}
+              onPress={onPressFavourite}
+            >
+              <StarIconSmall
+                color={starColor}
+                fill={isSaved ? starColor : "transparent"}
+              />
+            </TouchableOpacity>
+          )}
 
           <View style={{ alignItems: isRtl ? "flex-start" : "flex-end" }}>
             {!!distance && (

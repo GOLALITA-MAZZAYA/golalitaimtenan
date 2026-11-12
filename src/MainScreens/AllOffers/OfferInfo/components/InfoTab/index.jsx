@@ -8,9 +8,11 @@ import {navigateToBookNow} from "../../../helpres"
 import {useState} from "react"
 import OfferTypeInfoButtons from "../OfferTypeInfoButtons"
 import Button from "../../../../../components/Button"
+import useIsGuest from "../../../../../hooks/useIsGuest"
 
 const InfoTab = ({offer, merchant, isHotel}) => {
     const {t} = useTranslation();
+    const isGuest = useIsGuest();
     const [selectedImageUrl, setSelectedImageUrl] = useState('');
 
     const data = getInfoBlocksConfig(offer, isHotel);
@@ -79,7 +81,7 @@ const InfoTab = ({offer, merchant, isHotel}) => {
               /> }
         
 
-            <OfferTypeInfoButtons data={btnsConfig} />
+            {!isGuest && <OfferTypeInfoButtons data={btnsConfig} />}
         </>
     )
 };

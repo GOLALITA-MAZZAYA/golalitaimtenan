@@ -3,7 +3,6 @@ import { useTheme } from '../ThemeProvider';
 import { colors } from '../colors';
 import { useDispatch } from 'react-redux';
 import { login } from '../../redux/auth/auth-thunks';
-import { setIsGuest } from '../../redux/auth/auth-actions';
 import { useTranslation } from 'react-i18next';
 import CommonButton from '../CommonButton/CommonButton';
 import { useEffect, useState } from 'react';
@@ -56,14 +55,18 @@ const ContinueAsGuestBtn = ({ label }) => {
         ? guestCredentials
         : { login: org.guestEmail, password: FALLBACK_GUEST_PASSWORD };
 
+    // The thunk flags the session as guest only after the login succeeds.
     dispatch(
-      login({
-        login: credentials.login,
-        password: credentials.password,
-        device_type: Platform.OS,
-      }),
+      login(
+        {
+          login: credentials.login,
+          password: credentials.password,
+          device_type: Platform.OS,
+        },
+        undefined,
+        { asGuest: true },
+      ),
     );
-    dispatch(setIsGuest(true));
   };
 
   if (!isVisible) {

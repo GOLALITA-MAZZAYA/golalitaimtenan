@@ -9,6 +9,7 @@ import { isRTL } from "../../../../../../utils";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../../../components/ThemeProvider";
 import { sized } from "../../../../../Svg";
+import useIsGuest from "../../../../../hooks/useIsGuest";
 
 const HeartIcon = sized(HeartSvg, 16, 16);
 
@@ -24,6 +25,7 @@ const RoomRatesListItem = ({
   const isRtl = isRTL();
   const { isDark } = useTheme();
   const { t } = useTranslation();
+  const isGuest = useIsGuest();
 
   return (
     <TouchableOpacity
@@ -97,23 +99,25 @@ const RoomRatesListItem = ({
             ]}
           />
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={onSavePress}
-            style={[
-              styles.favoriteButton,
-              {
-                backgroundColor: isDark
-                  ? "rgba(255, 255, 255, 0.08)"
-                  : "#F3F4F6",
-              },
-            ]}
-          >
-            <HeartIcon
-              color={isLiked ? "#EF4444" : isDark ? "#A1A1AA" : "#9CA3AF"}
-              fill={isLiked ? "#EF4444" : "transparent"}
-            />
-          </TouchableOpacity>
+          {!isGuest && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={onSavePress}
+              style={[
+                styles.favoriteButton,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(255, 255, 255, 0.08)"
+                    : "#F3F4F6",
+                },
+              ]}
+            >
+              <HeartIcon
+                color={isLiked ? "#EF4444" : isDark ? "#A1A1AA" : "#9CA3AF"}
+                fill={isLiked ? "#EF4444" : "transparent"}
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Bottom Price & Book Button Row */}

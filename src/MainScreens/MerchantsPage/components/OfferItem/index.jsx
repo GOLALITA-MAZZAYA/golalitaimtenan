@@ -20,6 +20,7 @@ import FullScreenLoader from '../../../../components/Loaders/FullScreenLoader';
 import HeartSvg from '../../../../assets/heart.svg';
 import { sized } from '../../../../Svg';
 import ArrowSvg from '../../../../assets/arrow_right.svg';
+import useIsGuest from '../../../../hooks/useIsGuest';
 
 const IMAGE_SIZE = 66;
 
@@ -28,6 +29,7 @@ const OfferItem = ({ merchant, isB1G1 }) => {
   const [data, setData] = useState([]);
   const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
+  const isGuest = useIsGuest();
   const language = i18n.language;
   const dispatch = useDispatch();
 
@@ -115,12 +117,14 @@ const OfferItem = ({ merchant, isB1G1 }) => {
                 numberOfLines={2}
               />
 
-              <TouchableOpacity
-                onPress={() => dispatch(saveOffer(item.id, t))}
-                style={{ paddingLeft: 5 }}
-              >
-                <HeartSvg color={isLiked ? '#E32251' : (isDark ? '#52525B' : '#DDDFE4')} />
-              </TouchableOpacity>
+              {!isGuest && (
+                <TouchableOpacity
+                  onPress={() => dispatch(saveOffer(item.id, t))}
+                  style={{ paddingLeft: 5 }}
+                >
+                  <HeartSvg color={isLiked ? '#E32251' : (isDark ? '#52525B' : '#DDDFE4')} />
+                </TouchableOpacity>
+              )}
             </View>
             <View style={[styles.row, { marginTop: 10 }]}>
               {!!price && (

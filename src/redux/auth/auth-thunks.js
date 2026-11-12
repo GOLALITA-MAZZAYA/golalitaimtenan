@@ -16,6 +16,7 @@ import {
   setVersion,
   setWorkStatus,
   setIsloadingAutologin,
+  setIsGuest,
 } from './auth-actions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getToken, setToken as storeToken, removeToken as clearStoredToken } from '../../utils/secureStorage';
@@ -43,19 +44,25 @@ const resetAiChatSession = async dispatch => {
   dispatch(setAiChatMessages([]));
 };
 
+// Guest mode is persisted so it survives an app restart (restored in
+// getInitialData). It's only written after a successful login.
+const IS_GUEST_KEY = 'isGuest';
+
 // prefetchedUserDataRes: an already-fetched /v5/user/dashboard/data response
 // for this token (see checkIfTokenIsValid), reused here instead of letting
 // getUserData fetch it again.
 export const getInitialData = prefetchedUserDataRes => async (dispatch, getState) => {
   try {
     const { categoriesType } = getState().merchantReducer;
-    const [token, userId] = await Promise.all([
+    const [token, userId, isGuest] = await Promise.all([
       getToken(),
       AsyncStorage.getItem('userId'),
+      AsyncStorage.getItem(IS_GUEST_KEY),
     ]);
 
     if (userId) dispatch(setUserId(userId));
     if (token) {
+      dispatch(setIsGuest(isGuest === 'true'));
       await dispatch(getUserData(token, prefetchedUserDataRes));
       dispatch(setToken(token));
       dispatch(getAdvert());
@@ -76,7 +83,9 @@ export const getInitialData = prefetchedUserDataRes => async (dispatch, getState
   }
 };
 
-export const login = (body, onSuccess) => async (dispatch, getState) => {
+// asGuest marks the session as the org's shared guest account. It is applied
+// only once the login has succeeded, so a failed guest login leaves no flag.
+export const login = (body, onSuccess, { asGuest = false } = {}) => async (dispatch, getState) => {
   dispatch(setLoginLoading(true));
   dispatch(setIsLoginError(false));
 
@@ -119,6 +128,7 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
         ['tracking_partner_id', `${res.data.result.tracking_partner_id}`],
         ['paused_notification', `${res.data.result.paused_notification}`],
         ['isUserLoggedOut', 'false'],
+        [IS_GUEST_KEY, asGuest.toString()],
       ]),
       storeToken(res.data.result.token),
       setIfEverLoggedIn(true.toString()),
@@ -126,6 +136,7 @@ export const login = (body, onSuccess) => async (dispatch, getState) => {
 
     dispatch(setToken(res.data.result.token));
     dispatch(setUserId(res.data.result.id));
+    dispatch(setIsGuest(asGuest));
     await resetAiChatSession(dispatch);
 
     dispatch(getUserData(res.data.result.token));
@@ -188,6 +199,7 @@ export const autologin = token => async (dispatch, getState) => {
       );
       await storeToken(res.data.result.token);
       await AsyncStorage.setItem('isUserLoggedOut', 'false');
+      await AsyncStorage.setItem(IS_GUEST_KEY, 'false');
 
       dispatch(setToken(res.data.result.token));
       dispatch(setUserId(res.data.result.id));
@@ -197,6 +209,7 @@ export const autologin = token => async (dispatch, getState) => {
       dispatch(getUserData(res.data.result.token));
       dispatch(getAdvert());
       dispatch(setIsAuthorized(true));
+      dispatch(setIsGuest(false));
       dispatch(setIsloadingAutologin(false));
     }
   } catch (err) {
@@ -220,6 +233,8 @@ export const logout = () => async (dispatch, getState) => {
   dispatch(setUserId(null));
   dispatch(setUser(null));
   dispatch(setIsAuthorized(false));
+  dispatch(setIsGuest(false));
+  await AsyncStorage.removeItem(IS_GUEST_KEY);
   await resetAiChatSession(dispatch);
 
   await AsyncStorage.setItem('isUserLoggedOut', 'true');

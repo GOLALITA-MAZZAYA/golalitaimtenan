@@ -18,6 +18,7 @@ import { sized } from '../../Svg';
 import { useTranslation } from 'react-i18next';
 import FullScreenLoader from '../Loaders/FullScreenLoader';
 import { getFlexDirection, isRTL } from '../../../utils';
+import useIsGuest from '../../hooks/useIsGuest';
 
 const IMAGE_SIZE = 64;
 
@@ -25,6 +26,7 @@ const CardWithNesetedItems = props => {
   const { parentProps, toggleBtns, children, footerAction } = props;
 
   const { t } = useTranslation();
+  const isGuest = useIsGuest();
   const { isDark } = useTheme();
   const [openedIndex, setOpenedIndex] = useState(null);
   const isRtl = isRTL();
@@ -299,25 +301,29 @@ const CardWithNesetedItems = props => {
             },
           ]}
         >
-          <TouchableOpacity
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            style={[
-              styles.favBtn,
-              hasBadge && { marginTop: 14 },
-            ]}
-            onPress={() => parentProps.onPressFavourite()}
-          >
-            {parentProps.isSaved ? (
-              <StartIconSmall
-                color={isDark ? colors.mainDarkMode : colors.darkBlue}
-                fill={isDark ? colors.mainDarkMode : colors.darkBlue}
-              />
-            ) : (
-              <StartIconSmall
-                color={isDark ? '#71717A' : '#A1A1AA'}
-              />
-            )}
-          </TouchableOpacity>
+          {/* The empty View keeps the distance pinned to the bottom of this
+              space-between column when the star is hidden. */}
+          {isGuest ? <View /> : (
+            <TouchableOpacity
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={[
+                styles.favBtn,
+                hasBadge && { marginTop: 14 },
+              ]}
+              onPress={() => parentProps.onPressFavourite()}
+            >
+              {parentProps.isSaved ? (
+                <StartIconSmall
+                  color={isDark ? colors.mainDarkMode : colors.darkBlue}
+                  fill={isDark ? colors.mainDarkMode : colors.darkBlue}
+                />
+              ) : (
+                <StartIconSmall
+                  color={isDark ? '#71717A' : '#A1A1AA'}
+                />
+              )}
+            </TouchableOpacity>
+          )}
 
           {parentProps.distance && (
             <View style={styles.distanceBlock}>

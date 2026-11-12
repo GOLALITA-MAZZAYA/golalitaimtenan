@@ -15,6 +15,8 @@ import AnimatedIcon from './AnimatedIcon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { NO_TAB_BAR_ROUTES } from '../Navigation/MainStack';
+import { showMessage } from 'react-native-flash-message';
+import useIsGuest from '../hooks/useIsGuest';
 
 const HomeIcon = sized(HomeSvg, 26, 27);
 const CardIcon = sized(CardSvg, 28, 23);
@@ -24,6 +26,7 @@ export let ButtonTabBar = ({ state }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const isGuest = useIsGuest();
 
   const focusedRoute = state.routes[state.index];
   const currentRouteName = getFocusedRouteNameFromRoute(focusedRoute) || 'Main';
@@ -96,6 +99,13 @@ export let ButtonTabBar = ({ state }) => {
         <TouchableOpacity
           style={styles.TabView__item}
           onPress={() => {
+            if (isGuest) {
+              showMessage({
+                type: 'warning',
+                message: t('Drawer.notForGuest'),
+              });
+              return;
+            }
             navigate('card');
           }}
         >
