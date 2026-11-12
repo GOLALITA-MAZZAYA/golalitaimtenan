@@ -9,15 +9,22 @@ import BackBtn from './components/BackBtn';
 import FilterBtn from './components/FilterBtn';
 import CartBtn from "./components/CartBtn";
 import MyBookingsBtn from "./components/MyBookingsBtn";
+import { isRTL } from '../../../utils';
 
 const Header = ({
   btns = ['back', 'notifications'],
   label,
+  subLabel,
+  titleChildren,
+  align = 'center',
   style,
   additionalBtnsProps,
   rightChildren,
 }) => {
   const { isDark } = useTheme();
+  const isRtl = isRTL();
+  const isLeft = align === 'left';
+
   const hasMultipleRightBtns =
     (rightChildren ? 1 : 0) +
     (additionalBtnsProps?.cart ? 1 : 0) +
@@ -31,14 +38,58 @@ const Header = ({
         {btns.includes('back') && <BackBtn {...additionalBtnsProps?.back} />}
       </View>
 
-      <View style={styles.titleWrapper}>
-        <TypographyText
-          textColor={isDark ? colors.white : '#202226'}
-          size={18}
-          font={LUSAIL_REGULAR}
-          style={{ flex: 1, textAlign: "center" }}
-          title={label}
-        />
+      <View
+        style={[
+          styles.titleWrapper,
+          isLeft && {
+            justifyContent: isRtl ? 'flex-end' : 'flex-start',
+            paddingHorizontal: 8,
+          },
+        ]}
+      >
+        {titleChildren ? (
+          titleChildren
+        ) : subLabel ? (
+          <View
+            style={{
+              alignItems: isLeft ? (isRtl ? 'flex-end' : 'flex-start') : 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <TypographyText
+              textColor={isDark ? colors.white : '#202226'}
+              size={16.5}
+              font={LUSAIL_REGULAR}
+              style={{
+                textAlign: isLeft ? (isRtl ? 'right' : 'left') : 'center',
+                fontWeight: '700',
+              }}
+              title={label}
+            />
+            <TypographyText
+              textColor={isDark ? colors.mainDarkMode : colors.darkBlue}
+              size={11.5}
+              font={LUSAIL_REGULAR}
+              style={{
+                textAlign: isLeft ? (isRtl ? 'right' : 'left') : 'center',
+                marginTop: 2,
+                fontWeight: '500',
+              }}
+              title={subLabel}
+            />
+          </View>
+        ) : (
+          <TypographyText
+            textColor={isDark ? colors.white : '#202226'}
+            size={18}
+            font={LUSAIL_REGULAR}
+            style={{
+              flex: 1,
+              textAlign: isLeft ? (isRtl ? 'right' : 'left') : 'center',
+            }}
+            title={label}
+          />
+        )}
       </View>
       <View style={[styles.rightBtns, hasMultipleRightBtns && styles.rightBtnsWide]}>
         {rightChildren}

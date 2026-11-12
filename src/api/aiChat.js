@@ -133,6 +133,10 @@ const aiChatApi = {
       params: { limit },
       headers: { Authorization: `Bearer ${token}` },
     }),
+  getIntro: (token) =>
+    instance.get("/ai/customer-chat/intro", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
   clearHistory: (token) =>
     instance.post(
       "/ai/customer-chat/clear",

@@ -1,6 +1,7 @@
 import {
   ADD_AI_CHAT_MESSAGE,
   SET_AI_CHAT_HISTORY_LOADING,
+  SET_AI_CHAT_INTRO,
   SET_AI_CHAT_MESSAGES,
   SET_AI_CHAT_SENDING,
 } from "./aiChat-types";
@@ -20,4 +21,8 @@ export const setAiChatHistoryLoading = (loading) => ({
 export const setAiChatSending = (sending) => ({
   type: SET_AI_CHAT_SENDING,
   sending,
+});
+export const setAiChatIntro = (intro) => ({
+  type: SET_AI_CHAT_INTRO,
+  intro,
 });

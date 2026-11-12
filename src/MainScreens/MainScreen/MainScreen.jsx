@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Platform, Linking } from 'react-native';
+import { View, ActivityIndicator, Platform, Linking, Animated } from 'react-native';
 import MainLayout from '../../components/MainLayout';
 import { colors } from '../../components/colors';
 import { useTheme } from '../../components/ThemeProvider';
@@ -14,7 +14,7 @@ import MarketingPopupModal from '../../components/MarketingPopupModal/MarketingP
 import { getMarketingPopupThunk } from '../../redux/global/global-thunks';
 import MerchantListHeader from '../MerchantsPage/components/MerchantsHeader';
 import NotificationsBtn from '../../components/Header/components/NotificationsBtn';
-import FloatingAiChatButton from '../../components/FloatingAiChatButton';
+import AskMeBanner from './components/AskMeBanner';
 import { isRTL } from '../../../utils';
 
 const MainScreen = ({
@@ -38,6 +38,35 @@ const MainScreen = ({
   }, []);
 
   const handleBannerPress = useBannerPress({ pageName: 'home' });
+
+  // Smooth collapsible animation for the "Ask Me" banner on scroll
+  const lastScrollY = useRef(0);
+  const isAskMeVisible = useRef(true);
+  const askMeAnim = useRef(new Animated.Value(1)).current; // 1 = fully expanded, 0 = collapsed
+
+  const handleCategoriesScroll = (event) => {
+    const currentY = event?.nativeEvent?.contentOffset?.y ?? 0;
+    const diff = currentY - lastScrollY.current;
+
+    // Scrolling down: collapse when scrolling past threshold
+    if (diff > 8 && currentY > 15 && isAskMeVisible.current) {
+      isAskMeVisible.current = false;
+      Animated.timing(askMeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    } else if ((diff < -8 || currentY <= 5) && !isAskMeVisible.current) {
+      // Scrolling up or reaching top: expand back
+      isAskMeVisible.current = true;
+      Animated.timing(askMeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    }
+    lastScrollY.current = currentY;
+  };
 
   useEffect(() => {
     const sub = Linking.addEventListener('url', ({ url }) => {
@@ -114,13 +143,14 @@ const MainScreen = ({
           />
         )}
 
-        <Categories />
+        {/* Minimalist AI chat prompt: auto-hides smoothly on scroll down */}
+        <AskMeBanner collapseAnim={askMeAnim} />
+
+        <Categories onScroll={handleCategoriesScroll} />
 
         <NotificationModal />
         <MarketingPopupModal />
       </MainLayout>
-
-      <FloatingAiChatButton />
     </View>
   );
 };

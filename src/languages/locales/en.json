@@ -968,11 +968,36 @@
       "vouchersAndGiftCards": "Giftcards"
     },
     "AiChat": {
-      "title": "AI Chat",
-      "inputPlaceholder": "Ask me anything...",
+      "title": "Virtual Assistant",
+      "appName": "Etizaz",
+      "fullName": "ETIZAZ - Qatar Central Bank",
+      "inputPlaceholder": "Type your message here...",
+      "send": "Send",
       "emptyState": "Ask about offers, merchants, or anything else - I'm here to help.",
+      "disclaimer": "This Virtual Assistant is powered by advanced algorithms and offers guidance only. The information provided may contain inaccuracies and shall not be considered as an official response from QCB.",
       "typing": "Typing...",
-      "rateLimited": "You're sending messages too quickly. Please wait a moment and try again."
+      "rateLimited": "You're sending messages too quickly. Please wait a moment and try again.",
+      "suggestions": {
+        "reserves": "International Reserves by QCB",
+        "exchange": "Exchange rates for foreign currency",
+        "qibor": "Latest QIBOR Rates",
+        "contact": "How can I contact the bank?"
+      }
+    },
+    "AskMe": {
+      "welcomePrompt": "Welcome! How can I assist you?",
+      "title": "Welcome! How can I assist you?",
+      "compactHint": "Search offers & perks with AI...",
+      "searchSubtitle": "Ask about offers, stores & perks...",
+      "mascotSubtitle": "Welcome! How can I assist you?",
+      "luxurySubtitle": "Your personal Etizaz benefits concierge",
+      "minimalSubtitle": "Tap to ask AI assistant",
+      "chatNow": "Chat Now",
+      "activeNow": "Active 24/7",
+      "promptsLabel": "Prompts:",
+      "dining": "Dining",
+      "shopping": "Shopping",
+      "discounts": "Discounts"
     },
     "TabBar": {
       "home": "Home",

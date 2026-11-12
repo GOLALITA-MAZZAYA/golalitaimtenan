@@ -114,7 +114,7 @@ const CategoryItem = memo(({ item, isDark, language, onPress }) => {
   );
 });
 
-const Categories = ({ ListHeaderComponent }) => {
+const Categories = ({ ListHeaderComponent, onScroll }) => {
   const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
   const navigation = useNavigation();
@@ -255,13 +255,15 @@ const Categories = ({ ListHeaderComponent }) => {
       contentContainerStyle={styles.contentContainerStyle}
       showsVerticalScrollIndicator={false}
       keyExtractor={keyExtractor}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
       ListHeaderComponent={
         <View
           style={{
             flexDirection: isRTL() ? 'row-reverse' : 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginTop: 16,
+            marginTop: 0,
             marginBottom: 12,
           }}
         >

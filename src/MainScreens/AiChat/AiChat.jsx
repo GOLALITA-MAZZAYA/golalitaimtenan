@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -19,11 +20,11 @@ import { useTheme } from '../../components/ThemeProvider';
 import { sized } from '../../Svg';
 import SendSvg from '../../assets/send.svg';
 import DeleteSvg from '../../assets/delete.svg';
-import FullScreenLoader from '../../components/Loaders/FullScreenLoader';
 import { isRTL } from '../../../utils';
 import {
   clearAiChatHistory,
   getAiChatHistory,
+  localizedIntroField,
   sendAiChatMessage,
 } from '../../redux/aiChat/aiChat-thunks';
 
@@ -35,7 +36,7 @@ const AiChat = () => {
   const [draft, setDraft] = useState('');
   const [androidKeyboardHeight, setAndroidKeyboardHeight] = useState(0);
 
-  const { messages, historyLoading, sending } = useSelector(
+  const { messages, intro, historyLoading, sending } = useSelector(
     (state) => state.aiChatReducer
   );
 
@@ -75,12 +76,16 @@ const AiChat = () => {
 
   const renderMessage = ({ item }) => {
     const isUser = item.role === 'user';
+    // LTR: user on the right, assistant on the left. Arabic mirrors that, in
+    // line with the already-mirrored input row. The small "tail" corner
+    // follows whichever side the bubble sits on.
+    const onRight = isUser !== isRTL();
 
     return (
       <View
         style={[
           styles.bubbleRow,
-          { justifyContent: isUser ? 'flex-end' : 'flex-start' },
+          { justifyContent: onRight ? 'flex-end' : 'flex-start' },
         ]}
       >
         <View
@@ -94,8 +99,8 @@ const AiChat = () => {
                 : isDark
                   ? colors.cardBackground
                   : colors.highlatedGrey,
-              borderBottomRightRadius: isUser ? 4 : 16,
-              borderBottomLeftRadius: isUser ? 16 : 4,
+              borderBottomRightRadius: onRight ? 4 : 16,
+              borderBottomLeftRadius: onRight ? 16 : 4,
             },
           ]}
         >
@@ -125,11 +130,15 @@ const AiChat = () => {
         backgroundColor: isDark ? colors.darkBlue : colors.white,
       }}
     >
+      {/* Title and app name come from GET /ai/customer-chat/intro; the locale
+          strings only cover the moment before it loads or a failed request. */}
       <Header
-        label={t('AiChat.title')}
+        label={localizedIntroField(intro, 'title') || t('AiChat.title')}
+        subLabel={localizedIntroField(intro, 'app_name') || t('AiChat.appName')}
+        align="left"
         btns={['back']}
         rightChildren={
-          messages.length > 0 ? (
+          messages.filter((m) => !m.isIntro).length > 0 ? (
             <TouchableOpacity onPress={() => dispatch(clearAiChatHistory())}>
               <DeleteIcon />
             </TouchableOpacity>
@@ -145,56 +154,66 @@ const AiChat = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {historyLoading ? (
-          <FullScreenLoader />
-        ) : (
-          <FlatList
-            ref={listRef}
-            style={styles.list}
-            data={messages}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderMessage}
-            contentContainerStyle={styles.listContent}
-            onContentSizeChange={() =>
-              listRef.current?.scrollToEnd({ animated: true })
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyWrapper}>
-                <TypographyText
-                  title={t('AiChat.emptyState')}
-                  font={BALOO_REGULAR}
-                  size={15}
-                  textColor={isDark ? colors.secondary : colors.darkGrey}
-                  style={{ textAlign: 'center' }}
+        {/* Render FlatList immediately to avoid screen freezing */}
+        <FlatList
+          ref={listRef}
+          style={styles.list}
+          data={messages}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderMessage}
+          contentContainerStyle={styles.listContent}
+          onContentSizeChange={() =>
+            listRef.current?.scrollToEnd({ animated: true })
+          }
+          ListHeaderComponent={
+            historyLoading ? (
+              <View style={styles.topLoader}>
+                <ActivityIndicator
+                  size="small"
+                  color={isDark ? colors.mainDarkMode : colors.darkBlue}
                 />
               </View>
-            }
-            ListFooterComponent={
-              sending ? (
-                <View style={[styles.bubbleRow, { justifyContent: 'flex-start' }]}>
-                  <View
-                    style={[
-                      styles.bubble,
-                      styles.typingBubble,
-                      {
-                        backgroundColor: isDark
-                          ? colors.cardBackground
-                          : colors.highlatedGrey,
-                      },
-                    ]}
-                  >
-                    <TypographyText
-                      title={t('AiChat.typing')}
-                      font={BALOO_REGULAR}
-                      size={15}
-                      textColor={isDark ? colors.secondary : colors.darkGrey}
-                    />
-                  </View>
+            ) : null
+          }
+          ListFooterComponent={
+            sending ? (
+              <View
+                style={[
+                  styles.bubbleRow,
+                  { justifyContent: isRTL() ? 'flex-end' : 'flex-start' },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.bubble,
+                    isRTL()
+                      ? { borderBottomRightRadius: 4 }
+                      : { borderBottomLeftRadius: 4 },
+                    {
+                      backgroundColor: isDark
+                        ? colors.cardBackground
+                        : colors.highlatedGrey,
+                      flexDirection: isRTL() ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                    },
+                  ]}
+                >
+                  <ActivityIndicator
+                    size="small"
+                    color={isDark ? colors.mainDarkMode : colors.darkBlue}
+                  />
+                  <TypographyText
+                    title={t('AiChat.typing')}
+                    font={BALOO_REGULAR}
+                    size={15}
+                    textColor={isDark ? colors.secondary : colors.darkGrey}
+                  />
                 </View>
-              ) : null
-            }
-          />
-        )}
+              </View>
+            ) : null
+          }
+        />
 
         <View
           style={[
@@ -248,6 +267,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     flexGrow: 1,
   },
+  topLoader: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bubbleRow: {
     flexDirection: 'row',
     marginBottom: 10,
@@ -258,14 +282,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 16,
   },
-  typingBubble: {
-    borderBottomLeftRadius: 4,
-  },
   emptyWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
+    paddingTop: 80,
   },
   inputRow: {
     alignItems: 'flex-end',

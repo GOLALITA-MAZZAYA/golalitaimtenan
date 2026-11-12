@@ -4,6 +4,7 @@ import aiChatApi, { getAiChatToken, clearAiChatToken } from "../../api/aiChat";
 import {
   addAiChatMessage,
   setAiChatHistoryLoading,
+  setAiChatIntro,
   setAiChatMessages,
   setAiChatSending,
 } from "./aiChat-actions";
@@ -50,28 +51,85 @@ const describeAiChatError = async (e) => {
   return e.response?.data?.error?.message || i18next.t("General.error");
 };
 
+// GET /ai/customer-chat/intro returns
+//   { app_code, app_id, app_name, app_name_ar, title_en, title_ar,
+//     welcome_en, welcome_ar }
+// It drives both the chat header (title + app name) and the welcome bubble.
+
+// Picks the `<field>_ar` / `<field>_en` variant for the active app language,
+// falling back to the other language if the preferred one is missing. The
+// English value may also be the bare `<field>` (app_name has no _en suffix).
+export const localizedIntroField = (intro, field) => {
+  if (!intro) return undefined;
+  const isArabic = (i18next.language || "").startsWith("ar");
+  const ar = intro[`${field}_ar`];
+  const en = intro[`${field}_en`] || intro[field];
+  return (isArabic ? ar || en : en || ar) || undefined;
+};
+
+// Resolves to the intro payload, or null when the request fails - the intro
+// is decorative and must never block the chat, so this never rejects.
+const fetchIntro = async (aiToken) => {
+  try {
+    const res = await aiChatApi.getIntro(aiToken);
+    console.log(res, "getIntro introResintroResintroResintroResintroResintroRes");
+    const intro = res.data?.data;
+    return intro && typeof intro === "object" ? intro : null;
+  } catch (e) {
+    console.log(e, "getIntro error");
+    return null;
+  }
+};
+
+const buildIntroMessages = (intro) => {
+  const text = localizedIntroField(intro, "welcome");
+  if (!text) return [];
+
+  return [
+    {
+      id: "intro-msg",
+      role: "assistant",
+      text,
+      isIntro: true,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+};
+
 export const getAiChatHistory =
   (limit = 50) =>
-  async (dispatch, getState) => {
-    try {
-      dispatch(setAiChatHistoryLoading(true));
-      const { token: mobileToken } = getState().authReducer;
-      const aiToken = await getAiChatToken(mobileToken);
-      const res = await aiChatApi.getHistory(aiToken, limit);
-      const list = res.data?.data ?? [];
+    async (dispatch, getState) => {
+      try {
+        dispatch(setAiChatHistoryLoading(true));
+        const { token: mobileToken } = getState().authReducer;
+        const aiToken = await getAiChatToken(mobileToken);
+        // The header needs the intro even when a conversation exists, so it
+        // is fetched alongside the history and stored as soon as it lands -
+        // independently of whether the history request succeeds.
+        const introPromise = fetchIntro(aiToken).then((intro) => {
+          if (intro) dispatch(setAiChatIntro(intro));
+          return intro;
+        });
+        const res = await aiChatApi.getHistory(aiToken, limit);
+        const list = res.data?.data ?? [];
+        const normalized = Array.isArray(list) ? list.map(normalizeHistoryMessage) : [];
 
-      dispatch(
-        setAiChatMessages(
-          Array.isArray(list) ? list.map(normalizeHistoryMessage) : []
-        )
-      );
-    } catch (e) {
-      await describeAiChatError(e);
-      console.log(e, "getAiChatHistory error");
-    } finally {
-      dispatch(setAiChatHistoryLoading(false));
-    }
-  };
+        // The welcome message is not part of the stored history, so it is
+        // always put back as the first bubble - otherwise it would vanish as
+        // soon as the user has a conversation and reopens the screen.
+        dispatch(
+          setAiChatMessages([
+            ...buildIntroMessages(await introPromise),
+            ...normalized,
+          ])
+        );
+      } catch (e) {
+        await describeAiChatError(e);
+        console.log(e, "getAiChatHistory error");
+      } finally {
+        dispatch(setAiChatHistoryLoading(false));
+      }
+    };
 
 export const sendAiChatMessage = (message) => async (dispatch, getState) => {
   const trimmed = (message || "").trim();
@@ -110,7 +168,14 @@ export const clearAiChatHistory = () => async (dispatch, getState) => {
     const { token: mobileToken } = getState().authReducer;
     const aiToken = await getAiChatToken(mobileToken);
     await aiChatApi.clearHistory(aiToken);
-    dispatch(setAiChatMessages([]));
+
+    // Cleared chat goes back to the backend-provided welcome message.
+    let { intro } = getState().aiChatReducer;
+    if (!intro) {
+      intro = await fetchIntro(aiToken);
+      if (intro) dispatch(setAiChatIntro(intro));
+    }
+    dispatch(setAiChatMessages(buildIntroMessages(intro)));
   } catch (e) {
     console.log(e, "clearAiChatHistory error");
     showMessage({ message: await describeAiChatError(e), type: "danger" });

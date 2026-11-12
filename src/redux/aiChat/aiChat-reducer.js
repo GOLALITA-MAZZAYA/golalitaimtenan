@@ -1,12 +1,14 @@
 import {
   ADD_AI_CHAT_MESSAGE,
   SET_AI_CHAT_HISTORY_LOADING,
+  SET_AI_CHAT_INTRO,
   SET_AI_CHAT_MESSAGES,
   SET_AI_CHAT_SENDING,
 } from "./aiChat-types";
 
 const initialState = {
   messages: [],
+  intro: null,
   historyLoading: false,
   sending: false,
 };
@@ -17,6 +19,8 @@ export const aiChatReducer = (state = initialState, action) => {
       return { ...state, messages: action.messages };
     case ADD_AI_CHAT_MESSAGE:
       return { ...state, messages: [...state.messages, action.message] };
+    case SET_AI_CHAT_INTRO:
+      return { ...state, intro: action.intro };
     case SET_AI_CHAT_HISTORY_LOADING:
       return { ...state, historyLoading: action.loading };
     case SET_AI_CHAT_SENDING:
