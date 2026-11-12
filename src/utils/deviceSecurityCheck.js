@@ -11,6 +11,7 @@ import {
 import { org } from '../org/config';
 import { removeToken } from './secureStorage';
 import logger from './logger';
+import { getStorePlatformKey } from './storePlatform';
 
 // Once set, the block persists until the app's data is cleared or the app is
 // reinstalled — and a fresh install still has to pass detection again. There
@@ -22,6 +23,14 @@ let triggeredIssues = new Set();
 let persistedIssues = new Set();
 let alertVisible = false;
 let alertScheduled = false;
+// Warnings the user chose to continue past; not shown again this session.
+const dismissedIssues = new Set();
+
+// Huawei AppGallery reviewers install builds with their own tool, which
+// freeRASP reports as an unrecognized source. On Huawei/Honor devices that
+// one warning can be dismissed, does not log the user out and is not saved
+// as a permanent block.
+const isHuaweiDevice = getStorePlatformKey() === 'huawei';
 
 const securityMessages = {
   privilegedAccess: 'Root or elevated privileges were detected.',
@@ -42,6 +51,24 @@ const obfuscationMessage = 'Application code is not properly obfuscated.';
 
 const genericBlockMessage =
   'Security issues were previously detected on this device.';
+
+// Continue is offered when the screen-lock warning is shown alone or only
+// alongside the unknown-source warning. On Huawei/Honor the unknown-source
+// warning on its own can also be dismissed.
+const canContinue = issues => {
+  const issueList = Array.from(issues);
+  const onlyAllowed = issueList.every(
+    issue =>
+      issue === securityMessages.passcode ||
+      issue === securityMessages.unofficialStore,
+  );
+
+  if (!onlyAllowed) {
+    return false;
+  }
+
+  return issues.has(securityMessages.passcode) || isHuaweiDevice;
+};
 
 // Hard threats mean the device or app is compromised/tampered: the session is
 // revoked and the block survives relaunches. Soft signals (VPN, no passcode,
@@ -79,17 +106,27 @@ const showAlert = () => {
     .map(issue => `• ${issue}`)
     .join('\n');
 
-  Alert.alert(
-    'Security Issues Detected',
-    message,
-    [
-      {
-        text: 'Exit',
-        onPress: () => RNExitApp.exitApp(),
+  const buttons = [
+    {
+      text: 'Exit',
+      onPress: () => RNExitApp.exitApp(),
+    },
+  ];
+
+  if (canContinue(triggeredIssues)) {
+    buttons.unshift({
+      text: 'Continue',
+      onPress: () => {
+        triggeredIssues.forEach(issue => dismissedIssues.add(issue));
+        triggeredIssues.clear();
+        alertVisible = false;
       },
-    ],
-    { cancelable: false },
-  );
+    });
+  }
+
+  Alert.alert('Security Issues Detected', message, buttons, {
+    cancelable: false,
+  });
 };
 
 const scheduleAlertOnce = () => {
@@ -136,13 +173,17 @@ const applyStoredIssues = issues => {
     if (issue === 'App integrity check failed.') {
       return;
     }
+    // Drop AppGallery install-source warnings saved by older builds.
+    if (isHuaweiDevice && issue === securityMessages.unofficialStore) {
+      return;
+    }
     persistedIssues.add(issue);
     triggeredIssues.add(issue);
   });
 
   const remaining = Array.from(persistedIssues);
   if (remaining.length === 0) {
-    AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => { });
+    AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => {});
     return false;
   }
 
@@ -190,6 +231,13 @@ export const showSecurityAlert = () => {
 };
 
 const handleThreat = message => () => {
+  const isHuaweiStoreWarning =
+    isHuaweiDevice && message === securityMessages.unofficialStore;
+
+  if (dismissedIssues.has(message)) {
+    return;
+  }
+
   if (__DEV__ && devBuildSignals.has(message)) {
     logger.warn(`[Security] ${message} Ignored in development build`);
     return;
@@ -206,11 +254,15 @@ const handleThreat = message => () => {
 
   triggeredIssues.add(message);
 
-  if (hardThreatMessages.has(message)) {
+  if (isHuaweiStoreWarning) {
+    logger.warn('Unrecognized install source on Huawei device; session kept');
+  } else if (hardThreatMessages.has(message)) {
     if (IS_PRODUCTION && !__DEV__) {
       blockDevice(message);
     } else {
-      logger.warn('Hard security threat detected; session kept in non-production build');
+      logger.warn(
+        'Hard security threat detected; session kept in non-production build',
+      );
     }
   }
 
@@ -241,7 +293,7 @@ export const useSecurityCheck = () => {
       // A block left on a dev/test device by an earlier production-flagged install
       // would otherwise survive forever — drop it.
       if (__DEV__ || !IS_PRODUCTION) {
-        AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => { });
+        AsyncStorage.removeItem(SECURITY_BLOCK_KEY).catch(() => {});
         return;
       }
 
@@ -332,9 +384,10 @@ export const useSecurityCheck = () => {
       killOnBypass: IS_PRODUCTION && !__DEV__,
       androidConfig: {
         packageName: org.androidPackage,
-        certificateHashes: (!IS_PRODUCTION || __DEV__)
-          ? [...org.signInCertHashes, org.debugSignInCertHash]
-          : org.signInCertHashes,
+        certificateHashes:
+          !IS_PRODUCTION || __DEV__
+            ? [...org.signInCertHashes, org.debugSignInCertHash]
+            : org.signInCertHashes,
         malwareConfig: FREERASP_MALWARE_CONFIG,
       },
       iosConfig: {
